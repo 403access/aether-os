@@ -1,0 +1,35 @@
+{
+  "name": "aether-os",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "description": "A single-target Linux workstation OS: Rust compositor, zero-copy IPC, capability-isolated agents.",
+  "license": "MIT",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "bun run --cwd apps/web dev",
+    "dev:docs": "bun run --cwd apps/docs start",
+    "build": "bun run build:web && bun run build:docs && bun run scripts/assemble.ts",
+    "build:web": "bun run --cwd apps/web build",
+    "build:docs": "bun run --cwd apps/docs build",
+    "preview": "bun run --cwd apps/web preview",
+    "test": "bun test",
+    "test:unit": "bun test packages",
+    "test:e2e": "playwright test",
+    "test:all": "bun run test:unit && bun run test:e2e",
+    "typecheck": "tsc --noEmit",
+    "bench": "bun run packages/bench/src/cli.ts",
+    "bench:check": "bun run packages/bench/src/cli.ts --check",
+    "os:test": "cargo test --manifest-path os/compositor/Cargo.toml",
+    "verify": "bun run typecheck && bun run test:unit && bun run build"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@types/bun": "^1.3.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "typescript": "^5.9.0"
+  }
+}

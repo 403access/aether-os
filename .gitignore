@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+.bun/
+
+# builds
+dist/
+build/
+apps/docs/.docusaurus/
+apps/docs/build/
+apps/web/dist/
+
+# rust
+target/
+os/compositor/target/
+
+# test artifacts
+coverage/
+playwright-report/
+test-results/
+blob-report/
+bench-results/
+
+# env & local
+.env
+.env.*
+!.env.example
+*.local
+.DS_Store
+
+# nix
+result
+result-*
+.direnv/

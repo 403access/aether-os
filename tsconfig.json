@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "types": ["bun"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowJs": false,
+    "noEmit": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@aether/protocol": ["packages/protocol/src/index.ts"],
+      "@aether/indexer": ["packages/indexer/src/index.ts"],
+      "@aether/ipc": ["packages/ipc/src/index.ts"],
+      "@aether/agents": ["packages/agents/src/index.ts"],
+      "@aether/palette": ["packages/palette/src/index.ts"],
+      "@aether/ui": ["packages/ui/src/index.ts"],
+      "@aether/bench": ["packages/bench/src/index.ts"]
+    }
+  },
+  "include": [
+    "packages/*/src/**/*.ts",
+    "packages/*/src/**/*.tsx",
+    "apps/web/src/**/*.ts",
+    "apps/web/src/**/*.tsx",
+    "e2e/**/*.ts",
+    "scripts/**/*.ts",
+    "playwright.config.ts"
+  ],
+  "exclude": ["node_modules", "**/dist", "**/.docusaurus", "os"]
+}

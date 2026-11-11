@@ -1,0 +1,298 @@
+/* ==========================================================================
+   Data Cloud Compare — design tokens
+   --------------------------------------------------------------------------
+   The water theme is the canonical brand theme. Deep-sea surfaces, a single
+   cyan current, and slow liquid motion. Everything is expressed as custom
+   properties so the explorer, the marketing site, the documentation and the
+   component gallery stay in sync.
+
+   Usage
+     <html data-theme="light" data-water-tone="lagoon" data-water-speed="calm">
+   -------------------------------------------------------------------------- */
+
+:root {
+  color-scheme: dark;
+
+  /* ---------------------------------------------------------------- brand */
+  --ds-brand-a: #22c8e8;
+  --ds-brand-b: #3f7cff;
+
+  /* --------------------------------------------------------------- accent */
+  --ds-accent: #38d6ff;
+  --ds-accent-strong: #22c8e8;
+  --ds-accent-soft: rgba(56, 214, 255, 0.18);
+  --ds-accent-rgb: 56, 214, 255;
+  --ds-glow: rgba(56, 214, 255, 0.22);
+
+  /* ------------------------------------------------------------ surfaces */
+  --ds-bg: #031922;
+  --ds-bg-soft: #052530;
+  --ds-bg-elevated: #072a38;
+  --ds-surface: rgba(7, 39, 51, 0.82);
+  --ds-surface-2: rgba(11, 57, 71, 0.9);
+  --ds-surface-solid: #072733;
+  --ds-popover: #0d3d4b;
+  --ds-sidebar: rgba(9, 47, 60, 0.9);
+  --ds-glass: rgba(7, 39, 51, 0.62);
+  --ds-glass-blur: 18px;
+
+  /* ---------------------------------------------------------------- text */
+  --ds-text: #e9fbff;
+  --ds-text-2: #a5dbe5;
+  --ds-text-3: #6ba9b6;
+  --ds-text-inverse: #03202b;
+
+  /* --------------------------------------------------------------- lines */
+  --ds-line: rgba(127, 230, 255, 0.15);
+  --ds-line-strong: rgba(127, 230, 255, 0.3);
+  --ds-hover: rgba(112, 226, 255, 0.1);
+  --ds-selection: rgba(56, 214, 255, 0.14);
+
+  /* -------------------------------------------------------------- status */
+  --ds-green: #5ef2b0;
+  --ds-green-bg: rgba(94, 242, 176, 0.16);
+  --ds-blue: #6fd5ff;
+  --ds-blue-bg: rgba(111, 213, 255, 0.17);
+  --ds-amber: #ffd27a;
+  --ds-amber-bg: rgba(255, 210, 122, 0.15);
+  --ds-orange: #ffb072;
+  --ds-orange-bg: rgba(255, 176, 114, 0.16);
+  --ds-red: #ff8a92;
+  --ds-red-bg: rgba(255, 138, 146, 0.16);
+  --ds-violet: #c3a8ff;
+  --ds-violet-bg: rgba(195, 168, 255, 0.18);
+  --ds-gray: #9ec5ce;
+  --ds-gray-bg: rgba(158, 197, 206, 0.15);
+  --ds-pink: #ff9ad5;
+  --ds-pink-bg: rgba(255, 154, 213, 0.16);
+
+  /* ---------------------------------------------------------- typography */
+  --ds-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+    "Inter", "Helvetica Neue", Arial, sans-serif;
+  --ds-font-mono: "SFMono-Regular", ui-monospace, SFMono-Regular, Menlo,
+    Consolas, "Liberation Mono", monospace;
+
+  --ds-text-2xs: 0.625rem; /* 10px */
+  --ds-text-xs: 0.6875rem; /* 11px */
+  --ds-text-sm: 0.75rem; /* 12px */
+  --ds-text-base: 0.8125rem; /* 13px */
+  --ds-text-md: 0.875rem; /* 14px */
+  --ds-text-lg: 1rem; /* 16px */
+  --ds-text-xl: 1.25rem; /* 20px */
+  --ds-text-2xl: 1.625rem; /* 26px */
+  --ds-text-3xl: 2.125rem; /* 34px */
+  --ds-text-4xl: 2.875rem; /* 46px */
+
+  --ds-leading-tight: 1.15;
+  --ds-leading-snug: 1.35;
+  --ds-leading-normal: 1.6;
+  --ds-tracking-tight: -0.03em;
+  --ds-tracking-wide: 0.12em;
+
+  /* -------------------------------------------------------------- spacing */
+  --ds-space-1: 4px;
+  --ds-space-2: 6px;
+  --ds-space-3: 8px;
+  --ds-space-4: 10px;
+  --ds-space-5: 12px;
+  --ds-space-6: 16px;
+  --ds-space-7: 20px;
+  --ds-space-8: 24px;
+  --ds-space-9: 32px;
+  --ds-space-10: 40px;
+  --ds-space-11: 56px;
+  --ds-space-12: 72px;
+  --ds-space-13: 96px;
+
+  /* ---------------------------------------------------------------- radii */
+  --ds-radius-xs: 5px;
+  --ds-radius-sm: 7px;
+  --ds-radius-md: 10px;
+  --ds-radius-lg: 14px;
+  --ds-radius-xl: 20px;
+  --ds-radius-2xl: 26px;
+  --ds-radius-pill: 999px;
+
+  /* --------------------------------------------------------------- shadow */
+  --ds-shadow: 0 2px 4px rgba(0, 8, 14, 0.28), 0 18px 48px rgba(0, 8, 14, 0.34);
+  --ds-shadow-pop: 0 20px 54px rgba(0, 8, 14, 0.62),
+    0 2px 12px rgba(0, 8, 14, 0.45);
+  --ds-shadow-soft: 0 12px 34px rgba(0, 8, 14, 0.28);
+
+  /* --------------------------------------------------------------- motion */
+  --ds-motion-fast: 210ms;
+  --ds-motion-base: 340ms;
+  --ds-motion-layout: 520ms;
+  --ds-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ds-ease-in-out: cubic-bezier(0.45, 0, 0.25, 1);
+
+  /* --------------------------------------------------------------- layout */
+  --ds-content: 1180px;
+  --ds-header-h: 62px;
+  --ds-focus-ring: 0 0 0 3px var(--ds-accent-soft);
+
+  /* ---------------------------------------------------------------- water */
+  --ds-water-tone-name: "ocean";
+  --ds-water-speed-factor: 1;
+  --ds-water-opacity: 0.92;
+  --ds-bg-grad:
+    radial-gradient(1100px 620px at 12% -12%, rgba(46, 196, 224, 0.34) 0%, transparent 58%),
+    radial-gradient(900px 560px at 92% 8%, rgba(45, 110, 230, 0.22) 0%, transparent 62%),
+    radial-gradient(1200px 900px at 50% 118%, rgba(18, 130, 160, 0.3) 0%, transparent 66%),
+    linear-gradient(165deg, #083545 0%, #052530 48%, #031922 100%);
+}
+
+/* ------------------------------------------------------------- water tones */
+
+:root[data-water-tone="lagoon"] {
+  --ds-accent: #55f0e0;
+  --ds-accent-strong: #3ee8d6;
+  --ds-accent-soft: rgba(85, 240, 224, 0.18);
+  --ds-accent-rgb: 85, 240, 224;
+  --ds-glow: rgba(85, 240, 224, 0.24);
+  --ds-selection: rgba(85, 240, 224, 0.14);
+  --ds-brand-a: #3ee8d6;
+  --ds-brand-b: #2a9df4;
+  --ds-bg: #021f27;
+  --ds-bg-soft: #04343e;
+  --ds-bg-elevated: #07535f;
+  --ds-surface: rgba(6, 55, 65, 0.8);
+  --ds-surface-2: rgba(9, 77, 89, 0.88);
+  --ds-surface-solid: #063741;
+  --ds-popover: #0b5059;
+  --ds-sidebar: rgba(7, 62, 73, 0.9);
+  --ds-glass: rgba(6, 55, 65, 0.62);
+  --ds-water-tone-name: "lagoon";
+  --ds-bg-grad:
+    radial-gradient(1100px 620px at 12% -12%, rgba(109, 240, 231, 0.42) 0%, transparent 58%),
+    radial-gradient(900px 560px at 92% 8%, rgba(45, 180, 230, 0.26) 0%, transparent 62%),
+    radial-gradient(1200px 900px at 50% 118%, rgba(33, 196, 180, 0.32) 0%, transparent 66%),
+    linear-gradient(165deg, #07535f 0%, #04343e 48%, #021f27 100%);
+}
+
+:root[data-water-tone="deep"] {
+  --ds-accent: #48b7ff;
+  --ds-accent-strong: #2a9fe0;
+  --ds-accent-soft: rgba(72, 183, 255, 0.18);
+  --ds-accent-rgb: 72, 183, 255;
+  --ds-glow: rgba(72, 183, 255, 0.24);
+  --ds-selection: rgba(65, 165, 255, 0.15);
+  --ds-brand-a: #2a9fe0;
+  --ds-brand-b: #4a6cff;
+  --ds-bg: #010c16;
+  --ds-bg-soft: #031625;
+  --ds-bg-elevated: #06243a;
+  --ds-surface: rgba(4, 26, 42, 0.86);
+  --ds-surface-2: rgba(6, 39, 61, 0.92);
+  --ds-surface-solid: #041a2a;
+  --ds-popover: #07293f;
+  --ds-sidebar: rgba(5, 33, 52, 0.92);
+  --ds-glass: rgba(4, 26, 42, 0.64);
+  --ds-text: #e4f6ff;
+  --ds-text-2: #97c9e2;
+  --ds-text-3: #5e93ad;
+  --ds-line: rgba(119, 196, 255, 0.16);
+  --ds-line-strong: rgba(119, 196, 255, 0.3);
+  --ds-hover: rgba(107, 197, 255, 0.11);
+  --ds-water-tone-name: "deep";
+  --ds-bg-grad:
+    radial-gradient(1100px 620px at 12% -12%, rgba(31, 120, 200, 0.34) 0%, transparent 58%),
+    radial-gradient(900px 560px at 92% 8%, rgba(30, 64, 160, 0.28) 0%, transparent 62%),
+    radial-gradient(1200px 900px at 50% 118%, rgba(12, 70, 130, 0.34) 0%, transparent 66%),
+    linear-gradient(165deg, #06243a 0%, #031625 48%, #010c16 100%);
+}
+
+/* ------------------------------------------------------------ shallow light */
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --ds-brand-a: #067a99;
+  --ds-brand-b: #2f5fd0;
+  --ds-accent: #067a99;
+  --ds-accent-strong: #05657f;
+  --ds-accent-soft: rgba(6, 122, 153, 0.12);
+  --ds-accent-rgb: 6, 122, 153;
+  --ds-glow: rgba(6, 122, 153, 0.14);
+
+  --ds-bg: #eef8fb;
+  --ds-bg-soft: #e2f2f6;
+  --ds-bg-elevated: #ffffff;
+  --ds-surface: rgba(255, 255, 255, 0.86);
+  --ds-surface-2: #edf7fa;
+  --ds-surface-solid: #ffffff;
+  --ds-popover: #ffffff;
+  --ds-sidebar: #f2fafc;
+  --ds-glass: rgba(255, 255, 255, 0.72);
+
+  --ds-text: #062e39;
+  --ds-text-2: #416b76;
+  --ds-text-3: #6d949e;
+  --ds-text-inverse: #ffffff;
+
+  --ds-line: rgba(8, 61, 75, 0.14);
+  --ds-line-strong: rgba(8, 61, 75, 0.26);
+  --ds-hover: rgba(8, 61, 75, 0.055);
+  --ds-selection: rgba(6, 122, 153, 0.12);
+
+  --ds-green: #0a7a55;
+  --ds-green-bg: rgba(10, 122, 85, 0.12);
+  --ds-blue: #1f6fc4;
+  --ds-blue-bg: rgba(31, 111, 196, 0.12);
+  --ds-amber: #8a5c00;
+  --ds-amber-bg: rgba(206, 145, 0, 0.15);
+  --ds-orange: #a94814;
+  --ds-orange-bg: rgba(169, 72, 20, 0.13);
+  --ds-red: #c73442;
+  --ds-red-bg: rgba(199, 52, 66, 0.12);
+  --ds-violet: #6d4bd6;
+  --ds-violet-bg: rgba(109, 75, 214, 0.13);
+  --ds-gray: #5f7378;
+  --ds-gray-bg: rgba(95, 115, 120, 0.13);
+  --ds-pink: #b53d9b;
+  --ds-pink-bg: rgba(181, 61, 155, 0.12);
+
+  --ds-shadow: 0 1px 2px rgba(8, 48, 60, 0.06), 0 16px 40px rgba(8, 48, 60, 0.12);
+  --ds-shadow-pop: 0 20px 50px rgba(8, 48, 60, 0.2), 0 2px 8px rgba(8, 48, 60, 0.1);
+  --ds-shadow-soft: 0 12px 32px rgba(8, 48, 60, 0.1);
+  --ds-focus-ring: 0 0 0 3px var(--ds-accent-soft);
+
+  --ds-bg-grad:
+    radial-gradient(1000px 600px at 12% -12%, rgba(111, 219, 233, 0.34) 0%, transparent 58%),
+    radial-gradient(900px 520px at 92% 6%, rgba(122, 164, 255, 0.18) 0%, transparent 62%),
+    radial-gradient(1100px 800px at 50% 120%, rgba(139, 224, 219, 0.3) 0%, transparent 66%),
+    linear-gradient(165deg, #f5fcfe 0%, #e9f6fa 48%, #e2f2f6 100%);
+}
+
+:root[data-theme="light"][data-water-tone="lagoon"] {
+  --ds-accent: #0a8f7f;
+  --ds-accent-strong: #08796c;
+  --ds-accent-rgb: 10, 143, 127;
+  --ds-accent-soft: rgba(10, 143, 127, 0.13);
+  --ds-glow: rgba(10, 143, 127, 0.16);
+  --ds-brand-a: #0a8f7f;
+  --ds-brand-b: #2a6fd0;
+}
+
+:root[data-theme="light"][data-water-tone="deep"] {
+  --ds-accent: #2166c4;
+  --ds-accent-strong: #1a54a2;
+  --ds-accent-rgb: 33, 102, 196;
+  --ds-accent-soft: rgba(33, 102, 196, 0.13);
+  --ds-glow: rgba(33, 102, 196, 0.16);
+  --ds-brand-a: #2166c4;
+  --ds-brand-b: #4a4fd0;
+}
+
+/* ------------------------------------------------------------------ motion */
+
+:root[data-water-speed="calm"] { --ds-water-speed-factor: 0.65; }
+:root[data-water-speed="rapid"] { --ds-water-speed-factor: 1.6; }
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ds-motion-fast: 1ms;
+    --ds-motion-base: 1ms;
+    --ds-motion-layout: 1ms;
+  }
+}

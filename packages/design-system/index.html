@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="en" data-water-tone="ocean" data-water-background="sea" data-water-effects="on">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Water design system — Data Cloud Compare</title>
+  <meta name="description" content="The water-themed design system behind Data Cloud Compare: tokens, components, motion, and the deep-sea palette.">
+  <meta name="theme-color" content="#031922">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <script>
+    /* Apply saved preferences before paint to avoid a theme flash. */
+    (function () {
+      try {
+        var prefs = JSON.parse(localStorage.getItem("dcc-design-prefs") || "null");
+        if (!prefs || typeof prefs !== "object") return;
+        var root = document.documentElement;
+        if (["lagoon", "ocean", "deep"].indexOf(prefs.tone) !== -1) root.dataset.waterTone = prefs.tone;
+        if (prefs.background === "still" || prefs.background === "sea") root.dataset.waterBackground = prefs.background;
+        if (typeof prefs.effects === "boolean") root.dataset.waterEffects = prefs.effects ? "on" : "off";
+        if (prefs.theme === "light" || prefs.theme === "dark") root.dataset.theme = prefs.theme;
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="showcase.css">
+  <script type="module" src="showcase.js"></script>
+</head>
+<body class="ds-scope">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <div class="ds-sea" aria-hidden="true">
+    <svg class="ds-wave ds-wave--far" viewBox="0 0 2880 320" preserveAspectRatio="none" focusable="false">
+      <path d="M0 150 C 240 96 480 204 720 150 C 960 96 1200 204 1440 150 C 1680 96 1920 204 2160 150 C 2400 96 2640 204 2880 150 L 2880 320 L 0 320 Z"/>
+    </svg>
+    <svg class="ds-wave ds-wave--mid" viewBox="0 0 2880 320" preserveAspectRatio="none" focusable="false">
+      <path d="M0 170 C 240 126 480 214 720 170 C 960 126 1200 214 1440 170 C 1680 126 1920 214 2160 170 C 2400 126 2640 214 2880 170 L 2880 320 L 0 320 Z"/>
+    </svg>
+    <svg class="ds-wave ds-wave--near" viewBox="0 0 2880 320" preserveAspectRatio="none" focusable="false">
+      <path d="M0 190 C 240 156 480 224 720 190 C 960 156 1200 224 1440 190 C 1680 156 1920 224 2160 190 C 2400 156 2640 224 2880 190 L 2880 320 L 0 320 Z"/>
+    </svg>
+  </div>
+  <canvas id="water-fx" class="water-fx" aria-hidden="true"></canvas>
+
+  <svg class="sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3.5 7.5A2.5 2.5 0 0 1 6 5h3.2c.5 0 1 .2 1.4.6l1.2 1.1c.3.3.8.5 1.3.5H18a2.5 2.5 0 0 1 2.5 2.5v6.8A2.5 2.5 0 0 1 18 19H6a2.5 2.5 0 0 1-2.5-2.5z"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3.5h7l5 5v12H6z"/><path d="M13 3.5v5h5"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.2 4.2L19 6.5"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15"/><path d="m13 6 6 6-6 6"/></symbol>
+    <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3s-6 6.2-6 10.4a6 6 0 0 0 12 0C18 9.2 12 3 12 3Z"/><path d="M9.4 13.6a2.7 2.7 0 0 0 2.6 2.4"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/><path d="m3 17.5 9 5 9-5"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5 19 6v5.4c0 4.4-2.9 7.5-7 9.1-4.1-1.6-7-4.7-7-9.1V6z"/><path d="m9 12 2 2 4-4.5"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M6.5 18.5a4 4 0 0 1-.6-7.9A6 6 0 0 1 17.5 9a4.8 4.8 0 0 1-.5 9.5z"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><path d="m8.5 7-5 5 5 5"/><path d="m15.5 7 5 5-5 5"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.2A8.5 8.5 0 0 1 9.8 4a8.5 8.5 0 1 0 10.2 10.2z"/></symbol>
+  </svg>
+
+  <header class="show-top">
+    <div class="wrap show-top__inner">
+      <a class="show-brand" href="../" aria-label="Data Cloud Compare home">
+        <span class="show-brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <rect x="2.5" y="6.5" width="18" height="13" rx="4" class="mark-back"/>
+            <rect x="11.5" y="12.5" width="18" height="13" rx="4" class="mark-front"/>
+            <path d="m15.5 19 2.2 2.2 4.4-4.8" class="mark-check"/>
+          </svg>
+        </span>
+        <span class="show-brand__text">Water<span>design system</span></span>
+      </a>
+
+      <nav class="show-nav" aria-label="Sections">
+        <a href="#principles">Principles</a>
+        <a href="#foundations">Foundations</a>
+        <a href="#components">Components</a>
+        <a href="#water">Water</a>
+        <a href="#usage">Usage</a>
+      </nav>
+
+      <div class="show-controls" aria-label="Theme controls">
+        <div class="tone-switch" role="group" aria-label="Water tone">
+          <button class="tone" type="button" data-tone="lagoon" aria-pressed="false">
+            <span class="tone__swatch" style="--swatch:#55f0e0"></span><span>Lagoon</span>
+          </button>
+          <button class="tone" type="button" data-tone="ocean" aria-pressed="true">
+            <span class="tone__swatch" style="--swatch:#38d6ff"></span><span>Ocean</span>
+          </button>
+          <button class="tone" type="button" data-tone="deep" aria-pressed="false">
+            <span class="tone__swatch" style="--swatch:#48b7ff"></span><span>Deep</span>
+          </button>
+        </div>
+        <button class="ds-btn ds-btn--small ds-btn--quiet" type="button" data-theme-toggle>
+          <svg class="icon"><use href="#i-moon"/></svg><span>Light</span>
+        </button>
+        <button class="ds-btn ds-btn--small ds-btn--quiet" type="button" data-background-toggle aria-pressed="true">Sea: on</button>
+        <button class="ds-btn ds-btn--small ds-btn--quiet" type="button" data-effects-toggle aria-pressed="true">Effects: on</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="show-hero">
+      <div class="wrap show-hero__inner">
+        <div class="show-hero__copy">
+          <span class="show-kicker"><span class="pulse-dot"></span> Design system · v1</span>
+          <h1>Water,<br><span class="gradient-text">distilled.</span></h1>
+          <p class="show-lede">
+            A deep-sea palette, one cyan current, and slow liquid motion. This is the
+            design language behind the Data Cloud Compare explorer — extracted into
+            tokens, primitives, and patterns that the marketing site, the documentation,
+            and the app can share.
+          </p>
+          <div class="ds-row">
+            <a class="ds-btn ds-btn--primary" href="#components">Browse components <svg class="icon"><use href="#i-arrow"/></svg></a>
+            <a class="ds-btn" href="../">Product site</a>
+            <a class="ds-btn ds-btn--ghost" href="../docs/">Documentation</a>
+          </div>
+          <div class="show-meta">
+            <span><svg class="icon"><use href="#i-drop"/></svg> 3 water tones</span>
+            <span><svg class="icon"><use href="#i-layers"/></svg> Light + deep</span>
+            <span><svg class="icon"><use href="#i-shield"/></svg> Reduced-motion safe</span>
+            <span><svg class="icon"><use href="#i-code"/></svg> Plain CSS + JS</span>
+          </div>
+        </div>
+
+        <div class="show-hero__visual" aria-hidden="true">
+          <div class="water-card ds-card ds-card--glass">
+            <div class="water-card__head">
+              <span class="water-card__label">Current tone</span>
+              <span class="ds-badge ds-badge--solid" data-tone-label>Ocean</span>
+            </div>
+            <div class="water-card__orb"></div>
+            <div class="water-card__rings">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="water-card__swatches">
+              <span style="--swatch:#38d6ff"><b>#38D6FF</b><i>accent</i></span>
+              <span style="--swatch:#052530"><b>#052530</b><i>deep</i></span>
+              <span style="--swatch:#5EF2B0"><b>#5EF2B0</b><i>same</i></span>
+              <span style="--swatch:#FFD27A"><b>#FFD27A</b><i>maybe</i></span>
+            </div>
+            <div class="water-card__foot">
+              <span class="ds-chip"><span class="ds-dot"></span> lively drip energy</span>
+              <span class="ds-chip">flowing</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="show-section" id="principles">
+      <div class="wrap">
+        <header class="section-head">
+          <span class="show-kicker">01 · Principles</span>
+          <h2>Depth over decoration.</h2>
+          <p>Water is a system, not a filter. Every effect has a job: establish depth, show a state, or acknowledge an action.</p>
+        </header>
+
+        <div class="show-grid show-grid--3">
+          <article class="ds-card">
+            <span class="ds-card__icon"><svg class="icon"><use href="#i-layers"/></svg></span>
+            <h3>Layered, not flat</h3>
+            <p>Sea, currents, caustics, glass, and drops. Surfaces sit at clear depths, and the interface never fights the background.</p>
+          </article>
+          <article class="ds-card">
+            <span class="ds-card__icon"><svg class="icon"><use href="#i-drop"/></svg></span>
+            <h3>Motion with manners</h3>
+            <p>Slow ambient currents, fast interface feedback. Every animation respects <code>prefers-reduced-motion</code> and can be paused.</p>
+          </article>
+          <article class="ds-card">
+            <span class="ds-card__icon"><svg class="icon"><use href="#i-check"/></svg></span>
+            <h3>One honest accent</h3>
+            <p>The cyan current means action and selection. Status colours stay semantic: green same, blue moved, amber review, red missing.</p>
+          </article>
+        </div>
+
+        <div class="layer-strip" aria-label="Water layers">
+          <div class="layer"><span>05</span><b>Drops</b><i>pointer + click feedback</i></div>
+          <div class="layer"><span>04</span><b>Glass</b><i>frosted working surfaces</i></div>
+          <div class="layer"><span>03</span><b>Caustics</b><i>slow light, low alpha</i></div>
+          <div class="layer"><span>02</span><b>Currents</b><i>waves + drifting highlights</i></div>
+          <div class="layer"><span>01</span><b>Sea</b><i>depth gradient + tone</i></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="show-section" id="foundations">
+      <div class="wrap">
+        <header class="section-head">
+          <span class="show-kicker">02 · Foundations</span>
+          <h2>Tokens, not guesses.</h2>
+          <p>Colour, type, spacing, radius, elevation, and motion are custom properties. Change a tone, not a component.</p>
+        </header>
+
+        <div class="foundation-block">
+          <h3 class="block-title">Colour</h3>
+          <div class="swatch-grid">
+            <div class="swatch"><span class="swatch__chip" style="--swatch:var(--ds-bg)"></span><b>Deep sea</b><code>--ds-bg</code></div>
+            <div class="swatch"><span class="swatch__chip" style="--swatch:var(--ds-surface-solid)"></span><b>Surface</b><code>--ds-surface</code></div>
+            <div class="swatch"><span class="swatch__chip" style="--swatch:var(--ds-accent)"></span><b>Current</b><code>--ds-accent</code></div>
+            <div class="swatch"><span class="swatch__chip" style="--swatch:var(--ds-text)"></span><b>Foam</b><code>--ds-text</code></div>
+            <div class="swatch"><span class="swatch__chip" style="--swatch:var(--ds-green)"></span><b>Same</b><code>--ds-green</code></div>
+            <div class="swatch"><span class="swatch__chip" style="--swatch:var(--ds-blue)"></span><b>Moved</b><code>--ds-blue</code></div>
+            <div class="swatch"><span class="swatch__chip" style="--swatch:var(--ds-amber)"></span><b>Maybe</b><code>--ds-amber</code></div>
+            <div class="swatch"><span class="swatch__chip" style="--swatch:var(--ds-orange)"></span><b>Partial</b><code>--ds-orange</code></div>
+            <div class="swatch"><span class="swatch__chip" style="--swatch:var(--ds-red)"></span><b>Missing</b><code>--ds-red</code></div>
+            <div class="swatch"><span class="swatch__chip" style="--swatch:var(--ds-violet)"></span><b>Local only</b><code>--ds-violet</code></div>
+          </div>
+        </div>
+
+        <div class="foundation-grid">
+          <div class="foundation-block">
+            <h3 class="block-title">Typography</h3>
+            <div class="type-specimen">
+              <div class="type-row"><span class="type-label">Display</span><span class="type-display">Deep water</span><code>--ds-text-4xl</code></div>
+              <div class="type-row"><span class="type-label">Heading</span><span class="type-heading">Two panes. Zero guesswork.</span><code>--ds-text-2xl</code></div>
+              <div class="type-row"><span class="type-label">Body</span><span class="type-body">Compare millions of cloud files against your local index.</span><code>--ds-text-base</code></div>
+              <div class="type-row"><span class="type-label">Mono</span><span class="type-mono">report_data.json · 1,434,971 files</span><code>--ds-font-mono</code></div>
+            </div>
+          </div>
+
+          <div class="foundation-block">
+            <h3 class="block-title">Radius &amp; elevation</h3>
+            <div class="radius-row">
+              <span class="radius-sample r-xs">5</span>
+              <span class="radius-sample r-sm">7</span>
+              <span class="radius-sample r-md">10</span>
+              <span class="radius-sample r-lg">14</span>
+              <span class="radius-sample r-xl">20</span>
+              <span class="radius-sample r-pill">999</span>
+            </div>
+            <div class="elevation-row">
+              <span class="elevation-sample e-1">shadow</span>
+              <span class="elevation-sample e-2">soft</span>
+              <span class="elevation-sample e-3">popover</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="foundation-grid">
+          <div class="foundation-block">
+            <h3 class="block-title">Spacing</h3>
+            <div class="space-row">
+              <span style="--size:4px"></span><span style="--size:8px"></span><span style="--size:12px"></span>
+              <span style="--size:16px"></span><span style="--size:24px"></span><span style="--size:32px"></span>
+              <span style="--size:56px"></span><span style="--size:72px"></span>
+            </div>
+            <p class="ds-hint">4 · 8 · 12 · 16 · 24 · 32 · 56 · 72 px</p>
+          </div>
+          <div class="foundation-block">
+            <h3 class="block-title">Motion</h3>
+            <div class="motion-row">
+              <span class="motion-sample m-fast"><i></i><b>fast</b><code>210ms</code></span>
+              <span class="motion-sample m-base"><i></i><b>base</b><code>340ms</code></span>
+              <span class="motion-sample m-slow"><i></i><b>layout</b><code>520ms</code></span>
+            </div>
+            <p class="ds-hint">Ease-out <code>cubic-bezier(.16, 1, .3, 1)</code> for settling; linear for ambient water.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="show-section" id="components">
+      <div class="wrap">
+        <header class="section-head">
+          <span class="show-kicker">03 · Components</span>
+          <h2>The working set.</h2>
+          <p>Everything the product needs to communicate state: actions, verdicts, navigation, surfaces, and feedback.</p>
+        </header>
+
+        <div class="demo-grid">
+          <article class="demo">
+            <header class="demo-head"><h3>Buttons</h3><span class="demo-tag">.ds-btn</span></header>
+            <div class="demo-body ds-row">
+              <button class="ds-btn ds-btn--primary" type="button">Reveal counterpart</button>
+              <button class="ds-btn" type="button">Same path</button>
+              <button class="ds-btn ds-btn--ghost" type="button">Legend</button>
+              <button class="ds-btn ds-btn--quiet" type="button">Reset</button>
+              <button class="ds-btn ds-btn--danger" type="button">Remove</button>
+              <button class="ds-btn" type="button" disabled>Disabled</button>
+              <button class="ds-btn ds-icon-btn" type="button" aria-label="Search"><svg class="icon"><use href="#i-search"/></svg></button>
+            </div>
+          </article>
+
+          <article class="demo">
+            <header class="demo-head"><h3>Verdicts</h3><span class="demo-tag">.ds-badge</span></header>
+            <div class="demo-body ds-row">
+              <span class="ds-badge ds-badge--same"><span class="ds-dot"></span>Same</span>
+              <span class="ds-badge ds-badge--moved"><span class="ds-dot"></span>Moved</span>
+              <span class="ds-badge ds-badge--possible"><span class="ds-dot"></span>Maybe</span>
+              <span class="ds-badge ds-badge--partial"><span class="ds-dot"></span>Partial</span>
+              <span class="ds-badge ds-badge--missing"><span class="ds-dot"></span>Missing</span>
+              <span class="ds-badge ds-badge--local"><span class="ds-dot"></span>Local only</span>
+              <span class="ds-badge ds-badge--type"><span class="ds-dot"></span>Type differs</span>
+              <span class="ds-badge ds-badge--muted"><span class="ds-dot"></span>Not in cloud</span>
+            </div>
+          </article>
+
+          <article class="demo">
+            <header class="demo-head"><h3>Form controls</h3><span class="demo-tag">.ds-input · .ds-switch</span></header>
+            <div class="demo-body demo-form">
+              <label class="ds-field">
+                <span class="ds-label">Search scope</span>
+                <input class="ds-input" type="search" placeholder="Search local index…">
+              </label>
+              <label class="ds-field">
+                <span class="ds-label">Water tone</span>
+                <select class="ds-select">
+                  <option>Lagoon</option>
+                  <option selected>Ocean</option>
+                  <option>Deep</option>
+                </select>
+              </label>
+              <label class="ds-switch">
+                <input type="checkbox" checked>
+                <span class="ds-switch__track"><span class="ds-switch__thumb"></span></span>
+                <span>Glass surfaces</span>
+              </label>
+              <label class="ds-check"><input type="checkbox" checked> Show dotfiles</label>
+            </div>
+          </article>
+
+          <article class="demo">
+            <header class="demo-head"><h3>Segmented control</h3><span class="demo-tag">.ds-segmented</span></header>
+            <div class="demo-body">
+              <div class="ds-segmented" role="tablist" aria-label="Provider">
+                <button class="ds-segment" role="tab" aria-selected="true"><span class="ds-dot"></span>Jottacloud</button>
+                <button class="ds-segment" role="tab" aria-selected="false"><span class="ds-dot"></span>Google Drive</button>
+              </div>
+              <div class="ds-breadcrumbs" aria-label="Breadcrumb" style="margin-top:16px">
+                <button class="ds-crumb">tank</button><span class="ds-crumb-sep">/</span>
+                <button class="ds-crumb">Projects</button><span class="ds-crumb-sep">/</span>
+                <button class="ds-crumb">Aurora</button><span class="ds-crumb-sep">/</span>
+                <button class="ds-crumb" aria-current="page">web</button>
+              </div>
+              <div class="ds-search" style="margin-top:16px">
+                <svg class="icon"><use href="#i-search"/></svg>
+                <input type="search" placeholder="Search everywhere" aria-label="Search everywhere">
+                <span class="ds-kbd">⌘K</span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="demo-grid demo-grid--wide">
+          <article class="demo demo--pane">
+            <header class="demo-head"><h3>Two-pane list</h3><span class="demo-tag">.ds-pane</span></header>
+            <div class="demo-body">
+              <div class="pane-pair">
+                <div class="ds-pane is-active">
+                  <div class="ds-pane__head">
+                    <div class="ds-pane__title">
+                      <span class="ds-pane__icon"><svg class="icon"><use href="#i-folder"/></svg></span>
+                      <div class="ds-pane__titles">
+                        <h3>Local index <span class="faint">/mnt/tank</span></h3>
+                        <p>Snapshot · read-only</p>
+                      </div>
+                    </div>
+                    <span class="ds-chip ds-chip--accent">2.4M</span>
+                  </div>
+                  <div class="ds-pane__toolbar">
+                    <div class="ds-breadcrumbs">
+                      <button class="ds-crumb">tank</button><span class="ds-crumb-sep">/</span>
+                      <button class="ds-crumb">Projects</button><span class="ds-crumb-sep">/</span>
+                      <button class="ds-crumb" aria-current="page">Aurora</button>
+                    </div>
+                  </div>
+                  <div class="ds-pane__columns"><span>Name</span><span>Status</span><span>Size</span></div>
+                  <div class="ds-pane__rows">
+                    <div class="ds-pane__row"><span class="ds-pane__name"><svg class="icon is-folder"><use href="#i-folder"/></svg>src</span><span class="ds-badge ds-badge--in"><span class="ds-dot"></span>In Jottacloud</span><span class="ds-pane__size">—</span></div>
+                    <div class="ds-pane__row"><span class="ds-pane__name"><svg class="icon is-folder"><use href="#i-folder"/></svg>public</span><span class="ds-badge ds-badge--in"><span class="ds-dot"></span>In Jottacloud</span><span class="ds-pane__size">—</span></div>
+                    <div class="ds-pane__row"><span class="ds-pane__name"><svg class="icon is-file"><use href="#i-file"/></svg>package.json</span><span class="ds-badge ds-badge--in"><span class="ds-dot"></span>In Jottacloud</span><span class="ds-pane__size">2.1 KB</span></div>
+                    <div class="ds-pane__row is-selected"><span class="ds-pane__name"><svg class="icon is-file"><use href="#i-file"/></svg>README.md</span><span class="ds-badge ds-badge--moved"><span class="ds-dot"></span>Moved match</span><span class="ds-pane__size">11.4 KB</span></div>
+                    <div class="ds-pane__row"><span class="ds-pane__name"><svg class="icon is-file"><use href="#i-file"/></svg>legacy-build.sh</span><span class="ds-badge ds-badge--local"><span class="ds-dot"></span>Local only</span><span class="ds-pane__size">1.8 KB</span></div>
+                  </div>
+                  <div class="ds-pane__foot">
+                    <span class="ds-chip"><span class="ds-dot" style="color:var(--ds-green)"></span>In cloud <b>4</b></span>
+                    <span class="ds-chip"><span class="ds-dot" style="color:var(--ds-blue)"></span>Moved <b>1</b></span>
+                    <span class="ds-chip"><span class="ds-dot" style="color:var(--ds-violet)"></span>Local only <b>2</b></span>
+                  </div>
+                </div>
+
+                <div class="ds-pane">
+                  <div class="ds-pane__head">
+                    <div class="ds-pane__title">
+                      <span class="ds-pane__icon"><svg class="icon"><use href="#i-cloud"/></svg></span>
+                      <div class="ds-pane__titles">
+                        <h3>Jottacloud <span class="faint">Archive</span></h3>
+                        <p>archive.json · virtual view</p>
+                      </div>
+                    </div>
+                    <span class="ds-chip">87.7%</span>
+                  </div>
+                  <div class="ds-pane__toolbar">
+                    <div class="ds-breadcrumbs">
+                      <button class="ds-crumb">Archive</button><span class="ds-crumb-sep">/</span>
+                      <button class="ds-crumb">Projects</button><span class="ds-crumb-sep">/</span>
+                      <button class="ds-crumb" aria-current="page">Aurora</button>
+                    </div>
+                  </div>
+                  <div class="ds-pane__columns"><span>Name</span><span>Status</span><span>Size</span></div>
+                  <div class="ds-pane__rows">
+                    <div class="ds-pane__row"><span class="ds-pane__name"><svg class="icon is-folder"><use href="#i-folder"/></svg>src</span><span class="ds-badge ds-badge--same"><span class="ds-dot"></span>Same</span><span class="ds-pane__size">—</span></div>
+                    <div class="ds-pane__row"><span class="ds-pane__name"><svg class="icon is-folder"><use href="#i-folder"/></svg>public</span><span class="ds-badge ds-badge--same"><span class="ds-dot"></span>Same</span><span class="ds-pane__size">—</span></div>
+                    <div class="ds-pane__row"><span class="ds-pane__name"><svg class="icon is-file"><use href="#i-file"/></svg>package.json</span><span class="ds-badge ds-badge--same"><span class="ds-dot"></span>Same</span><span class="ds-pane__size">2.1 KB</span></div>
+                    <div class="ds-pane__row is-selected"><span class="ds-pane__name"><svg class="icon is-file"><use href="#i-file"/></svg>README.md</span><span class="ds-badge ds-badge--moved"><span class="ds-dot"></span>Moved</span><span class="ds-pane__size">11.4 KB</span></div>
+                    <div class="ds-pane__row"><span class="ds-pane__name"><svg class="icon is-folder"><use href="#i-folder"/></svg>node_modules</span><span class="ds-badge ds-badge--missing"><span class="ds-dot"></span>Missing</span><span class="ds-pane__size">—</span></div>
+                  </div>
+                  <div class="ds-pane__foot">
+                    <span class="ds-chip"><span class="ds-dot" style="color:var(--ds-green)"></span>Same <b>3</b></span>
+                    <span class="ds-chip"><span class="ds-dot" style="color:var(--ds-blue)"></span>Moved <b>1</b></span>
+                    <span class="ds-chip"><span class="ds-dot" style="color:var(--ds-red)"></span>Missing <b>2</b></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="demo-grid">
+          <article class="demo">
+            <header class="demo-head"><h3>Command bar</h3><span class="demo-tag">.ds-command</span></header>
+            <div class="demo-body">
+              <div class="ds-command">
+                <div class="ds-command__input">
+                  <svg class="icon"><use href="#i-search"/></svg>
+                  <input type="text" placeholder="Search files and folders, or run a command…" aria-label="Command bar">
+                  <span class="ds-kbd">Esc</span>
+                </div>
+                <div class="ds-command__list">
+                  <div class="ds-command__group">Commands</div>
+                  <div class="ds-command__item is-active"><svg class="icon"><use href="#i-layers"/></svg>Reveal counterpart<span class="ds-kbd">↵</span></div>
+                  <div class="ds-command__item"><svg class="icon"><use href="#i-search"/></svg>Search everywhere<span class="ds-kbd">⌘F</span></div>
+                  <div class="ds-command__item"><svg class="icon"><use href="#i-drop"/></svg>Toggle water effects</div>
+                </div>
+                <div class="ds-command__foot"><span>↑ ↓ to move</span><span>esc to close</span></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="demo">
+            <header class="demo-head"><h3>Feedback &amp; callouts</h3><span class="demo-tag">.ds-toast · .ds-callout</span></header>
+            <div class="demo-body ds-stack">
+              <span class="ds-toast"><span class="ds-dot"></span>Copied report path</span>
+              <div class="ds-callout">
+                <svg class="ds-callout__icon icon"><use href="#i-shield"/></svg>
+                <div><strong>Read-only.</strong> The explorer opens SQLite read-only and never writes to either source.</div>
+              </div>
+              <div class="ds-callout ds-callout--warning">
+                <svg class="ds-callout__icon icon"><use href="#i-search"/></svg>
+                <div><strong>Missing ≠ deleted.</strong> Check the index caveat before acting on a red row.</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="demo">
+            <header class="demo-head"><h3>Stats</h3><span class="demo-tag">.ds-stat</span></header>
+            <div class="demo-body stats-demo">
+              <div class="ds-stat"><span class="ds-stat__value">1.43M</span><span class="ds-stat__label">cloud files compared</span></div>
+              <div class="ds-stat"><span class="ds-stat__value">7.1 TB</span><span class="ds-stat__label">catalogued</span></div>
+              <div class="ds-stat"><span class="ds-stat__value is-accent">87.7%</span><span class="ds-stat__label">verified</span></div>
+              <div class="ds-stat"><span class="ds-stat__value">176,971</span><span class="ds-stat__label">need a look</span></div>
+            </div>
+          </article>
+
+          <article class="demo">
+            <header class="demo-head"><h3>Cards</h3><span class="demo-tag">.ds-card</span></header>
+            <div class="demo-body">
+              <article class="ds-card ds-card--accent" style="padding:20px">
+                <span class="ds-card__eyebrow">Provider</span>
+                <h3>Jottacloud Archive</h3>
+                <p>Snapshot the Archive mountpoint with rclone and compare it against the local index.</p>
+                <div class="ds-row" style="margin-top:14px">
+                  <a class="ds-btn ds-btn--small" href="../docs/guides/jottacloud/">Jottacloud guide <svg class="icon"><use href="#i-arrow"/></svg></a>
+                </div>
+              </article>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="show-section" id="water">
+      <div class="wrap">
+        <header class="section-head">
+          <span class="show-kicker">04 · Water</span>
+          <h2>The theme is a place.</h2>
+          <p>Move your cursor across the pond, click to send a ring outward, and change the current without reloading.</p>
+        </header>
+
+        <div class="water-grid">
+          <div class="ds-ripple-pond" id="ripple-pond">
+            <canvas id="pond-fx" aria-hidden="true"></canvas>
+            <span class="ds-ripple-pond__label"><span class="ds-dot"></span> Ripple pond · try it</span>
+          </div>
+
+          <div class="glass-stage ds-glass-demo">
+            <article class="ds-card ds-card--glass" style="max-width:330px">
+              <span class="ds-card__icon"><svg class="icon"><use href="#i-drop"/></svg></span>
+              <h3>Glass over water</h3>
+              <p>Working surfaces get a frosted pane. Ambient light stays visible, but content stays readable.</p>
+              <div class="ds-row" style="margin-top:16px">
+                <span class="ds-badge ds-badge--same"><span class="ds-dot"></span>WCAG AA</span>
+                <span class="ds-badge ds-badge--muted">18px blur</span>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="water-notes">
+          <div class="water-note"><span>Sea</span><p>One fixed background gradient. No image assets, no layout shift.</p></div>
+          <div class="water-note"><span>Currents</span><p>Three SVG wave bands roll at different speeds. They pause with reduced motion or effects off.</p></div>
+          <div class="water-note"><span>Caustics</span><p>Five low-alpha radial gradients drift behind the app on a canvas. Screen blend keeps them light.</p></div>
+          <div class="water-note"><span>Drops</span><p>Pointer drips are throttled by distance and time; clicks get one larger, slower ring.</p></div>
+        </div>
+
+        <div class="tone-table" role="table" aria-label="Water tones">
+          <div class="tone-row tone-row--head" role="row"><span>Tone</span><span>Accent</span><span>Background</span><span>Feeling</span></div>
+          <div class="tone-row" role="row"><span><i class="tone-dot" style="--swatch:#55f0e0"></i>Lagoon</span><span><code>#55F0E0</code></span><span><code>#06414C</code></span><span>Bright, tropical, optimistic</span></div>
+          <div class="tone-row" role="row"><span><i class="tone-dot" style="--swatch:#38d6ff"></i>Ocean</span><span><code>#38D6FF</code></span><span><code>#06232E</code></span><span>Clear, focused, default</span></div>
+          <div class="tone-row" role="row"><span><i class="tone-dot" style="--swatch:#48b7ff"></i>Deep</span><span><code>#48B7FF</code></span><span><code>#03121F</code></span><span>Quiet, archival, late-night</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="show-section" id="usage">
+      <div class="wrap">
+        <header class="section-head">
+          <span class="show-kicker">05 · Usage</span>
+          <h2>Three lines to join the current.</h2>
+          <p>Import the tokens, import the primitives, then set the tone on the root element.</p>
+        </header>
+
+        <div class="usage-grid">
+          <div class="usage-block">
+            <div class="usage-head"><h3>Markup</h3><button class="ds-btn ds-btn--small ds-btn--quiet" type="button" data-copy-target="code-markup"><svg class="icon"><use href="#i-copy"/></svg><span>Copy</span></button></div>
+            <pre class="ds-code" id="code-markup"><code>&lt;link rel="stylesheet" href="tokens.css"&gt;
+&lt;link rel="stylesheet" href="components.css"&gt;
+
+&lt;html data-water-tone="ocean"
+      data-water-background="sea"&gt;
+
+&lt;button class="ds-btn ds-btn--primary"&gt;
+  Reveal counterpart
+&lt;/button&gt;</code></pre>
+          </div>
+
+          <div class="usage-block">
+            <div class="usage-head"><h3>Water surface</h3><button class="ds-btn ds-btn--small ds-btn--quiet" type="button" data-copy-target="code-water"><svg class="icon"><use href="#i-copy"/></svg><span>Copy</span></button></div>
+            <pre class="ds-code" id="code-water"><code>import { WaterSurface } from "./water.js";
+
+const water = new WaterSurface(
+  document.querySelector("#water-fx"),
+  {
+    tone: "ocean",
+    speed: "flowing",
+    intensity: "subtle",
+    effects: true,
+    caustics: true,
+  },
+);
+
+water.setTone("lagoon");</code></pre>
+          </div>
+        </div>
+
+        <div class="usage-note ds-callout">
+          <svg class="ds-callout__icon icon"><use href="#i-check"/></svg>
+          <div>
+            <strong>Accessibility contract.</strong> Motion stops under
+            <code>prefers-reduced-motion</code>, every control has a visible focus ring, status is
+            never carried by colour alone, and the water canvas is decorative
+            (<code>aria-hidden</code>, pointer-events: none).
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="show-footer">
+    <div class="wrap show-footer__inner">
+      <div>
+        <a class="show-brand" href="../">
+          <span class="show-brand__mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none">
+              <rect x="2.5" y="6.5" width="18" height="13" rx="4" class="mark-back"/>
+              <rect x="11.5" y="12.5" width="18" height="13" rx="4" class="mark-front"/>
+              <path d="m15.5 19 2.2 2.2 4.4-4.8" class="mark-check"/>
+            </svg>
+          </span>
+          <span class="show-brand__text">Water<span>design system</span></span>
+        </a>
+        <p>Extracted from the Data Cloud Compare explorer. Plain CSS custom properties, no build step required.</p>
+      </div>
+      <nav class="show-footer__links" aria-label="Footer">
+        <a href="../">Product</a>
+        <a href="../docs/">Documentation</a>
+        <a href="../docs/getting-started/quickstart/">Quickstart</a>
+        <a href="../docs/concepts/matching/">Matching model</a>
+      </nav>
+      <span class="show-footer__meta">© <span data-year>2026</span> Data Cloud Compare · <span data-tone-label>Ocean</span></span>
+    </div>
+  </footer>
+</body>
+</html>

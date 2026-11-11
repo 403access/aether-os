@@ -1,0 +1,23 @@
+{
+  "name": "@aether/design-system",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "type": "module",
+  "description": "The Water design system: tokens, component primitives and water effects for every Aether surface.",
+  "exports": {
+    ".": "./tokens.css",
+    "./tokens.css": "./tokens.css",
+    "./components.css": "./components.css",
+    "./water.js": "./water.js",
+    "./showcase": "./index.html"
+  },
+  "files": [
+    "tokens.css",
+    "components.css",
+    "water.js",
+    "index.html",
+    "showcase.css",
+    "showcase.js"
+  ],
+  "license": "MIT"
+}

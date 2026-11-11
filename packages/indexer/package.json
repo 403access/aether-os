@@ -1,0 +1,16 @@
+{
+  "name": "@aether/indexer",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "type": "module",
+  "description": "In-memory BM25 + prefix + fuzzy search engine and filesystem ingestion.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@aether/protocol": "workspace:*"
+  }
+}

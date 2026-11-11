@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "createdAt": "2026-11-11T23:46:48.150Z",
+  "tolerance": 0.25,
+  "metrics": {
+    "index.build": {
+      "value": 80.2,
+      "unit": "ms",
+      "direction": "lower"
+    },
+    "index.query.p50": {
+      "value": 1646.29,
+      "unit": "µs",
+      "direction": "lower"
+    },
+    "index.query.p95": {
+      "value": 2225.25,
+      "unit": "µs",
+      "direction": "lower"
+    },
+    "ipc.ring.throughput": {
+      "value": 4461315,
+      "unit": "msgs/s",
+      "direction": "higher"
+    },
+    "capability.verify": {
+      "value": 9214679,
+      "unit": "ops/s",
+      "direction": "higher"
+    },
+    "palette.query.p50": {
+      "value": 779.54,
+      "unit": "µs",
+      "direction": "lower"
+    }
+  }
+}

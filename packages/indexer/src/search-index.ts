@@ -284,7 +284,7 @@ export class SearchIndex {
       perTerm.push({ weights, documentFrequency: weights.size, usedFuzzy });
     }
 
-    const scored: Array<{ entry: Entry; hit: SearchHit }> = [];
+    const scored: Array<{ entry: Entry; score: number; usedFuzzy: boolean }> = [];
 
     for (const entry of entries) {
       let relevance = 0;
@@ -311,31 +311,34 @@ export class SearchIndex {
       // happen per term, so typos still satisfy the clause.
       if (matchedTerms !== perTerm.length) continue;
 
-      const source = matchSource(entry, terms, usedFuzzy);
-      const score =
-        relevance +
-        KIND_PRIOR[entry.doc.kind] +
-        titleBoost(entry.titleFolded, terms) +
-        recencyBoost(entry.modifiedAt, now) +
-        usageBoost(entry.uses);
-
       scored.push({
         entry,
-        hit: {
-          id: entry.doc.id,
-          kind: entry.doc.kind,
-          title: entry.doc.title,
-          ...(entry.doc.subtitle === undefined ? {} : { subtitle: entry.doc.subtitle }),
-          ...(entry.doc.path === undefined ? {} : { path: entry.doc.path }),
-          score,
-          source,
-          highlights: highlightTitle(entry.doc.title, terms, source),
-        },
+        score:
+          relevance +
+          KIND_PRIOR[entry.doc.kind] +
+          titleBoost(entry.titleFolded, terms) +
+          recencyBoost(entry.modifiedAt, now) +
+          usageBoost(entry.uses),
+        usedFuzzy,
       });
     }
 
-    scored.sort((a, b) => compareHits(a.hit, b.hit));
-    return scored.slice(0, limit).map((item) => item.hit);
+    // Rank first; only the survivors pay for source classification and
+    // highlight mapping (the dominant per-hit cost at 5k documents).
+    scored.sort((a, b) => compareScored(a, b));
+    return scored.slice(0, limit).map(({ entry, score, usedFuzzy }) => {
+      const source = matchSource(entry, terms, usedFuzzy);
+      return {
+        id: entry.doc.id,
+        kind: entry.doc.kind,
+        title: entry.doc.title,
+        ...(entry.doc.subtitle === undefined ? {} : { subtitle: entry.doc.subtitle }),
+        ...(entry.doc.path === undefined ? {} : { path: entry.doc.path }),
+        score,
+        source,
+        highlights: highlightTitle(entry.doc.title, terms, source),
+      };
+    });
   }
 
   snapshot(): SerializedIndex {
@@ -464,9 +467,24 @@ function matchSource(entry: Entry, terms: readonly string[], usedFuzzy: boolean)
 
 function compareHits(a: SearchHit, b: SearchHit): number {
   if (b.score !== a.score) return b.score - a.score;
-  const titleOrder = a.title.localeCompare(b.title);
+  const titleOrder = compareText(a.title, b.title);
   if (titleOrder !== 0) return titleOrder;
-  return a.id.localeCompare(b.id);
+  return compareText(a.id, b.id);
+}
+
+function compareScored(
+  a: { entry: Entry; score: number },
+  b: { entry: Entry; score: number },
+): number {
+  if (b.score !== a.score) return b.score - a.score;
+  const titleOrder = compareText(a.entry.doc.title, b.entry.doc.title);
+  if (titleOrder !== 0) return titleOrder;
+  return compareText(a.entry.doc.id, b.entry.doc.id);
+}
+
+/** Code-unit comparison: deterministic and much cheaper than localeCompare. */
+function compareText(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0;
 }
 
 function rankDefault(entries: readonly Entry[], limit: number, now: number): SearchHit[] {

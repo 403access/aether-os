@@ -1,0 +1,21 @@
+{
+  "name": "@aether/bench",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "type": "module",
+  "description": "Benchmark harness and regression gate for Aether packages.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "bench": "bun run src/cli.ts",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@aether/agents": "workspace:*",
+    "@aether/indexer": "workspace:*",
+    "@aether/ipc": "workspace:*",
+    "@aether/palette": "workspace:*",
+    "@aether/protocol": "workspace:*"
+  }
+}

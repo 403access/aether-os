@@ -169,11 +169,12 @@ export class PaletteEngine {
       const { provider, items } = outcome;
       for (const item of items) {
         if (mode !== "all" && item.mode !== undefined && item.mode !== mode) continue;
-        if (term.length > 0 && !matchesTerm(item, term)) continue;
+        const score = scoreItem(item, term, provider);
+        if (score === null) continue;
         candidates.push({
           ...item,
-          score: scoreItem(item, term, provider),
-          highlights: item.highlights ?? highlight(item.title, term),
+          score,
+          highlights: item.highlights ?? [],
           providerId: provider.id,
         });
       }
@@ -182,7 +183,12 @@ export class PaletteEngine {
     const deduped = dedupe(candidates, (providerId) => this.#providers.get(providerId)?.priority ?? 0);
     deduped.sort(compareItems);
 
-    const items = deduped.slice(0, limit);
+    // Highlight only what will actually be rendered.
+    const items = deduped.slice(0, limit).map((item) => ({
+      ...item,
+      highlights:
+        item.highlights.length > 0 ? item.highlights : highlight(item.title, term),
+    }));
     const groups = groupItems(items);
     const stale = requestId !== this.#request;
     if (stale && options.rejectStale === true) throw abortError();
@@ -226,20 +232,21 @@ export function executeSelection(result: PaletteResult): PaletteItemResult | nul
 // Ranking
 // ---------------------------------------------------------------------------
 
-function matchesTerm(item: PaletteItem, term: string): boolean {
-  const haystack = `${item.title} ${item.keywords ?? ""} ${item.subtitle ?? ""}`;
-  return subsequenceScore(term, haystack) !== null;
-}
-
-function scoreItem(item: PaletteItem, term: string, provider: PaletteProvider): number {
+function scoreItem(
+  item: PaletteItem,
+  term: string,
+  provider: PaletteProvider,
+): number | null {
   const providerBias = provider.priority ?? 0;
   const weight = item.weight ?? 0;
   const supplied = item.score === undefined ? 0 : Math.min(Math.abs(item.score), 10) * 0.15;
 
   if (term.length === 0) return providerBias * 0.05 + weight + supplied;
 
-  const haystack = `${item.title} ${item.keywords ?? ""}`;
-  const fuzzy = subsequenceScore(term, haystack) ?? 0;
+  const haystack = `${item.title} ${item.keywords ?? ""} ${item.subtitle ?? ""}`;
+  const fuzzy = subsequenceScore(term, haystack);
+  if (fuzzy === null) return null;
+
   const title = fold(item.title);
   const query = fold(term);
 
@@ -276,9 +283,13 @@ function dedupe(
 
 function compareItems(a: PaletteItemResult, b: PaletteItemResult): number {
   if (b.score !== a.score) return b.score - a.score;
-  const category = a.category.localeCompare(b.category);
+  const category = compareText(a.category, b.category);
   if (category !== 0) return category;
-  return a.title.localeCompare(b.title);
+  return compareText(a.title, b.title);
+}
+
+function compareText(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0;
 }
 
 function groupItems(items: readonly PaletteItemResult[]): PaletteGroup[] {

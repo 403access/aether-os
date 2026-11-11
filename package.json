@@ -26,10 +26,16 @@
     "verify": "bun run typecheck && bun run test:unit && bun run build"
   },
   "devDependencies": {
+    "@happy-dom/global-registrator": "^21.0.4",
     "@playwright/test": "^1.56.0",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
     "@types/bun": "^1.3.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "happy-dom": "^21.0.4",
+    "react": "^19",
+    "react-dom": "^19",
     "typescript": "^5.9.0"
   }
 }

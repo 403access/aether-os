@@ -1,0 +1,17 @@
+{
+  "name": "@aether/agents",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "type": "module",
+  "description": "Isolation planning, admission control and capability-gated collaboration for agents.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@aether/ipc": "workspace:*",
+    "@aether/protocol": "workspace:*"
+  }
+}

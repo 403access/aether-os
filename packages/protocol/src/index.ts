@@ -173,7 +173,7 @@ export interface AgentSpec {
   timeoutMs?: number;
 }
 
-export type Enforcement = "pku" | "landlock-seccomp" | "microvm-vfio";
+export type Enforcement = "pku" | "landlock-seccomp" | "microvm-vfio" | "none";
 
 export interface IsolationPlan {
   agentId: string;
@@ -184,6 +184,9 @@ export interface IsolationPlan {
   warnings: string[];
   /** True when the plan needs root/CAP_SYS_ADMIN on the host. */
   privileged: boolean;
+  /** True when the agent must not be launched as specified. */
+  blocked: boolean;
+  blockers: string[];
 }
 
 export interface HardwareProfile {
@@ -198,6 +201,8 @@ export interface HardwareProfile {
   instructionSets: readonly string[];
   /** Intel Memory Protection Keys (WRPKRU). Absent before Skylake-SP. */
   pku: boolean;
+  /** Linux Landlock LSM (5.13+). Required for zero-privilege filesystem jails. */
+  landlock: boolean;
   vtX: boolean;
   vtD: boolean;
   igpu: string | null;
@@ -218,6 +223,7 @@ export const KABYLAKE_7700K: HardwareProfile = {
   l3CacheMiB: 8,
   instructionSets: ["SSE4.2", "AVX2", "BMI2", "FMA3"],
   pku: false,
+  landlock: true,
   vtX: true,
   vtD: true,
   igpu: "Intel HD Graphics 630",

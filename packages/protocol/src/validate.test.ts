@@ -30,6 +30,7 @@ describe("protocol constants", () => {
     expect(KABYLAKE_7700K.threads).toBe(8);
     // Kaby Lake predates PKU; the isolation planner depends on this fact.
     expect(KABYLAKE_7700K.pku).toBe(false);
+    expect(KABYLAKE_7700K.landlock).toBe(true);
     expect(KABYLAKE_7700K.instructionSets).toContain("AVX2");
   });
 

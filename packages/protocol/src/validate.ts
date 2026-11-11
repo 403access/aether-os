@@ -305,10 +305,10 @@ export function parseCapability(input: unknown): Parsed<Capability> {
     scope,
     resource,
     issuedAt,
-    expiresAt,
+    expiresAt: expiresAt ?? null,
     delegable: input["delegable"],
     generation,
-    parentId,
+    parentId: parentId ?? null,
   };
   return ok(capability);
 }

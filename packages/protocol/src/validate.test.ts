@@ -8,6 +8,7 @@ import {
   parseAgentSpec,
   parseCapability,
   parseIndexDocument,
+  type IndexDocument,
 } from "./index";
 
 const validDocument = {
@@ -20,7 +21,7 @@ const validDocument = {
   tags: ["docs", "readme"],
   modifiedAt: 1_760_000_000_000,
   uses: 12,
-};
+} satisfies IndexDocument;
 
 describe("protocol constants", () => {
   test("exposes a versioned protocol and the reference machine", () => {

@@ -1,0 +1,16 @@
+{
+  "name": "@aether/ipc",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared-memory SPSC ring buffer and capability table for Aether OS.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@aether/protocol": "workspace:*"
+  }
+}

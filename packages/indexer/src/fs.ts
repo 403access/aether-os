@@ -148,11 +148,12 @@ export async function scanDirectory(
   const includeHidden = options.includeHidden ?? false;
   const absoluteRoot = resolve(root);
   const documents: IndexDocument[] = [];
+  const aborted = (): boolean => options.signal?.aborted === true;
 
   async function walk(directory: string, depth: number): Promise<void> {
     if (documents.length >= maxFiles) return;
     if (depth > maxDepth) return;
-    if (options.signal?.aborted === true) return;
+    if (aborted()) return;
 
     let entries;
     try {
@@ -164,7 +165,7 @@ export async function scanDirectory(
 
     for (const entry of entries) {
       if (documents.length >= maxFiles) return;
-      if (options.signal?.aborted === true) return;
+      if (aborted()) return;
       if (entry.isSymbolicLink()) continue;
 
       const fullPath = join(directory, entry.name);

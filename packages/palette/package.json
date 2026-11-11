@@ -1,0 +1,17 @@
+{
+  "name": "@aether/palette",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "type": "module",
+  "description": "Headless command palette: providers, ranking, grouping, keyboard navigation.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@aether/indexer": "workspace:*",
+    "@aether/protocol": "workspace:*"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "@aether/protocol",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared domain model and runtime validation for Aether OS.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  }
+}

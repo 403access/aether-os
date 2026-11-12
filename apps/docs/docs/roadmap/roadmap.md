@@ -79,9 +79,10 @@ Deliverables:
   Linux crate so the core stays toolkit-free.
 - ✅ xdg-shell/shm clients map into shell windows, tile and are configured to
   their rects; keyboard/pointer focus, buttons and axis; two terminals verified.
-- ✅ Workspace shortcuts (`Super+1/2/3`), window moves, close, workspace indicator
-  bars, and a modal shell overlay above clients (`Super+Space`).
-- ⏳ Workspace labels/picker, interactive move/resize, cursor theme, per-client
+- ✅ Workspace shortcuts (`Super+1/2/3`), window moves, close, labelled
+  indicators, a clickable workspace picker, and a modal shell overlay above
+  clients (`Super+Space`). Verified by an xdotool click smoke test.
+- ⏳ Overlay query/results, interactive move/resize, cursor theme, per-client
   damage, udev/DRM.
 - ⏳ udev/DRM backend, libinput seat, wgpu renderer, output hotplug.
 - Scene graph with damage tracking; shell chrome in one draw pass.

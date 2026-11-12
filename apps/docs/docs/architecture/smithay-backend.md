@@ -31,6 +31,12 @@ aether-shell (policy) ──> FramePlan ──> aether-shell-smithay (Linux)
 results and hints are real bitmap text rasterized by `aether-text`; the labelled
 bars at top-left are workspace indicators (active is bright).*
 
+![Clicking the second workspace indicator](/img/smithay-workspace-picker.png)
+
+*Clicking a labelled indicator switches workspace; the active chip is cyan. The
+capture is produced by `smoke-picker-xvfb.sh`, which drives the click with
+`xdotool` and asserts the shell log.*
+
 ![The `--demo` FramePlan view](/img/smithay-window.png)
 
 *`--demo` mode: tiled shell surfaces and the overlay, rendered from the same
@@ -52,6 +58,9 @@ bars at top-left are workspace indicators (active is bright).*
 - Workspace switching and window moves via shortcuts, with three labelled
   workspace indicator bars at the top-left:
   `Super+1/2/3`, `Super+Shift+1/2/3`, `Super+Q` to close.
+- **Clickable workspace picker.** Clicking an indicator chip (bar or label)
+  switches workspace. Chrome consumes pointer motion/buttons, so clicks never
+  leak to a client underneath. The seat advertises `wl_pointer`.
 - Compositor chrome renders real text through `aether-text`: workspace names,
   overlay header/search/results/footer and shortcut hints. Bitmaps are uploaded
   as Smithay `MemoryRenderBuffer` elements above client surfaces.
@@ -73,10 +82,9 @@ bars at top-left are workspace indicators (active is bright).*
 
 ## What is not implemented
 
-- **Workspace picker.** Indicators are labelled, but there is no clickable
-  workspace picker.
 - **Overlay content/interaction.** It renders text and is modal, but has no
-  editable query, filtering or selectable results yet.
+  editable query, filtering or selectable result actions yet. Row hints are
+  labels, not buttons.
 - **Text cache/atlas.** Every frame rebuilds small RGBA text buffers; a cached
   atlas is needed before text-heavy apps.
 - **Cursor theming** and hover cursor feedback.
@@ -114,9 +122,11 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 # headless verification:
 ./os/compositor/aether-shell-smithay/smoke-xvfb.sh          # --demo
 ./os/compositor/aether-shell-smithay/smoke-client-xvfb.sh   # weston-terminal
+./os/compositor/aether-shell-smithay/smoke-picker-xvfb.sh   # xdotool workspace click
 ```
 
-The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client.
+The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. The picker
+smoke also requires `xdotool`, which the `.#smithay` dev shell provides.
 
 The environment sets:
 

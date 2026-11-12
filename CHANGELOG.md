@@ -16,9 +16,12 @@ semantic versioning with release codenames (0.1 = “Kestrel”).
   clients (`Super+Space`, modal, `Esc` closes), workspace shortcuts
   (`Super+1/2/3`), window moves (`Super+Shift+1/2/3`), `Super+Q` close and
   labelled workspace indicators. Text is rasterized by `aether-text` and
-  uploaded as Smithay memory buffers. Workspace picker, interactive resize,
-  cursor theming, per-client damage and udev/DRM remain. Nix dev shell
-  `.#smithay`, demo/client smoke scripts, ADR-0012.
+  uploaded as Smithay memory buffers. Adds a clickable workspace picker with
+  chrome pointer capture, advertises `wl_pointer` (fixing a motion panic), titles
+  the window "Aether OS" and verifies the picker with an xdotool smoke script.
+  Overlay actions, interactive resize, cursor theming, per-client damage and
+  udev/DRM remain. Nix dev shell `.#smithay`, demo/client/picker smoke scripts,
+  ADR-0012.
 - **Backend-neutral shell state** — `aether-shell` owns windows, workspaces, focus,
   floating windows, the overlay and `FramePlan`, with no Wayland/GPU dependency.
   `aether-preview` renders frame plans to PNG (`aether-shell-preview`), providing

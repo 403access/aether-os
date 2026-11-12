@@ -1,0 +1,21 @@
+[package]
+name = "aether-shell-smithay"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Linux-only Smithay winit backend for the Aether shell (development adapter)"
+
+# Standalone: never part of the default workspace, so macOS/CI do not try to
+# build Smithay. Build with --manifest-path on Linux.
+[workspace]
+
+[[bin]]
+name = "aether-shell-smithay"
+path = "src/main.rs"
+
+[dependencies]
+smithay = { version = "0.7", default-features = false, features = ["backend_winit"] }
+aether-geometry = { path = "../crates/aether-geometry" }
+aether-layout = { path = "../crates/aether-layout" }
+aether-shell = { path = "../crates/aether-shell" }
+aether-scene = { path = "../crates/aether-scene" }

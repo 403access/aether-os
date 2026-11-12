@@ -18,6 +18,58 @@
         config.allowUnfree = true;
       };
 
+      # Linux-only Smithay backend dependencies. Kept out of the default shell
+      # and workspace so macOS/CI never try to build a Wayland compositor.
+      mkSmithayShell = shellSystem: let
+        shellPkgs = import nixpkgs {
+          system = shellSystem;
+          config.allowUnfree = true;
+        };
+      in
+        shellPkgs.mkShell {
+          packages = with shellPkgs; [
+            cargo
+            rustc
+            clippy
+            rustfmt
+            pkg-config
+            wayland
+            libxkbcommon
+            libglvnd
+            libGL
+            mesa
+            libx11
+            libxcursor
+            libxi
+            libxrandr
+            libxinerama
+            libxext
+            libxcb
+            xvfb
+            imagemagick
+          ];
+          shellHook = ''
+            export LD_LIBRARY_PATH="${shellPkgs.lib.makeLibraryPath [
+              shellPkgs.wayland
+              shellPkgs.libxkbcommon
+              shellPkgs.libglvnd
+              shellPkgs.libGL
+              shellPkgs.mesa
+              shellPkgs.libx11
+              shellPkgs.libxcursor
+              shellPkgs.libxi
+              shellPkgs.libxrandr
+              shellPkgs.libxinerama
+              shellPkgs.libxext
+              shellPkgs.libxcb
+            ]}:$LD_LIBRARY_PATH"
+            export LIBGL_DRIVERS_PATH="${shellPkgs.mesa}/lib/dri"
+            export __EGL_VENDOR_LIBRARY_FILENAMES="${shellPkgs.mesa}/share/glvnd/egl_vendor.d/50_mesa.json"
+            export MESA_LOADER_DRIVER_OVERRIDE=llvmpipe
+            export LIBGL_ALWAYS_SOFTWARE=1
+          '';
+        };
+
       # Keep local build artefacts out of the package source.
       sceneSource = nixpkgs.lib.cleanSourceWith {
         src = ./os/compositor;
@@ -91,7 +143,13 @@
         default = vm.config.system.build.images.qemu-efi;
       };
 
-      devShells.${system}.default = pkgs.mkShell {
+      devShells.aarch64-linux = {
+        smithay = mkSmithayShell "aarch64-linux";
+      };
+
+      devShells.${system} = {
+        smithay = mkSmithayShell system;
+        default = pkgs.mkShell {
         packages = with pkgs; [
           bun
           nodejs_22
@@ -102,12 +160,13 @@
           nixpkgs-fmt
           disko
         ];
-        shellHook = ''
-          echo "Aether dev shell"
-          echo "  bun install && bun run verify"
-          echo "  nix build .#iso"
-          echo "  cargo test --manifest-path os/compositor/Cargo.toml"
-        '';
+          shellHook = ''
+            echo "Aether dev shell"
+            echo "  bun install && bun run verify"
+            echo "  nix build .#iso"
+            echo "  cargo test --manifest-path os/compositor/Cargo.toml"
+          '';
+        };
       };
 
       formatter.${system} = pkgs.nixpkgs-fmt;

@@ -46,7 +46,7 @@ the next phase; first boot lands in a console, not the finished desktop.
 | aarch64 development VM target | ✅ built + booted headless in ~10–12 s (HVF) | `os/vm` |
 | disko disk layout + install script | ✅ written, evaluation-checked | `os/nixos/disko.nix`, `scripts/install.sh` |
 | Compositor core + shell state + preview | ✅ 49 Rust tests | `os/compositor` |
-| Smithay winit backend (Linux-only) | ✅ tiled xdg-shell clients rendered under Xvfb | `os/compositor/aether-shell-smithay` |
+| Smithay winit backend (Linux-only) | ✅ tiled clients, overlay + workspace shortcuts | `os/compositor/aether-shell-smithay` |
 | Compositor UI (`aether-shell`) | ⏳ roadmap P2 | — |
 | WebRTC remote display | ⏳ roadmap P7 | — |
 

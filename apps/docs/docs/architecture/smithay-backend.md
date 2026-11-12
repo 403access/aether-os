@@ -25,6 +25,11 @@ aether-shell (policy) ──> FramePlan ──> aether-shell-smithay (Linux)
 *Two real `weston-terminal` xdg-shell clients with shared-memory buffers, tiled by
 `aether-shell` and rendered by `aether-shell-smithay` under Xvfb.*
 
+![The shell overlay above a client](/img/smithay-overlay.png)
+
+*`Super+Space` toggles the shell overlay above clients. It is a solid panel until
+the text/glyph layer exists.*
+
 ![The `--demo` FramePlan view](/img/smithay-window.png)
 
 *`--demo` mode: tiled shell surfaces and the overlay, rendered from the same
@@ -39,22 +44,35 @@ aether-shell (policy) ──> FramePlan ──> aether-shell-smithay (Linux)
   the shell layout** and configured to their tile size. Two terminals are shown
   side-by-side in the screenshot.
 - Renders client surfaces with Smithay surface elements at their shell rects.
-- Pointer motion focuses the window under the cursor and forwards motion/buttons;
-  keyboard input goes to the focused surface.
+- Pointer motion focuses the window under the cursor and forwards motion/buttons
+  and axis; keyboard input goes to the focused surface.
+- The shell overlay is drawn above clients (`Super+Space`).
+- Workspace switching and window moves via shortcuts:
+  `Super+1/2/3`, `Super+Shift+1/2/3`, `Super+Q` to close.
 - Sends frame callbacks, handles client connect/disconnect/destroy and window close.
 - `--demo` mode presents the shell `FramePlan` as solid surfaces (z-order and
   overlay) for visual verification without clients.
 - Runs under Xvfb with Mesa software EGL for headless verification.
 - `--frames N` exits after N iterations for automated smoke tests.
 
+## Keyboard shortcuts
+
+| Shortcut | Action |
+| --- | --- |
+| `Super+Space` | Toggle the shell overlay above clients |
+| `Super+1/2/3` | Switch workspace |
+| `Super+Shift+1/2/3` | Move the focused client to a workspace |
+| `Super+Q` | Close the focused client |
+
 ## What is not implemented
 
-- **Workspaces have no UI/shortcuts yet.** Clients join the active workspace and
-  tile, but there is no keybinding/overlay to switch workspaces.
-- **No shell overlay in client mode.** The palette/chat overlay is only drawn in
-  `--demo`; integrating it above clients is next.
-- **Cursor theming and axis** are not handled; pointer motion/buttons are basic.
+- **Workspace indicator/UI.** Workspaces work and tile, but there is no on-screen
+  label or picker; the overlay is a solid panel, not the real palette UI.
+- **Overlay content/interaction.** It draws above clients, but has no text or
+  focus capture yet.
+- **Cursor theming** and hover cursor feedback.
 - **Interactive move/resize, popups and drag-and-drop** are ignored.
+- **Per-client damage.** Full-window redraw remains.
 - **Popups, drag-and-drop and grabs** are accepted/ignored at the protocol level.
 - **udev/DRM backend.** The target path for the 7700K (no X server) is not written;
   winit is the development adapter.
@@ -80,6 +98,9 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 
 # shell FramePlan demo (solid surfaces, no clients):
 ./os/compositor/aether-shell-smithay/target/debug/aether-shell-smithay --demo
+
+# show the overlay immediately (also Super+Space at runtime):
+./os/compositor/aether-shell-smithay/target/debug/aether-shell-smithay --overlay
 
 # headless verification:
 ./os/compositor/aether-shell-smithay/smoke-xvfb.sh          # --demo

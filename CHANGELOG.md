@@ -12,9 +12,11 @@ semantic versioning with release codenames (0.1 = “Kestrel”).
   Cargo crate) opens a Smithay/winit window. It now accepts xdg-shell/shm
   clients (verified with two real `weston-terminal` instances), maps them into
   `aether-shell` windows so they tile and are configured to their rects, and
-  forwards keyboard/pointer focus and buttons. A `--demo` mode keeps the solid
-  `FramePlan` view. Workspace UI, overlay above clients, interactive resize,
-  cursor theming and udev/DRM remain.
+  forwards keyboard/pointer focus, buttons and axis. Adds the shell overlay above
+  clients (`Super+Space`), workspace shortcuts (`Super+1/2/3`), window moves
+  (`Super+Shift+1/2/3`) and `Super+Q` close. A solid panel stands in for the
+  palette until text rendering. Workspace indicator/UI, interactive resize,
+  cursor theming, per-client damage and udev/DRM remain.
   Nix dev shell `.#smithay`, demo/client smoke scripts, ADR-0012.
 - **Backend-neutral shell state** — `aether-shell` owns windows, workspaces, focus,
   floating windows, the overlay and `FramePlan`, with no Wayland/GPU dependency.

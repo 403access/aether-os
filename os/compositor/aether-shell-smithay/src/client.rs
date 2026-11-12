@@ -15,9 +15,14 @@ use std::sync::Arc;
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect, Size as AetherSize};
 use aether_layout::LayoutConfig;
 use aether_shell::{Shell, WindowId, WindowSpec};
+use aether_text::{text_width, TextBitmap};
+use smithay::backend::allocator::Fourcc;
 use smithay::backend::input::{
     AbsolutePositionEvent, Axis, AxisSource, ButtonState, Event, InputEvent, KeyboardKeyEvent,
     PointerAxisEvent, PointerButtonEvent,
+};
+use smithay::backend::renderer::element::memory::{
+    MemoryRenderBuffer, MemoryRenderBufferRenderElement,
 };
 use smithay::backend::renderer::element::solid::{SolidColorBuffer, SolidColorRenderElement};
 use smithay::backend::renderer::element::surface::{
@@ -296,56 +301,143 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                 })
                 .collect();
 
-            let mut frame = renderer.render(&mut framebuffer, size, Transform::Flipped180)?;
-            frame.clear(Color32F::new(0.01, 0.06, 0.08, 1.0), &[damage])?;
-            // Client surfaces are painted over the shell background.
-            if !elements.is_empty() {
-                draw_render_elements(&mut frame, 1.0, &elements, &[damage])?;
-            }
-            // Compositor-owned chrome above clients. Until a glyph atlas exists
-            // these are solid blocks: palette structure + workspace indicators.
+            // Compositor-owned chrome above clients: palette structure,
+            // workspace indicators, labels and hints. Solid blocks carry the
+            // structure; aether-text supplies the glyphs.
             let mut chrome: Vec<(AetherRect, [f32; 4])> = Vec::new();
+            let mut labels: Vec<(String, i32, i32, u32, [u8; 4])> = Vec::new();
+
             if let Some(rect) = state.shell.overlay_rect() {
                 chrome.push((rect, [0.05, 0.24, 0.29, 0.96]));
                 chrome.push((
                     AetherRect::new(rect.x, rect.y, rect.width, 36.min(rect.height)),
                     [0.09, 0.42, 0.5, 1.0],
                 ));
+                labels.push((
+                    "Aether Palette".into(),
+                    rect.x + 14,
+                    rect.y + 10,
+                    2,
+                    [235, 252, 255, 255],
+                ));
+                let hint = "Super+Space";
+                labels.push((
+                    hint.into(),
+                    rect.x + rect.width as i32 - text_width(hint, 1) as i32 - 14,
+                    rect.y + 14,
+                    1,
+                    [179, 235, 250, 255],
+                ));
+
                 if rect.height > 96 {
-                    chrome.push((
-                        AetherRect::new(
-                            rect.x + 16,
-                            rect.y + 52,
-                            rect.width.saturating_sub(32),
-                            28,
-                        ),
-                        [0.03, 0.12, 0.16, 1.0],
+                    let input = AetherRect::new(
+                        rect.x + 16,
+                        rect.y + 52,
+                        rect.width.saturating_sub(32),
+                        28,
+                    );
+                    chrome.push((input, [0.03, 0.12, 0.16, 1.0]));
+                    labels.push((
+                        "Search files, windows, agents...".into(),
+                        input.x + 10,
+                        input.y + 10,
+                        1,
+                        [122, 173, 189, 255],
                     ));
-                    for row in 0..3 {
-                        let y = rect.y + 96 + row * 48;
+
+                    let rows = [
+                        "1  Open documentation",
+                        "2  Switch workspace",
+                        "3  Start agent session",
+                    ];
+                    for (row, text) in rows.iter().enumerate() {
+                        let y = rect.y + 96 + row as i32 * 48;
                         if y + 32 < rect.y + rect.height as i32 {
-                            chrome.push((
-                                AetherRect::new(rect.x + 16, y, rect.width.saturating_sub(32), 32),
-                                [0.05, 0.31, 0.37, 1.0],
+                            let row_rect =
+                                AetherRect::new(rect.x + 16, y, rect.width.saturating_sub(32), 32);
+                            chrome.push((row_rect, [0.05, 0.31, 0.37, 1.0]));
+                            labels.push((
+                                (*text).into(),
+                                row_rect.x + 10,
+                                row_rect.y + 12,
+                                1,
+                                [217, 247, 255, 255],
                             ));
                         }
                     }
+
+                    let footer = "Esc close   Enter run   Super+Space toggle";
+                    labels.push((
+                        footer.into(),
+                        rect.x + 16,
+                        rect.y + rect.height as i32 - 22,
+                        1,
+                        [128, 184, 199, 255],
+                    ));
                 }
             }
 
             let indicator_y = 10;
+            let names = state.shell.workspace_names();
             for workspace in 0..state.shell.workspace_count() {
                 let active = workspace == state.shell.active_workspace();
+                let x = 10 + workspace as i32 * 76;
                 chrome.push((
-                    AetherRect::new(10 + workspace as i32 * 46, indicator_y, 38, 6),
+                    AetherRect::new(x, indicator_y, 66, 6),
                     if active {
                         [0.22, 0.84, 1.0, 1.0]
                     } else {
                         [0.12, 0.3, 0.35, 0.9]
                     },
                 ));
+                let name = names.get(workspace).map(String::as_str).unwrap_or("");
+                labels.push((
+                    format!("{} {name}", workspace + 1),
+                    x + 4,
+                    indicator_y + 12,
+                    1,
+                    if active {
+                        [56, 214, 255, 255]
+                    } else {
+                        [102, 158, 173, 255]
+                    },
+                ));
             }
 
+            let text_elements: Vec<MemoryRenderBufferRenderElement<GlesRenderer>> = labels
+                .iter()
+                .filter_map(|(text, x, y, scale, color)| {
+                    let bitmap = TextBitmap::render(text, *scale, *color);
+                    if bitmap.is_empty() {
+                        return None;
+                    }
+                    let buffer = MemoryRenderBuffer::from_slice(
+                        bitmap.pixels(),
+                        Fourcc::Abgr8888,
+                        (bitmap.width() as i32, bitmap.height() as i32),
+                        1,
+                        Transform::Normal,
+                        None,
+                    );
+                    MemoryRenderBufferRenderElement::from_buffer(
+                        renderer,
+                        (*x as f64, *y as f64),
+                        &buffer,
+                        None,
+                        None,
+                        None,
+                        Kind::Unspecified,
+                    )
+                    .ok()
+                })
+                .collect();
+
+            let mut frame = renderer.render(&mut framebuffer, size, Transform::Flipped180)?;
+            frame.clear(Color32F::new(0.01, 0.06, 0.08, 1.0), &[damage])?;
+            // Client surfaces are painted over the shell background.
+            if !elements.is_empty() {
+                draw_render_elements(&mut frame, 1.0, &elements, &[damage])?;
+            }
             if !chrome.is_empty() {
                 let buffers: Vec<SolidColorBuffer> = chrome
                     .iter()
@@ -372,6 +464,13 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     &elements,
                     &[damage],
                 )?;
+            }
+            if !text_elements.is_empty() {
+                draw_render_elements::<
+                    GlesRenderer,
+                    f64,
+                    MemoryRenderBufferRenderElement<GlesRenderer>,
+                >(&mut frame, 1.0, &text_elements, &[damage])?;
             }
             let _ = frame.finish()?;
         }
@@ -559,6 +658,11 @@ struct App {
 
 impl App {
     fn handle_shortcut(&mut self, modifiers: &ModifiersState, keysym: Keysym) -> bool {
+        let escape: Keysym = keysyms::KEY_Escape.into();
+        if self.shell.overlay().is_some() && keysym == escape {
+            self.toggle_overlay();
+            return true;
+        }
         if !modifiers.logo {
             return false;
         }

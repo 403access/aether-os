@@ -49,7 +49,7 @@ dependencies = [
  "aether-layout",
  "aether-scene",
  "aether-shell",
- "font8x8",
+ "aether-text",
  "png",
 ]
 
@@ -70,6 +70,13 @@ dependencies = [
  "aether-layout",
  "aether-pacing",
  "aether-scene",
+]
+
+[[package]]
+name = "aether-text"
+version = "0.1.0"
+dependencies = [
+ "font8x8",
 ]
 
 [[package]]

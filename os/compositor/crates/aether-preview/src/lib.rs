@@ -13,7 +13,7 @@ use std::path::Path;
 
 use aether_geometry::{Rect, Size};
 use aether_shell::{FrameItem, FramePlan};
-use font8x8::{UnicodeFonts, BASIC_FONTS};
+use aether_text::TextBitmap;
 
 const BG_TOP: [u8; 4] = [5, 31, 41, 255];
 const BG_BOTTOM: [u8; 4] = [1, 9, 13, 255];
@@ -144,27 +144,36 @@ impl Canvas {
     }
 
     pub fn draw_text(&mut self, x: i32, y: i32, text: &str, scale: u32, color: [u8; 4]) {
-        let scale = scale.max(1) as i32;
-        let mut cursor = x;
-        for character in text.chars() {
-            if let Some(glyph) = BASIC_FONTS.get(character) {
-                for (row, bits) in glyph.iter().enumerate() {
-                    for column in 0..8 {
-                        if bits & (1 << column) != 0 {
-                            self.fill_rect(
-                                Rect::new(
-                                    cursor + column * scale,
-                                    y + row as i32 * scale,
-                                    scale as u32,
-                                    scale as u32,
-                                ),
-                                color,
-                            );
-                        }
-                    }
+        let bitmap = TextBitmap::render(text, scale, color);
+        self.blit_rgba(x, y, bitmap.width(), bitmap.height(), bitmap.pixels());
+    }
+
+    /// Alpha-composite a tightly cropped RGBA bitmap at `(x, y)`.
+    pub fn blit_rgba(&mut self, x: i32, y: i32, width: u32, height: u32, pixels: &[u8]) {
+        for row in 0..height {
+            for column in 0..width {
+                let index = ((row * width + column) * 4) as usize;
+                let source = &pixels[index..index + 4];
+                let alpha = source[3] as f32 / 255.0;
+                if alpha == 0.0 {
+                    continue;
                 }
+                let target_x = x + column as i32;
+                let target_y = y + row as i32;
+                if target_x < 0 || target_y < 0 {
+                    continue;
+                }
+                let Some(existing) = self.pixel(target_x as u32, target_y as u32) else {
+                    continue;
+                };
+                let blended = [
+                    (existing[0] as f32 * (1.0 - alpha) + source[0] as f32 * alpha) as u8,
+                    (existing[1] as f32 * (1.0 - alpha) + source[1] as f32 * alpha) as u8,
+                    (existing[2] as f32 * (1.0 - alpha) + source[2] as f32 * alpha) as u8,
+                    existing[3],
+                ];
+                self.put(target_x as u32, target_y as u32, blended);
             }
-            cursor += 8 * scale;
         }
     }
 

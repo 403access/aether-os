@@ -19,3 +19,4 @@ aether-geometry = { path = "../crates/aether-geometry" }
 aether-layout = { path = "../crates/aether-layout" }
 aether-shell = { path = "../crates/aether-shell" }
 aether-scene = { path = "../crates/aether-scene" }
+aether-text = { path = "../crates/aether-text" }

@@ -1,0 +1,13 @@
+[package]
+name = "aether-text"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Bitmap text rasterizer shared by the Aether preview and compositor backends"
+
+[lib]
+name = "aether_text"
+path = "src/lib.rs"
+
+[dependencies]
+font8x8 = "0.3"

@@ -18,5 +18,5 @@ aether-geometry.workspace = true
 aether-shell.workspace = true
 aether-scene.workspace = true
 aether-layout.workspace = true
-font8x8 = "0.3"
+aether-text.workspace = true
 png = "0.18"

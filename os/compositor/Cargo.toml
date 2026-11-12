@@ -7,6 +7,7 @@ members = [
   "crates/aether-scene",
   "crates/aether-compositor",
   "crates/aether-shell",
+  "crates/aether-text",
   "crates/aether-preview",
 ]
 resolver = "2"
@@ -24,6 +25,7 @@ aether-layout = { path = "crates/aether-layout" }
 aether-pacing = { path = "crates/aether-pacing" }
 aether-scene = { path = "crates/aether-scene" }
 aether-shell = { path = "crates/aether-shell" }
+aether-text = { path = "crates/aether-text" }
 
 [profile.release]
 lto = "thin"

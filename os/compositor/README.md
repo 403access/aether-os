@@ -17,7 +17,8 @@ aether-layout        master/stack tiling                        (geometry)
 aether-pacing        FramePacer, deadlines, missed frames       (no deps)
 aether-scene         Surface, Layer, Scene, hit testing          (geometry, damage)
 aether-shell         windows, workspaces, focus, FramePlan      (all core crates)
-aether-preview       software renderer + PNG preview            (shell)
+aether-text          8x8 bitmap text -> RGBA buffer              (font8x8)
+aether-preview       software renderer + PNG preview            (shell, text)
 aether-compositor    facade + prelude + demo binary             (core crates)
 
 aether-shell-smithay  Linux-only Smithay/winit backend (standalone crate,
@@ -34,6 +35,7 @@ Dependency direction is one-way. There are no cycles and no optional GPU code.
 | `aether-pacing` | You need a frame deadline scheduler |
 | `aether-scene` | You model surfaces, z-order and hit testing |
 | `aether-shell` | You need windows, workspaces, focus or frame plans |
+| `aether-text` | You need cropped bitmap text as RGBA pixels |
 | `aether-preview` | You want to render a frame to PNG without a display |
 | `aether-compositor` | You want the facade/prelude, or run the demo |
 
@@ -102,7 +104,7 @@ backend.
 | Phase | Work |
 | --- | --- |
 | P0 (done) | Pure crates, shell state, preview, tests, demo, facade |
-| P2 (started) | `aether-shell-smithay`: clients tile/configure, modal overlay, workspace indicators/shortcuts; labels, interactive resize, per-client damage and udev/DRM next |
+| P2 (started) | `aether-shell-smithay`: clients tile/configure, modal overlay with bitmap text, labelled workspace indicators/shortcuts; picker, interactive resize, per-client damage and udev/DRM next |
 | P2 | Text/atlas and scene-graph UI primitives |
 | P3 | Shell layers (palette/chat) consume the same crates |
 

@@ -93,6 +93,7 @@ const sidebars: SidebarsConfig = {
         "adr/0008-single-pages-deployment",
         "adr/0009-water-design-system",
         "adr/0010-compositor-crate-split",
+        "adr/0011-backend-neutral-shell",
       ],
     },
     {

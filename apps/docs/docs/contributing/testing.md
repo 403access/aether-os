@@ -17,7 +17,7 @@ deliberately layered so a failure points at one boundary.
 | Unit / DOM / integration | `bun test` | Logic, ranking, capabilities, planners, components, cross-thread ring, filesystem | **206 total** (17 DOM, ~15 integration) |
 | Architecture boundary | `bun test` | VM ↔ reference imports, security posture, flake modules | 7 (included above) |
 | E2E | Playwright | Assembled marketing site, docs, install pages, VM page | **14** |
-| Rust | `cargo test` | Scene graph, layout, damage, pacing | **35** |
+| Rust | `cargo test` | Scene, layout, damage, pacing, shell state, preview | **49** |
 | Performance | `packages/bench` | Regressions vs baseline | 6 metrics |
 
 Run everything:
@@ -53,7 +53,7 @@ fixture and the subject close and makes deletion obvious.
 | Adapter | `adapters.test.ts` | Index → palette mapping, filters, empty query |
 | UI | `ui.test.tsx` | ARIA, click, keyboard, explorer, meters |
 | Boundary | `tests/separation.test.ts` | No VM/reference imports; no VM posture in the reference |
-| Rust | `os/compositor/**` | Damage, layout invariants, pacing |
+| Rust | `os/compositor/**` | Damage, layout, shell policy, preview, pacing |
 
 ## Reusable fixtures
 

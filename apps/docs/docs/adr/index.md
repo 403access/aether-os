@@ -22,6 +22,7 @@ A decision that is reversed gets a new ADR; records are not rewritten.
 | [0008](/adr/0008-single-pages-deployment) | One Pages artifact for site + docs | Accepted |
 | [0009](/adr/0009-water-design-system) | Adopt the Water design system and reference explorer | Accepted |
 | [0010](/adr/0010-compositor-crate-split) | Split the compositor core into reusable crates | Accepted |
+| [0011](/adr/0011-backend-neutral-shell) | Backend-neutral shell state and preview | Accepted |
 
 ## When to write one
 

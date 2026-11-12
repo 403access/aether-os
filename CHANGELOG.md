@@ -8,6 +8,10 @@ semantic versioning with release codenames (0.1 = “Kestrel”).
 
 ### Added
 
+- **Backend-neutral shell state** — `aether-shell` owns windows, workspaces, focus,
+  floating windows, the overlay and `FramePlan`, with no Wayland/GPU dependency.
+  `aether-preview` renders frame plans to PNG (`aether-shell-preview`), providing
+  visual verification before the Smithay backend (ADR-0011).
 - **Compositor crate split** — `aether-geometry`, `aether-damage`, `aether-layout`,
   `aether-pacing`, `aether-scene` and the `aether-compositor` facade/prelude/demo.
   Apps can depend on the smallest crate they need; the P2 Smithay backend will be

@@ -79,8 +79,14 @@ aether-scene
 ```
 
 It prints a 2560×1440 tiling layout, a damage report, a hit test and a 120 Hz
-pacing calculation. This is the tested core that `aether-shell` will consume in P2,
-not a compositor.
+pacing calculation. The shell preview renders a real frame plan to a PNG:
+
+```bash
+aether-shell-preview
+# writes ./artifacts/shell/frame.png and damage.png
+```
+
+This is the tested shell/core layer; the Smithay backend is P2.
 
 ## What is running
 

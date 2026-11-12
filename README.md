@@ -45,7 +45,7 @@ the next phase; first boot lands in a console, not the finished desktop.
 | NixOS system + installer ISO | ✅ evaluates (`nix flake check`); not booted in CI | `os/nixos` |
 | aarch64 development VM target | ✅ built + booted headless in ~10–12 s (HVF) | `os/vm` |
 | disko disk layout + install script | ✅ written, evaluation-checked | `os/nixos/disko.nix`, `scripts/install.sh` |
-| Compositor scene graph + frame scheduler | ✅ 35 Rust tests | `os/compositor` |
+| Compositor core + shell state + preview | ✅ 49 Rust tests | `os/compositor` |
 | Compositor UI (`aether-shell`) | ⏳ roadmap P2 | — |
 | WebRTC remote display | ⏳ roadmap P7 | — |
 
@@ -67,7 +67,7 @@ bun run dev:docs         # documentation   → http://localhost:4322/docs/
 bun run test:unit        # 206 package tests (bun test)
 bun run test:e2e         # 14 Playwright specs against the assembled build
 bun run typecheck        # strict TS across the monorepo
-bun run os:test          # 35 Rust compositor-core tests
+bun run os:test          # 49 Rust compositor/shell tests
 bun run bench            # benchmarks; `bun run bench:check` gates regressions
 bun run build            # assembles a single deployable tree in apps/web/dist
 ```
@@ -129,7 +129,7 @@ packages/bench        benchmark runner + regression gate (--check)
 os/nixos              reference target: kernel, hardware, disko, installer, services
 os/vm                 separate aarch64 development VM target
 os/common             the only Nix module shared by both targets
-os/compositor         Rust crates: geometry, damage, layout, pacing, scene + facade
+os/compositor         Rust crates: geometry/damage/layout/pacing/scene/shell + preview
 scripts               assemble, publish, install, static server
 e2e                   Playwright specs for web + docs
 .github/workflows     CI, Pages deploy, perf gate

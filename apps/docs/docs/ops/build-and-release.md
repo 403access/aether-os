@@ -22,7 +22,9 @@ surfaces share the same repository and version number.
 | `bun run verify` | typecheck + unit tests + build |
 | `bun run bench` | Benchmarks; `--check` enforces the baseline |
 | `bun run os:test` | Rust compositor-core tests |
-| `nix build .#iso` | Bootable image (P1) |
+| `nix build .#iso` | Live installer ISO (x86_64) |
+| `./scripts/vm-build.sh` | Development VM image (aarch64, separate target) |
+| `./scripts/vm-run.sh` | Boot the VM with QEMU/HVF |
 
 ## Output layout
 

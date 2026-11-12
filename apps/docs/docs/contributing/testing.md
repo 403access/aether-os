@@ -14,11 +14,10 @@ deliberately layered so a failure points at one boundary.
 
 | Layer | Tool | Scope | Count at v0.1 |
 | --- | --- | --- | --- |
-| Unit | `bun test` | Pure logic, ranking, capabilities, planners | ~170 |
-| DOM | `bun test` + happy-dom + Testing Library | Components, hooks, ARIA | 17 |
-| Integration | `bun test` + Workers / temp dirs | Cross-thread ring, filesystem ingestion, adapters | ~15 |
-| E2E | Playwright | Built marketing site and docs | P0 |
-| Rust | `cargo test` | Scene graph, layout, pacing | P0 |
+| Unit / DOM / integration | `bun test` | Logic, ranking, capabilities, planners, components, cross-thread ring, filesystem | **206 total** (17 DOM, ~15 integration) |
+| Architecture boundary | `bun test` | VM ↔ reference imports, security posture, flake modules | 7 (included above) |
+| E2E | Playwright | Assembled marketing site, docs, install pages, VM page | **14** |
+| Rust | `cargo test` | Scene graph, layout, damage, pacing | **35** |
 | Performance | `packages/bench` | Regressions vs baseline | 6 metrics |
 
 Run everything:
@@ -29,6 +28,7 @@ bun run test:unit
 bun run test:e2e
 bun run os:test
 bun run bench --check
+./scripts/vm-smoke.sh     # optional: boots the aarch64 VM and waits for the marker
 ```
 
 ## Where tests live
@@ -52,6 +52,7 @@ fixture and the subject close and makes deletion obvious.
 | Palette | `palette.test.ts` | Modes, ranking, dedupe, stale queries, keyboard |
 | Adapter | `adapters.test.ts` | Index → palette mapping, filters, empty query |
 | UI | `ui.test.tsx` | ARIA, click, keyboard, explorer, meters |
+| Boundary | `tests/separation.test.ts` | No VM/reference imports; no VM posture in the reference |
 | Rust | `os/compositor/**` | Damage, layout invariants, pacing |
 
 ## Reusable fixtures
@@ -73,6 +74,14 @@ should need to change.
 - Sort before asserting sets.
 - Use `toEqual` on plain objects, not snapshots, unless the shape is the contract.
 - Don't assert exact benchmark values; assert budgets and directions.
+
+## Architectural boundary test
+
+`tests/separation.test.ts` reads the Nix tree and the flake. It fails if the
+physical target imports the VM, the VM imports the physical target, VM-only
+security posture appears in `os/nixos`, or the `kestrel` flake block includes the
+VM modules. It is part of the normal unit suite, so CI enforces the boundary
+without a separate job.
 
 ## Cross-thread test
 

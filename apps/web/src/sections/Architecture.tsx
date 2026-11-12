@@ -138,7 +138,7 @@ export function Architecture() {
       <p className="section__footnote">
         Layer memory figures are <strong>budgets</strong>, not measured results. The
         measurement method and current numbers are tracked in{" "}
-        <a href={`${LINKS.docs}reference/claims-and-evidence`}>claims &amp; evidence</a>.
+        <a href={`${LINKS.docs}reference/claims-and-evidence/`}>claims &amp; evidence</a>.
       </p>
     </section>
   );
@@ -247,7 +247,7 @@ export function Isolation() {
         The cards above are produced at build time by the same{" "}
         <code>planIsolation()</code> function the supervisor uses, against the
         published {KABYLAKE_7700K.cpu} profile.{" "}
-        <a href={`${LINKS.docs}architecture/agent-isolation`}>Read the isolation spec →</a>
+        <a href={`${LINKS.docs}architecture/agent-isolation/`}>Read the isolation spec →</a>
       </p>
     </section>
   );

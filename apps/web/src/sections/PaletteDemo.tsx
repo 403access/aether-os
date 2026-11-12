@@ -134,7 +134,7 @@ export function PaletteDemo() {
               covered by unit tests, including ties, typos and stale queries.
             </p>
           </div>
-          <a className="text-link" href={`${LINKS.docs}architecture/search`}>
+          <a className="text-link" href={`${LINKS.docs}architecture/search/`}>
             How the index works →
           </a>
           <a className="text-link" href={withBase("design-system/")}>

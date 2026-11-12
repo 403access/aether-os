@@ -1,7 +1,7 @@
 import { Badge } from "@aether/ui";
 import { LINKS } from "../data";
 
-type PhaseStatus = "shipped" | "next" | "planned";
+type PhaseStatus = "shipped" | "progress" | "next" | "planned";
 
 const PHASES: Array<{
   id: string;
@@ -26,12 +26,13 @@ const PHASES: Array<{
   {
     id: "P1",
     title: "NixOS bring-up",
-    status: "next",
+    status: "progress",
     summary: "Boot the reference machine into a deterministic base with the custom kernel.",
     bullets: [
       "Flake pinned to nixpkgs; Kaby Lake hardware and kernel fragment; installer ISO and disko layout included.",
+      "Install script, recovery path and a complete install guide for the reference machine.",
+      "Separate aarch64 VM target boots the same base headless in ~10 s (test harness only).",
       "XFS root with noatime/largeio/inode64; ext4 scratch; tmpfs for the index.",
-      "End-to-end install guide, install script and evaluation-verified flake.",
       "Remaining: first boot on the hardware, measured idle RAM and boot time.",
     ],
     gate: "Cold boot to a shell, < 1.5 s userspace, recorded by systemd-analyze.",
@@ -126,13 +127,15 @@ const PHASES: Array<{
 
 const STATUS_LABEL: Record<PhaseStatus, string> = {
   shipped: "Shipped",
+  progress: "In progress",
   next: "Next",
   planned: "Planned",
 };
 
 const STATUS_TONE = {
   shipped: "same",
-  next: "partial",
+  progress: "partial",
+  next: "info",
   planned: "muted",
 } as const;
 

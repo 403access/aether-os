@@ -29,6 +29,10 @@ semantic versioning with release codenames (0.1 = “Kestrel”).
 
 ### Fixed
 
+- The marketing “Full roadmap” CTA pointed at `/docs/roadmap/roadmap`, which does
+  not exist (the page is `/docs/roadmap/`). All in-site docs links now use the
+  canonical trailing slash, and a Playwright spec checks every docs link on the
+  marketing page resolves.
 - Flake evaluation failed because `security.polkit.enable = false` conflicted with
   NetworkManager; polkit is now left to NetworkManager.
 - Removed options removed in current nixpkgs: `services.journald.extraConfig` and

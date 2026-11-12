@@ -5,7 +5,7 @@ export function Hero() {
     <header className="hero">
       <div className="hero__copy">
         <p className="eyebrow">
-          <span className="pulse" aria-hidden="true" /> Aether OS · v0.1 “Kestrel”
+          <span className="pulse" aria-hidden="true" /> Aether OS · v0.1 “Kestrel” · installable base
         </p>
         <h1>
           An operating
@@ -24,11 +24,11 @@ export function Hero() {
           <a className="ds-btn ds-btn--primary" href={LINKS.architecture}>
             Read the architecture
           </a>
-          <a className="ds-btn" href="#palette">
-            Try the palette
+          <a className="ds-btn" href={LINKS.install}>
+            Install Aether
           </a>
-          <a className="ds-btn ds-btn--ghost" href={LINKS.github} target="_blank" rel="noreferrer">
-            GitHub ↗
+          <a className="ds-btn ds-btn--ghost" href="#palette">
+            Try the palette
           </a>
         </div>
 

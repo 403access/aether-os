@@ -29,6 +29,8 @@ bun run dev:docs     # http://localhost:4322/docs/
 bun run test:unit
 bun run typecheck
 bun run os:test
+./scripts/vm-build.sh   # optional: build the aarch64 VM (OrbStack/Nix)
+./scripts/vm-run.sh
 ```
 
 The docs dev server uses `baseUrl: /docs/`, so open
@@ -57,7 +59,10 @@ packages/palette      headless palette + index adapter
 packages/ui           React components on the design system
 packages/bench        benchmark harness + baseline
 packages/design-system  vendored Water tokens/components/effects
-os/nixos              flake and modules
+os/common             the only Nix module shared by both targets
+os/nixos              reference hardware target and installer
+os/vm                 separate aarch64 development VM
+tests                 architectural boundary tests
 os/compositor         Rust workspace (scene/layout/pacing)
 e2e                   Playwright specs
 scripts               assemble, publish, verify helpers

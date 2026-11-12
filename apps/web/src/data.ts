@@ -11,8 +11,9 @@ const DOCS_BASE = import.meta.env.DEV
 
 export const LINKS = {
   docs: DOCS_BASE,
-  architecture: `${DOCS_BASE}architecture/overview`,
-  roadmap: `${DOCS_BASE}roadmap/roadmap`,
+  architecture: `${DOCS_BASE}architecture/overview/`,
+  install: `${DOCS_BASE}getting-started/install/`,
+  roadmap: `${DOCS_BASE}roadmap/`,
   designSystem: import.meta.env.DEV ? "http://localhost:8787/" : withBase("design-system/"),
   github: "https://github.com/olivermolnar/aether-os",
 };

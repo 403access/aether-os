@@ -73,7 +73,7 @@ export function App() {
 
         <div className="site-nav__links">
           <a href="#architecture">Architecture</a>
-          <a href={`${LINKS.docs}getting-started/install`}>Install</a>
+          <a href={`${LINKS.docs}getting-started/install/`}>Install</a>
           <a href="#isolation">Isolation</a>
           <a href="#palette">Palette</a>
           <a href="#explorer">Explorer</a>
@@ -147,10 +147,10 @@ export function App() {
           <div>
             <h3>Docs</h3>
             <a href={LINKS.docs}>Overview</a>
-            <a href={`${LINKS.docs}getting-started/install`}>Install</a>
-            <a href={`${LINKS.docs}product/prd`}>Product requirements</a>
-            <a href={`${LINKS.docs}architecture/agent-isolation`}>Agent isolation</a>
-            <a href={`${LINKS.docs}reference/claims-and-evidence`}>Claims &amp; evidence</a>
+            <a href={`${LINKS.docs}getting-started/install/`}>Install</a>
+            <a href={`${LINKS.docs}product/prd/`}>Product requirements</a>
+            <a href={`${LINKS.docs}architecture/agent-isolation/`}>Agent isolation</a>
+            <a href={`${LINKS.docs}reference/claims-and-evidence/`}>Claims &amp; evidence</a>
           </div>
           <div>
             <h3>Project</h3>
@@ -158,7 +158,7 @@ export function App() {
               GitHub
             </a>
             <a href={LINKS.designSystem}>Design system</a>
-            <a href={`${LINKS.docs}contributing/development`}>Contributing</a>
+            <a href={`${LINKS.docs}contributing/development/`}>Contributing</a>
             <a href={LINKS.roadmap}>Roadmap</a>
           </div>
         </div>

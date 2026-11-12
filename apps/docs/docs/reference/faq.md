@@ -9,10 +9,17 @@ description: Straight answers about feasibility, hardware, the stack and what is
 
 ## Is this a real OS?
 
-It is a real project with a real architecture, a tested core, a boot configuration
-and a Rust compositor core. It is **not yet a bootable image**. v0.1 is the
-foundation release; P1 is the boot bring-up. The [intro](/) status table is the
-honest inventory.
+It is a real project with a real architecture, a tested core, an installable
+NixOS base and a Rust compositor core. v0.1 ships an installer ISO, a disko disk
+layout, an install script and a separate aarch64 VM that boots on this Mac. The
+compositor UI and daemons are P2/P3. It is an **installable base**, not the
+finished desktop; the [intro](/) status table is the honest inventory.
+
+## Can I try it without the i7-7700K?
+
+Yes, as a development VM: `./scripts/vm-build.sh && ./scripts/vm-run.sh`. It is a
+separate aarch64 target and not a supported install. See
+[boot the development VM](/getting-started/virtual-machine).
 
 ## Why not just use Omarchy / Arch + Hyprland?
 

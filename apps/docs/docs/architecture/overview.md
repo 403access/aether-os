@@ -141,7 +141,10 @@ Aether prefers **fail-closed and degrade visibly** over fail-open:
 | Palette state machine | `packages/palette` |
 | UI components | `packages/ui` |
 | Compositor core | `os/compositor` |
-| OS configuration | `os/nixos` |
+| Reference OS configuration | `os/nixos` |
+| Shared Nix base | `os/common/base.nix` |
+| Development VM (separate target) | `os/vm` |
+| Boundary enforcement | `tests/separation.test.ts` |
 
 Read next: [hardware target](/architecture/hardware-target) — every capacity
 decision in this document is derived from it.

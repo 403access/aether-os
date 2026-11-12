@@ -26,7 +26,7 @@ source. Everything else is a target or an aspiration.
 
 | Claim | Label | Evidence |
 | --- | --- | --- |
-| 130–200 MB idle RAM | **Budget** | No bootable image yet; P1 measures |
+| 130–200 MB idle RAM | **Budget** | Installer and VM exist; no measured target idle footprint yet; P1 measures |
 | 110–150 MB with all optimisations | **Speculative** | MicroVM/PGO combination not built |
 | 10–20 MB saved by shared-memory IPC | **Speculative** | Ring measured; whole-system saving not |
 | GNOME idles 1.2–2.5 GB | **Speculative** | Depends on distro/session; not measured here |
@@ -69,7 +69,8 @@ source. Everything else is a target or an aspiration.
 | Claim | Label | Evidence |
 | --- | --- | --- |
 | < 50 ms boot | **Refused** | That is a microVM snapshot restore, not a cold desktop boot |
-| < 1.5 s userspace boot | **Budget** | P1 gate |
+| < 1.5 s userspace boot on the 7700K | **Budget** | P1 gate |
+| ~10 s multi-user boot in the aarch64 VM | **Measured (dev host)** | Apple M3, HVF, 4 vCPU; not the target |
 | XFS is fastest for this workload | **Qualified** | Reasoned from design; not benchmarked on this machine |
 | Btrfs/ZFS rejected | **Decision** | ADR-0003; not a performance claim |
 

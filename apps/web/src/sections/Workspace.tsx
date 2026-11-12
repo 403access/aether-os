@@ -148,7 +148,7 @@ export function ExplorerDemo() {
           The underlying <code>FilePane</code>, <code>Badge</code> and{" "}
           <code>SystemBar</code> components are covered by DOM tests.
         </p>
-        <a className="text-link" href={`${LINKS.docs}architecture/ui-system`}>
+        <a className="text-link" href={`${LINKS.docs}architecture/ui-system/`}>
           UI system spec →
         </a>
       </div>
@@ -239,7 +239,7 @@ export function Performance() {
             <li>Every subsystem page separates measured, budgeted and speculative.</li>
             <li>Marketing copy never turns a target into a result.</li>
           </ul>
-          <a className="text-link" href={`${LINKS.docs}reference/claims-and-evidence`}>
+          <a className="text-link" href={`${LINKS.docs}reference/claims-and-evidence/`}>
             Read claims &amp; evidence →
           </a>
         </article>

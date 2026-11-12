@@ -16,6 +16,7 @@ test.describe("marketing site", () => {
 
     await expect(page.getByRole("heading", { level: 1 })).toContainText("one user");
     await expect(page.getByRole("link", { name: "Read the architecture" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Install Aether" })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Primary" })).toBeVisible();
     await expect(page.locator(".hero__stats")).toContainText("≤ 200 MB");
     expect(errors).toEqual([]);
@@ -86,6 +87,28 @@ test.describe("marketing site", () => {
     const home = page.getByRole("listbox", { name: "Home entries" });
     await expect(home.getByRole("option")).toHaveCount(1);
     await expect(home).toContainText("notes");
+  });
+
+  test("roadmap CTA opens the docs roadmap", async ({ page }) => {
+    await page.goto("/#roadmap");
+    await page
+      .getByRole("link", { name: /Full roadmap with risks and dependencies/ })
+      .click();
+    await expect(page).toHaveURL(/\/docs\/roadmap\/?$/);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Roadmap");
+  });
+
+  test("every docs link on the marketing page resolves", async ({ page }) => {
+    await page.goto("/");
+    const hrefs = await page
+      .locator('a[href*="/docs"]')
+      .evaluateAll((links) => links.map((link) => (link as HTMLAnchorElement).href));
+    const unique = [...new Set(hrefs)];
+    expect(unique.length).toBeGreaterThan(5);
+    for (const href of unique) {
+      const response = await page.request.get(href);
+      expect(response.status(), href).toBeLessThan(400);
+    }
   });
 
   test("links to the docs", async ({ page }) => {

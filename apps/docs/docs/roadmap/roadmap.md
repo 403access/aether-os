@@ -12,7 +12,7 @@ deliverables. A phase is done when the gate passes, not when the code merges.
 
 ```text
 P0 Foundations      ████████████  done
-P1 NixOS bring-up   ░░░░░░░░░░░░  next
+P1 NixOS bring-up   ██████░░░░░░  in progress
 P2 Compositor MVP   ░░░░░░░░░░░░
 P3 Shell surfaces   ░░░░░░░░░░░░
 P4 Audio            ░░░░░░░░░░░░
@@ -34,7 +34,7 @@ Deliverables:
 - Water design system vendored from the Data Cloud Compare project.
 - Docusaurus docs and a marketing site with a live palette and explorer demo.
 - Unit, DOM, cross-thread integration, Playwright e2e, Rust tests, perf gate.
-- NixOS flake and hardware/kernel/filesystem modules (written, not booted).
+- NixOS flake, hardware/kernel/filesystem modules, installer ISO, disko layout and install guide.
 
 **Gate.** `bun run verify`, Playwright and `cargo test` green in CI; benchmark
 baseline committed; docs build with no broken links.

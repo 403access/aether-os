@@ -58,6 +58,13 @@ diskoConfigurations.kestrel   = ...;  # disk layout
 packages.x86_64-linux.aether-scene = ...;
 ```
 
+## Development VM
+
+A separate `os/vm` target boots an aarch64 qcow2 image for local testing. It
+imports only `os/common/base.nix` and never imports this configuration; the boundary
+is enforced by `tests/separation.test.ts`. See
+[boot the development VM](/getting-started/virtual-machine).
+
 ## Pinning
 
 Inputs are pinned in `flake.lock` and updated deliberately:
@@ -156,6 +163,6 @@ Each gap is documented; none of them silently mutate `/etc`.
 
 ## Verification
 
-- `nix flake check` in CI on a Linux runner (non-blocking until P1).
+- `nix flake check --no-build` is a manual Linux workflow; both targets are evaluated locally during development. The VM image is booted headlessly as a smoke test.
 - `nixos-rebuild build-vm` smoke test for the service graph.
 - `systemd-analyze critical-chain` recorded with every release.

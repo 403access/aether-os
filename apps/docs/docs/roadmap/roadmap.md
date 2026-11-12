@@ -80,10 +80,11 @@ Deliverables:
 - ✅ xdg-shell/shm clients map into shell windows, tile and are configured to
   their rects; keyboard/pointer focus, buttons and axis; two terminals verified.
 - ✅ Workspace shortcuts (`Super+1/2/3`), window moves, close, labelled
-  indicators, a clickable workspace picker, and a modal shell overlay above
-  clients (`Super+Space`). Verified by an xdotool click smoke test.
-- ⏳ Overlay query/results, interactive move/resize, cursor theme, per-client
-  damage, udev/DRM.
+  indicators, a clickable workspace picker, a modal shell overlay above clients
+  (`Super+Space`) and a draggable master/stack split. Picker click and divider
+  drag are verified by xdotool smoke tests.
+- ⏳ Overlay query/results, interactive window move, maximize/fullscreen, cursor
+  theme, per-client damage, udev/DRM.
 - ⏳ udev/DRM backend, libinput seat, wgpu renderer, output hotplug.
 - Scene graph with damage tracking; shell chrome in one draw pass.
 - Tiling layout, focus, keybindings; one workspace per output.

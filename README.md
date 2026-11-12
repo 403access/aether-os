@@ -45,8 +45,8 @@ the next phase; first boot lands in a console, not the finished desktop.
 | NixOS system + installer ISO | ✅ evaluates (`nix flake check`); not booted in CI | `os/nixos` |
 | aarch64 development VM target | ✅ built + booted headless in ~10–12 s (HVF) | `os/vm` |
 | disko disk layout + install script | ✅ written, evaluation-checked | `os/nixos/disko.nix`, `scripts/install.sh` |
-| Compositor core + shell state + preview | ✅ 56 Rust tests | `os/compositor` |
-| Smithay winit backend (Linux-only) | ✅ tiled clients, modal overlay, text, clickable workspace picker | `os/compositor/aether-shell-smithay` |
+| Compositor core + shell state + preview | ✅ 58 Rust tests | `os/compositor` |
+| Smithay winit backend (Linux-only) | ✅ tiled clients, modal overlay, picker, draggable split | `os/compositor/aether-shell-smithay` |
 | Compositor UI (`aether-shell`) | ⏳ roadmap P2 | — |
 | WebRTC remote display | ⏳ roadmap P7 | — |
 
@@ -68,7 +68,7 @@ bun run dev:docs         # documentation   → http://localhost:4322/docs/
 bun run test:unit        # 206 package tests (bun test)
 bun run test:e2e         # 14 Playwright specs against the assembled build
 bun run typecheck        # strict TS across the monorepo
-bun run os:test          # 56 Rust compositor/shell tests
+bun run os:test          # 58 Rust compositor/shell tests
 bun run bench            # benchmarks; `bun run bench:check` gates regressions
 bun run build            # assembles a single deployable tree in apps/web/dist
 ```

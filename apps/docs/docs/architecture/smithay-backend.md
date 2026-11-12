@@ -37,6 +37,12 @@ bars at top-left are workspace indicators (active is bright).*
 capture is produced by `smoke-picker-xvfb.sh`, which drives the click with
 `xdotool` and asserts the shell log.*
 
+![Dragging the master/stack divider](/img/smithay-resize.png)
+
+*Dragging the gap between the master and stack changes the tiling ratio;
+`smoke-resize-xvfb.sh` drives the drag with `xdotool` and asserts the applied
+ratio.*
+
 ![The `--demo` FramePlan view](/img/smithay-window.png)
 
 *`--demo` mode: tiled shell surfaces and the overlay, rendered from the same
@@ -61,6 +67,8 @@ capture is produced by `smoke-picker-xvfb.sh`, which drives the click with
 - **Clickable workspace picker.** Clicking an indicator chip (bar or label)
   switches workspace. Chrome consumes pointer motion/buttons, so clicks never
   leak to a client underneath. The seat advertises `wl_pointer`.
+- **Interactive layout resize.** Dragging the gap between the master and stack
+  updates the split ratio (clamped 0.2–0.8) and reconfigures clients live.
 - Compositor chrome renders real text through `aether-text`: workspace names,
   overlay header/search/results/footer and shortcut hints. Bitmaps are uploaded
   as Smithay `MemoryRenderBuffer` elements above client surfaces.
@@ -88,7 +96,8 @@ capture is produced by `smoke-picker-xvfb.sh`, which drives the click with
 - **Text cache/atlas.** Every frame rebuilds small RGBA text buffers; a cached
   atlas is needed before text-heavy apps.
 - **Cursor theming** and hover cursor feedback.
-- **Interactive move/resize, popups and drag-and-drop** are ignored.
+- **Interactive window move**, maximize/fullscreen, popups and drag-and-drop are
+  ignored. Tiled divider resizing works; floating move does not.
 - **Per-client damage.** Full-window redraw remains.
 - **Popups, drag-and-drop and grabs** are accepted/ignored at the protocol level.
 - **udev/DRM backend.** The target path for the 7700K (no X server) is not written;
@@ -123,10 +132,11 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-xvfb.sh          # --demo
 ./os/compositor/aether-shell-smithay/smoke-client-xvfb.sh   # weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-picker-xvfb.sh   # xdotool workspace click
+./os/compositor/aether-shell-smithay/smoke-resize-xvfb.sh   # xdotool divider drag
 ```
 
 The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. The picker
-smoke also requires `xdotool`, which the `.#smithay` dev shell provides.
+and resize smokes require `xdotool`, which the `.#smithay` dev shell provides.
 
 The environment sets:
 

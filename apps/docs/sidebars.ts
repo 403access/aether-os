@@ -96,6 +96,7 @@ const sidebars: SidebarsConfig = {
         "adr/0010-compositor-crate-split",
         "adr/0011-backend-neutral-shell",
         "adr/0012-smithay-standalone-backend",
+        "adr/0013-bitmap-text",
       ],
     },
     {

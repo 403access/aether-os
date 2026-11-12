@@ -13,15 +13,19 @@ semantic versioning with release codenames (0.1 = “Kestrel”).
   clients (verified with two real `weston-terminal` instances), maps them into
   `aether-shell` windows so they tile and are configured to their rects, and
   forwards keyboard/pointer focus, buttons and axis. Adds the shell overlay above
-  clients (`Super+Space`, modal), workspace shortcuts (`Super+1/2/3`), window
-  moves (`Super+Shift+1/2/3`), `Super+Q` close and workspace indicator bars.
-  The overlay has header/input/result blocks but no text yet. Workspace labels,
-  interactive resize, cursor theming, per-client damage and udev/DRM remain.
-  Nix dev shell `.#smithay`, demo/client smoke scripts, ADR-0012.
+  clients (`Super+Space`, modal, `Esc` closes), workspace shortcuts
+  (`Super+1/2/3`), window moves (`Super+Shift+1/2/3`), `Super+Q` close and
+  labelled workspace indicators. Text is rasterized by `aether-text` and
+  uploaded as Smithay memory buffers. Workspace picker, interactive resize,
+  cursor theming, per-client damage and udev/DRM remain. Nix dev shell
+  `.#smithay`, demo/client smoke scripts, ADR-0012.
 - **Backend-neutral shell state** — `aether-shell` owns windows, workspaces, focus,
   floating windows, the overlay and `FramePlan`, with no Wayland/GPU dependency.
   `aether-preview` renders frame plans to PNG (`aether-shell-preview`), providing
   visual verification before the Smithay backend (ADR-0011).
+- **Bitmap text** — `aether-text` rasterizes 8x8 glyphs into cropped RGBA
+  buffers with no fontconfig/FreeType dependency; shared by `aether-preview` and
+  the Smithay backend for workspace labels and overlay copy. ADR-0013.
 - **Compositor crate split** — `aether-geometry`, `aether-damage`, `aether-layout`,
   `aether-pacing`, `aether-scene` and the `aether-compositor` facade/prelude/demo.
   Apps can depend on the smallest crate they need; the P2 Smithay backend will be

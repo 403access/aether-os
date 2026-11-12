@@ -31,8 +31,9 @@ Create `os/compositor/aether-shell-smithay` as a **standalone** Cargo crate:
 - macOS and the default Rust workspace stay toolkit-free and fast.
 - The backend can evolve without destabilizing app-facing crates.
 - Platform-specific build/CI is explicit and manual/optional.
-- The first backend renders solid surfaces only; client buffers and input are the
-  next slice.
+- The adapter now renders client surfaces, routes input, and draws overlay and
+  workspace chrome (including `aether-text` bitmap text); udev/DRM remains the
+  target-specific backend.
 - Two build paths exist (workspace vs standalone), which must be documented.
 
 ## Alternatives

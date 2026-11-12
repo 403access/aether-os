@@ -85,6 +85,11 @@ workspaces, focus, floating windows and the overlay, and emits a `FramePlan`
 (viewport, damage, draw items, focus) for a backend to present. It has no
 Wayland, GPU or input dependency.
 
+`aether-text` rasterizes 8x8 bitmap glyphs into tightly cropped RGBA buffers.
+It has no fontconfig, FreeType or glyph-atlas dependency, so labels and overlay
+copy render identically in the preview and in native backends. It is the shared
+text layer for the shell and for apps that draw simple chrome.
+
 `aether-preview` renders frames with a small software rasteriser, so the shell
 can be inspected without a display server:
 
@@ -103,9 +108,10 @@ damage region, then maps compositor surfaces and presents. Client buffers and
 input are backend concerns. See ADR-0011.
 
 The first native backend is `aether-shell-smithay` (winit/EGL, Linux-only,
-standalone crate). It opens a real window and presents the same frame plan; see
-[Smithay backend](/architecture/smithay-backend). Client surfaces, input routing
-and the udev/DRM target backend are still open.
+standalone crate). It opens a real window, presents the same frame plan, accepts
+xdg-shell clients, routes input and uploads `aether-text` buffers as Smithay
+memory elements; see [Smithay backend](/architecture/smithay-backend). The
+udev/DRM target backend is still open.
 
 Damage is implemented in `aether-damage` and consumed by `aether-scene`; both are
 tested without a GPU:

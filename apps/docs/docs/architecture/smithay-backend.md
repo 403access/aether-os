@@ -27,9 +27,9 @@ aether-shell (policy) ──> FramePlan ──> aether-shell-smithay (Linux)
 
 ![The shell overlay above a client](/img/smithay-overlay.png)
 
-*`Super+Space` toggles the modal shell overlay above clients. It has a header,
-input row and result rows drawn as solid blocks until the text/glyph layer exists.
-The three bars at top-left are workspace indicators (active is bright).*
+*`Super+Space` toggles the modal shell overlay above clients. Header, search row,
+results and hints are real bitmap text rasterized by `aether-text`; the labelled
+bars at top-left are workspace indicators (active is bright).*
 
 ![The `--demo` FramePlan view](/img/smithay-window.png)
 
@@ -49,9 +49,12 @@ The three bars at top-left are workspace indicators (active is bright).*
   and axis; keyboard input goes to the focused surface.
 - The shell overlay is drawn above clients (`Super+Space`) and is **modal**:
   keystrokes are intercepted while it is open.
-- Workspace switching and window moves via shortcuts, with three workspace
-  indicator bars at the top-left:
+- Workspace switching and window moves via shortcuts, with three labelled
+  workspace indicator bars at the top-left:
   `Super+1/2/3`, `Super+Shift+1/2/3`, `Super+Q` to close.
+- Compositor chrome renders real text through `aether-text`: workspace names,
+  overlay header/search/results/footer and shortcut hints. Bitmaps are uploaded
+  as Smithay `MemoryRenderBuffer` elements above client surfaces.
 - Sends frame callbacks, handles client connect/disconnect/destroy and window close.
 - `--demo` mode presents the shell `FramePlan` as solid surfaces (z-order and
   overlay) for visual verification without clients.
@@ -63,16 +66,19 @@ The three bars at top-left are workspace indicators (active is bright).*
 | Shortcut | Action |
 | --- | --- |
 | `Super+Space` | Toggle the shell overlay above clients |
+| `Esc` | Close the overlay |
 | `Super+1/2/3` | Switch workspace |
 | `Super+Shift+1/2/3` | Move the focused client to a workspace |
 | `Super+Q` | Close the focused client |
 
 ## What is not implemented
 
-- **Workspace label/picker.** Indicators are solid bars; there is no text label
-  or clickable workspace picker.
-- **Overlay content/interaction.** It is modal but has no text, filtering or
-  selectable results yet.
+- **Workspace picker.** Indicators are labelled, but there is no clickable
+  workspace picker.
+- **Overlay content/interaction.** It renders text and is modal, but has no
+  editable query, filtering or selectable results yet.
+- **Text cache/atlas.** Every frame rebuilds small RGBA text buffers; a cached
+  atlas is needed before text-heavy apps.
 - **Cursor theming** and hover cursor feedback.
 - **Interactive move/resize, popups and drag-and-drop** are ignored.
 - **Per-client damage.** Full-window redraw remains.
@@ -130,6 +136,6 @@ Smithay pulls in Wayland, EGL, X11 and libinput. Adding it to the workspace woul
 - make every app that uses `aether-shell` depend on a display stack,
 - blur the line between policy (testable anywhere) and backend.
 
-The standalone crate keeps `FramePlan` as the only contract. The next step is to
-replace solid elements with compositor surface render elements and add the
-xdg-shell/shm/seat handlers, then a udev/DRM backend for the target.
+The standalone crate keeps `FramePlan` as the only contract. The winit adapter
+now exercises the shell, client, input, overlay and text paths; the next backend
+is udev/DRM for the target.

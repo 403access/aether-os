@@ -20,10 +20,10 @@ aether-shell (policy) ──> FramePlan ──> aether-shell-smithay (Linux)
                                    └── aether-preview (software, any OS)
 ```
 
-![A Wayland terminal client rendered by the Smithay backend](/img/smithay-client.png)
+![Two Wayland terminal clients tiled by the shell](/img/smithay-client.png)
 
-*A real `weston-terminal` xdg-shell client with a shared-memory buffer, rendered
-by `aether-shell-smithay` under Xvfb.*
+*Two real `weston-terminal` xdg-shell clients with shared-memory buffers, tiled by
+`aether-shell` and rendered by `aether-shell-smithay` under Xvfb.*
 
 ![The `--demo` FramePlan view](/img/smithay-window.png)
 
@@ -35,11 +35,13 @@ by `aether-shell-smithay` under Xvfb.*
 - Opens a native window with Smithay's winit/EGL backend.
 - Accepts Wayland clients over a listening socket (`aether-0`): xdg-shell,
   shared-memory buffers, compositor and seat.
-- Renders client surfaces with Smithay surface elements; a real `weston-terminal`
-  is shown in the screenshot above.
-- Forwards keyboard input to the focused surface (focus follows a new toplevel and
-  pointer motion when nothing is focused).
-- Sends frame callbacks, handles client connect/disconnect and window close.
+- Maps each toplevel into `aether-shell` as a window, so clients are **tiled by
+  the shell layout** and configured to their tile size. Two terminals are shown
+  side-by-side in the screenshot.
+- Renders client surfaces with Smithay surface elements at their shell rects.
+- Pointer motion focuses the window under the cursor and forwards motion/buttons;
+  keyboard input goes to the focused surface.
+- Sends frame callbacks, handles client connect/disconnect/destroy and window close.
 - `--demo` mode presents the shell `FramePlan` as solid surfaces (z-order and
   overlay) for visual verification without clients.
 - Runs under Xvfb with Mesa software EGL for headless verification.
@@ -47,11 +49,12 @@ by `aether-shell-smithay` under Xvfb.*
 
 ## What is not implemented
 
-- **Shell policy for clients.** Clients are painted at `(0,0)`, not integrated
-  with `aether-shell` tiling/workspaces yet.
-- **Pointer input.** Motion focuses the first toplevel; pointer motion/buttons are
-  not forwarded, and there is no hit-testing or cursor theming.
-- **xdg configure/sizing.** Toplevels are activated but not sized by the shell.
+- **Workspaces have no UI/shortcuts yet.** Clients join the active workspace and
+  tile, but there is no keybinding/overlay to switch workspaces.
+- **No shell overlay in client mode.** The palette/chat overlay is only drawn in
+  `--demo`; integrating it above clients is next.
+- **Cursor theming and axis** are not handled; pointer motion/buttons are basic.
+- **Interactive move/resize, popups and drag-and-drop** are ignored.
 - **Popups, drag-and-drop and grabs** are accepted/ignored at the protocol level.
 - **udev/DRM backend.** The target path for the 7700K (no X server) is not written;
   winit is the development adapter.

@@ -77,9 +77,10 @@ Deliverables:
 
 - ✅ winit/EGL adapter presents `FramePlan` (solid surfaces) under Xvfb; standalone
   Linux crate so the core stays toolkit-free.
-- ✅ xdg-shell/shm clients render; keyboard focus/forwarding; `weston-terminal`
-  verified under Xvfb.
-- ⏳ Integrate clients with shell tiling/workspaces, pointer input, configure/sizing.
+- ✅ xdg-shell/shm clients map into shell windows, tile and are configured to
+  their rects; keyboard/pointer focus and basic buttons; two terminals verified.
+- ⏳ Workspace switching UI/shortcuts, shell overlay above clients, interactive
+  move/resize, cursor theme and axis.
 - ⏳ udev/DRM backend, libinput seat, wgpu renderer, output hotplug.
 - Scene graph with damage tracking; shell chrome in one draw pass.
 - Tiling layout, focus, keybindings; one workspace per output.

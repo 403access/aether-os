@@ -43,8 +43,8 @@ const PHASES: Array<{
     status: "progress",
     summary: "A Smithay shell that owns the scene graph, tiling and frame pacing.",
     bullets: [
-      "Winit/EGL adapter renders real xdg-shell clients (weston-terminal verified) and FramePlan demo; Linux-only crate.",
-      "Next: integrate clients with shell tiling/workspaces, pointer input and configure sizing, then udev/DRM.",
+      "Winit/EGL adapter maps xdg-shell clients into shell tiling (two terminals verified) and keeps a FramePlan demo; Linux-only crate.",
+      "Next: workspace switch/overlay above clients, interactive move/resize, cursor/axis, then udev/DRM.",
       "wgpu/Vulkan renderer, damage tracking, one draw pass for shell chrome.",
       "Frame scheduler from os/compositor wired to a real 120 Hz deadline.",
     ],

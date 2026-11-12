@@ -27,8 +27,9 @@ aether-shell (policy) ──> FramePlan ──> aether-shell-smithay (Linux)
 
 ![The shell overlay above a client](/img/smithay-overlay.png)
 
-*`Super+Space` toggles the shell overlay above clients. It is a solid panel until
-the text/glyph layer exists.*
+*`Super+Space` toggles the modal shell overlay above clients. It has a header,
+input row and result rows drawn as solid blocks until the text/glyph layer exists.
+The three bars at top-left are workspace indicators (active is bright).*
 
 ![The `--demo` FramePlan view](/img/smithay-window.png)
 
@@ -46,8 +47,10 @@ the text/glyph layer exists.*
 - Renders client surfaces with Smithay surface elements at their shell rects.
 - Pointer motion focuses the window under the cursor and forwards motion/buttons
   and axis; keyboard input goes to the focused surface.
-- The shell overlay is drawn above clients (`Super+Space`).
-- Workspace switching and window moves via shortcuts:
+- The shell overlay is drawn above clients (`Super+Space`) and is **modal**:
+  keystrokes are intercepted while it is open.
+- Workspace switching and window moves via shortcuts, with three workspace
+  indicator bars at the top-left:
   `Super+1/2/3`, `Super+Shift+1/2/3`, `Super+Q` to close.
 - Sends frame callbacks, handles client connect/disconnect/destroy and window close.
 - `--demo` mode presents the shell `FramePlan` as solid surfaces (z-order and
@@ -66,10 +69,10 @@ the text/glyph layer exists.*
 
 ## What is not implemented
 
-- **Workspace indicator/UI.** Workspaces work and tile, but there is no on-screen
-  label or picker; the overlay is a solid panel, not the real palette UI.
-- **Overlay content/interaction.** It draws above clients, but has no text or
-  focus capture yet.
+- **Workspace label/picker.** Indicators are solid bars; there is no text label
+  or clickable workspace picker.
+- **Overlay content/interaction.** It is modal but has no text, filtering or
+  selectable results yet.
 - **Cursor theming** and hover cursor feedback.
 - **Interactive move/resize, popups and drag-and-drop** are ignored.
 - **Per-client damage.** Full-window redraw remains.

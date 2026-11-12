@@ -31,3 +31,6 @@ bench-results/
 result
 result-*
 .direnv/
+
+# VM build artifacts
+artifacts/

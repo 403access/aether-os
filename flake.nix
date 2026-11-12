@@ -7,9 +7,13 @@
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nixos-generators = {
+      url = "github:nix-community/nixos-generators";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, rust-overlay }:
+  outputs = { self, nixpkgs, rust-overlay, nixos-generators}:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
@@ -38,7 +42,7 @@
           meta = with final.lib; {
             description = "Aether compositor scene graph, damage tracking and frame pacing";
             license = licenses.mit;
-            platforms = ["x86_64-linux"];
+            platforms = ["x86_64-linux" "aarch64-linux"];
           };
         };
       };
@@ -69,6 +73,21 @@
         iso = self.nixosConfigurations.installer.config.system.build.isoImage;
         installer-iso = self.packages.${system}.iso;
         aether-scene = pkgs.aether-scene;
+      };
+
+      # ---------------------------------------------------------------------
+      # Virtual-machine target. This is a DEVELOPMENT HARNESS, deliberately
+      # separate from os/nixos (the i7-7700K install target). It does not
+      # import the reference hardware, kernel fragment, storage layout or
+      # users; VM-only settings must never leak into kestrel.
+      # ---------------------------------------------------------------------
+      packages.aarch64-linux = {
+        vm-image = nixos-generators.nixosGenerate {
+          system = "aarch64-linux";
+          format = "qcow-efi";
+          modules = [./os/vm/configuration.nix];
+        };
+        default = self.packages.aarch64-linux.vm-image;
       };
 
       devShells.${system}.default = pkgs.mkShell {

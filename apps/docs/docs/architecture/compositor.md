@@ -10,6 +10,23 @@ description: Smithay-based compositor, scene graph, damage tracking, frame pacin
 `aether-shell` is one process that owns the display, input and the desktop
 surface. There is no separate window manager, panel or launcher.
 
+The pure core is a Rust workspace of small crates, so apps and tests can use
+geometry, damage, layout or pacing without a GPU or Wayland:
+
+```text
+aether-geometry   points, sizes, rectangles
+aether-damage     damage regions, merging, clipping
+aether-layout     master/stack tiling
+aether-pacing     frame deadlines
+aether-scene      surfaces, z-order, hit testing
+aether-compositor facade + prelude + demo binary
+```
+
+The dependency graph is one-way: `geometry → damage → scene`, `geometry →
+layout`, `pacing` standalone, and the facade on top. `aether-shell` (P2) will
+depend on these crates; they never depend on the shell or a toolkit. See
+[the crate README](https://github.com/olivermolnar/aether-os/blob/main/os/compositor/README.md).
+
 ## Responsibilities
 
 - Wayland compositor (Smithay) with a Vulkan/wgpu renderer.
@@ -61,8 +78,8 @@ the output. If the merged region exceeds 60% of the output, the renderer upgrade
 a full redraw. This prevents pathological many-small-rect cases from costing more
 than one pass.
 
-The Rust core implements this in `os/compositor/crates/aether-scene` and is tested
-without a GPU:
+Damage is implemented in `aether-damage` and consumed by `aether-scene`; both are
+tested without a GPU:
 
 - moving a surface damages both old and new rects,
 - merging adjacent rects reduces the count,
@@ -89,7 +106,7 @@ Rules:
 4. **Idle means idle.** With no damage, no frame is submitted and no timer runs.
 
 At 120 Hz the interval is 8.33 ms; the default safety margin is 1.2 ms. The pacer
-reports achieved and missed frames to the status surface.
+(`aether-pacing`) reports achieved and missed frames to the status surface.
 
 ## Tiling layout
 
@@ -108,9 +125,9 @@ The default layout is a three-column master stack:
 - Floating is per-surface and used only for overlays and dialogs.
 - Gaps are 8 px outer, 6 px inner, drawn by the compositor, not by clients.
 
-The layout engine is pure: `layout(surfaces, viewport, config) -> Vec<Rect>`. It is
-tested with invariants (no overlap, full coverage of the work area, stable ordering)
-rather than pixel snapshots.
+The layout engine (`aether-layout`) is pure:
+`tile(viewport, count, config) -> Vec<Rect>`. It is tested with invariants (no
+overlap, bounds, stable ordering) rather than pixel snapshots.
 
 ## Input
 
@@ -160,7 +177,9 @@ Capture is implemented as a protocol the shell serves, not a screen-scraper:
 
 ## What is not implemented yet
 
-- The Smithay integration layer (adorner, udev backend, libinput seat).
+- The Smithay integration layer (adorner, udev backend, libinput seat). The
+  `aether-compositor` crate is a facade and demo, not a Wayland compositor.
+- Input event types and a virtual seat (planned alongside the backend).
 - Real text shaping (cosmic-text or swash) and the font atlas.
 - Fractional scaling polish and per-surface scale factors.
 - HDR and colour management.

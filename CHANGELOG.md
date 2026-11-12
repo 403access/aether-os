@@ -8,6 +8,10 @@ semantic versioning with release codenames (0.1 = “Kestrel”).
 
 ### Added
 
+- **Compositor crate split** — `aether-geometry`, `aether-damage`, `aether-layout`,
+  `aether-pacing`, `aether-scene` and the `aether-compositor` facade/prelude/demo.
+  Apps can depend on the smallest crate they need; the P2 Smithay backend will be
+  a separate crate above this workspace. ADR-0010.
 - **Installer ISO** (`nixosConfigurations.installer`, `packages.iso`) — a minimal
   NixOS live environment with `git`, `disko`, `helix`, `rsync` and hardware probes.
 - **Development VM** (`packages.aarch64-linux.vm-image`) — a separate `os/vm`

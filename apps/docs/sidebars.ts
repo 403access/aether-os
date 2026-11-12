@@ -92,6 +92,7 @@ const sidebars: SidebarsConfig = {
         "adr/0007-remote-display-webrtc-webcodecs",
         "adr/0008-single-pages-deployment",
         "adr/0009-water-design-system",
+        "adr/0010-compositor-crate-split",
       ],
     },
     {

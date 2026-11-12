@@ -129,7 +129,7 @@ packages/bench        benchmark runner + regression gate (--check)
 os/nixos              reference target: kernel, hardware, disko, installer, services
 os/vm                 separate aarch64 development VM target
 os/common             the only Nix module shared by both targets
-os/compositor         Rust workspace: pure scene/layout/pacing core
+os/compositor         Rust crates: geometry, damage, layout, pacing, scene + facade
 scripts               assemble, publish, install, static server
 e2e                   Playwright specs for web + docs
 .github/workflows     CI, Pages deploy, perf gate

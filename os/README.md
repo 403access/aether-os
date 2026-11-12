@@ -33,6 +33,12 @@ os/nixos/
 └── users.nix                 operator, service user, agent UID range
 ```
 
+## Compositor core
+
+`os/compositor` is a Rust workspace of reusable crates (geometry, damage, layout,
+pacing, scene) plus a facade/demo. It has no GPU or Wayland dependency and is
+tested in CI. See `os/compositor/README.md`.
+
 ## Development VM (separate target)
 
 `os/vm/` boots Aether in a local aarch64 VM (Apple Silicon/QEMU) for testing. It

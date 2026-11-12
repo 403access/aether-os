@@ -63,7 +63,7 @@ os/common             the only Nix module shared by both targets
 os/nixos              reference hardware target and installer
 os/vm                 separate aarch64 development VM
 tests                 architectural boundary tests
-os/compositor         Rust workspace (scene/layout/pacing)
+os/compositor         Rust crates: geometry/damage/layout/pacing/scene + facade
 e2e                   Playwright specs
 scripts               assemble, publish, verify helpers
 ```

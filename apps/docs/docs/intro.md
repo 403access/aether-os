@@ -56,47 +56,12 @@ not need. Aether removes them:
 
 ## Reading paths
 
-<div className="doc-grid">
-  <div className="doc-card">
-    <h3>I want the product vision</h3>
-    <p className="doc-meta">15 minutes</p>
-    <p>
-      <a href="/product/prd">PRD</a> ·{" "}
-      <a href="/product/personas-and-jobs">Personas &amp; jobs</a> ·{" "}
-      <a href="/product/scope-and-non-goals">Scope &amp; non-goals</a> ·{" "}
-      <a href="/product/ux-principles">UX principles</a>
-    </p>
-  </div>
-  <div className="doc-card">
-    <h3>I want to understand the system</h3>
-    <p className="doc-meta">45 minutes</p>
-    <p>
-      <a href="/architecture/overview">Architecture overview</a> ·{" "}
-      <a href="/architecture/hardware-target">Hardware target</a> ·{" "}
-      <a href="/architecture/agent-isolation">Agent isolation</a> ·{" "}
-      <a href="/architecture/compositor">Compositor</a>
-    </p>
-  </div>
-  <div className="doc-card">
-    <h3>I want to build it</h3>
-    <p className="doc-meta">Start now</p>
-    <p>
-      <a href="/contributing/development">Development setup</a> ·{" "}
-      <a href="/contributing/testing">Testing strategy</a> ·{" "}
-      <a href="/roadmap">Roadmap</a> ·{" "}
-      <a href="/adr/index">Decision records</a>
-    </p>
-  </div>
-  <div className="doc-card">
-    <h3>I want the unvarnished numbers</h3>
-    <p className="doc-meta">Required reading</p>
-    <p>
-      <a href="/reference/claims-and-evidence">Claims &amp; evidence</a> ·{" "}
-      <a href="/architecture/performance-engineering">Performance engineering</a> ·{" "}
-      <a href="/product/metrics">Metrics</a>
-    </p>
-  </div>
-</div>
+| Path | Time | Start here |
+| --- | --- | --- |
+| Product vision | 15 min | [PRD](/product/prd) · [Personas & jobs](/product/personas-and-jobs) · [Scope & non-goals](/product/scope-and-non-goals) · [UX principles](/product/ux-principles) |
+| System design | 45 min | [Architecture overview](/architecture/overview) · [Hardware target](/architecture/hardware-target) · [Agent isolation](/architecture/agent-isolation) · [Compositor](/architecture/compositor) |
+| Build it | now | [Development setup](/contributing/development) · [Testing](/contributing/testing) · [Roadmap](/roadmap) · [ADRs](/adr/index) |
+| Unvarnished numbers | required | [Claims & evidence](/reference/claims-and-evidence) · [Performance engineering](/architecture/performance-engineering) · [Metrics](/product/metrics) |
 
 ## The five commitments
 

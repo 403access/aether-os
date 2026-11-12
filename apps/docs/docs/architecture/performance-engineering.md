@@ -61,9 +61,10 @@ Metrics:
 | `capability.verify` | higher | Broker hot path |
 | `palette.query.p50` | lower | Ranking/grouping regressions |
 
-Tolerance is 25%. That is deliberately loose enough for noisy CI and tight enough to
-catch an order-of-magnitude mistake. A regression can be waived only with an ADR and
-fresh numbers.
+Tolerance is 25% on the reference machine. CI runs the harness with a 3× smoke
+tolerance because GitHub's runners are slower than the development host; a 3×
+regression still catches an order-of-magnitude mistake without failing on clock
+differences. The exact 25% gate is a release step on the target hardware.
 
 Two real bugs found by this harness during v0.1:
 

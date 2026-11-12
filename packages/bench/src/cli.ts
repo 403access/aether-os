@@ -20,6 +20,13 @@ const RESULTS_DIR = join(import.meta.dir, "..", "..", "bench-results");
 const args = new Set(process.argv.slice(2));
 const check = args.has("--check");
 const updateBaseline = args.has("--update-baseline");
+const toleranceArg = [...args].find((arg) => arg.startsWith("--tolerance="));
+const tolerance =
+  toleranceArg === undefined ? undefined : Number(toleranceArg.slice("--tolerance=".length));
+if (tolerance !== undefined && (!Number.isFinite(tolerance) || tolerance <= 0)) {
+  console.error("--tolerance must be a positive number (for example --tolerance=3)");
+  process.exit(2);
+}
 
 const result = await runBenchmarks();
 
@@ -35,7 +42,8 @@ try {
   baseline = null;
 }
 
-const comparison = baseline === null ? null : compareToBaseline(result, baseline);
+const comparison =
+  baseline === null ? null : compareToBaseline(result, baseline, tolerance ?? baseline.tolerance ?? 0.25);
 
 console.log(`\nAether benchmarks  ·  ${result.environment.cpu}  ·  bun ${result.environment.bun}`);
 console.log("─".repeat(72));

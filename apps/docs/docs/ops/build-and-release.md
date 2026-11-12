@@ -59,7 +59,8 @@ Rules:
 
 - `verify` is required for every PR.
 - `e2e` runs against the **built** sites, not the dev server.
-- `bench` is required but tolerant (25% threshold).
+- `bench` runs the harness with a 3× smoke tolerance in CI and uploads results.
+  The exact 25% gate runs on the reference hardware before a release.
 - `deploy` runs only on `main`, after `verify`.
 - No secrets in PR workflows. No telemetry actions.
 

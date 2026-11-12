@@ -70,8 +70,8 @@ impl Canvas {
     }
 
     pub fn fill(&mut self, color: [u8; 4]) {
-        for pixel in self.pixels.chunks_exact_mut(4) {
-            pixel.copy_from_slice(&color);
+        for pixel in self.pixels.as_chunks_mut::<4>().0 {
+            *pixel = color;
         }
     }
 
@@ -373,8 +373,9 @@ mod tests {
         canvas.draw_text(0, 0, "A", 1, [255, 255, 255, 255]);
         assert!(canvas
             .pixels()
-            .chunks_exact(4)
-            .any(|p| p == [255, 255, 255, 255]));
+            .as_chunks::<4>()
+            .0
+            .contains(&[255, 255, 255, 255]));
     }
 
     #[test]

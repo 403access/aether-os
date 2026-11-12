@@ -1,0 +1,5 @@
+[toolchain]
+# Pinned so CI and contributors see the same clippy lints.
+channel = "1.99.1"
+components = ["clippy", "rustfmt"]
+profile = "minimal"

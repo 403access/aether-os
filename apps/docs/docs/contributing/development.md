@@ -13,7 +13,7 @@ description: Prerequisites, commands, repo layout, conventions and troubleshooti
 | --- | --- | --- |
 | Bun | ≥ 1.3 | Install, tests, build, scripts |
 | Node | ≥ 20 | Some tooling expects it |
-| Rust | stable (≥ 1.85) | Compositor core |
+| Rust | 1.99.1 (pinned in `rust-toolchain.toml`; MSRV 1.85) | Compositor/shell core |
 | Git | any recent | History |
 | Playwright browsers | installed via `bunx playwright install chromium` | E2E |
 | Nix | optional | OS image, `nix flake check` |

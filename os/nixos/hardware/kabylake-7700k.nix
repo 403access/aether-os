@@ -21,6 +21,8 @@
       "usbhid"
       "usb_storage"
       "sd_mod"
+      "xfs"
+      "ext4"
       "aesni_intel"
       "cryptd"
     ];

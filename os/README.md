@@ -1,70 +1,123 @@
 # Aether OS — NixOS layer
 
-Status: **written, not yet booted**. This is the P1 configuration. The kernel
-fragment and modules are intentionally explicit; nothing here needs a desktop
-environment.
+Status: **installable, evaluation-verified, not yet booted in CI.** The installed
+system and the live installer ISO both evaluate cleanly with `nix flake check`.
+An actual boot requires x86_64 hardware.
+
+## Flake outputs
+
+| Output | Purpose |
+| --- | --- |
+| `nixosConfigurations.kestrel` | The installed system |
+| `nixosConfigurations.installer` | Live installer environment |
+| `packages.x86_64-linux.iso` | Installer ISO (alias: `default`, `installer-iso`) |
+| `diskoConfigurations.kestrel` | Disk layout for `disko --flake` |
+| `packages.x86_64-linux.aether-scene` | Rust scene/pacing demo |
+| `devShells.x86_64-linux.default` | Bun, Rust, Nix tooling |
 
 ## Layout
 
 ```text
-flake.nix                 pinned inputs, ISO, aether-scene package, dev shell
-configuration.nix         system-wide settings, boot, network, packages
-hardware/kabylake-7700k.nix  CPU/GPU/audio/NVMe facts
-kernel.nix                custom kernel + cmdline + sysctl
-kernel/kestrel.config     config fragment (appended to defconfig)
-filesystem.nix            XFS root, ext4 scratch, tmpfs index
-services.nix              PipeWire, WirePlumber, udev, journald
-users.nix                 operator, service user, agent UID range
+flake.nix                    inputs, systems, ISO, disko config, package
+configuration.nix            system-wide settings, boot, network, packages
+hardware/kabylake-7700k.nix  CPU/GPU/audio/NVMe facts, microcode
+kernel.nix                   custom kernel + cmdline + sysctl
+kernel/kestrel.config        config fragment (appended to defconfig)
+filesystem.nix               XFS root, ext4 scratch, tmpfs index
+disko.nix                    GPT layout (ESP, root, nix, scratch, home)
+disk.nix                     the ONE disk device you edit
+installer.nix                live ISO: git, disko, helix, probe tools
+services.nix                 PipeWire, WirePlumber, udev, journald
+users.nix                    operator, service user, agent UID range
 ```
 
-## Build
-
-Requires Linux and Nix with flakes enabled:
+## Validate
 
 ```bash
-nix develop ./os/nixos
-nix build ./os/nixos#iso
-nixos-rebuild switch --flake ./os/nixos#kestrel
+nix flake check --no-build     # evaluation (any host)
+nix eval .#diskoConfigurations.kestrel --json
 ```
 
-`nix flake check ./os/nixos --no-build` validates evaluation. The ISO target is
-`packages.x86_64-linux.iso` (aliased as `default`).
+Evaluation is what CI can do on macOS/ARM. Building the ISO or the system closure
+requires an x86_64 Linux host with Nix (or a remote builder).
 
-## Disk labels
-
-The configuration mounts by label. Create them before the first install:
-
-| Label | Mount | FS | Notes |
-| --- | --- | --- | --- |
-| `AETHER-BOOT` | `/boot` | vfat | 1 GiB |
-| `aether-root` | `/` | xfs | 80 GiB |
-| `aether-nix` | `/nix` | xfs | 120 GiB |
-| `aether-home` | `/home` | xfs | remainder |
-| `aether-scratch` | `/scratch` | ext4 | 60 GiB |
-
-Format with:
+## Build the installer ISO
 
 ```bash
-mkfs.xfs -f -b size=4096 -L aether-root /dev/nvme0n1p2
-mkfs.xfs -f -L aether-nix /dev/nvme0n1p3
-mkfs.xfs -f -L aether-home /dev/nvme0n1p4
-mkfs.ext4 -L aether-scratch /dev/nvme0n1p5
-mkfs.vfat -F32 -n AETHER-BOOT /dev/nvme0n1p1
+nix build .#iso
+ls result/iso/
 ```
+
+Then write it to a USB stick:
+
+```bash
+sudo dd if=result/iso/*.iso of=/dev/rdiskN bs=4m status=progress   # macOS
+sudo dd if=result/iso/*.iso of=/dev/sdX bs=4M status=progress oflag=sync  # Linux
+```
+
+You do **not** need this ISO to install Aether. Any current NixOS minimal ISO
+works; the install guide fetches the flake from a clone. The custom ISO just
+preinstalls `git`, `disko`, `helix` and hardware probes.
+
+## Install
+
+On the live ISO, from a clone of this repository:
+
+```bash
+# 1. identify the target
+lsblk -o NAME,SIZE,MODEL,SERIAL,TYPE,MOUNTPOINTS
+
+# 2. set it in os/nixos/disk.nix
+#    device = "/dev/nvme0n1";
+
+# 3. install (wipes the target; asks for confirmation)
+sudo ./scripts/install.sh /dev/nvme0n1
+```
+
+Manual equivalent:
+
+```bash
+sudo nix --extra-experimental-features "nix-command flakes" \
+  run nixpkgs#disko -- --mode disko --flake .#kestrel
+
+sudo nixos-install --root /mnt --flake .#kestrel --no-root-passwd
+```
+
+Full instructions, firmware settings, recovery and hardware checks:
+
+- `apps/docs/docs/getting-started/install.md`
+- `apps/docs/docs/getting-started/first-boot.md`
+- `apps/docs/docs/getting-started/hardware.md`
+
+## Disk layout
+
+`disko.nix` creates one GPT disk:
+
+| Partition | Size | FS | Mount | Label |
+| --- | --- | --- | --- | --- |
+| `01-esp` | 1 GiB | vfat | `/boot` | `AETHER-BOOT` |
+| `02-root` | 25% | xfs | `/` | `aether-root` |
+| `03-nix` | 30% | xfs | `/nix` | `aether-nix` |
+| `04-scratch` | 10% | ext4 | `/scratch` | `aether-scratch` |
+| `05-home` | remainder | xfs | `/home` | `aether-home` |
+
+The mount configuration uses `/dev/disk/by-label/*`, so labels are part of the
+contract. XFS labels are limited to 12 characters; do not rename them without
+updating `filesystem.nix`.
 
 ## First boot
 
-1. systemd-boot starts the kernel; initrd mounts the XFS root.
-2. systemd reaches `multi-user.target`; tty1 auto-logs in as `oliver`.
-3. The `aether-shell` binary is not packaged yet. For P1 bring-up, run a
-   terminal and verify the gate:
-   ```bash
-   systemd-analyze
-   free -m
-   cat /sys/kernel/security/lsm
-   vainfo
-   ```
-4. Change the password: `passwd`.
+1. Reboot, remove the USB, choose the NixOS/Aether entry in the UEFI menu.
+2. Log in on tty1 as `oliver` (initial password `aether`) and run `passwd`.
+3. Follow the first-boot checklist: `apps/docs/docs/getting-started/first-boot.md`.
+
+Expected at this milestone:
+
+- Custom kernel ending in `-aether`, Landlock in `/sys/kernel/security/lsm`.
+- XFS/ext4/tmpfs mounts per `filesystem.nix`.
+- PipeWire/WirePlumber running; NetworkManager running.
+- `aether-scene` demo available.
+- **No compositor and no aetherd/index services yet** — P2/P3.
 
 ## Kernel workflow
 
@@ -73,32 +126,26 @@ real machine:
 
 ```bash
 zcat /proc/config.gz > /tmp/current.config     # if IKCONFIG_PROC is enabled
-# boot a live image, run: make localmodconfig
-# diff the result against the fragment and commit the delta
+# or run make localmodconfig against the nixpkgs kernel source
+# diff the result and commit only the deliberate deltas
 ```
 
-Rebuild with `nixos-rebuild switch`. Keep the previous generation; a bad kernel
-is recovered in systemd-boot.
+Rebuild with `nixos-rebuild switch --flake .#kestrel`. Keep the previous generation;
+a bad kernel is recovered in systemd-boot.
 
-## Session units (P1/P3)
+## What still needs to happen on hardware (P1 gate)
 
-The session is deliberately not a systemd service yet. Once binaries exist:
-
-```nix
-systemd.services.aetherd = {
-  wantedBy = [ "aether-session.target" ];
-  serviceConfig.ExecStart = "${pkgs.aetherd}/bin/aetherd";
-};
-```
-
-and `aether-shell` starts on tty1 with `WantedBy=graphical.target`. Until then,
-`services.getty.autologinUser` keeps the machine usable for bring-up.
-
-## What to verify in P1
-
+- [ ] First boot of `nixosConfigurations.kestrel`.
 - [ ] `uname -r` ends in `-aether`.
 - [ ] `/sys/kernel/security/lsm` contains `landlock`.
-- [ ] XFS mount options match `filesystem.nix` (`findmnt -o TARGET,SOURCE,FSTYPE,OPTIONS`).
-- [ ] PipeWire sees analog, USB and Bluetooth devices (`wpctl status`).
-- [ ] Idle RAM and CPU recorded, replacing the budgets.
-- [ ] Userspace boot < 1.5 s (`systemd-analyze`).
+- [ ] Mounts match `filesystem.nix`.
+- [ ] `vainfo` opens the iHD driver.
+- [ ] `wpctl status` shows a default sink; analog/USB/Bluetooth enumerated.
+- [ ] Idle RAM/CPU and userspace boot time recorded, replacing budgets.
+- [ ] `localmodconfig` delta reviewed.
+
+## Legacy BIOS and encryption
+
+Neither is supported by the default install path. BIOS requires a 1 MiB `EF02`
+partition and GRUB; LUKS requires a disko encryption layer and initrd changes.
+Both are documented as forks in the install guide.

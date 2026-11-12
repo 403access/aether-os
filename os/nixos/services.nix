@@ -43,13 +43,11 @@
     ACTION=="add|change", KERNEL=="nvme[0-9]n[0-9]", ATTR{queue/read_ahead_kb}="4096"
   '';
 
-  services.journald = {
-    extraConfig = ''
-      SystemMaxUse=500M
-      RuntimeMaxUse=128M
-      MaxRetentionSec=2week
-      ForwardToSyslog=no
-    '';
+  services.journald.settings.Journal = {
+    SystemMaxUse = "500M";
+    RuntimeMaxUse = "128M";
+    MaxRetentionSec = "2week";
+    ForwardToSyslog = "no";
   };
 
   # No inbound remote access.
@@ -63,10 +61,5 @@
     settings.Manager.DefaultTimeoutStopSec = "10s";
     # No wait-for-network: the shell must paint before the network is up.
     services.NetworkManager-wait-online.enable = false;
-    # Keep the journal but not an unbounded one.
-    services.systemd-journald.serviceConfig.SystemMaxUse = "500M";
   };
-
-  # The agent UID range is reserved; dynamic allocation happens in aetherd.
-  users.groups.aether-agents.gid = 4000;
 }

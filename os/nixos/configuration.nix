@@ -40,9 +40,9 @@
       efi.canTouchEfiVariables = true;
       timeout = 1;
     };
-    initrd.systemd.enable = true;
-    tmpOnTmpfs = true;
-    cleanTmpDir = true;
+    tmp.useTmpfs = true;
+    tmp.cleanOnBoot = true;
+    supportedFilesystems = ["xfs" "ext4" "vfat"];
   };
 
   # The operator is the only interactive user; no display manager.
@@ -73,6 +73,11 @@
       jq
       curl
       htop
+      helix
+      tmux
+      pciutils
+      usbutils
+      alsa-utils
       pavucontrol
       wireplumber
       intel-gpu-tools
@@ -96,7 +101,6 @@
 
   security = {
     sudo.enable = true;
-    polkit.enable = false;
     protectKernelImage = true;
     lockKernelModules = false; # needed for agent Landlock/seccomp development
   };

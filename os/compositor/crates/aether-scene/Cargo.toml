@@ -1,0 +1,16 @@
+[package]
+name = "aether-scene"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Compositor scene graph, damage tracking, tiling layout and frame pacing for Aether OS"
+
+[lib]
+name = "aether_scene"
+path = "src/lib.rs"
+
+[[bin]]
+name = "aether-scene-demo"
+path = "src/main.rs"
+
+[dependencies]

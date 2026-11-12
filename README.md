@@ -64,7 +64,7 @@ bun install
 bun run dev:web          # marketing site  → http://localhost:4321
 bun run dev:docs         # documentation   → http://localhost:4322/docs/
 
-bun run test:unit        # 199 package tests (bun test)
+bun run test:unit        # 206 package tests (bun test)
 bun run test:e2e         # 12 Playwright specs against the assembled build
 bun run typecheck        # strict TS across the monorepo
 bun run os:test          # 35 Rust compositor-core tests
@@ -126,7 +126,9 @@ packages/agents       isolation tiers, admission control, collaboration bus
 packages/palette      headless command-palette state machine
 packages/ui           React design system (palette, chat, chrome)
 packages/bench        benchmark runner + regression gate (--check)
-os/nixos              flake, kernel, hardware, disko layout, installer, services
+os/nixos              reference target: kernel, hardware, disko, installer, services
+os/vm                 separate aarch64 development VM target
+os/common             the only Nix module shared by both targets
 os/compositor         Rust workspace: pure scene/layout/pacing core
 scripts               assemble, publish, install, static server
 e2e                   Playwright specs for web + docs

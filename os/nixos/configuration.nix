@@ -9,6 +9,7 @@
   ...
 }: {
   imports = [
+    ../common/base.nix
     ./hardware/kabylake-7700k.nix
     ./kernel.nix
     ./filesystem.nix
@@ -20,7 +21,6 @@
 
   nix = {
     settings = {
-      experimental-features = ["nix-command" "flakes"];
       auto-optimise-store = true;
       trusted-users = ["root" "oliver"];
     };
@@ -58,11 +58,7 @@
   };
 
   time.timeZone = "Europe/Berlin";
-  i18n.defaultLocale = "en_US.UTF-8";
-  console = {
-    font = "Lat2-Terminus16";
-    keyMap = "us";
-  };
+  console.font = "Lat2-Terminus16";
 
   environment = {
     systemPackages = with pkgs; [

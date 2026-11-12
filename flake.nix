@@ -42,7 +42,7 @@
           meta = with final.lib; {
             description = "Aether compositor scene graph, damage tracking and frame pacing";
             license = licenses.mit;
-            platforms = ["x86_64-linux" "aarch64-linux"];
+            platforms = ["x86_64-linux"];
           };
         };
       };

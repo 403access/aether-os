@@ -36,7 +36,20 @@ VM-only settings live in `os/vm/` and are exposed as
 | Purpose | install on hardware | boot and test the base |
 
 Shared behavior belongs in `packages/` or `os/compositor/`, not in either
-configuration.
+configuration. The only shared Nix module is `os/common/base.nix` (locale,
+keymap, flake support); it contains no hardware, users, storage or security
+policy.
+
+### The boundary is enforced
+
+`tests/separation.test.ts` runs with `bun run test` and CI. It fails if:
+
+- `os/nixos` references `os/vm` or configures VM disks,
+- `os/vm` imports `os/nixos`,
+- VM-only posture (passwordless sudo, firewall off, password SSH) appears in the
+  reference,
+- the `kestrel` flake block includes the VM tree,
+- the VM package stops using only `os/vm/configuration.nix`.
 
 ## Requirements
 

@@ -18,7 +18,10 @@ machine without touching the real installation target.
 
 **Do not import `os/nixos` from here, and do not copy anything from here into
 `os/nixos` unless it is a genuinely shared fix.** Shared behavior belongs in
-`packages/` or `os/compositor/`.
+`os/common/` (target-agnostic Nix), `packages/` or `os/compositor/`.
+
+Both targets import `os/common/base.nix` (locale, keymap, flakes). The boundary
+is enforced by `tests/separation.test.ts`, not just by convention.
 
 ## Build
 

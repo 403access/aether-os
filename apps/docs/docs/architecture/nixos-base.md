@@ -32,6 +32,7 @@ machine configuration.
 
 ```text
 flake.nix / flake.lock        inputs, systems, ISO, disko config, package
+os/common/base.nix            only shared module (locale, keymap, flakes)
 os/nixos/
 ├── configuration.nix         # system-wide modules and services
 ├── hardware/

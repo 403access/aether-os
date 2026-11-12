@@ -19,6 +19,7 @@ An actual boot requires x86_64 hardware.
 
 ```text
 flake.nix / flake.lock       inputs, systems, ISO, disko config (repo root)
+os/common/base.nix           the only shared module (locale, keymap, flakes)
 os/nixos/
 ├── configuration.nix        system-wide settings, boot, network, packages
 ├── hardware/kabylake-7700k.nix  CPU/GPU/audio/NVMe facts, microcode

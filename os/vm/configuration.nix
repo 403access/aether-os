@@ -20,12 +20,12 @@
   lib,
   ...
 }: {
+  imports = [../common/base.nix];
+
   system.stateVersion = "26.11";
 
   networking.hostName = "aether-vm";
   time.timeZone = "UTC";
-  i18n.defaultLocale = "en_US.UTF-8";
-  console.keyMap = "us";
 
   # Small, sparse disk. Grow with qemu-img if you need more.
   virtualisation.diskSize = 4096;
@@ -67,10 +67,7 @@
   };
   networking.firewall.enable = false; # user-mode NAT only; not the install target
 
-  nix.settings = {
-    experimental-features = ["nix-command" "flakes"];
-    trusted-users = ["root" "aether"];
-  };
+  nix.settings.trusted-users = ["root" "aether"];
 
   # A deterministic marker for headless smoke tests. It only writes to the
   # serial console; it does not power off or modify the system.

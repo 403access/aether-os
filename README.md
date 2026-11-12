@@ -35,7 +35,7 @@ core, not yet a bootable image.
 | Area | State | Where |
 | --- | --- | --- |
 | Marketing site + live palette demo | ✅ built, 11 e2e specs | `apps/web` |
-| Documentation site (35 pages) | ✅ built | `apps/docs` |
+| Documentation site (44 pages) | ✅ built | `apps/docs` |
 | Search/index engine (BM25, fuzzy, prefix) | ✅ 59 tests | `packages/indexer` |
 | Shared-memory SPSC ring + capabilities | ✅ 28 tests (incl. cross-thread) | `packages/ipc` |
 | Agent isolation policy + scheduling | ✅ 39 tests | `packages/agents` |

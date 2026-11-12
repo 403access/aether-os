@@ -2,6 +2,7 @@
   "name": "aether-os",
   "version": "0.1.0-alpha.0",
   "private": true,
+  "packageManager": "bun@1.4.4",
   "description": "A single-target Linux workstation OS: Rust compositor, zero-copy IPC, capability-isolated agents.",
   "license": "MIT",
   "workspaces": [
@@ -15,7 +16,7 @@
     "build:web": "bun run --cwd apps/web build",
     "build:docs": "bun run --cwd apps/docs build",
     "preview": "bun run --cwd apps/web preview",
-    "test": "bun test",
+    "test": "bun test packages",
     "test:unit": "bun test packages",
     "test:e2e": "playwright test",
     "test:all": "bun run test:unit && bun run test:e2e",

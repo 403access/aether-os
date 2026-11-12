@@ -35,7 +35,7 @@ os/nixos/
 ├── kernel.nix                # custom kernel package and config
 ├── kernel/kestrel.config     # committed .config
 ├── filesystem.nix            # XFS mount options, scratch ext4, tmpfs
-├── services.nix              # aetherd, aether-index, aether-shell, PipeWire
+├── services.nix              # PipeWire, WirePlumber, udev, journald
 ├── users.nix                 # operator user, agent UIDs, groups
 └── overlay.nix               # packages built with target-cpu=native
 ```

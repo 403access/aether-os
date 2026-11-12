@@ -34,15 +34,16 @@ core, not yet a bootable image.
 
 | Area | State | Where |
 | --- | --- | --- |
-| Marketing site + live palette demo | ✅ built | `apps/web` |
-| Documentation site (30+ pages) | ✅ built | `apps/docs` |
-| Search/index engine (BM25, fuzzy, prefix) | ✅ tested | `packages/indexer` |
-| Shared-memory SPSC ring + capabilities | ✅ tested (incl. cross-thread) | `packages/ipc` |
-| Agent isolation policy + scheduling | ✅ tested | `packages/agents` |
-| Command palette state machine | ✅ tested | `packages/palette` |
-| React UI kit | ✅ tested | `packages/ui` |
+| Marketing site + live palette demo | ✅ built, 11 e2e specs | `apps/web` |
+| Documentation site (35 pages) | ✅ built | `apps/docs` |
+| Search/index engine (BM25, fuzzy, prefix) | ✅ 59 tests | `packages/indexer` |
+| Shared-memory SPSC ring + capabilities | ✅ 28 tests (incl. cross-thread) | `packages/ipc` |
+| Agent isolation policy + scheduling | ✅ 39 tests | `packages/agents` |
+| Command palette state machine | ✅ 27 tests | `packages/palette` |
+| React UI kit | ✅ 17 DOM tests | `packages/ui` |
+| Benchmark harness + regression gate | ✅ baseline committed | `packages/bench` |
 | NixOS flake, kernel & hardware config | ⚠️ written, not yet booted | `os/nixos` |
-| Compositor scene graph + frame scheduler | ✅ tested (Rust) | `os/compositor` |
+| Compositor scene graph + frame scheduler | ✅ 35 Rust tests | `os/compositor` |
 | Bootable ISO | ⏳ planned (roadmap P1) | — |
 | WebRTC remote display | ⏳ planned (roadmap P7) | — |
 
@@ -59,12 +60,13 @@ compositor core.
 ```bash
 bun install
 bun run dev:web          # marketing site  → http://localhost:4321
-bun run dev:docs         # documentation   → http://localhost:4322
+bun run dev:docs         # documentation   → http://localhost:4322/docs/
 
-bun run test:unit        # package tests (bun test)
-bun run test:e2e         # Playwright against both built sites
+bun run test:unit        # 199 package tests (bun test)
+bun run test:e2e         # 11 Playwright specs against the assembled build
 bun run typecheck        # strict TS across the monorepo
-bun run os:test          # Rust compositor-core tests
+bun run os:test          # 35 Rust compositor-core tests
+bun run bench            # benchmarks; `bun run bench:check` gates regressions
 bun run build            # assembles a single deployable tree in apps/web/dist
 ```
 
@@ -113,6 +115,12 @@ Start at `apps/docs/docs/intro.md`, or run the docs site. Highlights:
 - [Agent isolation without PKU](apps/docs/docs/architecture/agent-isolation.md)
 - [Roadmap](apps/docs/docs/roadmap/roadmap.md)
 - [Claims & evidence](apps/docs/docs/reference/claims-and-evidence.md)
+
+The visual language and the explorer GUI are adopted from the Data Cloud Compare
+project (`/Users/olivermolnar/Developer/jottacloud-comparison`, live reference at
+`http://localhost:8787/`). The tokens and components are vendored in
+`packages/design-system`; provenance and the adoption plan are recorded in
+[design system and explorer source](apps/docs/docs/roadmap/design-system-and-explorer.md).
 
 ## Publishing to GitHub
 

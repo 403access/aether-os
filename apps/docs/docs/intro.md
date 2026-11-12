@@ -60,7 +60,7 @@ not need. Aether removes them:
 | --- | --- | --- |
 | Product vision | 15 min | [PRD](/product/prd) · [Personas & jobs](/product/personas-and-jobs) · [Scope & non-goals](/product/scope-and-non-goals) · [UX principles](/product/ux-principles) |
 | System design | 45 min | [Architecture overview](/architecture/overview) · [Hardware target](/architecture/hardware-target) · [Agent isolation](/architecture/agent-isolation) · [Compositor](/architecture/compositor) |
-| Build it | now | [Development setup](/contributing/development) · [Testing](/contributing/testing) · [Roadmap](/roadmap) · [ADRs](/adr/index) |
+| Build it | now | [Development setup](/contributing/development) · [Testing](/contributing/testing) · [Roadmap](/roadmap) · [ADRs](/adr) |
 | Unvarnished numbers | required | [Claims & evidence](/reference/claims-and-evidence) · [Performance engineering](/architecture/performance-engineering) · [Metrics](/product/metrics) |
 
 ## The five commitments

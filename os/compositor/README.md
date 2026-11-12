@@ -16,7 +16,9 @@ aether-damage        Region, merging, clipping                  (geometry)
 aether-layout        master/stack tiling                        (geometry)
 aether-pacing        FramePacer, deadlines, missed frames       (no deps)
 aether-scene         Surface, Layer, Scene, hit testing          (geometry, damage)
-aether-compositor    facade + prelude + demo binary             (all of the above)
+aether-shell         windows, workspaces, focus, FramePlan      (all core crates)
+aether-preview       software renderer + PNG preview            (shell)
+aether-compositor    facade + prelude + demo binary             (core crates)
 ```
 
 Dependency direction is one-way. There are no cycles and no optional GPU code.
@@ -28,6 +30,8 @@ Dependency direction is one-way. There are no cycles and no optional GPU code.
 | `aether-layout` | You place windows/tiles without a compositor |
 | `aether-pacing` | You need a frame deadline scheduler |
 | `aether-scene` | You model surfaces, z-order and hit testing |
+| `aether-shell` | You need windows, workspaces, focus or frame plans |
+| `aether-preview` | You want to render a frame to PNG without a display |
 | `aether-compositor` | You want the facade/prelude, or run the demo |
 
 ## Design rules
@@ -50,7 +54,10 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --all -- --check
 cargo run -p aether-compositor --example hello_scene
 cargo run -p aether-compositor --bin aether-scene-demo
+cargo run -p aether-preview --bin aether-shell-preview
 ```
+
+The last command writes `artifacts/shell/frame.png` and `damage.png`.
 
 The Nix package installs the demo as `aether-scene`:
 
@@ -83,13 +90,15 @@ let mut pacer = FramePacer::new(120);
 pacer.on_present(0);
 ```
 
-Use `aether-compositor::prelude::*` in shell-side code and examples.
+Use `aether-shell` for window/workspace policy and `aether-compositor::prelude::*`
+for geometry/damage/scene helpers. Apps should not depend on the future Smithay
+backend.
 
 ## Roadmap boundary
 
 | Phase | Work |
 | --- | --- |
-| P0 (done) | Pure crates, tests, demo, facade |
+| P0 (done) | Pure crates, shell state, preview, tests, demo, facade |
 | P2 | `aether-shell`: Smithay backend, renderer, input seat, DMA-BUF export |
 | P2 | Text/atlas and scene-graph UI primitives |
 | P3 | Shell layers (palette/chat) consume the same crates |

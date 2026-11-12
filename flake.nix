@@ -30,10 +30,11 @@
           version = "0.1.0";
           src = sceneSource;
           cargoLock.lockFile = ./os/compositor/Cargo.lock;
-          cargoBuildFlags = ["--package" "aether-compositor" "--bin" "aether-scene-demo"];
+          cargoBuildFlags = ["--workspace"];
           installPhase = ''
             mkdir -p $out/bin
             cp target/release/aether-scene-demo $out/bin/aether-scene
+            cp target/release/aether-shell-preview $out/bin/aether-shell-preview
           '';
           meta = with final.lib; {
             description = "Aether compositor scene graph, damage tracking and frame pacing";

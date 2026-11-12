@@ -1,0 +1,22 @@
+[package]
+name = "aether-preview"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Software frame renderer and preview binary for the Aether shell"
+
+[lib]
+name = "aether_preview"
+path = "src/lib.rs"
+
+[[bin]]
+name = "aether-shell-preview"
+path = "src/main.rs"
+
+[dependencies]
+aether-geometry.workspace = true
+aether-shell.workspace = true
+aether-scene.workspace = true
+aether-layout.workspace = true
+font8x8 = "0.3"
+png = "0.18"

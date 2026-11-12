@@ -9,10 +9,11 @@ semantic versioning with release codenames (0.1 = “Kestrel”).
 ### Added
 
 - **First native backend** — `aether-shell-smithay` (Linux-only, standalone
-  Cargo crate) opens a Smithay/winit window and presents `FramePlan` as solid
-  surfaces. Verified under Xvfb/llvmpipe with a captured window; client
-  protocols/input and udev/DRM remain. Nix dev shell `.#smithay`, smoke script,
-  ADR-0012.
+  Cargo crate) opens a Smithay/winit window. It now accepts xdg-shell/shm
+  clients (verified with a real `weston-terminal`), forwards keyboard input to
+  the focused surface and keeps a `--demo` mode for the solid `FramePlan` view.
+  Shell tiling integration, pointer input, configure/sizing and udev/DRM remain.
+  Nix dev shell `.#smithay`, demo/client smoke scripts, ADR-0012.
 - **Backend-neutral shell state** — `aether-shell` owns windows, workspaces, focus,
   floating windows, the overlay and `FramePlan`, with no Wayland/GPU dependency.
   `aether-preview` renders frame plans to PNG (`aether-shell-preview`), providing

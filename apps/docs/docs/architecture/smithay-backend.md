@@ -20,29 +20,42 @@ aether-shell (policy) ──> FramePlan ──> aether-shell-smithay (Linux)
                                    └── aether-preview (software, any OS)
 ```
 
-![Smithay winit window presenting tiled shell surfaces and the overlay](/img/smithay-window.png)
+![A Wayland terminal client rendered by the Smithay backend](/img/smithay-client.png)
 
-*The winit backend under Xvfb/llvmpipe: four tiled surfaces and the overlay,
-rendered from the same `FramePlan` as the software preview. Solid colours are
-stand-ins until client buffers are mapped.*
+*A real `weston-terminal` xdg-shell client with a shared-memory buffer, rendered
+by `aether-shell-smithay` under Xvfb.*
+
+![The `--demo` FramePlan view](/img/smithay-window.png)
+
+*`--demo` mode: tiled shell surfaces and the overlay, rendered from the same
+`FramePlan` as the software preview.*
 
 ## What works
 
 - Opens a native window with Smithay's winit/EGL backend.
-- Consumes `FramePlan`; z-order (windows → overlay) matches the shell.
-- Resize and close events; damage tracker is recreated on resize.
+- Accepts Wayland clients over a listening socket (`aether-0`): xdg-shell,
+  shared-memory buffers, compositor and seat.
+- Renders client surfaces with Smithay surface elements; a real `weston-terminal`
+  is shown in the screenshot above.
+- Forwards keyboard input to the focused surface (focus follows a new toplevel and
+  pointer motion when nothing is focused).
+- Sends frame callbacks, handles client connect/disconnect and window close.
+- `--demo` mode presents the shell `FramePlan` as solid surfaces (z-order and
+  overlay) for visual verification without clients.
 - Runs under Xvfb with Mesa software EGL for headless verification.
-- `--frames N` exits after N frames for automated smoke tests.
+- `--frames N` exits after N iterations for automated smoke tests.
 
 ## What is not implemented
 
-- **Wayland clients.** There is no `wl_display`, xdg-shell, shm or seat yet, so
-  the window shows compositor-owned surfaces, not client applications.
-- **Client buffer rendering.** Solid colour elements stand in for surfaces.
-- **Input routing.** Keyboard/pointer events are not mapped to shell actions.
+- **Shell policy for clients.** Clients are painted at `(0,0)`, not integrated
+  with `aether-shell` tiling/workspaces yet.
+- **Pointer input.** Motion focuses the first toplevel; pointer motion/buttons are
+  not forwarded, and there is no hit-testing or cursor theming.
+- **xdg configure/sizing.** Toplevels are activated but not sized by the shell.
+- **Popups, drag-and-drop and grabs** are accepted/ignored at the protocol level.
 - **udev/DRM backend.** The target path for the 7700K (no X server) is not written;
   winit is the development adapter.
-- **Text and chrome.** No glyph atlas yet.
+- **Damage from client buffers** is tracked as a full-window redraw for now.
 
 The P2 gate remains: a real client window, 120 Hz pacing and input on the target.
 
@@ -56,12 +69,21 @@ nix develop .#smithay
 # in the shell:
 cargo build --manifest-path os/compositor/aether-shell-smithay/Cargo.toml
 
-# on a normal X11/Wayland session:
+# client-capable mode on a normal X11/Wayland session (prints the socket name):
 ./os/compositor/aether-shell-smithay/target/debug/aether-shell-smithay
 
-# headless verification (Xvfb + llvmpipe), writes artifacts/smithay/window.png:
-./os/compositor/aether-shell-smithay/smoke-xvfb.sh
+# launch a client against it in another shell:
+WAYLAND_DISPLAY=aether-0 weston-terminal
+
+# shell FramePlan demo (solid surfaces, no clients):
+./os/compositor/aether-shell-smithay/target/debug/aether-shell-smithay --demo
+
+# headless verification:
+./os/compositor/aether-shell-smithay/smoke-xvfb.sh          # --demo
+./os/compositor/aether-shell-smithay/smoke-client-xvfb.sh   # weston-terminal
 ```
+
+The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client.
 
 The environment sets:
 

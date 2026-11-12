@@ -1,0 +1,26 @@
+{
+  "name": "@aether/docs",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "scripts": {
+    "start": "docusaurus start --port 4322",
+    "build": "docusaurus build",
+    "serve": "docusaurus serve --port 4322",
+    "clear": "docusaurus clear"
+  },
+  "dependencies": {
+    "@docusaurus/core": "^3.9.2",
+    "@docusaurus/preset-classic": "^3.9.2",
+    "@easyops-cn/docusaurus-search-local": "^0.52.0",
+    "@mdx-js/react": "^3.1.0",
+    "clsx": "^2.1.1",
+    "prism-react-renderer": "^2.4.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@docusaurus/module-type-aliases": "^3.9.2",
+    "@docusaurus/tsconfig": "^3.9.2",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,225 @@
+@import "./tokens.css";
+
+/* ==========================================================================
+   Aether docs — Docusaurus on the Water design system.
+   ========================================================================== */
+
+:root {
+  --ifm-color-primary: #38d6ff;
+  --ifm-color-primary-dark: #22c8e8;
+  --ifm-color-primary-darker: #1dbbd9;
+  --ifm-color-primary-darkest: #1698b1;
+  --ifm-color-primary-light: #5adfff;
+  --ifm-color-primary-lighter: #6ee4ff;
+  --ifm-color-primary-lightest: #a4eeff;
+
+  --ifm-background-color: #031922;
+  --ifm-background-surface-color: #072733;
+  --ifm-font-family-base: var(--ds-font);
+  --ifm-font-family-monospace: var(--ds-font-mono);
+  --ifm-font-color-base: #e9fbff;
+  --ifm-heading-color: #f4feff;
+  --ifm-link-color: #38d6ff;
+  --ifm-link-hover-color: #8ae9ff;
+  --ifm-navbar-background-color: rgba(3, 25, 34, 0.72);
+  --ifm-navbar-shadow: none;
+  --ifm-toc-border-color: rgba(127, 230, 255, 0.15);
+  --ifm-menu-color: #a5dbe5;
+  --ifm-menu-color-active: #38d6ff;
+  --ifm-menu-color-background-active: rgba(56, 214, 255, 0.12);
+  --ifm-menu-color-background-hover: rgba(112, 226, 255, 0.08);
+  --ifm-code-background: rgba(7, 39, 51, 0.75);
+  --ifm-code-font-size: 88%;
+  --ifm-table-border-color: rgba(127, 230, 255, 0.15);
+  --ifm-table-stripe-background: rgba(7, 39, 51, 0.45);
+  --ifm-table-head-background: rgba(9, 47, 60, 0.6);
+  --ifm-blockquote-color: #a5dbe5;
+  --ifm-blockquote-border-color: rgba(56, 214, 255, 0.4);
+  --ifm-footer-background-color: #02141c;
+  --ifm-hr-border-color: rgba(127, 230, 255, 0.15);
+  --docusaurus-highlighted-code-line-bg: rgba(56, 214, 255, 0.1);
+  --docsearch-primary-color: #38d6ff;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] body {
+  background-color: var(--ds-bg);
+  background-image:
+    radial-gradient(1100px 620px at 12% -12%, rgba(46, 196, 224, 0.14) 0%, transparent 58%),
+    radial-gradient(900px 560px at 92% 8%, rgba(45, 110, 230, 0.1) 0%, transparent 62%),
+    linear-gradient(165deg, #041e28 0%, #031922 45%, #02121a 100%);
+  background-attachment: fixed;
+}
+
+.navbar {
+  border-bottom: 1px solid var(--ds-line);
+  backdrop-filter: blur(18px) saturate(140%);
+}
+
+.navbar__title {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.navbar__logo {
+  height: 26px;
+}
+
+.navbar__link--active {
+  color: var(--ds-accent);
+}
+
+.theme-doc-sidebar-container {
+  border-right: 1px solid var(--ds-line) !important;
+}
+
+.menu__link {
+  border-radius: var(--ds-radius-sm);
+  font-size: var(--ds-text-sm);
+}
+
+.menu__list-item-collapsible {
+  border-radius: var(--ds-radius-sm);
+}
+
+.menu__list-item-collapsible:hover {
+  background: var(--ds-hover);
+}
+
+.table-of-contents__link--active {
+  color: var(--ds-accent);
+  font-weight: 600;
+}
+
+.markdown {
+  font-size: var(--ds-text-md);
+  line-height: 1.72;
+}
+
+.markdown h1:first-child {
+  font-size: clamp(2rem, 3.4vw, 2.6rem);
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+}
+
+.markdown h2 {
+  margin-top: 2.6rem;
+  font-size: 1.45rem;
+  letter-spacing: -0.02em;
+}
+
+.markdown h3 {
+  margin-top: 1.8rem;
+  font-size: 1.1rem;
+}
+
+.markdown > p > code,
+.markdown li > code {
+  padding: 1px 5px;
+  border: 1px solid var(--ds-line);
+  border-radius: var(--ds-radius-xs);
+  background: var(--ds-glass);
+}
+
+.markdown table {
+  display: table;
+  width: 100%;
+}
+
+.markdown th {
+  font-size: var(--ds-text-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.markdown blockquote {
+  border-left-width: 3px;
+  background: rgba(7, 39, 51, 0.45);
+}
+
+.admonition {
+  border: 1px solid var(--ds-line-strong);
+  border-radius: var(--ds-radius-md);
+  background: var(--ds-glass);
+}
+
+.admonition-heading h5 {
+  font-size: var(--ds-text-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pagination-nav__link {
+  border: 1px solid var(--ds-line);
+  border-radius: var(--ds-radius-md);
+  background: var(--ds-glass);
+  transition: border-color var(--ds-motion-fast) ease;
+}
+
+.pagination-nav__link:hover {
+  border-color: var(--ds-accent);
+}
+
+.footer {
+  border-top: 1px solid var(--ds-line);
+}
+
+.footer__title {
+  color: var(--ds-text-3);
+  font-size: var(--ds-text-2xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.footer__link-item {
+  color: var(--ds-text-2);
+  font-size: var(--ds-text-sm);
+}
+
+.footer__copyright {
+  color: var(--ds-text-3);
+  font-size: var(--ds-text-2xs);
+}
+
+/* Home / intro cards used via MDX or plain HTML class names. */
+.doc-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 1.5rem 0;
+}
+
+.doc-card {
+  padding: 16px;
+  border: 1px solid var(--ds-line);
+  border-radius: var(--ds-radius-md);
+  background: var(--ds-glass);
+}
+
+.doc-card h3 {
+  margin-top: 0;
+}
+
+.doc-meta {
+  color: var(--ds-text-3);
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+}
+
+.doc-callout {
+  margin: 1.5rem 0;
+  padding: 16px 18px;
+  border: 1px solid rgba(56, 214, 255, 0.28);
+  border-left: 3px solid var(--ds-accent);
+  border-radius: var(--ds-radius-md);
+  background: rgba(56, 214, 255, 0.06);
+}
+
+@media (max-width: 720px) {
+  .doc-grid {
+    grid-template-columns: 1fr;
+  }
+}

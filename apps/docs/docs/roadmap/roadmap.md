@@ -1,0 +1,194 @@
+---
+id: roadmap
+title: Roadmap
+sidebar_position: 1
+description: Phases P0–P8 with deliverables, exit gates, dependencies and design-source guidance.
+---
+
+# Roadmap
+
+Nine phases. Each has a **gate** — a measurement or behavioural proof — and a list of
+deliverables. A phase is done when the gate passes, not when the code merges.
+
+```text
+P0 Foundations      ████████████  done
+P1 NixOS bring-up   ░░░░░░░░░░░░  next
+P2 Compositor MVP   ░░░░░░░░░░░░
+P3 Shell surfaces   ░░░░░░░░░░░░
+P4 Audio            ░░░░░░░░░░░░
+P5 Agents & chat    ░░░░░░░░░░░░
+P6 Applications     ░░░░░░░░░░░░
+P7 Remote display   ░░░░░░░░░░░░
+P8 Hardening        ░░░░░░░░░░░░
+```
+
+## P0 — Foundations · done
+
+**Goal.** A repository that contains the product surfaces, the tested core and the OS
+configuration, with CI and documentation.
+
+Deliverables:
+
+- Monorepo: Bun workspaces, strict TypeScript, Rust workspace.
+- `protocol`, `indexer`, `ipc`, `agents`, `palette`, `ui`, `bench`.
+- Water design system vendored from the Data Cloud Compare project.
+- Docusaurus docs and a marketing site with a live palette and explorer demo.
+- Unit, DOM, cross-thread integration, Playwright e2e, Rust tests, perf gate.
+- NixOS flake and hardware/kernel/filesystem modules (written, not booted).
+
+**Gate.** `bun run verify`, Playwright and `cargo test` green in CI; benchmark
+baseline committed; docs build with no broken links.
+
+## P1 — NixOS bring-up · next
+
+**Goal.** Boot the reference machine into a deterministic base with the custom kernel.
+
+Deliverables:
+
+- Pin nixpkgs and the Rust toolchain; flake exposes `nixosConfigurations.kestrel`.
+- Kernel: `localmodconfig`, Kaby Lake options, Landlock, seccomp, VFIO.
+- XFS root, ext4 scratch, tmpfs index; mount options from the spec.
+- Minimal systemd target; no display manager; shell starts on seat0.
+- ISO and `nixos-rebuild build-vm` smoke test.
+
+**Gate.** Cold boot to a shell in < 1.5 s userspace (three consecutive runs), idle
+RAM and CPU recorded, `landlock` present in `/sys/kernel/security/lsm`.
+
+**Dependencies.** None. **Risk:** missing firmware, storage driver, thermal throttling.
+
+## P2 — Compositor MVP
+
+**Goal.** A Smithay shell that owns the scene graph, tiling and frame pacing.
+
+Deliverables:
+
+- udev backend, libinput seat, wgpu renderer, output hotplug.
+- Scene graph with damage tracking; shell chrome in one draw pass.
+- Tiling layout, focus, keybindings; one workspace per output.
+- `os/compositor` pacing core wired to the 120 Hz deadline.
+- Cursor, fractional scaling, screenshot protocol.
+
+**Gate.** Sustained 120 Hz on a 1440p output with the palette open; no frames queued;
+input → damage commit < 2 ms.
+
+**Dependencies.** P1. **Risk:** GPU driver quirks, text rendering performance.
+
+## P3 — Shell surfaces
+
+**Goal.** Palette, chat and explorer become compositor layers.
+
+Deliverables:
+
+- `aether-index` daemon with inotify ingestion over the ring.
+- Palette layer using `@aether/palette` logic (ported or shared via FFI).
+- Chat drawer with streaming markdown; explorer as a virtualised list.
+- Design-system parity with the reference explorer; screenshot comparison.
+- Keyboard map, focus stack, status bar.
+
+**Gate.** Palette p95 < 10 ms at 10k documents; explorer scrolls 10k rows at 120 Hz;
+no dropped frames while streaming tokens.
+
+**Dependencies.** P2. **Risk:** text shaping, IME, clipboard integration.
+
+## P4 — Audio
+
+**Goal.** Every input and output route is first-class.
+
+Deliverables:
+
+- PipeWire + WirePlumber policy; analog, USB, Bluetooth.
+- Device overlay, per-app routing, input meters.
+- Latency presets and xrun instrumentation.
+- Capability check for microphone access.
+
+**Gate.** Route switch < 100 ms; zero xruns in a 10-minute 64-frame stress test;
+agent mic access denied without a capability.
+
+**Dependencies.** P2 (overlay primitives). **Risk:** Bluetooth codec negotiation.
+
+## P5 — Agents & chat
+
+**Goal.** DeepSeek chat and isolated workers under one supervisor.
+
+Deliverables:
+
+- `aetherd`: planner integration, admission control, capability issuance, audit.
+- Landlock + seccomp profiles per language runtime.
+- Chat UI with tool-call traces and cancellation.
+- Red-team suite: six agents attempting cross-reads and escapes.
+
+**Gate.** Six concurrent agents; zero cross-agent reads in the suite; audit chain
+verifies after a forced kill.
+
+**Dependencies.** P3, P4 (for audio-capable agents). **Risk:** seccomp profiles
+breaking legitimate workloads; model latency dominating UX.
+
+## P6 — Applications
+
+**Goal.** Browser, media and file management usable daily.
+
+Deliverables:
+
+- WebKitGTK shell with per-tab processes and the permission model.
+- libmpv frontend with hardware decode and zero-copy handoff.
+- Explorer operations: copy, move, rename, delete, reveal.
+- Crash isolation and recovery surfaces.
+
+**Gate.** 4K60 video < 6% CPU; a tab crash leaves the shell at 120 Hz; `~/.ssh` is
+unreadable from a `file://` page.
+
+**Dependencies.** P2, P3. **Risk:** WebKit integration, GPU decode on HD 630.
+
+## P7 — Remote display
+
+**Goal.** The desktop in a browser tab at interactive latency.
+
+Deliverables:
+
+- DMA-BUF capture → VA-API encode → str0m → WebCodecs canvas.
+- Virtual seat input over a data channel.
+- Signaling service, pairing code, DTLS.
+- Fallback ladder (WebSocket + fMP4, JPEG tiles).
+- AF_XDP only if measurement justifies it.
+
+**Gate.** Glass-to-glass < 40 ms LAN; no CPU pixel copies; p99 frame interval
+< 1.5× target.
+
+**Dependencies.** P2, P6 (for real workloads). **Risk:** encoder/driver matrix,
+WebCodecs support differences.
+
+## P8 — Hardening
+
+**Goal.** Compiler and isolation work that only pays once the system exists.
+
+Deliverables:
+
+- PGO pipeline with recorded workloads; ThinLTO everywhere.
+- Firecracker + VFIO microVM tier; snapshot/restore.
+- Threat-model review, capability fuzzing, kernel attack-surface audit.
+- Accessibility gaps assessed; AT-SPI prototype if viable.
+
+**Gate.** 10–25% throughput gain from PGO on recorded workloads, or the change is
+reverted; microVM escape corpus passes; audit of residual risks signed off.
+
+**Dependencies.** P5, P7. **Risk:** diminishing returns, complexity budget.
+
+## Cross-cutting work
+
+These are not phases; they run continuously:
+
+| Track | Cadence |
+| --- | --- |
+| Benchmark baseline refresh | Every release |
+| Documentation accuracy | Every PR that changes behaviour |
+| Design-system parity | Every UI change |
+| Security review | Every new capability or syscall |
+| Dependency updates | Monthly, pinned and tested |
+
+## How work is chosen
+
+1. Does it unblock a gate? Do it.
+2. Does it remove measured cost? Do it.
+3. Does it add a process, dependency or capability without a gate? Write an ADR
+   first.
+4. Everything else waits.

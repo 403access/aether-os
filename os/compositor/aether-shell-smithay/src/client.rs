@@ -8,10 +8,16 @@
 //! This is the first client slice. Mapping to `aether-shell`'s FramePlan,
 //! resizing/configure policy, pointer hit-testing and udev/DRM are next.
 
+use std::collections::HashMap;
 use std::error::Error;
 use std::sync::Arc;
 
-use smithay::backend::input::{InputEvent, KeyboardKeyEvent};
+use aether_geometry::{Point as AetherPoint, Rect as AetherRect, Size as AetherSize};
+use aether_layout::LayoutConfig;
+use aether_shell::{Shell, WindowId, WindowSpec};
+use smithay::backend::input::{
+    AbsolutePositionEvent, ButtonState, Event, InputEvent, KeyboardKeyEvent, PointerButtonEvent,
+};
 use smithay::backend::renderer::element::surface::{
     render_elements_from_surface_tree, WaylandSurfaceRenderElement,
 };
@@ -21,6 +27,7 @@ use smithay::backend::renderer::utils::{draw_render_elements, on_commit_buffer_h
 use smithay::backend::renderer::{Color32F, Frame, Renderer};
 use smithay::backend::winit::{self, WinitEvent};
 use smithay::input::keyboard::FilterResult;
+use smithay::input::pointer::{ButtonEvent, MotionEvent};
 use smithay::input::{Seat, SeatHandler, SeatState};
 use smithay::reexports::wayland_protocols::xdg::shell::server::xdg_toplevel;
 use smithay::reexports::wayland_server::backend::{ClientData, ClientId, DisconnectReason};
@@ -28,7 +35,7 @@ use smithay::reexports::wayland_server::protocol::wl_buffer;
 use smithay::reexports::wayland_server::protocol::wl_surface::{self, WlSurface};
 use smithay::reexports::wayland_server::{Client, Display, ListeningSocket};
 use smithay::reexports::winit::platform::pump_events::PumpStatus;
-use smithay::utils::{Rectangle, Serial, Transform};
+use smithay::utils::{Physical, Rectangle, Serial, Size as SSize, Transform, SERIAL_COUNTER};
 use smithay::wayland::buffer::BufferHandler;
 use smithay::wayland::compositor::{
     with_surface_tree_downward, CompositorClientState, CompositorHandler, CompositorState,
@@ -60,8 +67,22 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         seat_state,
         data_device_state: DataDeviceState::new::<App>(&dh),
         seat,
+        shell: Shell::new(
+            AetherSize::new(1280, 800),
+            LayoutConfig {
+                master_ratio: 0.55,
+                gap: 10,
+                outer_gap: 16,
+            },
+            120,
+        ),
+        windows: HashMap::new(),
+        configured: HashMap::new(),
         focus: None,
         close_requested: false,
+        window_size: SSize::from((1280, 800)),
+        scale: 1.0,
+        pointer_pos: smithay::utils::Point::from((0.0, 0.0)),
     };
 
     let listener = ListeningSocket::bind_auto("aether", 0..8)?;
@@ -74,6 +95,12 @@ pub fn run() -> Result<(), Box<dyn Error>> {
 
     let (mut backend, mut winit) = winit::init::<GlesRenderer>()?;
     let start_time = std::time::Instant::now();
+    state.window_size = backend.window_size();
+    state.scale = backend.scale_factor();
+    state
+        .shell
+        .set_viewport(logical_size(state.window_size, state.scale));
+    state.configure_all();
     let keyboard = state
         .seat
         .add_keyboard(Default::default(), 200, 200)
@@ -89,7 +116,13 @@ pub fn run() -> Result<(), Box<dyn Error>> {
 
     loop {
         let status = winit.dispatch_new_events(|event| match event {
-            WinitEvent::Resized { .. } | WinitEvent::Focus(_) => {}
+            WinitEvent::Resized { size, scale_factor } => {
+                state.window_size = size;
+                state.scale = scale_factor;
+                state.shell.set_viewport(logical_size(size, scale_factor));
+                state.configure_all();
+            }
+            WinitEvent::Focus(_) => {}
             WinitEvent::Input(InputEvent::Keyboard { event }) => {
                 keyboard.input::<(), _>(
                     &mut state,
@@ -100,17 +133,71 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     |_, _, _| FilterResult::Forward,
                 );
             }
-            WinitEvent::Input(InputEvent::PointerMotionAbsolute { .. }) => {
-                if state.focus.is_none() {
-                    if let Some(surface) = state
-                        .xdg_shell_state
-                        .toplevel_surfaces()
-                        .first()
-                        .map(|surface| surface.wl_surface().clone())
+            WinitEvent::Input(InputEvent::PointerMotionAbsolute { event }) => {
+                let logical = state.shell.viewport();
+                let position = event.position_transformed(SSize::from((
+                    logical.width as i32,
+                    logical.height as i32,
+                )));
+                state.pointer_pos = position;
+                let point = AetherPoint::new(position.x.round() as i32, position.y.round() as i32);
+                if let Some(id) = state.shell.window_at(point) {
+                    if state.shell.focus_window(id) {
+                        state.sync_focus();
+                    }
+                    if let Some(rect) = state
+                        .shell
+                        .windows()
+                        .into_iter()
+                        .find(|window| window.id == id)
+                        .map(|window| window.rect)
                     {
-                        state.focus = Some(surface);
+                        let local = smithay::utils::Point::from((
+                            position.x - rect.x as f64,
+                            position.y - rect.y as f64,
+                        ));
+                        let surface = state
+                            .windows
+                            .get(&id)
+                            .map(|toplevel| toplevel.wl_surface().clone());
+                        let serial = SERIAL_COUNTER.next_serial();
+                        let time = Event::time_msec(&event);
+                        let pointer = state.seat.get_pointer().expect("seat pointer");
+                        pointer.motion(
+                            &mut state,
+                            surface.map(|surface| (surface, local)),
+                            &MotionEvent {
+                                location: local,
+                                serial,
+                                time,
+                            },
+                        );
+                        pointer.frame(&mut state);
                     }
                 }
+            }
+            WinitEvent::Input(InputEvent::PointerButton { event }) => {
+                let position = state.pointer_pos;
+                let point = AetherPoint::new(position.x.round() as i32, position.y.round() as i32);
+                if event.state() == ButtonState::Pressed {
+                    if let Some(id) = state.shell.window_at(point) {
+                        state.shell.focus_window(id);
+                        state.sync_focus();
+                    }
+                }
+                let serial = SERIAL_COUNTER.next_serial();
+                let time = Event::time_msec(&event);
+                let pointer = state.seat.get_pointer().expect("seat pointer");
+                pointer.button(
+                    &mut state,
+                    &ButtonEvent {
+                        button: event.button_code(),
+                        state: event.state(),
+                        serial,
+                        time,
+                    },
+                );
+                pointer.frame(&mut state);
             }
             WinitEvent::CloseRequested => {
                 state.close_requested = true;
@@ -134,15 +221,22 @@ pub fn run() -> Result<(), Box<dyn Error>> {
 
         {
             let (renderer, mut framebuffer) = backend.bind()?;
+            let rects: HashMap<WindowId, AetherRect> = state
+                .shell
+                .windows()
+                .into_iter()
+                .filter(|window| window.workspace == state.shell.active_workspace())
+                .map(|window| (window.id, window.rect))
+                .collect();
             let elements: Vec<WaylandSurfaceRenderElement<GlesRenderer>> = state
-                .xdg_shell_state
-                .toplevel_surfaces()
+                .windows
                 .iter()
-                .flat_map(|surface| {
+                .filter_map(|(id, toplevel)| rects.get(id).map(|rect| (rect, toplevel)))
+                .flat_map(|(rect, toplevel)| {
                     render_elements_from_surface_tree(
                         renderer,
-                        surface.wl_surface(),
-                        (0, 0),
+                        toplevel.wl_surface(),
+                        (rect.x, rect.y),
                         1.0,
                         1.0,
                         Kind::Unspecified,
@@ -180,16 +274,25 @@ pub fn run() -> Result<(), Box<dyn Error>> {
 
         if !spawned_client {
             if let Ok(path) = std::env::var("AETHER_TEST_CLIENT") {
-                let mut command = std::process::Command::new(path);
-                command.env("WAYLAND_DISPLAY", &socket_name);
-                match command.spawn() {
-                    Ok(child) => {
-                        println!(
-                            "aether-shell-smithay: spawned test client (pid {})",
-                            child.id()
-                        );
+                let count = std::env::var("AETHER_TEST_CLIENT_COUNT")
+                    .ok()
+                    .and_then(|value| value.parse::<u32>().ok())
+                    .unwrap_or(1)
+                    .max(1);
+                for _ in 0..count {
+                    let mut command = std::process::Command::new(&path);
+                    command.env("WAYLAND_DISPLAY", &socket_name);
+                    match command.spawn() {
+                        Ok(child) => {
+                            println!(
+                                "aether-shell-smithay: spawned test client (pid {})",
+                                child.id()
+                            );
+                        }
+                        Err(error) => {
+                            eprintln!("aether-shell-smithay: test client failed: {error}");
+                        }
                     }
-                    Err(error) => eprintln!("aether-shell-smithay: test client failed: {error}"),
                 }
                 spawned_client = true;
             }
@@ -199,6 +302,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         if max_frames.is_some_and(|limit| frames >= limit) {
             return Ok(());
         }
+        state.configure_all();
     }
 }
 
@@ -222,11 +326,12 @@ impl XdgShellHandler for App {
     }
 
     fn new_toplevel(&mut self, surface: ToplevelSurface) {
-        surface.with_pending_state(|state| {
-            state.states.set(xdg_toplevel::State::Activated);
-        });
-        surface.send_configure();
+        let mut spec = WindowSpec::new("Wayland client", "wayland.client");
+        spec.preferred_size = AetherSize::new(800, 600);
+        let id = self.shell.add_window(spec);
+        self.windows.insert(id, surface.clone());
         self.focus = Some(surface.wl_surface().clone());
+        self.configure_window(id);
     }
 
     fn new_popup(&mut self, _surface: PopupSurface, _positioner: PositionerState) {}
@@ -243,6 +348,19 @@ impl XdgShellHandler for App {
         _positioner: PositionerState,
         _token: u32,
     ) {
+    }
+
+    fn toplevel_destroyed(&mut self, surface: ToplevelSurface) {
+        let id = self.windows.iter().find_map(|(id, toplevel)| {
+            (toplevel.wl_surface() == surface.wl_surface()).then_some(*id)
+        });
+        if let Some(id) = id {
+            self.windows.remove(&id);
+            self.configured.remove(&id);
+            self.shell.close_window(id);
+            self.sync_focus();
+            self.configure_all();
+        }
     }
 }
 
@@ -306,8 +424,64 @@ struct App {
     seat_state: SeatState<Self>,
     data_device_state: DataDeviceState,
     seat: Seat<Self>,
+    shell: Shell,
+    windows: HashMap<WindowId, ToplevelSurface>,
+    configured: HashMap<WindowId, (i32, i32)>,
     focus: Option<WlSurface>,
     close_requested: bool,
+    window_size: SSize<i32, Physical>,
+    scale: f64,
+    pointer_pos: smithay::utils::Point<f64, smithay::utils::Logical>,
+}
+
+impl App {
+    fn configure_window(&mut self, id: WindowId) {
+        let Some(toplevel) = self.windows.get(&id).cloned() else {
+            return;
+        };
+        let Some(rect) = self
+            .shell
+            .windows()
+            .into_iter()
+            .find(|window| window.id == id)
+            .map(|window| window.rect)
+        else {
+            return;
+        };
+        let size = (rect.width.max(1) as i32, rect.height.max(1) as i32);
+        if self.configured.get(&id) == Some(&size) {
+            return;
+        }
+        self.configured.insert(id, size);
+        toplevel.with_pending_state(|state| {
+            state.states.set(xdg_toplevel::State::Activated);
+            state.size = Some(SSize::from(size));
+        });
+        toplevel.send_configure();
+    }
+
+    fn configure_all(&mut self) {
+        let ids: Vec<WindowId> = self.windows.keys().copied().collect();
+        for id in ids {
+            self.configure_window(id);
+        }
+    }
+
+    fn sync_focus(&mut self) {
+        self.focus = self.shell.focused_window().and_then(|id| {
+            self.windows
+                .get(&id)
+                .map(|toplevel| toplevel.wl_surface().clone())
+        });
+    }
+}
+
+fn logical_size(physical: SSize<i32, Physical>, scale: f64) -> AetherSize {
+    let scale = if scale > 0.0 { scale } else { 1.0 };
+    AetherSize::new(
+        ((physical.w as f64) / scale).round().max(1.0) as u32,
+        ((physical.h as f64) / scale).round().max(1.0) as u32,
+    )
 }
 
 fn send_frames_surface_tree(surface: &wl_surface::WlSurface, time: u32) {

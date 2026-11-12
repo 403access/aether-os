@@ -4,6 +4,40 @@ All notable changes to Aether OS. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); the project uses
 semantic versioning with release codenames (0.1 = “Kestrel”).
 
+## [Unreleased] — installable base
+
+### Added
+
+- **Installer ISO** (`nixosConfigurations.installer`, `packages.iso`) — a minimal
+  NixOS live environment with `git`, `disko`, `helix`, `rsync` and hardware probes.
+- **disko layout** (`os/nixos/disko.nix`) — GPT ESP, XFS root, XFS `/nix`, ext4
+  scratch, XFS `/home`, with filesystem labels matching `filesystem.nix`.
+- **One-line disk target** (`os/nixos/disk.nix`) and `scripts/install.sh`, which
+  validates UEFI/device, confirms destructively, runs disko and installs the flake.
+- **Install documentation** for the i7-7700K: install, first boot and hardware
+  notes, including firmware settings, manual commands, recovery and rollback.
+- `diskoConfigurations.kestrel` flake output and a `disko` dev-shell package.
+- `aether-scene` is now packaged and installed; `helix`, `tmux`, `pciutils`,
+  `usbutils` and `alsa-utils` are in the system profile.
+- README and docs now link the install path.
+
+### Fixed
+
+- Flake evaluation failed because `security.polkit.enable = false` conflicted with
+  NetworkManager; polkit is now left to NetworkManager.
+- Removed options removed in current nixpkgs: `services.journald.extraConfig` and
+  `boot.initrd.systemd.enable`.
+- Renamed `boot.tmpOnTmpfs`/`boot.cleanTmpDir` to `boot.tmp.useTmpfs`/`cleanOnBoot`.
+- Added `xfs` and `ext4` to the initrd module set so the root can mount.
+- `os/nixos/flake.lock` is now committed; `flake check --no-build` passes for both
+  the installed system and the installer.
+
+### Known limitations
+
+- Not booted on the reference machine yet; evaluation is verified, boot is not.
+- No compositor/daemons at first boot (P2/P3); the session is a TTY.
+- No LUKS layout and no Legacy BIOS path in the default config.
+
 ## [0.1.0-alpha.0] — 2026-11-12
 
 Foundation release. Everything below is in the repository and tested; nothing

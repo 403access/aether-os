@@ -32,12 +32,14 @@ os/nixos/
 ├── configuration.nix         # system-wide modules and services
 ├── hardware/
 │   └── kabylake-7700k.nix    # CPU, GPU, audio, NVMe facts
-├── kernel.nix                # custom kernel package and config
-├── kernel/kestrel.config     # committed .config
+├── kernel.nix                # custom kernel package and cmdline
+├── kernel/kestrel.config     # kernel config fragment
 ├── filesystem.nix            # XFS mount options, scratch ext4, tmpfs
+├── disk.nix                  # the one disk device to install on
+├── disko.nix                 # GPT layout used by the installer
+├── installer.nix             # live ISO environment
 ├── services.nix              # PipeWire, WirePlumber, udev, journald
-├── users.nix                 # operator user, agent UIDs, groups
-└── overlay.nix               # packages built with target-cpu=native
+└── users.nix                 # operator user, agent UIDs, groups
 ```
 
 The flake exposes:

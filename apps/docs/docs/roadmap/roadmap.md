@@ -39,20 +39,31 @@ Deliverables:
 **Gate.** `bun run verify`, Playwright and `cargo test` green in CI; benchmark
 baseline committed; docs build with no broken links.
 
-## P1 — NixOS bring-up · next
+## P1 — NixOS bring-up · in progress
 
 **Goal.** Boot the reference machine into a deterministic base with the custom kernel.
 
 Deliverables:
 
-- Pin nixpkgs and the Rust toolchain; flake exposes `nixosConfigurations.kestrel`.
-- Kernel: `localmodconfig`, Kaby Lake options, Landlock, seccomp, VFIO.
-- XFS root, ext4 scratch, tmpfs index; mount options from the spec.
-- Minimal systemd target; no display manager; shell starts on seat0.
-- ISO and `nixos-rebuild build-vm` smoke test.
+- ✅ Pin nixpkgs and the Rust toolchain; flake exposes `nixosConfigurations.kestrel`
+  and `nixosConfigurations.installer`.
+- ✅ Kernel fragment: Kaby Lake options, Landlock, seccomp, VFIO, 1 kHz tick.
+- ✅ XFS root, ext4 scratch, tmpfs index; mount options from the spec.
+- ✅ disko GPT layout, live installer ISO, `scripts/install.sh` and an end-to-end
+  [install guide](/getting-started/install).
+- ✅ Flake evaluation (`nix flake check --no-build`) passes for the installed system
+  and the installer on x86_64-linux.
+- ⏳ Boot the installed system on the reference machine and record the numbers.
+- ⏳ Trim the kernel with `localmodconfig` on that machine and commit the delta.
+- ⏳ Console session on tty1 (autologin). The compositor starts a surface at P2.
 
 **Gate.** Cold boot to a shell in < 1.5 s userspace (three consecutive runs), idle
 RAM and CPU recorded, `landlock` present in `/sys/kernel/security/lsm`.
+
+**Status notes.** Evaluation is verified; an actual boot has not been performed in
+this repository’s CI (no x86_64 builder). Building the ISO requires an x86_64 Linux
+host with Nix; the install guide’s Option A uses the official NixOS ISO and does
+not require building one.
 
 **Dependencies.** None. **Risk:** missing firmware, storage driver, thermal throttling.
 

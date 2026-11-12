@@ -26,26 +26,27 @@ in-memory index that answers in single-digit milliseconds.
 
 ## What exists today
 
-This repository is the **foundation release (v0.1 "Kestrel")**. It is a working
-monorepo: the product surfaces, design system, indexing engine, IPC protocol,
-capability model, and OS configuration all exist as real, tested code. The
-kernel/compositor pieces are a validated configuration + a dependency-free Rust
-core, not yet a bootable image.
+This repository is the **installable base release (v0.1 "Kestrel")**. It is a
+working monorepo: the product surfaces, design system, indexing engine, IPC
+protocol, capability model, bootable NixOS system, live installer ISO, disk layout
+and install guide all exist as real, tested code. The compositor UI and daemons are
+the next phase; first boot lands in a console, not the finished desktop.
 
 | Area | State | Where |
 | --- | --- | --- |
 | Marketing site + live palette demo | ✅ built, 11 e2e specs | `apps/web` |
-| Documentation site (44 pages) | ✅ built | `apps/docs` |
+| Documentation site | ✅ built | `apps/docs` |
 | Search/index engine (BM25, fuzzy, prefix) | ✅ 59 tests | `packages/indexer` |
 | Shared-memory SPSC ring + capabilities | ✅ 28 tests (incl. cross-thread) | `packages/ipc` |
 | Agent isolation policy + scheduling | ✅ 39 tests | `packages/agents` |
 | Command palette state machine | ✅ 27 tests | `packages/palette` |
 | React UI kit | ✅ 17 DOM tests | `packages/ui` |
 | Benchmark harness + regression gate | ✅ baseline committed | `packages/bench` |
-| NixOS flake, kernel & hardware config | ⚠️ written, not yet booted | `os/nixos` |
+| NixOS system + installer ISO | ✅ evaluates (`nix flake check`); not booted in CI | `os/nixos` |
+| disko disk layout + install script | ✅ written, evaluation-checked | `os/nixos/disko.nix`, `scripts/install.sh` |
 | Compositor scene graph + frame scheduler | ✅ 35 Rust tests | `os/compositor` |
-| Bootable ISO | ⏳ planned (roadmap P1) | — |
-| WebRTC remote display | ⏳ planned (roadmap P7) | — |
+| Compositor UI (`aether-shell`) | ⏳ roadmap P2 | — |
+| WebRTC remote display | ⏳ roadmap P7 | — |
 
 > **On numbers:** the docs distinguish *measured*, *budgeted*, and *speculative*
 > figures. Idle-RAM and latency numbers in the architecture discussion are
@@ -73,6 +74,31 @@ bun run build            # assembles a single deployable tree in apps/web/dist
 `bun run build` produces one artifact: the marketing site at `/` and the docs at
 `/docs/`, which is exactly what the GitHub Pages workflow publishes.
 
+## Install on the reference machine
+
+Aether installs from any current NixOS minimal ISO, or from the included installer
+ISO. The target machine must be UEFI x86_64 and **the whole target disk is wiped**.
+
+```bash
+# on a live NixOS ISO, in a clone of this repo:
+#   edit os/nixos/disk.nix and set your NVMe device
+sudo ./scripts/install.sh /dev/nvme0n1
+```
+
+Then reboot and sign in as `oliver` (initial password `aether`). Full guide,
+including firmware settings, manual disko/install commands, recovery and a
+hardware checklist:
+
+- [`apps/docs/docs/getting-started/install.md`](apps/docs/docs/getting-started/install.md)
+- [`apps/docs/docs/getting-started/first-boot.md`](apps/docs/docs/getting-started/first-boot.md)
+- [`apps/docs/docs/getting-started/hardware.md`](apps/docs/docs/getting-started/hardware.md)
+
+To build the live installer ISO (requires an x86_64 Linux host with Nix):
+
+```bash
+nix build .#iso
+```
+
 ## Repository layout
 
 ```text
@@ -85,8 +111,9 @@ packages/agents       isolation tiers, admission control, collaboration bus
 packages/palette      headless command-palette state machine
 packages/ui           React design system (palette, chat, chrome)
 packages/bench        benchmark runner + regression gate (--check)
-os/nixos              flake, kernel, hardware, filesystem, services
+os/nixos              flake, kernel, hardware, disko layout, installer, services
 os/compositor         Rust workspace: pure scene/layout/pacing core
+scripts               assemble, publish, install, static server
 e2e                   Playwright specs for web + docs
 .github/workflows     CI, Pages deploy, perf gate
 ```
@@ -109,6 +136,9 @@ e2e                   Playwright specs for web + docs
 
 Start at `apps/docs/docs/intro.md`, or run the docs site. Highlights:
 
+- [Install on the i7-7700K](apps/docs/docs/getting-started/install.md)
+- [First boot checklist](apps/docs/docs/getting-started/first-boot.md)
+- [Hardware notes](apps/docs/docs/getting-started/hardware.md)
 - [Product requirements](apps/docs/docs/product/prd.md)
 - [Architecture overview](apps/docs/docs/architecture/overview.md)
 - [Hardware dossier: i7-7700K](apps/docs/docs/architecture/hardware-target.md)

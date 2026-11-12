@@ -135,8 +135,8 @@ Requires Linux and Nix:
 
 ```bash
 nix develop ./os/nixos
-nix build ./os/nixos#iso
-nixos-rebuild switch --flake ./os/nixos#kestrel
+nix build .#iso
+nixos-rebuild switch --flake .#kestrel
 ```
 
 Never test an unbootable change on the only machine. Keep a known-good generation

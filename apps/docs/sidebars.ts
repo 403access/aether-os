@@ -5,6 +5,16 @@ const sidebars: SidebarsConfig = {
     "intro",
     {
       type: "category",
+      label: "Getting started",
+      collapsed: false,
+      items: [
+        "getting-started/install",
+        "getting-started/first-boot",
+        "getting-started/hardware",
+      ],
+    },
+    {
+      type: "category",
       label: "Product",
       collapsed: false,
       items: [

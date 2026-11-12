@@ -106,7 +106,25 @@ test.describe("documentation", () => {
     await expect(
       page.getByRole("link", { name: "Product requirements", exact: true }),
     ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Install on the i7-7700K", exact: true }),
+    ).toBeVisible();
     expect(errors).toEqual([]);
+  });
+
+  test("documents the install path and first boot", async ({ page }) => {
+    await page.goto("/docs/getting-started/install/");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Install on the i7-7700K");
+    await expect(page.getByText("scripts/install.sh").first()).toBeVisible();
+    await expect(page.getByText("/dev/nvme0n1").first()).toBeVisible();
+
+    await page.goto("/docs/getting-started/first-boot/");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("First boot checklist");
+    await expect(page.getByText("landlock").first()).toBeVisible();
+
+    await page.goto("/docs/getting-started/hardware/");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Hardware notes");
+    await expect(page.getByText("Secure Boot").first()).toBeVisible();
   });
 
   test("navigates to a subsystem page", async ({ page }) => {

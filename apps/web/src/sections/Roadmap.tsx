@@ -29,10 +29,10 @@ const PHASES: Array<{
     status: "next",
     summary: "Boot the reference machine into a deterministic base with the custom kernel.",
     bullets: [
-      "Flake pinned to nixpkgs; hardware facts for the i7-7700K and HD 630 in one module.",
-      "Kernel via localmodconfig, Kaby Lake tuning, unused drivers removed.",
+      "Flake pinned to nixpkgs; Kaby Lake hardware and kernel fragment; installer ISO and disko layout included.",
       "XFS root with noatime/largeio/inode64; ext4 scratch; tmpfs for the index.",
-      "Measured idle RAM and boot time replace the current budgets.",
+      "End-to-end install guide, install script and evaluation-verified flake.",
+      "Remaining: first boot on the hardware, measured idle RAM and boot time.",
     ],
     gate: "Cold boot to a shell, < 1.5 s userspace, recorded by systemd-analyze.",
   },

@@ -13,11 +13,12 @@ Core i7-7700K (Kaby Lake, 4 cores / 8 threads). Portability is a non-goal.
 Determinism, latency and a small resident footprint are the goals.
 
 <div className="doc-callout">
-  <strong>Status: v0.1 “Kestrel” — foundation release.</strong> The product
+  <strong>Status: v0.1 “Kestrel” — installable base.</strong> The product
   surfaces, the tested core libraries and the full OS configuration exist in this
-  repository. The kernel and compositor are validated configuration and a
-  dependency-free Rust core, not yet a bootable image. See the{" "}
-  <a href="/roadmap">roadmap</a> for the path to boot.
+  repository. The NixOS system and a live installer ISO evaluate, and the install
+  path for the reference machine is written end to end. The compositor UI and
+  daemons are still P2/P3 work. See the{" "}
+  <a href="/roadmap">roadmap</a> and the <a href="/getting-started/install">install guide</a>.
 </div>
 
 ## The thesis
@@ -49,15 +50,17 @@ not need. Aether removes them:
 | Headless command palette | ✅ 27 tests | `packages/palette` |
 | React UI kit on the Water design system | ✅ 17 DOM tests | `packages/ui` |
 | Benchmark harness + regression gate | ✅ baseline committed | `packages/bench` |
-| NixOS flake, kernel and hardware modules | ⚠️ written, not booted | `os/nixos` |
-| Compositor scene/layout/pacing core | ✅ Rust tests | `os/compositor` |
-| Bootable ISO | ⏳ P1 | — |
+| NixOS flake + installer ISO | ✅ evaluates; not booted in CI | `os/nixos` |
+| disko layout + install script | ✅ written, evaluation-checked | `os/nixos/disko.nix`, `scripts/install.sh` |
+| Compositor scene/layout/pacing core | ✅ 35 Rust tests | `os/compositor` |
+| Compositor UI (`aether-shell`) | ⏳ P2 | — |
 | Remote display | ⏳ P7 | — |
 
 ## Reading paths
 
 | Path | Time | Start here |
 | --- | --- | --- |
+| Install it | 1–2 h | [Install on the 7700K](/getting-started/install) · [First boot](/getting-started/first-boot) · [Hardware notes](/getting-started/hardware) |
 | Product vision | 15 min | [PRD](/product/prd) · [Personas & jobs](/product/personas-and-jobs) · [Scope & non-goals](/product/scope-and-non-goals) · [UX principles](/product/ux-principles) |
 | System design | 45 min | [Architecture overview](/architecture/overview) · [Hardware target](/architecture/hardware-target) · [Agent isolation](/architecture/agent-isolation) · [Compositor](/architecture/compositor) |
 | Build it | now | [Development setup](/contributing/development) · [Testing](/contributing/testing) · [Roadmap](/roadmap) · [ADRs](/adr) |

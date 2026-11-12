@@ -19,7 +19,7 @@ use aether_text::{text_width, TextBitmap};
 use smithay::backend::allocator::Fourcc;
 use smithay::backend::input::{
     AbsolutePositionEvent, Axis, AxisSource, ButtonState, Event, InputEvent, KeyboardKeyEvent,
-    PointerAxisEvent, PointerButtonEvent,
+    MouseButton, PointerAxisEvent, PointerButtonEvent,
 };
 use smithay::backend::renderer::element::memory::{
     MemoryRenderBuffer, MemoryRenderBufferRenderElement,
@@ -98,6 +98,8 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         window_size: SSize::from((1280, 800)),
         scale: 1.0,
         pointer_pos: smithay::utils::Point::from((0.0, 0.0)),
+        resize_drag: None,
+        pointer_captured: false,
     };
 
     let listener = ListeningSocket::bind_auto("aether", 0..8)?;
@@ -179,44 +181,63 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     logical.height as i32,
                 )));
                 state.pointer_pos = position;
-                let point = AetherPoint::new(position.x.round() as i32, position.y.round() as i32);
-                let chrome_owns_pointer =
-                    state.shell.overlay().is_some() || state.shell.workspace_at(point).is_some();
-                if chrome_owns_pointer {
-                    // The overlay and workspace picker are compositor-owned
-                    // surfaces: never focus or move a client underneath them.
-                } else if let Some(id) = state.shell.window_at(point) {
-                    if state.shell.focus_window(id) {
-                        state.sync_focus();
+
+                if let Some(mut drag) = state.resize_drag {
+                    // Drag the master/stack divider. Ratio is measured against
+                    // the usable inner width (viewport minus outer gaps and gap).
+                    let layout = state.shell.layout();
+                    let inner = AetherRect::from_size(state.shell.viewport())
+                        .inset(layout.outer_gap as i32);
+                    let usable = (inner.width as i32 - layout.gap as i32).max(1) as f64;
+                    let ratio = ((position.x - inner.x as f64) / usable) as f32;
+                    if (ratio - drag.last_ratio).abs() > 0.002 {
+                        drag.last_ratio = ratio;
+                        state.resize_drag = Some(drag);
+                        if state.shell.set_master_ratio(ratio) {
+                            state.configure_all();
+                        }
                     }
-                    if let Some(rect) = state
-                        .shell
-                        .windows()
-                        .into_iter()
-                        .find(|window| window.id == id)
-                        .map(|window| window.rect)
-                    {
-                        let local = smithay::utils::Point::from((
-                            position.x - rect.x as f64,
-                            position.y - rect.y as f64,
-                        ));
-                        let surface = state
-                            .windows
-                            .get(&id)
-                            .map(|toplevel| toplevel.wl_surface().clone());
-                        let serial = SERIAL_COUNTER.next_serial();
-                        let time = Event::time_msec(&event);
-                        let pointer = state.seat.get_pointer().expect("seat pointer");
-                        pointer.motion(
-                            &mut state,
-                            surface.map(|surface| (surface, local)),
-                            &MotionEvent {
-                                location: local,
-                                serial,
-                                time,
-                            },
-                        );
-                        pointer.frame(&mut state);
+                } else {
+                    let point =
+                        AetherPoint::new(position.x.round() as i32, position.y.round() as i32);
+                    let chrome_owns_pointer = state.shell.overlay().is_some()
+                        || state.shell.workspace_at(point).is_some();
+                    if chrome_owns_pointer {
+                        // The overlay and workspace picker are compositor-owned
+                        // surfaces: never focus or move a client underneath them.
+                    } else if let Some(id) = state.shell.window_at(point) {
+                        if state.shell.focus_window(id) {
+                            state.sync_focus();
+                        }
+                        if let Some(rect) = state
+                            .shell
+                            .windows()
+                            .into_iter()
+                            .find(|window| window.id == id)
+                            .map(|window| window.rect)
+                        {
+                            let local = smithay::utils::Point::from((
+                                position.x - rect.x as f64,
+                                position.y - rect.y as f64,
+                            ));
+                            let surface = state
+                                .windows
+                                .get(&id)
+                                .map(|toplevel| toplevel.wl_surface().clone());
+                            let serial = SERIAL_COUNTER.next_serial();
+                            let time = Event::time_msec(&event);
+                            let pointer = state.seat.get_pointer().expect("seat pointer");
+                            pointer.motion(
+                                &mut state,
+                                surface.map(|surface| (surface, local)),
+                                &MotionEvent {
+                                    location: local,
+                                    serial,
+                                    time,
+                                },
+                            );
+                            pointer.frame(&mut state);
+                        }
                     }
                 }
             }
@@ -252,8 +273,19 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                 let point = AetherPoint::new(position.x.round() as i32, position.y.round() as i32);
                 let modal = state.shell.overlay().is_some();
                 let over_picker = state.shell.workspace_at(point).is_some();
+                let over_divider = state.shell.master_gap_rect().is_some_and(|gap| {
+                    AetherRect::new(gap.x - 5, gap.y, gap.width + 10, gap.height).contains(point)
+                });
+
                 if event.state() == ButtonState::Pressed {
-                    if let Some(workspace) = state.shell.workspace_at(point) {
+                    state.pointer_captured = modal || over_picker;
+                    if over_divider && event.button() == Some(MouseButton::Left) {
+                        state.resize_drag = Some(ResizeDrag {
+                            last_ratio: state.shell.master_ratio(),
+                        });
+                        state.pointer_captured = true;
+                        println!("aether-shell-smithay: resize drag started");
+                    } else if let Some(workspace) = state.shell.workspace_at(point) {
                         state.switch_workspace(workspace);
                     } else if modal {
                         // Clicking outside the panel dismisses the overlay;
@@ -270,7 +302,19 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                         state.sync_focus();
                     }
                 }
-                if !modal && !over_picker {
+
+                let forward = !state.pointer_captured;
+                if event.state() == ButtonState::Released {
+                    if state.resize_drag.take().is_some() {
+                        println!(
+                            "aether-shell-smithay: master ratio -> {:.2}",
+                            state.shell.master_ratio()
+                        );
+                    }
+                    state.pointer_captured = false;
+                }
+
+                if forward {
                     let serial = SERIAL_COUNTER.next_serial();
                     let time = Event::time_msec(&event);
                     let pointer = state.seat.get_pointer().expect("seat pointer");
@@ -670,6 +714,11 @@ impl SeatHandler for App {
     }
 }
 
+#[derive(Clone, Copy)]
+struct ResizeDrag {
+    last_ratio: f32,
+}
+
 struct App {
     compositor_state: CompositorState,
     xdg_shell_state: XdgShellState,
@@ -685,6 +734,8 @@ struct App {
     window_size: SSize<i32, Physical>,
     scale: f64,
     pointer_pos: smithay::utils::Point<f64, smithay::utils::Logical>,
+    resize_drag: Option<ResizeDrag>,
+    pointer_captured: bool,
 }
 
 impl App {

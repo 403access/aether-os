@@ -26,9 +26,13 @@ machine” becomes a hash.
 
 ## Flake layout
 
+The flake lives at the **repository root** so `nixos-install` copies the whole
+source tree to `/etc/nixos` and rebuilds keep working. `os/nixos` contains the
+machine configuration.
+
 ```text
+flake.nix / flake.lock        inputs, systems, ISO, disko config, package
 os/nixos/
-├── flake.nix                 # inputs: nixpkgs, rust toolchain, aether packages
 ├── configuration.nix         # system-wide modules and services
 ├── hardware/
 │   └── kabylake-7700k.nix    # CPU, GPU, audio, NVMe facts
@@ -40,15 +44,17 @@ os/nixos/
 ├── installer.nix             # live ISO environment
 ├── services.nix              # PipeWire, WirePlumber, udev, journald
 └── users.nix                 # operator user, agent UIDs, groups
+os/compositor/                # Rust scene/pacing crate packaged by the overlay
 ```
 
 The flake exposes:
 
 ```nix
-nixosConfigurations.kestrel = nixpkgs.lib.nixosSystem { ... };
-packages.x86_64-linux.aether-shell = ...;
-packages.x86_64-linux.aether-kernel = ...;
-packages.x86_64-linux.iso = ...;   # P1
+nixosConfigurations.kestrel   = ...;  # installed system
+nixosConfigurations.installer = ...;  # live ISO
+packages.x86_64-linux.iso     = ...;  # installer image
+diskoConfigurations.kestrel   = ...;  # disk layout
+packages.x86_64-linux.aether-scene = ...;
 ```
 
 ## Pinning

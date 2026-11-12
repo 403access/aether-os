@@ -18,17 +18,18 @@ An actual boot requires x86_64 hardware.
 ## Layout
 
 ```text
-flake.nix                    inputs, systems, ISO, disko config, package
-configuration.nix            system-wide settings, boot, network, packages
-hardware/kabylake-7700k.nix  CPU/GPU/audio/NVMe facts, microcode
-kernel.nix                   custom kernel + cmdline + sysctl
-kernel/kestrel.config        config fragment (appended to defconfig)
-filesystem.nix               XFS root, ext4 scratch, tmpfs index
-disko.nix                    GPT layout (ESP, root, nix, scratch, home)
-disk.nix                     the ONE disk device you edit
-installer.nix                live ISO: git, disko, helix, probe tools
-services.nix                 PipeWire, WirePlumber, udev, journald
-users.nix                    operator, service user, agent UID range
+flake.nix / flake.lock       inputs, systems, ISO, disko config (repo root)
+os/nixos/
+├── configuration.nix        system-wide settings, boot, network, packages
+├── hardware/kabylake-7700k.nix  CPU/GPU/audio/NVMe facts, microcode
+├── kernel.nix                custom kernel + cmdline + sysctl
+├── kernel/kestrel.config     config fragment (appended to defconfig)
+├── filesystem.nix            XFS root, ext4 scratch, tmpfs index
+├── disko.nix                 GPT layout (ESP, root, nix, scratch, home)
+├── disk.nix                  the ONE disk device you edit
+├── installer.nix             live ISO: git, disko, helix, probe tools
+├── services.nix              PipeWire, WirePlumber, udev, journald
+└── users.nix                 operator, service user, agent UID range
 ```
 
 ## Validate
@@ -96,9 +97,9 @@ Full instructions, firmware settings, recovery and hardware checks:
 | Partition | Size | FS | Mount | Label |
 | --- | --- | --- | --- | --- |
 | `01-esp` | 1 GiB | vfat | `/boot` | `AETHER-BOOT` |
-| `02-root` | 25% | xfs | `/` | `aether-root` |
-| `03-nix` | 30% | xfs | `/nix` | `aether-nix` |
-| `04-scratch` | 10% | ext4 | `/scratch` | `aether-scratch` |
+| `02-root` | 80 GiB | xfs | `/` | `aether-root` |
+| `03-nix` | 120 GiB | xfs | `/nix` | `aether-nix` |
+| `04-scratch` | 60 GiB | ext4 | `/scratch` | `aether-scratch` |
 | `05-home` | remainder | xfs | `/home` | `aether-home` |
 
 The mount configuration uses `/dev/disk/by-label/*`, so labels are part of the

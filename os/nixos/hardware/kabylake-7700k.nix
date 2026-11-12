@@ -60,7 +60,8 @@
   powerManagement.cpuFreqGovernor = "performance";
 
   services = {
-    thermald.enable = true;
+    # No thermald: this is a desktop board without DPTF. It exits on most
+    # Kaby Lake desktops and leaves a failed unit in the first-boot checklist.
     fstrim.enable = true;
     irqbalance.enable = true;
   };

@@ -39,8 +39,6 @@ in {
     "kernel.unprivileged_userns_clone" = 1; # required for agent sandboxes
     "vm.unprivileged_userfaultfd" = 0;
     "vm.swappiness" = 10;
-    "net.core.default_qdisc" = "fq";
-    "net.ipv4.tcp_congestion_control" = "bbr";
   };
 
   # Keep the build honest: if the fragment cannot be applied, fail loudly.

@@ -34,7 +34,7 @@ the next phase; first boot lands in a console, not the finished desktop.
 
 | Area | State | Where |
 | --- | --- | --- |
-| Marketing site + live palette demo | ✅ built, 11 e2e specs | `apps/web` |
+| Marketing site + live palette demo | ✅ built, 12 e2e specs | `apps/web` |
 | Documentation site | ✅ built | `apps/docs` |
 | Search/index engine (BM25, fuzzy, prefix) | ✅ 59 tests | `packages/indexer` |
 | Shared-memory SPSC ring + capabilities | ✅ 28 tests (incl. cross-thread) | `packages/ipc` |
@@ -64,7 +64,7 @@ bun run dev:web          # marketing site  → http://localhost:4321
 bun run dev:docs         # documentation   → http://localhost:4322/docs/
 
 bun run test:unit        # 199 package tests (bun test)
-bun run test:e2e         # 11 Playwright specs against the assembled build
+bun run test:e2e         # 12 Playwright specs against the assembled build
 bun run typecheck        # strict TS across the monorepo
 bun run os:test          # 35 Rust compositor-core tests
 bun run bench            # benchmarks; `bun run bench:check` gates regressions

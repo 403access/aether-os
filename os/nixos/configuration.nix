@@ -16,7 +16,7 @@
     ./users.nix
   ];
 
-  system.stateVersion = "25.11";
+  system.stateVersion = "26.11";
 
   nix = {
     settings = {
@@ -87,7 +87,6 @@
     ];
     variables = {
       EDITOR = "hx";
-      XDG_CACHE_HOME = "/home/oliver/.cache";
     };
     etc."aether/README".text = ''
       Aether OS configuration lives in /nix/var/nix/profiles/system.

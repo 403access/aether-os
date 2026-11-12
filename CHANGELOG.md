@@ -29,7 +29,15 @@ semantic versioning with release codenames (0.1 = “Kestrel”).
   `boot.initrd.systemd.enable`.
 - Renamed `boot.tmpOnTmpfs`/`boot.cleanTmpDir` to `boot.tmp.useTmpfs`/`cleanOnBoot`.
 - Added `xfs` and `ext4` to the initrd module set so the root can mount.
-- `os/nixos/flake.lock` is now committed; `flake check --no-build` passes for both
+- Moved the flake to the repository root and applied the Aether overlay to the
+  NixOS `pkgs` instance; without this, `aether-scene` in `systemPackages` was
+  undefined at install time.
+- disko partition sizes are absolute (80G/120G/60G) with build-time assertions;
+  disko does not support arbitrary percentages other than `100%`.
+- The install script exports `NIX_CONFIG` so flakes work on the official NixOS
+  minimal ISO, and checks the root flake path.
+- Removed `thermald` (no DPTF on this desktop board) and unused network sysctls.
+- `flake.lock` is now committed at the repository root; `flake check --no-build` passes for both
   the installed system and the installer.
 
 ### Known limitations

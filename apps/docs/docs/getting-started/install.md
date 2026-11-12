@@ -191,8 +191,9 @@ Edit the one line in `os/nixos/disk.nix`:
 }
 ```
 
-If your disk is smaller than ~512 GiB, reduce the percentages in
-`os/nixos/disko.nix` (root 25%, nix 30%, scratch 10%, home remainder).
+The default layout is ESP 1 GiB, root 80 GiB, nix 120 GiB, scratch 60 GiB and
+home on the rest. If your disk is smaller than ~512 GiB, reduce the fixed sizes
+in `os/nixos/disko.nix`; only the last partition may use `size = "100%"`.
 
 ## 7. Install
 
@@ -214,12 +215,14 @@ The script:
 ### Manual equivalent
 
 ```bash
+# Enable flakes for this shell (the Aether ISO does this already)
+export NIX_CONFIG="experimental-features = nix-command flakes"
+
 # 1. partition, format, mount at /mnt
-sudo nix --extra-experimental-features "nix-command flakes" \
-  run nixpkgs#disko -- --mode disko --flake .#kestrel
+sudo -E nix run nixpkgs#disko -- --mode disko --flake .#kestrel
 
 # 2. install the system closure
-sudo nixos-install --root /mnt --flake .#kestrel --no-root-passwd
+sudo -E nixos-install --root /mnt --flake .#kestrel --no-root-passwd
 ```
 
 `nixos-install` copies the flake to `/mnt/etc/nixos` and installs the bootloader

@@ -47,6 +47,9 @@
       nixosConfigurations.kestrel = nixpkgs.lib.nixosSystem {
         inherit system;
         modules = [
+          # Make the Aether overlay (aether-scene, future daemons) visible to
+          # the NixOS pkgs instance, not just to flake packages.
+          { nixpkgs.overlays = [ self.overlays.default ]; }
           ./os/nixos/configuration.nix
           ./os/nixos/hardware/kabylake-7700k.nix
         ];

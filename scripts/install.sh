@@ -17,6 +17,8 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Flakes are not enabled by default on the official NixOS minimal ISO.
+export NIX_CONFIG="${NIX_CONFIG:-experimental-features = nix-command flakes}"
 FLAKE_PATH="${REPO_ROOT}"
 DEVICE="${1:-}"
 FLAKE_ATTR="kestrel"
@@ -41,8 +43,8 @@ if [ ! -b "${DEVICE}" ]; then
   die "${DEVICE} is not a block device"
 fi
 
-if [ ! -f "${REPO_ROOT}/os/nixos/flake.nix" ]; then
-  die "run this script from the Aether repository (os/nixos/flake.nix not found)"
+if [ ! -f "${REPO_ROOT}/flake.nix" ]; then
+  die "run this script from the Aether repository (flake.nix not found at the root)"
 fi
 
 if [ ! -d /sys/firmware/efi ]; then
@@ -62,7 +64,7 @@ lsblk -o NAME,SIZE,MODEL,TYPE,MOUNTPOINTS "${DEVICE}" || true
 
 echo
 echo "Everything on ${DEVICE} will be destroyed."
-echo "Partitions created: ESP 1G, root 25%, nix 30%, scratch 10%, home remainder."
+echo "Partitions created: ESP 1G, root 80G, nix 120G, scratch 60G, home remainder."
 echo
 read -r -p "Type the device path again to continue (${DEVICE}): " CONFIRM
 if [ "${CONFIRM}" != "${DEVICE}" ]; then

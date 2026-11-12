@@ -40,11 +40,12 @@ const PHASES: Array<{
   {
     id: "P2",
     title: "Compositor MVP",
-    status: "planned",
+    status: "progress",
     summary: "A Smithay shell that owns the scene graph, tiling and frame pacing.",
     bullets: [
+      "winit/EGL adapter presents FramePlan (solid surfaces) under Xvfb; Linux-only, separate crate.",
+      "Next: xdg-shell/shm client surfaces, input routing, then the udev/DRM target backend.",
       "wgpu/Vulkan renderer, damage tracking, one draw pass for shell chrome.",
-      "Tiling layout, keyboard focus, output hotplug.",
       "Frame scheduler from os/compositor wired to a real 120 Hz deadline.",
     ],
     gate: "Sustained 120 Hz with a 4K + 1080p output pair; no dropped frames at idle.",

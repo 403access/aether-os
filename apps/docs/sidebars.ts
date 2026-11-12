@@ -36,6 +36,7 @@ const sidebars: SidebarsConfig = {
         "architecture/kernel-and-boot",
         "architecture/nixos-base",
         "architecture/compositor",
+        "architecture/smithay-backend",
         "architecture/ui-system",
         "architecture/search",
         "architecture/agent-isolation",
@@ -94,6 +95,7 @@ const sidebars: SidebarsConfig = {
         "adr/0009-water-design-system",
         "adr/0010-compositor-crate-split",
         "adr/0011-backend-neutral-shell",
+        "adr/0012-smithay-standalone-backend",
       ],
     },
     {

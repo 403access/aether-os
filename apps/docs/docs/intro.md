@@ -52,7 +52,8 @@ not need. Aether removes them:
 | Benchmark harness + regression gate | ✅ baseline committed | `packages/bench` |
 | NixOS flake + installer ISO | ✅ evaluates; not booted in CI | `os/nixos` |
 | disko layout + install script | ✅ written, evaluation-checked | `os/nixos/disko.nix`, `scripts/install.sh` |
-| aarch64 development VM | ✅ build + booted headless (~10 s) | `os/vm` |
+| aarch64 development VM | ✅ build + booted headless (~10–12 s) | `os/vm` |
+| Smithay winit backend | ✅ Linux-only; presents FramePlan under Xvfb | `os/compositor/aether-shell-smithay` |
 | Compositor core + shell state + preview | ✅ 49 Rust tests | `os/compositor` |
 | Compositor UI (`aether-shell`) | ⏳ P2 | — |
 | Remote display | ⏳ P7 | — |

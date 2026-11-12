@@ -13,7 +13,7 @@ deliverables. A phase is done when the gate passes, not when the code merges.
 ```text
 P0 Foundations      ████████████  done
 P1 NixOS bring-up   ██████░░░░░░  in progress
-P2 Compositor MVP   ░░░░░░░░░░░░
+P2 Compositor MVP   ███░░░░░░░░░  in progress
 P3 Shell surfaces   ░░░░░░░░░░░░
 P4 Audio            ░░░░░░░░░░░░
 P5 Agents & chat    ░░░░░░░░░░░░
@@ -69,13 +69,16 @@ not require building one.
 
 **Dependencies.** None. **Risk:** missing firmware, storage driver, thermal throttling.
 
-## P2 — Compositor MVP
+## P2 — Compositor MVP · in progress
 
 **Goal.** A Smithay shell that owns the scene graph, tiling and frame pacing.
 
 Deliverables:
 
-- udev backend, libinput seat, wgpu renderer, output hotplug.
+- ✅ winit/EGL adapter presents `FramePlan` (solid surfaces) under Xvfb; standalone
+  Linux crate so the core stays toolkit-free.
+- ⏳ xdg-shell/shm client surfaces and input routing.
+- ⏳ udev/DRM backend, libinput seat, wgpu renderer, output hotplug.
 - Scene graph with damage tracking; shell chrome in one draw pass.
 - Tiling layout, focus, keybindings; one workspace per output.
 - `os/compositor` pacing core wired to the 120 Hz deadline.

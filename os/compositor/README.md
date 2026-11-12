@@ -19,6 +19,9 @@ aether-scene         Surface, Layer, Scene, hit testing          (geometry, dama
 aether-shell         windows, workspaces, focus, FramePlan      (all core crates)
 aether-preview       software renderer + PNG preview            (shell)
 aether-compositor    facade + prelude + demo binary             (core crates)
+
+aether-shell-smithay  Linux-only Smithay/winit backend (standalone crate,
+                      not in this workspace; consumes FramePlan)
 ```
 
 Dependency direction is one-way. There are no cycles and no optional GPU code.
@@ -99,9 +102,17 @@ backend.
 | Phase | Work |
 | --- | --- |
 | P0 (done) | Pure crates, shell state, preview, tests, demo, facade |
-| P2 | `aether-shell`: Smithay backend, renderer, input seat, DMA-BUF export |
+| P2 (started) | `aether-shell-smithay`: winit window presents `FramePlan`; client protocols, input and udev/DRM next |
 | P2 | Text/atlas and scene-graph UI primitives |
 | P3 | Shell layers (palette/chat) consume the same crates |
 
-The backend crate may depend on this workspace; this workspace must never depend on
-the backend. That keeps apps testable without a display.
+The backend crate depends on this workspace; this workspace must never depend on
+it. That keeps apps testable without a display.
+
+Build the backend only on Linux:
+
+```bash
+nix develop .#smithay
+cargo build --manifest-path os/compositor/aether-shell-smithay/Cargo.toml
+./os/compositor/aether-shell-smithay/smoke-xvfb.sh
+```

@@ -46,6 +46,7 @@ the next phase; first boot lands in a console, not the finished desktop.
 | aarch64 development VM target | ✅ built + booted headless in ~10–12 s (HVF) | `os/vm` |
 | disko disk layout + install script | ✅ written, evaluation-checked | `os/nixos/disko.nix`, `scripts/install.sh` |
 | Compositor core + shell state + preview | ✅ 49 Rust tests | `os/compositor` |
+| Smithay winit backend (Linux-only) | ✅ builds + presents under Xvfb; no clients yet | `os/compositor/aether-shell-smithay` |
 | Compositor UI (`aether-shell`) | ⏳ roadmap P2 | — |
 | WebRTC remote display | ⏳ roadmap P7 | — |
 
@@ -129,7 +130,7 @@ packages/bench        benchmark runner + regression gate (--check)
 os/nixos              reference target: kernel, hardware, disko, installer, services
 os/vm                 separate aarch64 development VM target
 os/common             the only Nix module shared by both targets
-os/compositor         Rust crates: geometry/damage/layout/pacing/scene/shell + preview
+os/compositor         Rust crates + software preview; Smithay backend is standalone
 scripts               assemble, publish, install, static server
 e2e                   Playwright specs for web + docs
 .github/workflows     CI, Pages deploy, perf gate

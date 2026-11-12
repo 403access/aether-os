@@ -148,6 +148,10 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     |state, modifiers, keysym| {
                         if state.handle_shortcut(modifiers, keysym.modified_sym()) {
                             FilterResult::Intercept(())
+                        } else if state.shell.overlay().is_some() {
+                            // The overlay is modal: keystrokes do not leak to the
+                            // focused client while it is open.
+                            FilterResult::Intercept(())
                         } else {
                             FilterResult::Forward
                         }
@@ -298,24 +302,74 @@ pub fn run() -> Result<(), Box<dyn Error>> {
             if !elements.is_empty() {
                 draw_render_elements(&mut frame, 1.0, &elements, &[damage])?;
             }
-            // The shell overlay (palette/chat) is drawn above clients. Until a
-            // glyph atlas exists it is a solid panel.
+            // Compositor-owned chrome above clients. Until a glyph atlas exists
+            // these are solid blocks: palette structure + workspace indicators.
+            let mut chrome: Vec<(AetherRect, [f32; 4])> = Vec::new();
             if let Some(rect) = state.shell.overlay_rect() {
-                let buffer = SolidColorBuffer::new(
-                    (rect.width as i32, rect.height as i32),
-                    [0.05f32, 0.24, 0.29, 0.96],
-                );
-                let element: SolidColorRenderElement = SolidColorRenderElement::from_buffer(
-                    &buffer,
-                    (rect.x, rect.y),
-                    1.0f64,
-                    1.0,
-                    Kind::Unspecified,
-                );
+                chrome.push((rect, [0.05, 0.24, 0.29, 0.96]));
+                chrome.push((
+                    AetherRect::new(rect.x, rect.y, rect.width, 36.min(rect.height)),
+                    [0.09, 0.42, 0.5, 1.0],
+                ));
+                if rect.height > 96 {
+                    chrome.push((
+                        AetherRect::new(
+                            rect.x + 16,
+                            rect.y + 52,
+                            rect.width.saturating_sub(32),
+                            28,
+                        ),
+                        [0.03, 0.12, 0.16, 1.0],
+                    ));
+                    for row in 0..3 {
+                        let y = rect.y + 96 + row * 48;
+                        if y + 32 < rect.y + rect.height as i32 {
+                            chrome.push((
+                                AetherRect::new(rect.x + 16, y, rect.width.saturating_sub(32), 32),
+                                [0.05, 0.31, 0.37, 1.0],
+                            ));
+                        }
+                    }
+                }
+            }
+
+            let indicator_y = 10;
+            for workspace in 0..state.shell.workspace_count() {
+                let active = workspace == state.shell.active_workspace();
+                chrome.push((
+                    AetherRect::new(10 + workspace as i32 * 46, indicator_y, 38, 6),
+                    if active {
+                        [0.22, 0.84, 1.0, 1.0]
+                    } else {
+                        [0.12, 0.3, 0.35, 0.9]
+                    },
+                ));
+            }
+
+            if !chrome.is_empty() {
+                let buffers: Vec<SolidColorBuffer> = chrome
+                    .iter()
+                    .map(|(rect, color)| {
+                        SolidColorBuffer::new((rect.width as i32, rect.height as i32), *color)
+                    })
+                    .collect();
+                let elements: Vec<SolidColorRenderElement> = buffers
+                    .iter()
+                    .zip(chrome.iter())
+                    .map(|(buffer, (rect, _))| {
+                        SolidColorRenderElement::from_buffer(
+                            buffer,
+                            (rect.x, rect.y),
+                            1.0f64,
+                            1.0,
+                            Kind::Unspecified,
+                        )
+                    })
+                    .collect();
                 draw_render_elements::<GlesRenderer, f64, SolidColorRenderElement>(
                     &mut frame,
                     1.0,
-                    &[element],
+                    &elements,
                     &[damage],
                 )?;
             }

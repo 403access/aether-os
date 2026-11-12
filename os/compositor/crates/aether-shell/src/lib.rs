@@ -713,6 +713,17 @@ mod tests {
     }
 
     #[test]
+    fn overlay_rect_tracks_the_overlay_surface() {
+        let mut shell = shell();
+        assert_eq!(shell.overlay_rect(), None);
+        let rect = Rect::new(100, 80, 400, 300);
+        shell.set_overlay(Some(rect));
+        assert_eq!(shell.overlay_rect(), Some(rect));
+        shell.set_overlay(None);
+        assert_eq!(shell.overlay_rect(), None);
+    }
+
+    #[test]
     fn window_hit_testing_maps_to_ids() {
         let mut shell = shell();
         let a = window(&mut shell, "a");

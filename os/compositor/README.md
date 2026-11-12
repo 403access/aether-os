@@ -102,7 +102,7 @@ backend.
 | Phase | Work |
 | --- | --- |
 | P0 (done) | Pure crates, shell state, preview, tests, demo, facade |
-| P2 (started) | `aether-shell-smithay`: xdg-shell clients tile/configure, overlay and workspace shortcuts, pointer/keyboard; indicator/UI, interactive resize and udev/DRM next |
+| P2 (started) | `aether-shell-smithay`: clients tile/configure, modal overlay, workspace indicators/shortcuts; labels, interactive resize, per-client damage and udev/DRM next |
 | P2 | Text/atlas and scene-graph UI primitives |
 | P3 | Shell layers (palette/chat) consume the same crates |
 

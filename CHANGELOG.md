@@ -21,9 +21,13 @@ semantic versioning with release codenames (0.1 = “Kestrel”).
   the window "Aether OS" and verifies the picker with an xdotool smoke script.
   Adds interactive master/stack resizing: dragging the divider updates the split
   ratio (0.2–0.8) and reconfigures clients live, verified by an xdotool drag
-  smoke. Overlay actions, window move, cursor theming, per-client damage and
-  udev/DRM remain. Nix dev shell `.#smithay`, demo/client/picker/resize smoke
-  scripts, ADR-0012.
+  smoke. Adds an interactive command palette: typed queries filter workspace
+  commands, Up/Down wraps selection, Enter switches workspace or closes, and
+  Backspace edits. Input is press-only (shortcuts no longer fire twice) and the
+  palette path is verified by an xdotool typing smoke. Fixes compositor chrome
+  draw order so panels/rows layer correctly. More palette providers, window
+  move, cursor theming, per-client damage and udev/DRM remain. Nix dev shell
+  `.#smithay`, demo/client/picker/resize/palette smoke scripts, ADR-0012.
 - **Backend-neutral shell state** — `aether-shell` owns windows, workspaces, focus,
   floating windows, the overlay and `FramePlan`, with no Wayland/GPU dependency.
   `aether-preview` renders frame plans to PNG (`aether-shell-preview`), providing

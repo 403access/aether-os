@@ -43,8 +43,8 @@ const PHASES: Array<{
     status: "progress",
     summary: "A Smithay shell that owns the scene graph, tiling and frame pacing.",
     bullets: [
-      "Winit/EGL adapter tiles clients, draws a modal text overlay, clickable picker and draggable split; two terminals verified.",
-      "Next: overlay query/results, window move/maximize, cursor theme, per-client damage, then udev/DRM.",
+      "Winit/EGL adapter tiles clients with an interactive command palette, clickable picker and draggable split; two terminals verified.",
+      "Next: app/file/agent palette providers, window move/maximize, cursor theme, per-client damage, then udev/DRM.",
       "wgpu/Vulkan renderer, damage tracking, one draw pass for shell chrome.",
       "Frame scheduler from os/compositor wired to a real 120 Hz deadline.",
     ],

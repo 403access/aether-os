@@ -76,6 +76,27 @@ pub struct WindowInfo {
     pub focused: bool,
 }
 
+/// A command palette result.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PaletteEntry {
+    pub title: String,
+    pub detail: String,
+    pub action: PaletteAction,
+}
+
+/// What activating a palette entry does. The backend performs side effects.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PaletteAction {
+    SwitchWorkspace(usize),
+    Close,
+}
+
+#[derive(Clone, Debug, Default)]
+struct PaletteState {
+    query: String,
+    selected: usize,
+}
+
 #[derive(Clone, Debug)]
 pub struct FrameItem {
     pub surface: SurfaceId,
@@ -121,6 +142,7 @@ pub struct Shell {
     active: usize,
     focus: Option<WindowId>,
     overlay: Option<SurfaceId>,
+    palette: PaletteState,
     viewport: Size,
     next_id: WindowId,
 }
@@ -139,6 +161,7 @@ impl Shell {
             active: 0,
             focus: None,
             overlay: None,
+            palette: PaletteState::default(),
             viewport,
             next_id: 1,
         }
@@ -405,6 +428,118 @@ impl Shell {
         }
     }
 
+    /// Open the overlay with a default centred rect and reset the query.
+    pub fn open_overlay(&mut self) -> Option<SurfaceId> {
+        self.palette = PaletteState::default();
+        let width = 680.min(self.viewport.width.saturating_sub(64)).max(1);
+        let height = 420.min(self.viewport.height.saturating_sub(64)).max(1);
+        let x = ((self.viewport.width.saturating_sub(width)) / 2) as i32;
+        let y = ((self.viewport.height.saturating_sub(height)) / 2) as i32;
+        self.set_overlay(Some(Rect::new(x, y, width, height)))
+    }
+
+    /// Close the overlay and clear the palette query.
+    pub fn close_overlay(&mut self) -> Option<SurfaceId> {
+        self.palette = PaletteState::default();
+        self.set_overlay(None)
+    }
+
+    /// Toggle the overlay. Returns whether it is now open.
+    pub fn toggle_overlay(&mut self) -> bool {
+        if self.overlay.is_some() {
+            self.close_overlay();
+            false
+        } else {
+            self.open_overlay();
+            true
+        }
+    }
+
+    pub fn palette_query(&self) -> &str {
+        &self.palette.query
+    }
+
+    /// Filtered palette entries. Workspaces are always available; the close
+    /// command is last. Matching is case-insensitive on title, then detail.
+    pub fn palette_entries(&self) -> Vec<PaletteEntry> {
+        let query = self.palette.query.trim().to_lowercase();
+        let mut scored: Vec<(u8, usize, PaletteEntry)> = Vec::new();
+
+        for (index, workspace) in self.workspaces.iter().enumerate() {
+            let detail = format!("workspace {}", index + 1);
+            if let Some(score) = palette_score(&query, &workspace.name) {
+                scored.push((
+                    score,
+                    index,
+                    PaletteEntry {
+                        title: workspace.name.clone(),
+                        detail,
+                        action: PaletteAction::SwitchWorkspace(index),
+                    },
+                ));
+            }
+        }
+
+        let close = PaletteEntry {
+            title: "Close palette".to_string(),
+            detail: "Esc".to_string(),
+            action: PaletteAction::Close,
+        };
+        if let Some(score) = palette_score(&query, &close.title) {
+            scored.push((score, self.workspaces.len(), close));
+        }
+
+        scored.sort_by_key(|(score, order, _)| (*score, *order));
+        scored.into_iter().map(|(_, _, entry)| entry).collect()
+    }
+
+    /// 0-based index into [`Shell::palette_entries`].
+    pub fn palette_selected(&self) -> usize {
+        let len = self.palette_entries().len();
+        if len == 0 {
+            0
+        } else {
+            self.palette.selected.min(len - 1)
+        }
+    }
+
+    /// Append a printable character to the query. Returns whether it changed.
+    pub fn palette_push_char(&mut self, character: char) -> bool {
+        if character.is_control() || self.palette.query.chars().count() >= 48 {
+            return false;
+        }
+        self.palette.query.push(character);
+        self.palette.selected = 0;
+        true
+    }
+
+    /// Remove the last query character. Returns whether it changed.
+    pub fn palette_backspace(&mut self) -> bool {
+        let changed = self.palette.query.pop().is_some();
+        if changed {
+            self.palette.selected = 0;
+        }
+        changed
+    }
+
+    /// Move the selection by `delta`, wrapping at the ends.
+    pub fn palette_move_selection(&mut self, delta: i32) -> bool {
+        let len = self.palette_entries().len();
+        if len < 2 || delta == 0 {
+            return false;
+        }
+        let current = self.palette_selected() as i32;
+        self.palette.selected = (current + delta).rem_euclid(len as i32) as usize;
+        true
+    }
+
+    /// Activate the selected entry. The caller performs the returned action.
+    pub fn palette_activate(&self) -> Option<PaletteAction> {
+        self.palette_entries()
+            .get(self.palette_selected())
+            .map(|entry| entry.action)
+    }
+
     /// Create or update the single overlay surface (palette/chat). Passing
     /// `None` removes it.
     pub fn set_overlay(&mut self, rect: Option<Rect>) -> Option<SurfaceId> {
@@ -620,6 +755,22 @@ impl Shell {
     }
 }
 
+fn palette_score(query: &str, title: &str) -> Option<u8> {
+    if query.is_empty() {
+        return Some(0);
+    }
+    let title = title.to_lowercase();
+    if title == query {
+        Some(0)
+    } else if title.starts_with(query) {
+        Some(1)
+    } else if title.contains(query) {
+        Some(2)
+    } else {
+        None
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -786,6 +937,85 @@ mod tests {
 
         let info = shell.windows().into_iter().find(|w| w.id == a).unwrap();
         assert!(info.rect.intersect(Rect::from_size(Size::new(1024, 768))) == Some(info.rect));
+    }
+
+    #[test]
+    fn palette_filters_workspaces_and_close() {
+        let mut shell = shell();
+        shell.add_workspace("code");
+        shell.add_workspace("web");
+
+        let titles: Vec<String> = shell
+            .palette_entries()
+            .into_iter()
+            .map(|entry| entry.title)
+            .collect();
+        assert_eq!(titles, ["main", "code", "web", "Close palette"]);
+
+        assert!(shell.palette_push_char('c'));
+        let titles: Vec<String> = shell
+            .palette_entries()
+            .into_iter()
+            .map(|entry| entry.title)
+            .collect();
+        assert_eq!(titles, ["code", "Close palette"]);
+
+        assert!(shell.palette_push_char('o'));
+        let titles: Vec<String> = shell
+            .palette_entries()
+            .into_iter()
+            .map(|entry| entry.title)
+            .collect();
+        assert_eq!(titles, ["code"]);
+
+        assert!(shell.palette_push_char('d'));
+        assert_eq!(shell.palette_entries().len(), 1);
+
+        assert!(shell.palette_push_char('z'));
+        assert!(shell.palette_entries().is_empty());
+        assert!(shell.palette_activate().is_none());
+
+        assert!(shell.palette_backspace());
+        assert_eq!(shell.palette_entries().len(), 1);
+    }
+
+    #[test]
+    fn palette_selection_wraps_and_activates() {
+        let mut shell = shell();
+        shell.add_workspace("code");
+        shell.open_overlay();
+
+        assert_eq!(shell.palette_selected(), 0);
+        assert!(shell.palette_move_selection(-1));
+        assert_eq!(shell.palette_selected(), 2);
+        assert_eq!(shell.palette_activate(), Some(PaletteAction::Close));
+
+        assert!(shell.palette_move_selection(1));
+        assert_eq!(shell.palette_selected(), 0);
+        assert_eq!(
+            shell.palette_activate(),
+            Some(PaletteAction::SwitchWorkspace(0))
+        );
+
+        assert!(shell.palette_push_char('c'));
+        assert_eq!(shell.palette_selected(), 0);
+        assert_eq!(
+            shell.palette_activate(),
+            Some(PaletteAction::SwitchWorkspace(1))
+        );
+    }
+
+    #[test]
+    fn palette_query_resets_when_reopened() {
+        let mut shell = shell();
+        assert!(shell.toggle_overlay());
+        assert!(shell.palette_push_char('w'));
+        assert_eq!(shell.palette_query(), "w");
+        assert!(!shell.toggle_overlay());
+        assert_eq!(shell.palette_query(), "");
+        assert!(shell.toggle_overlay());
+        assert_eq!(shell.palette_query(), "");
+        assert_eq!(shell.overlay_rect(), Some(Rect::new(60, 90, 680, 420)));
     }
 
     #[test]

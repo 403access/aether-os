@@ -14,12 +14,12 @@ use std::sync::Arc;
 
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect, Size as AetherSize};
 use aether_layout::LayoutConfig;
-use aether_shell::{Shell, WindowId, WindowSpec, WORKSPACE_INDICATOR_BAR_HEIGHT};
+use aether_shell::{PaletteAction, Shell, WindowId, WindowSpec, WORKSPACE_INDICATOR_BAR_HEIGHT};
 use aether_text::{text_width, TextBitmap};
 use smithay::backend::allocator::Fourcc;
 use smithay::backend::input::{
-    AbsolutePositionEvent, Axis, AxisSource, ButtonState, Event, InputEvent, KeyboardKeyEvent,
-    MouseButton, PointerAxisEvent, PointerButtonEvent,
+    AbsolutePositionEvent, Axis, AxisSource, ButtonState, Event, InputEvent, KeyState,
+    KeyboardKeyEvent, MouseButton, PointerAxisEvent, PointerButtonEvent,
 };
 use smithay::backend::renderer::element::memory::{
     MemoryRenderBuffer, MemoryRenderBufferRenderElement,
@@ -33,7 +33,7 @@ use smithay::backend::renderer::gles::GlesRenderer;
 use smithay::backend::renderer::utils::{draw_render_elements, on_commit_buffer_handler};
 use smithay::backend::renderer::{Color32F, Frame, Renderer};
 use smithay::backend::winit::{self, WinitEvent};
-use smithay::input::keyboard::{keysyms, FilterResult, Keysym, ModifiersState};
+use smithay::input::keyboard::{keysyms, xkb, FilterResult, Keysym, ModifiersState};
 use smithay::input::pointer::{AxisFrame, ButtonEvent, MotionEvent};
 use smithay::input::{Seat, SeatHandler, SeatState};
 use smithay::reexports::wayland_protocols::xdg::shell::server::xdg_toplevel;
@@ -155,6 +155,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
             }
             WinitEvent::Focus(_) => {}
             WinitEvent::Input(InputEvent::Keyboard { event }) => {
+                let pressed = event.state() == KeyState::Pressed;
                 keyboard.input::<(), _>(
                     &mut state,
                     event.key_code(),
@@ -162,11 +163,16 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     0.into(),
                     0,
                     |state, modifiers, keysym| {
-                        if state.handle_shortcut(modifiers, keysym.modified_sym()) {
+                        let sym = keysym.modified_sym();
+                        if pressed && state.handle_shortcut(modifiers, sym) {
                             FilterResult::Intercept(())
                         } else if state.shell.overlay().is_some() {
-                            // The overlay is modal: keystrokes do not leak to the
-                            // focused client while it is open.
+                            // The overlay is modal: key presses edit the palette
+                            // query instead of leaking to the focused client.
+                            // Releases are consumed without repeating the key.
+                            if pressed {
+                                state.handle_palette_key(sym);
+                            }
                             FilterResult::Intercept(())
                         } else {
                             FilterResult::Forward
@@ -411,36 +417,80 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                         28,
                     );
                     chrome.push((input, [0.03, 0.12, 0.16, 1.0]));
-                    labels.push((
-                        "Search files, windows, agents...".into(),
-                        input.x + 10,
-                        input.y + 10,
-                        1,
-                        [122, 173, 189, 255],
-                    ));
+                    let query = state.shell.palette_query();
+                    if query.is_empty() {
+                        labels.push((
+                            "Search workspaces...".into(),
+                            input.x + 10,
+                            input.y + 10,
+                            1,
+                            [122, 173, 189, 255],
+                        ));
+                    } else {
+                        labels.push((
+                            format!("> {query}_"),
+                            input.x + 10,
+                            input.y + 10,
+                            1,
+                            [235, 252, 255, 255],
+                        ));
+                    }
 
-                    let rows = [
-                        "1  Open documentation",
-                        "2  Switch workspace",
-                        "3  Start agent session",
-                    ];
-                    for (row, text) in rows.iter().enumerate() {
+                    let entries = state.shell.palette_entries();
+                    let selected = state.shell.palette_selected();
+                    if entries.is_empty() {
+                        labels.push((
+                            "No matching commands".into(),
+                            rect.x + 26,
+                            rect.y + 106,
+                            1,
+                            [128, 184, 199, 255],
+                        ));
+                    }
+                    for (row, entry) in entries.iter().take(4).enumerate() {
                         let y = rect.y + 96 + row as i32 * 48;
                         if y + 32 < rect.y + rect.height as i32 {
                             let row_rect =
                                 AetherRect::new(rect.x + 16, y, rect.width.saturating_sub(32), 32);
-                            chrome.push((row_rect, [0.05, 0.31, 0.37, 1.0]));
+                            let active = row == selected;
+                            chrome.push((
+                                row_rect,
+                                if active {
+                                    [0.09, 0.42, 0.5, 1.0]
+                                } else {
+                                    [0.05, 0.31, 0.37, 1.0]
+                                },
+                            ));
+                            if active {
+                                chrome.push((
+                                    AetherRect::new(row_rect.x, row_rect.y, 3, row_rect.height),
+                                    [0.22, 0.84, 1.0, 1.0],
+                                ));
+                            }
                             labels.push((
-                                (*text).into(),
-                                row_rect.x + 10,
+                                entry.title.clone(),
+                                row_rect.x + 12,
                                 row_rect.y + 12,
                                 1,
-                                [217, 247, 255, 255],
+                                if active {
+                                    [235, 252, 255, 255]
+                                } else {
+                                    [217, 247, 255, 255]
+                                },
+                            ));
+                            labels.push((
+                                entry.detail.clone(),
+                                row_rect.x + row_rect.width as i32
+                                    - text_width(&entry.detail, 1) as i32
+                                    - 10,
+                                row_rect.y + 12,
+                                1,
+                                [128, 184, 199, 255],
                             ));
                         }
                     }
 
-                    let footer = "Esc close   Enter run   Super+Space toggle";
+                    let footer = "Esc close   Enter run   Up/Down select";
                     labels.push((
                         footer.into(),
                         rect.x + 16,
@@ -514,7 +564,11 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                 draw_render_elements(&mut frame, 1.0, &elements, &[damage])?;
             }
             if !chrome.is_empty() {
-                let buffers: Vec<SolidColorBuffer> = chrome
+                // `draw_render_elements` treats the slice as topmost-first and
+                // reverses it internally; our chrome is built bottom-up.
+                let chrome_top_down: Vec<(AetherRect, [f32; 4])> =
+                    chrome.iter().rev().copied().collect();
+                let buffers: Vec<SolidColorBuffer> = chrome_top_down
                     .iter()
                     .map(|(rect, color)| {
                         SolidColorBuffer::new((rect.width as i32, rect.height as i32), *color)
@@ -522,7 +576,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     .collect();
                 let elements: Vec<SolidColorRenderElement> = buffers
                     .iter()
-                    .zip(chrome.iter())
+                    .zip(chrome_top_down.iter())
                     .map(|(buffer, (rect, _))| {
                         SolidColorRenderElement::from_buffer(
                             buffer,
@@ -817,16 +871,57 @@ impl App {
     }
 
     fn toggle_overlay(&mut self) {
-        if self.shell.overlay().is_some() {
-            self.shell.set_overlay(None);
-        } else {
-            let viewport = self.shell.viewport();
-            let width = 680.min(viewport.width.saturating_sub(64)).max(1);
-            let height = 420.min(viewport.height.saturating_sub(64)).max(1);
-            let x = ((viewport.width.saturating_sub(width)) / 2) as i32;
-            let y = ((viewport.height.saturating_sub(height)) / 2) as i32;
-            self.shell
-                .set_overlay(Some(AetherRect::new(x, y, width, height)));
+        self.shell.toggle_overlay();
+    }
+
+    fn handle_palette_key(&mut self, keysym: Keysym) {
+        let enter: Keysym = keysyms::KEY_Return.into();
+        let keypad_enter: Keysym = keysyms::KEY_KP_Enter.into();
+        let up: Keysym = keysyms::KEY_Up.into();
+        let down: Keysym = keysyms::KEY_Down.into();
+        let backspace: Keysym = keysyms::KEY_BackSpace.into();
+
+        if keysym == enter || keysym == keypad_enter {
+            if let Some(action) = self.shell.palette_activate() {
+                println!("aether-shell-smithay: palette action {action:?}");
+                match action {
+                    PaletteAction::SwitchWorkspace(index) => {
+                        self.shell.close_overlay();
+                        self.switch_workspace(index);
+                    }
+                    PaletteAction::Close => {
+                        self.shell.close_overlay();
+                    }
+                }
+            }
+            return;
+        }
+        if keysym == up {
+            self.shell.palette_move_selection(-1);
+            return;
+        }
+        if keysym == down {
+            self.shell.palette_move_selection(1);
+            return;
+        }
+        if keysym == backspace {
+            if self.shell.palette_backspace() {
+                println!(
+                    "aether-shell-smithay: palette query -> {:?}",
+                    self.shell.palette_query()
+                );
+            }
+            return;
+        }
+
+        let Some(character) = char::from_u32(xkb::keysym_to_utf32(keysym)) else {
+            return;
+        };
+        if !character.is_control() && self.shell.palette_push_char(character) {
+            println!(
+                "aether-shell-smithay: palette query -> {:?}",
+                self.shell.palette_query()
+            );
         }
     }
 

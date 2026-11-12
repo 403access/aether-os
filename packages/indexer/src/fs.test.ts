@@ -8,7 +8,7 @@ import {
   extensionOf,
   isProbablyText,
   scanDirectory,
-} from "../src/index";
+} from "../src/fs";
 import { buildIndex } from "../src/search-index";
 
 const NOW = Date.UTC(2026, 10, 12);

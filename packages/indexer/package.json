@@ -5,7 +5,8 @@
   "type": "module",
   "description": "In-memory BM25 + prefix + fuzzy search engine and filesystem ingestion.",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./fs": "./src/fs.ts"
   },
   "scripts": {
     "test": "bun test"

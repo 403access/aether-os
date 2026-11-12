@@ -46,6 +46,7 @@
             libxext
             libxcb
             xvfb
+            weston
             imagemagick
           ];
           shellHook = ''

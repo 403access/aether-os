@@ -14,6 +14,9 @@ DISPLAY_NUM="${DISPLAY_NUM:-99}"
 WIDTH="${WIDTH:-1280}"
 HEIGHT="${HEIGHT:-800}"
 SETTLE="${SETTLE:-3}"
+ARGS="${ARGS:---demo}"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-$(mktemp -d)}"
+chmod 700 "${XDG_RUNTIME_DIR}"
 
 [ -x "${BIN}" ] || {
   echo "error: ${BIN} not built; run cargo build --manifest-path ${ROOT}/Cargo.toml" >&2
@@ -34,7 +37,8 @@ cleanup() {
 trap cleanup EXIT
 
 sleep 1
-DISPLAY=":${DISPLAY_NUM}" "${BIN}" >"${OUT}/app.log" 2>&1 &
+# shellcheck disable=SC2086
+DISPLAY=":${DISPLAY_NUM}" "${BIN}" ${ARGS} >"${OUT}/app.log" 2>&1 &
 APP_PID=$!
 sleep "${SETTLE}"
 

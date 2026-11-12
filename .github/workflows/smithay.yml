@@ -26,10 +26,14 @@ jobs:
             cargo fmt --manifest-path os/compositor/aether-shell-smithay/Cargo.toml -- --check
             cargo clippy --manifest-path os/compositor/aether-shell-smithay/Cargo.toml -- -D warnings
           '
-      - name: Present a frame under Xvfb
+      - name: Present the FramePlan demo under Xvfb
         run: |
           nix develop .#smithay --command \
             ./os/compositor/aether-shell-smithay/smoke-xvfb.sh
+      - name: Render a real Wayland client under Xvfb
+        run: |
+          nix develop .#smithay --command \
+            ./os/compositor/aether-shell-smithay/smoke-client-xvfb.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:

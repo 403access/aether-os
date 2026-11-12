@@ -14,7 +14,7 @@ name = "aether-shell-smithay"
 path = "src/main.rs"
 
 [dependencies]
-smithay = { version = "0.7", default-features = false, features = ["backend_winit"] }
+smithay = { version = "0.7", default-features = false, features = ["backend_winit", "wayland_frontend"] }
 aether-geometry = { path = "../crates/aether-geometry" }
 aether-layout = { path = "../crates/aether-layout" }
 aether-shell = { path = "../crates/aether-shell" }

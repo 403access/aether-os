@@ -3,5 +3,42 @@
 version = 4
 
 [[package]]
+name = "aether-compositor"
+version = "0.1.0"
+dependencies = [
+ "aether-damage",
+ "aether-geometry",
+ "aether-layout",
+ "aether-pacing",
+ "aether-scene",
+]
+
+[[package]]
+name = "aether-damage"
+version = "0.1.0"
+dependencies = [
+ "aether-geometry",
+]
+
+[[package]]
+name = "aether-geometry"
+version = "0.1.0"
+
+[[package]]
+name = "aether-layout"
+version = "0.1.0"
+dependencies = [
+ "aether-geometry",
+]
+
+[[package]]
+name = "aether-pacing"
+version = "0.1.0"
+
+[[package]]
 name = "aether-scene"
 version = "0.1.0"
+dependencies = [
+ "aether-damage",
+ "aether-geometry",
+]

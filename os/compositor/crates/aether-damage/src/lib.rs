@@ -5,7 +5,9 @@
 //! visual bug. When merging would produce too many rectangles, the region
 //! collapses to its bounding box.
 
-use crate::geometry::Rect;
+#![forbid(unsafe_code)]
+
+use aether_geometry::Rect;
 
 /// Above this many rectangles, a full bounding-box redraw is cheaper.
 pub const MAX_RECTS: usize = 32;

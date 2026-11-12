@@ -3,6 +3,8 @@
 //! Coordinates are logical pixels, origin at the top-left of the output.
 //! Rectangles are half-open: `x .. x + width`, `y .. y + height`.
 
+#![forbid(unsafe_code)]
+
 use std::ops::{Add, Sub};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]

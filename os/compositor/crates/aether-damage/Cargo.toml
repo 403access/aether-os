@@ -1,0 +1,8 @@
+[package]
+name = "aether-damage"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Damage regions with merging and clipping"
+[dependencies]
+aether-geometry.workspace = true

@@ -1,0 +1,8 @@
+[package]
+name = "aether-layout"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Pure tiling layout for the Aether compositor"
+[dependencies]
+aether-geometry.workspace = true

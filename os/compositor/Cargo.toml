@@ -1,6 +1,26 @@
 [workspace]
-members = ["crates/aether-scene"]
+members = [
+  "crates/aether-geometry",
+  "crates/aether-damage",
+  "crates/aether-layout",
+  "crates/aether-pacing",
+  "crates/aether-scene",
+  "crates/aether-compositor",
+]
 resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+rust-version = "1.85"
+
+[workspace.dependencies]
+aether-geometry = { path = "crates/aether-geometry" }
+aether-damage = { path = "crates/aether-damage" }
+aether-layout = { path = "crates/aether-layout" }
+aether-pacing = { path = "crates/aether-pacing" }
+aether-scene = { path = "crates/aether-scene" }
 
 [profile.release]
 lto = "thin"

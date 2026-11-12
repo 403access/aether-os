@@ -34,7 +34,7 @@
           version = "0.1.0";
           src = sceneSource;
           cargoLock.lockFile = ./os/compositor/Cargo.lock;
-          cargoBuildFlags = ["--package" "aether-scene" "--bin" "aether-scene-demo"];
+          cargoBuildFlags = ["--package" "aether-compositor" "--bin" "aether-scene-demo"];
           installPhase = ''
             mkdir -p $out/bin
             cp target/release/aether-scene-demo $out/bin/aether-scene

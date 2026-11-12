@@ -1,0 +1,21 @@
+[package]
+name = "aether-compositor"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Facade and demo binary for the Aether compositor scene stack"
+
+[lib]
+name = "aether_compositor"
+path = "src/lib.rs"
+
+[[bin]]
+name = "aether-scene-demo"
+path = "src/main.rs"
+
+[dependencies]
+aether-geometry.workspace = true
+aether-damage.workspace = true
+aether-layout.workspace = true
+aether-pacing.workspace = true
+aether-scene.workspace = true

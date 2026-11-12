@@ -1,0 +1,6 @@
+[package]
+name = "aether-geometry"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Points, sizes and rectangles for Aether compositor and apps"

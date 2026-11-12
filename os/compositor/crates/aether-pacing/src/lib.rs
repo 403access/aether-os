@@ -4,6 +4,8 @@
 //! is dropped and superseded; the next present re-anchors the deadline to the
 //! actual present time so the error does not accumulate.
 
+#![forbid(unsafe_code)]
+
 pub const NS_PER_SEC: u64 = 1_000_000_000;
 
 #[derive(Clone, Copy, Debug)]

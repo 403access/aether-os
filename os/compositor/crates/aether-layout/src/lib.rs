@@ -4,7 +4,9 @@
 //! function is pure: it takes a viewport and a count and returns rectangles in
 //! window order. Gaps are drawn by the compositor, not by clients.
 
-use crate::geometry::Rect;
+#![forbid(unsafe_code)]
+
+use aether_geometry::Rect;
 
 #[derive(Clone, Copy, Debug)]
 pub struct LayoutConfig {
@@ -101,7 +103,6 @@ fn stack(x: i32, inner: Rect, width: i32, count: usize, gap: i32) -> Vec<Rect> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::geometry::Rect;
 
     const VIEWPORT: Rect = Rect::new(0, 0, 1600, 1000);
 

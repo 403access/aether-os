@@ -1,7 +1,7 @@
 //! End-to-end exercise of the pure core: layout, scene mutation, damage and
 //! frame pacing, without a GPU or a display server.
 
-use aether_scene::{tile, FramePacer, Layer, LayoutConfig, Point, Rect, Scene, Size};
+use aether_compositor::{tile, FramePacer, Layer, LayoutConfig, Point, Rect, Scene, Size};
 
 #[test]
 fn a_session_of_window_management() {

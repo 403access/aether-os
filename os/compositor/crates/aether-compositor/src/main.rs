@@ -3,14 +3,16 @@
 //!
 //!   cargo run --release --bin aether-scene-demo
 
-use aether_scene::{tile, FramePacer, Layer, LayoutConfig, Point, Rect, Scene, Size};
+use aether_compositor::{
+    tile, FramePacer, Layer, LayoutConfig, Point, Rect, Scene, Size, SCENE_MODEL_VERSION,
+};
 
 fn main() {
     let viewport = Rect::new(0, 0, 2560, 1440);
     let config = LayoutConfig::default();
     let rects = tile(viewport, 4, config);
 
-    println!("Aether scene model v{}", aether_scene::SCENE_MODEL_VERSION);
+    println!("Aether scene model v{}", SCENE_MODEL_VERSION);
     println!("viewport {viewport:?}");
     println!("tiling (4 windows, gap {} px):", config.gap);
     for (index, rect) in rects.iter().enumerate() {

@@ -14,6 +14,7 @@ DISPLAY_NUM="${DISPLAY_NUM:-99}"
 WIDTH="${WIDTH:-1280}"
 HEIGHT="${HEIGHT:-800}"
 SETTLE="${SETTLE:-5}"
+ARGS="${ARGS:-}"
 
 [ -x "${BIN}" ] || {
   echo "error: ${BIN} not built; run cargo build --manifest-path ${ROOT}/Cargo.toml" >&2
@@ -38,7 +39,8 @@ cleanup() {
 trap cleanup EXIT
 
 sleep 1
-DISPLAY=":${DISPLAY_NUM}" "${BIN}" >"${OUT}/client-app.log" 2>&1 &
+# shellcheck disable=SC2086
+DISPLAY=":${DISPLAY_NUM}" "${BIN}" ${ARGS} >"${OUT}/client-app.log" 2>&1 &
 APP_PID=$!
 sleep "${SETTLE}"
 

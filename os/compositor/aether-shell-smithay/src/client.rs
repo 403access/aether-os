@@ -16,8 +16,10 @@ use aether_geometry::{Point as AetherPoint, Rect as AetherRect, Size as AetherSi
 use aether_layout::LayoutConfig;
 use aether_shell::{Shell, WindowId, WindowSpec};
 use smithay::backend::input::{
-    AbsolutePositionEvent, ButtonState, Event, InputEvent, KeyboardKeyEvent, PointerButtonEvent,
+    AbsolutePositionEvent, Axis, AxisSource, ButtonState, Event, InputEvent, KeyboardKeyEvent,
+    PointerAxisEvent, PointerButtonEvent,
 };
+use smithay::backend::renderer::element::solid::{SolidColorBuffer, SolidColorRenderElement};
 use smithay::backend::renderer::element::surface::{
     render_elements_from_surface_tree, WaylandSurfaceRenderElement,
 };
@@ -26,8 +28,8 @@ use smithay::backend::renderer::gles::GlesRenderer;
 use smithay::backend::renderer::utils::{draw_render_elements, on_commit_buffer_handler};
 use smithay::backend::renderer::{Color32F, Frame, Renderer};
 use smithay::backend::winit::{self, WinitEvent};
-use smithay::input::keyboard::FilterResult;
-use smithay::input::pointer::{ButtonEvent, MotionEvent};
+use smithay::input::keyboard::{keysyms, FilterResult, Keysym, ModifiersState};
+use smithay::input::pointer::{AxisFrame, ButtonEvent, MotionEvent};
 use smithay::input::{Seat, SeatHandler, SeatState};
 use smithay::reexports::wayland_protocols::xdg::shell::server::xdg_toplevel;
 use smithay::reexports::wayland_server::backend::{ClientData, ClientId, DisconnectReason};
@@ -51,6 +53,7 @@ use smithay::wayland::shell::xdg::{
 use smithay::wayland::shm::{ShmHandler, ShmState};
 
 pub fn run() -> Result<(), Box<dyn Error>> {
+    let args: Vec<String> = std::env::args().collect();
     let max_frames = parse_frames();
     let mut display: Display<App> = Display::new()?;
     let dh = display.handle();
@@ -67,15 +70,20 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         seat_state,
         data_device_state: DataDeviceState::new::<App>(&dh),
         seat,
-        shell: Shell::new(
-            AetherSize::new(1280, 800),
-            LayoutConfig {
-                master_ratio: 0.55,
-                gap: 10,
-                outer_gap: 16,
-            },
-            120,
-        ),
+        shell: {
+            let mut shell = Shell::new(
+                AetherSize::new(1280, 800),
+                LayoutConfig {
+                    master_ratio: 0.55,
+                    gap: 10,
+                    outer_gap: 16,
+                },
+                120,
+            );
+            shell.add_workspace("code");
+            shell.add_workspace("web");
+            shell
+        },
         windows: HashMap::new(),
         configured: HashMap::new(),
         focus: None,
@@ -101,6 +109,13 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         .shell
         .set_viewport(logical_size(state.window_size, state.scale));
     state.configure_all();
+    if args.iter().any(|arg| arg == "--overlay") || std::env::var("AETHER_OVERLAY").is_ok() {
+        state.toggle_overlay();
+        println!(
+            "aether-shell-smithay: overlay enabled: {:?}",
+            state.shell.overlay_rect()
+        );
+    }
     let keyboard = state
         .seat
         .add_keyboard(Default::default(), 200, 200)
@@ -130,7 +145,13 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     event.state(),
                     0.into(),
                     0,
-                    |_, _, _| FilterResult::Forward,
+                    |state, modifiers, keysym| {
+                        if state.handle_shortcut(modifiers, keysym.modified_sym()) {
+                            FilterResult::Intercept(())
+                        } else {
+                            FilterResult::Forward
+                        }
+                    },
                 );
             }
             WinitEvent::Input(InputEvent::PointerMotionAbsolute { event }) => {
@@ -175,6 +196,33 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                         pointer.frame(&mut state);
                     }
                 }
+            }
+            WinitEvent::Input(InputEvent::PointerAxis { event }) => {
+                let source = event.source();
+                let horizontal = event.amount(Axis::Horizontal).unwrap_or_else(|| {
+                    event.amount_v120(Axis::Horizontal).unwrap_or(0.0) * 15.0 / 120.0
+                });
+                let vertical = event.amount(Axis::Vertical).unwrap_or_else(|| {
+                    event.amount_v120(Axis::Vertical).unwrap_or(0.0) * 15.0 / 120.0
+                });
+                let mut axis = AxisFrame::new(event.time_msec()).source(source);
+                if horizontal != 0.0 {
+                    axis = axis.value(Axis::Horizontal, horizontal);
+                }
+                if vertical != 0.0 {
+                    axis = axis.value(Axis::Vertical, vertical);
+                }
+                if source == AxisSource::Finger {
+                    if event.amount(Axis::Horizontal) == Some(0.0) {
+                        axis = axis.stop(Axis::Horizontal);
+                    }
+                    if event.amount(Axis::Vertical) == Some(0.0) {
+                        axis = axis.stop(Axis::Vertical);
+                    }
+                }
+                let pointer = state.seat.get_pointer().expect("seat pointer");
+                pointer.axis(&mut state, axis);
+                pointer.frame(&mut state);
             }
             WinitEvent::Input(InputEvent::PointerButton { event }) => {
                 let position = state.pointer_pos;
@@ -249,6 +297,27 @@ pub fn run() -> Result<(), Box<dyn Error>> {
             // Client surfaces are painted over the shell background.
             if !elements.is_empty() {
                 draw_render_elements(&mut frame, 1.0, &elements, &[damage])?;
+            }
+            // The shell overlay (palette/chat) is drawn above clients. Until a
+            // glyph atlas exists it is a solid panel.
+            if let Some(rect) = state.shell.overlay_rect() {
+                let buffer = SolidColorBuffer::new(
+                    (rect.width as i32, rect.height as i32),
+                    [0.05f32, 0.24, 0.29, 0.96],
+                );
+                let element: SolidColorRenderElement = SolidColorRenderElement::from_buffer(
+                    &buffer,
+                    (rect.x, rect.y),
+                    1.0f64,
+                    1.0,
+                    Kind::Unspecified,
+                );
+                draw_render_elements::<GlesRenderer, f64, SolidColorRenderElement>(
+                    &mut frame,
+                    1.0,
+                    &[element],
+                    &[damage],
+                )?;
             }
             let _ = frame.finish()?;
         }
@@ -435,6 +504,84 @@ struct App {
 }
 
 impl App {
+    fn handle_shortcut(&mut self, modifiers: &ModifiersState, keysym: Keysym) -> bool {
+        if !modifiers.logo {
+            return false;
+        }
+
+        let one: Keysym = keysyms::KEY_1.into();
+        let two: Keysym = keysyms::KEY_2.into();
+        let three: Keysym = keysyms::KEY_3.into();
+        let space: Keysym = keysyms::KEY_space.into();
+        let close: Keysym = keysyms::KEY_q.into();
+
+        if modifiers.shift {
+            let target = if keysym == one {
+                Some(0)
+            } else if keysym == two {
+                Some(1)
+            } else if keysym == three {
+                Some(2)
+            } else {
+                None
+            };
+            if let Some(workspace) = target {
+                if let Some(id) = self.shell.focused_window() {
+                    if self.shell.move_window_to_workspace(id, workspace) {
+                        self.sync_focus();
+                        self.configure_all();
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        let target = if keysym == one {
+            Some(0)
+        } else if keysym == two {
+            Some(1)
+        } else if keysym == three {
+            Some(2)
+        } else {
+            None
+        };
+        if let Some(workspace) = target {
+            if self.shell.switch_workspace(workspace) {
+                self.sync_focus();
+                self.configure_all();
+            }
+            return true;
+        }
+        if keysym == space {
+            self.toggle_overlay();
+            return true;
+        }
+        if keysym == close {
+            if let Some(id) = self.shell.focused_window() {
+                if let Some(toplevel) = self.windows.get(&id) {
+                    toplevel.send_close();
+                }
+            }
+            return true;
+        }
+        false
+    }
+
+    fn toggle_overlay(&mut self) {
+        if self.shell.overlay().is_some() {
+            self.shell.set_overlay(None);
+        } else {
+            let viewport = self.shell.viewport();
+            let width = 680.min(viewport.width.saturating_sub(64)).max(1);
+            let height = 420.min(viewport.height.saturating_sub(64)).max(1);
+            let x = ((viewport.width.saturating_sub(width)) / 2) as i32;
+            let y = ((viewport.height.saturating_sub(height)) / 2) as i32;
+            self.shell
+                .set_overlay(Some(AetherRect::new(x, y, width, height)));
+        }
+    }
+
     fn configure_window(&mut self, id: WindowId) {
         let Some(toplevel) = self.windows.get(&id).cloned() else {
             return;

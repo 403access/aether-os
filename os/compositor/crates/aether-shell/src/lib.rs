@@ -355,6 +355,11 @@ impl Shell {
         self.overlay
     }
 
+    pub fn overlay_rect(&self) -> Option<Rect> {
+        self.overlay
+            .and_then(|surface| self.scene.get(surface).map(|surface| surface.rect))
+    }
+
     /// Simulate content damage for a window (text append, resize of app
     /// content). Clipped to the surface by the scene.
     pub fn damage_window(&mut self, id: WindowId, rect: Rect) -> bool {

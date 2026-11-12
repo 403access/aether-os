@@ -12,15 +12,23 @@
 #
 # Shared code belongs in packages/ or os/compositor/, never in this directory.
 #
-# Built as a qcow2 EFI image by nixos-generators (see flake.nix:
-# packages.aarch64-linux.vm-image). The qcow-efi format supplies the root
-# filesystem, ESP, GRUB and serial consoles; do not duplicate them here.
+# Built as a qcow2 EFI image by NixOS's built-in image support (see flake.nix:
+# packages.aarch64-linux.vm-image, image target `qemu-efi`). The image module
+# supplies the root filesystem, ESP and systemd-boot; do not duplicate them
+# here.
 {
   pkgs,
   lib,
+  modulesPath,
   ...
 }: {
-  imports = [../common/base.nix];
+  imports = [
+    ../common/base.nix
+    # virtio storage/net/console drivers. nixos-generators' qcow-efi format
+    # imported this; NixOS's built-in image modules do not, so the image would
+    # otherwise not find its root disk under QEMU.
+    "${modulesPath}/profiles/qemu-guest.nix"
+  ];
 
   system.stateVersion = "26.11";
 
@@ -30,8 +38,11 @@
   # Small, sparse disk. Grow with qemu-img if you need more.
   virtualisation.diskSize = 4096;
 
-  # ttyAMA0 is added by the qcow-efi format; tty0 is for a graphical console.
-  boot.kernelParams = ["console=tty0" "loglevel=4"];
+  # The upstream image modules do not add a serial console; keep the behaviour
+  # the old nixos-generators qcow-efi format provided. The console= parameters
+  # also make systemd spawn a getty on the serial line.
+  boot.kernelParams = ["console=tty0" "console=ttyAMA0,115200" "loglevel=4"];
+  boot.loader.timeout = 0;
 
   # --- development account -------------------------------------------------
   # VM only. The reference machine uses a locked root and a hashed operator

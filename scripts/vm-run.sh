@@ -49,9 +49,18 @@ QEMU_ARGS=(
   -bios "${FIRMWARE}"
   -drive "file=${IMAGE},if=virtio,format=qcow2"
   -device virtio-rng-pci
-  -netdev "user,id=net0,hostfwd=tcp::${SSH_PORT}-:22"
-  -device virtio-net-pci,netdev=net0
 )
+
+# The smoke test does not need SSH; avoiding a fixed host port also prevents
+# conflicts when an interactive VM is already running.
+if [ "${MODE}" = "--smoke" ]; then
+  QEMU_ARGS+=(-netdev "user,id=net0" -device virtio-net-pci,netdev=net0)
+else
+  QEMU_ARGS+=(
+    -netdev "user,id=net0,hostfwd=tcp::${SSH_PORT}-:22"
+    -device virtio-net-pci,netdev=net0
+  )
+fi
 
 if [ "${MODE}" = "--smoke" ]; then
   LOG="${ART}/serial.log"

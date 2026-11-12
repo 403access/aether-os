@@ -14,6 +14,11 @@ STORE_VOLUME="${STORE_VOLUME:-aether-vm-nix}"
 
 say() { printf '\n\033[1;36m==>\033[0m %s\n' "$*"; }
 
+# Previous images are read-only (Nix store copy); make sure a rebuild can
+# replace them.
+mkdir -p "${ART}"
+chmod -R u+w "${ART}" 2>/dev/null || true
+rm -rf "${ART}"
 mkdir -p "${ART}"
 
 if [ "${SKIP_DOCKER:-0}" = "1" ]; then
@@ -52,6 +57,8 @@ docker run --rm --privileged \
       --option sandbox false \
       --option system-features "kvm nixos-test benchmark big-parallel" > /tmp/out
     out="$(cat /tmp/out)"
+    chmod -R u+w /src/artifacts/vm 2>/dev/null || true
+    rm -rf /src/artifacts/vm
     mkdir -p /src/artifacts/vm
     if [ -d "$out" ]; then
       cp -Lr "$out"/. /src/artifacts/vm/

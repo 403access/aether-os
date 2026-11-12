@@ -48,7 +48,7 @@ Artifacts are copied to `artifacts/vm/` (gitignored).
 ```
 
 QEMU is driven directly with HVF acceleration and the EDK2 aarch64 firmware.
-The image is `qcow-efi`, so no bootloader setup is needed on the host.
+The image is `qemu-efi`, so no bootloader setup is needed on the host.
 
 - Login: `aether` / `aether`
 - SSH: `ssh -p 2222 aether@127.0.0.1`
@@ -56,7 +56,7 @@ The image is `qcow-efi`, so no bootloader setup is needed on the host.
 - The build image is read-only; boots use a writable overlay (`run.qcow2`), so
   the base stays pristine. Delete the overlay or set `VM_RESET=1` to reset.
 
-Measured on the development Mac (M3, HVF, 4 vCPU, 4 GiB): **multi-user in ~10 s**,
+Measured on the development Mac (M3, HVF, 4 vCPU, 4 GiB): **multi-user in ~10–12 s**,
 `AETHER_VM_LSM=lockdown,capability,landlock,yama,bpf,ima`.
 
 ## Not the product

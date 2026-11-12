@@ -70,7 +70,7 @@ source. Everything else is a target or an aspiration.
 | --- | --- | --- |
 | < 50 ms boot | **Refused** | That is a microVM snapshot restore, not a cold desktop boot |
 | < 1.5 s userspace boot on the 7700K | **Budget** | P1 gate |
-| ~10 s multi-user boot in the aarch64 VM | **Measured (dev host)** | Apple M3, HVF, 4 vCPU; not the target |
+| ~10–12 s multi-user boot in the aarch64 VM | **Measured (dev host)** | Apple M3, HVF, 4 vCPU; not the target |
 | XFS is fastest for this workload | **Qualified** | Reasoned from design; not benchmarked on this machine |
 | Btrfs/ZFS rejected | **Decision** | ADR-0003; not a performance claim |
 

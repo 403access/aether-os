@@ -33,6 +33,10 @@ semantic versioning with release codenames (0.1 = “Kestrel”).
 
 ### Fixed
 
+- The development VM image now uses NixOS's built-in image support
+  (`system.build.images.qemu-efi`) instead of the deprecated `nixos-generators`
+  input, removing its flake evaluation warning. The `qemu-efi` target produces
+  the same qcow2 + ESP + systemd-boot image.
 - The marketing “Full roadmap” CTA pointed at `/docs/roadmap/roadmap`, which does
   not exist (the page is `/docs/roadmap/`). All in-site docs links now use the
   canonical trailing slash, and a Playwright spec checks every docs link on the

@@ -7,13 +7,9 @@
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nixos-generators = {
-      url = "github:nix-community/nixos-generators";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
-  outputs = { self, nixpkgs, rust-overlay, nixos-generators}:
+  outputs = {self, nixpkgs, rust-overlay}:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
@@ -81,13 +77,17 @@
       # import the reference hardware, kernel fragment, storage layout or
       # users; VM-only settings must never leak into kestrel.
       # ---------------------------------------------------------------------
-      packages.aarch64-linux = {
-        vm-image = nixos-generators.nixosGenerate {
+      packages.aarch64-linux = let
+        vm = nixpkgs.lib.nixosSystem {
           system = "aarch64-linux";
-          format = "qcow-efi";
           modules = [./os/vm/configuration.nix];
         };
-        default = self.packages.aarch64-linux.vm-image;
+      in {
+        # NixOS's built-in image support: `qemu-efi` is the upstream
+        # replacement for nixos-generators' `qcow-efi` (qcow2 + ESP +
+        # systemd-boot).
+        vm-image = vm.config.system.build.images.qemu-efi;
+        default = vm.config.system.build.images.qemu-efi;
       };
 
       devShells.${system}.default = pkgs.mkShell {

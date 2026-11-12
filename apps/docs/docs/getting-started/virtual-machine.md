@@ -90,10 +90,10 @@ nix build .#vm-image
 Artifacts are gitignored.
 
 :::note
-`nixos-generators` is deprecated upstream in favour of the image-building support
-in NixOS itself. It is pinned here because the qcow-efi format is stable and this
-is a development-only target; migrating the VM output is tracked as cleanup, not
-part of the reference install.
+The VM image is built with NixOS's own image support
+(`system.build.images.qemu-efi`), the upstream replacement for the deprecated
+`nixos-generators`. The `qemu-efi` target produces the same qcow2 disk with an
+EFI system partition and systemd-boot.
 :::
 
 ## Boot
@@ -133,7 +133,7 @@ systemd unit, then exits:
 AETHER_VM_READY arch=aarch64 kernel=6.18.62
 AETHER_VM_LSM=lockdown,capability,landlock,yama,bpf,ima
 AETHER_VM_USER=root
-boot ok after 10s
+boot ok after 12s
 ```
 
 That is the measured result on the development Mac (M3, HVF, 4 vCPU, 4 GiB).

@@ -43,7 +43,7 @@ the next phase; first boot lands in a console, not the finished desktop.
 | React UI kit | ✅ 17 DOM tests | `packages/ui` |
 | Benchmark harness + regression gate | ✅ baseline committed | `packages/bench` |
 | NixOS system + installer ISO | ✅ evaluates (`nix flake check`); not booted in CI | `os/nixos` |
-| aarch64 development VM target | ✅ built + booted headless in ~10 s (HVF) | `os/vm` |
+| aarch64 development VM target | ✅ built + booted headless in ~10–12 s (HVF) | `os/vm` |
 | disko disk layout + install script | ✅ written, evaluation-checked | `os/nixos/disko.nix`, `scripts/install.sh` |
 | Compositor scene graph + frame scheduler | ✅ 35 Rust tests | `os/compositor` |
 | Compositor UI (`aether-shell`) | ⏳ roadmap P2 | — |

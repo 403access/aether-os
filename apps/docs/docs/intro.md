@@ -61,6 +61,7 @@ not need. Aether removes them:
 | Path | Time | Start here |
 | --- | --- | --- |
 | Install it | 1–2 h | [Install on the 7700K](/getting-started/install) · [First boot](/getting-started/first-boot) · [Hardware notes](/getting-started/hardware) |
+| Boot it virtually | 30 min | [Development VM](/getting-started/virtual-machine) — separate aarch64 target, no hardware changes |
 | Product vision | 15 min | [PRD](/product/prd) · [Personas & jobs](/product/personas-and-jobs) · [Scope & non-goals](/product/scope-and-non-goals) · [UX principles](/product/ux-principles) |
 | System design | 45 min | [Architecture overview](/architecture/overview) · [Hardware target](/architecture/hardware-target) · [Agent isolation](/architecture/agent-isolation) · [Compositor](/architecture/compositor) |
 | Build it | now | [Development setup](/contributing/development) · [Testing](/contributing/testing) · [Roadmap](/roadmap) · [ADRs](/adr) |

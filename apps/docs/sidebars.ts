@@ -11,6 +11,7 @@ const sidebars: SidebarsConfig = {
         "getting-started/install",
         "getting-started/first-boot",
         "getting-started/hardware",
+        "getting-started/virtual-machine",
       ],
     },
     {

@@ -55,7 +55,9 @@ Deliverables:
   and the installer on x86_64-linux.
 - ⏳ Boot the installed system on the reference machine and record the numbers.
 - ⏳ Trim the kernel with `localmodconfig` on that machine and commit the delta.
-- ⏳ Console session on tty1 (autologin). The compositor starts a surface at P2.
+- ✅ Console session on tty1 (autologin). The compositor starts a surface at P2.
+- ✅ A separate aarch64 development VM boots the same base under HVF in ~10 s
+  (test harness only; not the reference target).
 
 **Gate.** Cold boot to a shell in < 1.5 s userspace (three consecutive runs), idle
 RAM and CPU recorded, `landlock` present in `/sys/kernel/security/lsm`.

@@ -43,6 +43,7 @@ the next phase; first boot lands in a console, not the finished desktop.
 | React UI kit | ✅ 17 DOM tests | `packages/ui` |
 | Benchmark harness + regression gate | ✅ baseline committed | `packages/bench` |
 | NixOS system + installer ISO | ✅ evaluates (`nix flake check`); not booted in CI | `os/nixos` |
+| aarch64 development VM target | ✅ built + booted headless in ~10 s (HVF) | `os/vm` |
 | disko disk layout + install script | ✅ written, evaluation-checked | `os/nixos/disko.nix`, `scripts/install.sh` |
 | Compositor scene graph + frame scheduler | ✅ 35 Rust tests | `os/compositor` |
 | Compositor UI (`aether-shell`) | ⏳ roadmap P2 | — |
@@ -98,6 +99,20 @@ To build the live installer ISO (requires an x86_64 Linux host with Nix):
 ```bash
 nix build .#iso
 ```
+
+### Boot it in a VM on this Mac
+
+The VM target is deliberately separate from the reference install: `os/vm` only,
+no 7700K kernel, no XFS layout, no PipeWire, no daemons. It is a development
+harness, not a supported deployment.
+
+```bash
+./scripts/vm-build.sh     # builds aarch64 qcow2 via OrbStack + Nix
+./scripts/vm-run.sh       # QEMU/HVF, login aether / aether
+./scripts/vm-smoke.sh     # headless boot check
+```
+
+See [`apps/docs/docs/getting-started/virtual-machine.md`](apps/docs/docs/getting-started/virtual-machine.md).
 
 ## Repository layout
 

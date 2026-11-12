@@ -10,6 +10,9 @@ semantic versioning with release codenames (0.1 = “Kestrel”).
 
 - **Installer ISO** (`nixosConfigurations.installer`, `packages.iso`) — a minimal
   NixOS live environment with `git`, `disko`, `helix`, `rsync` and hardware probes.
+- **Development VM** (`packages.aarch64-linux.vm-image`) — a separate `os/vm`
+  target that boots in QEMU/HVF on this Mac, with build/run/smoke scripts and a
+  documented separation policy from the 7700K install.
 - **disko layout** (`os/nixos/disko.nix`) — GPT ESP, XFS root, XFS `/nix`, ext4
   scratch, XFS `/home`, with filesystem labels matching `filesystem.nix`.
 - **One-line disk target** (`os/nixos/disk.nix`) and `scripts/install.sh`, which

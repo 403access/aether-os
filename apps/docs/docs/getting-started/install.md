@@ -38,6 +38,12 @@ the prerequisite for the UI, not a substitute for it.
 | Network | Wired Ethernet recommended. The live environment needs it to fetch packages. |
 | GPU | HD 630 integrated graphics is the reference. A discrete GPU is not configured. |
 
+:::tip Want to try it first?
+You can boot a separate aarch64 development VM on an Apple Silicon Mac without
+touching any hardware: see [boot the development VM](/getting-started/virtual-machine).
+It is a test harness, not this installation target.
+:::
+
 ## 1. Get an installer
 
 You have two options. **Option A is recommended for the first install** because it

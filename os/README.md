@@ -32,6 +32,18 @@ os/nixos/
 └── users.nix                 operator, service user, agent UID range
 ```
 
+## Development VM (separate target)
+
+`os/vm/` boots Aether in a local aarch64 VM (Apple Silicon/QEMU) for testing. It
+does not import this directory and must never be merged into `kestrel`.
+
+```bash
+./scripts/vm-build.sh
+./scripts/vm-run.sh
+```
+
+See `os/vm/README.md` and the docs page `getting-started/virtual-machine.md`.
+
 ## Validate
 
 ```bash

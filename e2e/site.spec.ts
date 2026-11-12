@@ -125,6 +125,10 @@ test.describe("documentation", () => {
     await page.goto("/docs/getting-started/hardware/");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Hardware notes");
     await expect(page.getByText("Secure Boot").first()).toBeVisible();
+
+    await page.goto("/docs/getting-started/virtual-machine/");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("development VM");
+    await expect(page.getByText("AETHER_VM_READY").first()).toBeVisible();
   });
 
   test("navigates to a subsystem page", async ({ page }) => {

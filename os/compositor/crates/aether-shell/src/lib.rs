@@ -27,6 +27,19 @@ use aether_scene::{Layer, Scene, SurfaceId};
 
 pub type WindowId = u64;
 
+/// Top-left of the first workspace indicator.
+pub const WORKSPACE_INDICATOR_X: i32 = 10;
+/// Top of the workspace indicator strip.
+pub const WORKSPACE_INDICATOR_Y: i32 = 10;
+/// Width of one indicator bar.
+pub const WORKSPACE_INDICATOR_WIDTH: u32 = 66;
+/// Height of the coloured bar itself.
+pub const WORKSPACE_INDICATOR_BAR_HEIGHT: u32 = 6;
+/// Horizontal distance between indicator origins.
+pub const WORKSPACE_INDICATOR_SPACING: i32 = 76;
+/// Hit height including the label below the bar.
+pub const WORKSPACE_INDICATOR_HIT_HEIGHT: u32 = 26;
+
 #[derive(Clone, Debug)]
 pub struct WindowSpec {
     pub title: String,
@@ -153,6 +166,27 @@ impl Shell {
 
     pub fn workspace_names(&self) -> Vec<String> {
         self.workspaces.iter().map(|ws| ws.name.clone()).collect()
+    }
+
+    /// Picker hit area for a workspace: the bar plus its label.
+    pub fn workspace_indicator_rect(&self, index: usize) -> Option<Rect> {
+        if index >= self.workspaces.len() {
+            return None;
+        }
+        Some(Rect::new(
+            WORKSPACE_INDICATOR_X + index as i32 * WORKSPACE_INDICATOR_SPACING,
+            WORKSPACE_INDICATOR_Y,
+            WORKSPACE_INDICATOR_WIDTH,
+            WORKSPACE_INDICATOR_HIT_HEIGHT,
+        ))
+    }
+
+    /// Workspace whose indicator (bar or label) contains `point`.
+    pub fn workspace_at(&self, point: Point) -> Option<usize> {
+        (0..self.workspaces.len()).find(|&index| {
+            self.workspace_indicator_rect(index)
+                .is_some_and(|rect| rect.contains(point))
+        })
     }
 
     pub fn add_workspace(&mut self, name: impl Into<String>) -> usize {
@@ -710,6 +744,27 @@ mod tests {
 
         let info = shell.windows().into_iter().find(|w| w.id == a).unwrap();
         assert!(info.rect.intersect(Rect::from_size(Size::new(1024, 768))) == Some(info.rect));
+    }
+
+    #[test]
+    fn workspace_picker_hit_tests_bars_and_labels() {
+        let mut shell = shell();
+        shell.add_workspace("web");
+
+        assert_eq!(
+            shell.workspace_indicator_rect(0),
+            Some(Rect::new(10, 10, 66, 26))
+        );
+        assert_eq!(shell.workspace_at(Point::new(12, 12)), Some(0));
+        assert_eq!(shell.workspace_at(Point::new(20, 30)), Some(0));
+
+        let second = shell.workspace_indicator_rect(1).expect("second indicator");
+        assert_eq!(
+            shell.workspace_at(Point::new(second.x + 2, second.y + 2)),
+            Some(1)
+        );
+        assert_eq!(shell.workspace_at(Point::new(500, 500)), None);
+        assert_eq!(shell.workspace_indicator_rect(2), None);
     }
 
     #[test]

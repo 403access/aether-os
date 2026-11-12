@@ -14,7 +14,7 @@ use std::sync::Arc;
 
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect, Size as AetherSize};
 use aether_layout::LayoutConfig;
-use aether_shell::{Shell, WindowId, WindowSpec};
+use aether_shell::{Shell, WindowId, WindowSpec, WORKSPACE_INDICATOR_BAR_HEIGHT};
 use aether_text::{text_width, TextBitmap};
 use smithay::backend::allocator::Fourcc;
 use smithay::backend::input::{
@@ -41,7 +41,9 @@ use smithay::reexports::wayland_server::backend::{ClientData, ClientId, Disconne
 use smithay::reexports::wayland_server::protocol::wl_buffer;
 use smithay::reexports::wayland_server::protocol::wl_surface::{self, WlSurface};
 use smithay::reexports::wayland_server::{Client, Display, ListeningSocket};
+use smithay::reexports::winit::dpi::LogicalSize;
 use smithay::reexports::winit::platform::pump_events::PumpStatus;
+use smithay::reexports::winit::window::WindowAttributes;
 use smithay::utils::{Physical, Rectangle, Serial, Size as SSize, Transform, SERIAL_COUNTER};
 use smithay::wayland::buffer::BufferHandler;
 use smithay::wayland::compositor::{
@@ -106,7 +108,11 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         .to_string();
     let mut clients = Vec::new();
 
-    let (mut backend, mut winit) = winit::init::<GlesRenderer>()?;
+    let (mut backend, mut winit) = winit::init_from_attributes::<GlesRenderer>(
+        WindowAttributes::default()
+            .with_inner_size(LogicalSize::new(1280.0, 800.0))
+            .with_title("Aether OS"),
+    )?;
     let start_time = std::time::Instant::now();
     state.window_size = backend.window_size();
     state.scale = backend.scale_factor();
@@ -125,6 +131,9 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         .seat
         .add_keyboard(Default::default(), 200, 200)
         .map_err(|_| "failed to create keyboard")?;
+    // Advertise wl_pointer. Without this `get_pointer()` is `None` and any
+    // motion/button event over a client panics.
+    let _pointer = state.seat.add_pointer();
 
     let mut spawned_client = false;
     let mut frames = 0u32;
@@ -171,7 +180,12 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                 )));
                 state.pointer_pos = position;
                 let point = AetherPoint::new(position.x.round() as i32, position.y.round() as i32);
-                if let Some(id) = state.shell.window_at(point) {
+                let chrome_owns_pointer =
+                    state.shell.overlay().is_some() || state.shell.workspace_at(point).is_some();
+                if chrome_owns_pointer {
+                    // The overlay and workspace picker are compositor-owned
+                    // surfaces: never focus or move a client underneath them.
+                } else if let Some(id) = state.shell.window_at(point) {
                     if state.shell.focus_window(id) {
                         state.sync_focus();
                     }
@@ -236,25 +250,41 @@ pub fn run() -> Result<(), Box<dyn Error>> {
             WinitEvent::Input(InputEvent::PointerButton { event }) => {
                 let position = state.pointer_pos;
                 let point = AetherPoint::new(position.x.round() as i32, position.y.round() as i32);
+                let modal = state.shell.overlay().is_some();
+                let over_picker = state.shell.workspace_at(point).is_some();
                 if event.state() == ButtonState::Pressed {
-                    if let Some(id) = state.shell.window_at(point) {
+                    if let Some(workspace) = state.shell.workspace_at(point) {
+                        state.switch_workspace(workspace);
+                    } else if modal {
+                        // Clicking outside the panel dismisses the overlay;
+                        // clicks inside are consumed by the compositor.
+                        if state
+                            .shell
+                            .overlay_rect()
+                            .is_some_and(|rect| !rect.contains(point))
+                        {
+                            state.toggle_overlay();
+                        }
+                    } else if let Some(id) = state.shell.window_at(point) {
                         state.shell.focus_window(id);
                         state.sync_focus();
                     }
                 }
-                let serial = SERIAL_COUNTER.next_serial();
-                let time = Event::time_msec(&event);
-                let pointer = state.seat.get_pointer().expect("seat pointer");
-                pointer.button(
-                    &mut state,
-                    &ButtonEvent {
-                        button: event.button_code(),
-                        state: event.state(),
-                        serial,
-                        time,
-                    },
-                );
-                pointer.frame(&mut state);
+                if !modal && !over_picker {
+                    let serial = SERIAL_COUNTER.next_serial();
+                    let time = Event::time_msec(&event);
+                    let pointer = state.seat.get_pointer().expect("seat pointer");
+                    pointer.button(
+                        &mut state,
+                        &ButtonEvent {
+                            button: event.button_code(),
+                            state: event.state(),
+                            serial,
+                            time,
+                        },
+                    );
+                    pointer.frame(&mut state);
+                }
             }
             WinitEvent::CloseRequested => {
                 state.close_requested = true;
@@ -377,13 +407,14 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                 }
             }
 
-            let indicator_y = 10;
             let names = state.shell.workspace_names();
             for workspace in 0..state.shell.workspace_count() {
+                let Some(chip) = state.shell.workspace_indicator_rect(workspace) else {
+                    continue;
+                };
                 let active = workspace == state.shell.active_workspace();
-                let x = 10 + workspace as i32 * 76;
                 chrome.push((
-                    AetherRect::new(x, indicator_y, 66, 6),
+                    AetherRect::new(chip.x, chip.y, chip.width, WORKSPACE_INDICATOR_BAR_HEIGHT),
                     if active {
                         [0.22, 0.84, 1.0, 1.0]
                     } else {
@@ -393,8 +424,8 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                 let name = names.get(workspace).map(String::as_str).unwrap_or("");
                 labels.push((
                     format!("{} {name}", workspace + 1),
-                    x + 4,
-                    indicator_y + 12,
+                    chip.x + 4,
+                    chip.y + 12,
                     1,
                     if active {
                         [56, 214, 255, 255]
@@ -657,6 +688,14 @@ struct App {
 }
 
 impl App {
+    fn switch_workspace(&mut self, workspace: usize) {
+        if self.shell.switch_workspace(workspace) {
+            println!("aether-shell-smithay: workspace -> {workspace}");
+            self.sync_focus();
+            self.configure_all();
+        }
+    }
+
     fn handle_shortcut(&mut self, modifiers: &ModifiersState, keysym: Keysym) -> bool {
         let escape: Keysym = keysyms::KEY_Escape.into();
         if self.shell.overlay().is_some() && keysym == escape {
@@ -686,6 +725,9 @@ impl App {
             if let Some(workspace) = target {
                 if let Some(id) = self.shell.focused_window() {
                     if self.shell.move_window_to_workspace(id, workspace) {
+                        println!(
+                            "aether-shell-smithay: moved window {id} -> workspace {workspace}"
+                        );
                         self.sync_focus();
                         self.configure_all();
                         return true;
@@ -705,10 +747,7 @@ impl App {
             None
         };
         if let Some(workspace) = target {
-            if self.shell.switch_workspace(workspace) {
-                self.sync_focus();
-                self.configure_all();
-            }
+            self.switch_workspace(workspace);
             return true;
         }
         if keysym == space {

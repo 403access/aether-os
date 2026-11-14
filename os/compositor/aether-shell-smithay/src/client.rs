@@ -1401,7 +1401,22 @@ impl App {
     }
 
     fn toggle_overlay(&mut self) {
+        if self.shell.overlay().is_none() {
+            self.refresh_providers();
+        }
         self.shell.toggle_overlay();
+    }
+
+    fn refresh_providers(&mut self) {
+        let launchers = desktop_launchers();
+        let files = file_index();
+        println!(
+            "aether-shell-smithay: reloaded {} desktop apps, {} files",
+            launchers.len(),
+            files.len()
+        );
+        self.shell.set_launchers(launchers);
+        self.shell.set_files(files);
     }
 
     fn activate_palette(&mut self) {

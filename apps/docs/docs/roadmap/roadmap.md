@@ -15,7 +15,7 @@ P0 Foundations      ████████████  done
 P1 NixOS bring-up   ██████████░░  in progress
 P2 Compositor MVP   ███████████░  in progress
 P3 Shell surfaces   ██████████░░  gate pending
-P4 Audio            ░░░░░░░░░░░░
+P4 Audio            ██░░░░░░░░░░  in progress
 P5 Agents & chat    ░░░░░░░░░░░░
 P6 Applications     ░░░░░░░░░░░░
 P7 Remote display   ░░░░░░░░░░░░
@@ -139,7 +139,7 @@ budgets until the reference run.
 
 **Dependencies.** P2. **Risk:** text shaping, IME, clipboard integration.
 
-## P4 — Audio
+## P4 — Audio · in progress
 
 **Goal.** Every input and output route is first-class.
 
@@ -152,6 +152,10 @@ Deliverables:
 
 **Gate.** Route switch < 100 ms; zero xruns in a 10-minute 64-frame stress test;
 agent mic access denied without a capability.
+
+Execution plan and commit ledger: [P4 completion](/roadmap/p4-completion). The
+runtime/overlay work is code-complete in this phase; the route-latency and xrun
+gates remain target measurements and are labelled as budgets until run there.
 
 **Dependencies.** P2 (overlay primitives). **Risk:** Bluetooth codec negotiation.
 

@@ -167,6 +167,12 @@ JSON snapshots of active sessions. Each snapshot replaces the previous agent
 launchers; disconnecting the last publisher clears them. The smoke publishes a
 session, searches it and launches its command.*
 
+![Clipboard persistence after the source exits](/img/smithay-clipboard-persist.png)
+
+*`wl-clip-persist` re-owns the regular/primary selection through
+`zwlr-data-control`. The smoke copies with `wl-copy --paste-once`, pastes once,
+then pastes again after the source has exited.*
+
 ![The same window maximized](/img/smithay-window-maximized.png)
 
 *`Super+M` maximizes the focused window to the full output; pressing it again
@@ -218,8 +224,10 @@ drag and both toggles with `xdotool` and asserts each transition.*
   updates the split ratio (clamped 0.2–0.8) and reconfigures clients live.
 - **Client clipboard.** `wl_data_device` copy/paste and `zwp_primary_selection`
   work between clients. The compositor forwards data-device and primary focus
-  with keyboard focus so selection offers reach the right client. DnD and
-  clipboard persistence after the source exits are not implemented.
+  with keyboard focus so selection offers reach the right client. It also
+  advertises `zwlr_data_control_manager_v1`, which `wl-clip-persist`
+  (`--clipboard both`) uses to keep the selection after the source exits.
+  The target runs that helper as a user service.
 - **Text input and IME plumbing.** `zwp_text_input_manager_v3` and
   `zwp_input_method_manager_v2` are advertised; text-input focus follows
   keyboard focus and popup requests are accepted. The target and VM enable

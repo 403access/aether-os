@@ -1396,15 +1396,14 @@ impl Shell {
         if point.x < pane.x + 8 || point.x >= pane.right() as i32 - 8 {
             return None;
         }
+        let row_height = design::EXPLORER_ROW_HEIGHT as i32;
         if point.y < content_top
-            || point.y >= content_top + self.explorer_visible_rows() as i32 * 28
+            || point.y >= content_top + self.explorer_visible_rows() as i32 * row_height
         {
             return None;
         }
-        let row = ((point.y - content_top) / 28) as usize;
-        let Some(mut state) = self.explorer.clone() else {
-            return None;
-        };
+        let row = ((point.y - content_top) / row_height) as usize;
+        let mut state = self.explorer.clone()?;
         self.refresh_explorer(&mut state);
         let index = state.scroll + row;
         if index >= state.matches.len() {

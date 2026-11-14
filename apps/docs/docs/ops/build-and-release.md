@@ -77,6 +77,11 @@ jobs:
 
 Rules:
 
+- Project commands use **Bun**, not Node; Bun is installed by `setup-bun`.
+- GitHub Actions are kept on majors that use a current Node runtime (checkout v5,
+  upload-artifact v5, Pages v5/v6). The project's `.node-version` 26 only affects
+  local tooling and does not change the action runtime.
+
 - `verify` is required for every PR.
 - `e2e` runs against the **built** sites, not the dev server.
 - `bench` runs the harness with a 3× smoke tolerance in CI and uploads results.

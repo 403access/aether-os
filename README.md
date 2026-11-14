@@ -66,8 +66,9 @@ its two target gates are budgets until run on the 7700K.
 
 ## Quickstart
 
-Requires [Bun](https://bun.sh) ≥ 1.3, Node ≥ 20, and Rust (stable) for the
-compositor core.
+Requires [Bun](https://bun.sh) ≥ 1.3 and Rust (stable) for the compositor core.
+Node 26 is optional for tooling that insists on Node; Bun runs installs, builds
+and tests.
 
 ```bash
 bun install

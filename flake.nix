@@ -393,7 +393,7 @@
         default = pkgs.mkShell {
         packages = with pkgs; [
           bun
-          nodejs_22
+          nodejs_26
           rust-bin.stable.latest.default
           cargo
           clippy

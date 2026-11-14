@@ -12,7 +12,7 @@ description: Prerequisites, commands, repo layout, conventions and troubleshooti
 | Tool | Version | Why |
 | --- | --- | --- |
 | Bun | ≥ 1.3 | Install, tests, build, scripts |
-| Node | ≥ 20 | Some tooling expects it |
+| Node | 26 (optional; Bun is the primary runtime) | Some tooling and IDE integrations expect Node. `.node-version` records it. |
 | Rust | 1.99.1 (pinned in `rust-toolchain.toml`; MSRV 1.85) | Compositor/shell core |
 | Git | any recent | History |
 | Playwright browsers | installed via `bunx playwright install chromium` | E2E |

@@ -4,6 +4,9 @@
   "private": true,
   "packageManager": "bun@1.4.4",
   "description": "A single-target Linux workstation OS: Rust compositor, zero-copy IPC, capability-isolated agents.",
+  "engines": {
+    "node": ">=26"
+  },
   "license": "MIT",
   "workspaces": [
     "apps/*",

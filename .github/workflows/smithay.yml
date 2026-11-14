@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: cachix/install-nix-action@v31
         with:
           extra_nix_config: |
@@ -83,7 +83,7 @@ jobs:
           if [ -f artifacts/perf/p2/frames.ndjson ]; then
             python3 scripts/frame-stats.py artifacts/perf/p2/frames.ndjson
           fi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: always()
         with:
           name: smithay-window

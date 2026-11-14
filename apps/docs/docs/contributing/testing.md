@@ -18,6 +18,7 @@ deliberately layered so a failure points at one boundary.
 | Architecture boundary | `bun test` | VM ↔ reference imports, security posture, flake modules | 7 (included above) |
 | E2E | Playwright | Assembled marketing site, docs, install pages, VM page | **14** |
 | Rust | `cargo test` | Scene, layout, damage, pacing, shell state, palette/commands, desktop entries/actions, filename index, picker, split/move/resize/snap/maximize/fullscreen, text, cursors, preview | **89** |
+| Rust (Smithay backend) | `cargo test --manifest-path os/compositor/aether-shell-smithay/Cargo.toml` | Surface/buffer damage conversion | **4** |
 | Performance | `packages/bench` | Regressions vs baseline | 6 metrics |
 
 Run everything:

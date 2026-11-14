@@ -220,10 +220,10 @@ drag and both toggles with `xdotool` and asserts each transition.*
   receive `wl_output.enter` on map and leave on destroy. `smoke-output-xvfb.sh`
   checks the globals with `wayland-info`.
 - **Idle frame skipping and partial damage.** Input events request a full
-  redraw; client commits damage the surface rectangles they report, falling
-  back to the whole window when no usable damage arrives (buffer-coordinate
-  damage currently falls back). When nothing is dirty, the compositor stops
-  presenting and stops sending frame callbacks. `AETHER_FRAME_LOG=1` logs each
+  redraw; client commits damage the surface rectangles they report. Buffer
+  damage is divided by the surface scale (rounded outward) when the transform is
+  normal; other transforms fall back to the window. When nothing is dirty, the
+  compositor stops presenting and stops sending frame callbacks. `AETHER_FRAME_LOG=1` logs each
   frame with `damage=full` or `damage=partial [...]`.
 - **Software cursors.** Cursor shapes are rendered in-frame by `aether-cursor`
   (white fill, black outline, explicit hotspot) above all other elements. The
@@ -284,9 +284,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
 - **Multi-output** is not implemented: there is one hard-coded output, no
   hotplug and no per-output workspaces. Fullscreen, maximize, halves, floating
   resize and single-output snapping work. Popups and drag-and-drop are ignored.
-- **Buffer-coordinate damage and occlusion.** Surface-coordinate damage is used;
-  buffer-coordinate damage falls back to the window, and opaque-region
-  occlusion/per-subsurface tracking are not wired in yet.
+- **Per-subsurface damage.** Top-level surface and buffer damage are used;
+  Smithay also subtracts opaque regions when drawing the z-ordered element list,
+  but nested subsurface damage is not tracked separately.
 - **Popups, drag-and-drop and grabs** are accepted/ignored at the protocol level.
 - **udev/DRM backend.** The target path for the 7700K (no X server) is not written;
   winit is the development adapter.

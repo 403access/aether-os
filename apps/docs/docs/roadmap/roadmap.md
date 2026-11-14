@@ -89,7 +89,8 @@ Deliverables:
   copy/paste work between clients via focus forwarding. Picker, divider, palette
   input/commands, desktop/file launch, clipboard, window management and cursor
   mapping are verified by xdotool smokes. Idle frames are skipped; client
-  commits use surface damage when available and fall back to the window rect.
+  commits use surface/buffer damage when available and fall back to the window
+  rect.
   Palette app/file/external-launcher providers refresh on open; agent sessions
   can be published through the external manifest. Fullscreen uses xdg
   fullscreen state and hides shell chrome. A single 1280x800@60 output is

@@ -1,3 +1,10 @@
+## v0.1.0-alpha.65
+
+- Add the virtualised explorer layer (`Super+E`): cached filtered indices,
+  bounded 14-row composition, keyboard/pointer/wheel navigation and file open.
+  Release 10k scroll p95 is 0.004 ms; add explorer screenshot and evidence.
+- Sample the status bar during composition so memory/CPU values populate.
+
 ## v0.1.0-alpha.64
 
 - Add P3 palette modes (`>`, `@`, `/`, `~`), subsequence ranking, a shared

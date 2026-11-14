@@ -17,9 +17,10 @@ use aether_shell::PaletteFile;
 const DEBOUNCE: Duration = Duration::from_millis(30);
 const SOCKET_TIMEOUT: Duration = Duration::from_millis(250);
 const RESULT_LIMIT: usize = 5;
+const EXPLORER_LIMIT: usize = 5000;
 
 struct Shared {
-    slot: Mutex<Option<(u64, String)>>,
+    slot: Mutex<Option<(u64, String, usize)>>,
     signal: Condvar,
     alive: AtomicBool,
 }
@@ -57,19 +58,20 @@ impl IndexWorker {
                         slot = guard;
                     }
                 };
-                let Some((mut generation, mut query)) = first else {
+                let Some((mut generation, mut query, mut limit)) = first else {
                     continue;
                 };
                 // Coalesce a burst of keystrokes before touching the socket.
                 std::thread::sleep(DEBOUNCE);
                 {
                     let mut slot = worker_state.slot.lock().unwrap();
-                    if let Some((newer, newer_query)) = slot.take() {
+                    if let Some((newer, newer_query, newer_limit)) = slot.take() {
                         generation = newer;
                         query = newer_query;
+                        limit = newer_limit;
                     }
                 }
-                let files = query_index(&socket, &query).unwrap_or_default();
+                let files = query_index(&socket, &query, limit).unwrap_or_default();
                 if tx.send((generation, files)).is_err() {
                     return;
                 }
@@ -85,9 +87,18 @@ impl IndexWorker {
     /// Publish the newest query; returns its generation. Never blocks and
     /// never grows a queue: only the latest request is kept.
     pub fn request(&mut self, query: String) -> u64 {
+        self.request_with_limit(query, RESULT_LIMIT)
+    }
+
+    /// Request filtered files for the explorer (larger than palette rows).
+    pub fn request_explorer(&mut self) -> u64 {
+        self.request_with_limit(String::new(), EXPLORER_LIMIT)
+    }
+
+    fn request_with_limit(&mut self, query: String, limit: usize) -> u64 {
         self.generation = self.generation.wrapping_add(1);
         let mut slot = self.shared.slot.lock().unwrap();
-        *slot = Some((self.generation, query));
+        *slot = Some((self.generation, query, limit));
         self.shared.signal.notify_one();
         self.generation
     }
@@ -118,12 +129,12 @@ pub fn should_apply(generation: u64, current: u64) -> bool {
     generation == current
 }
 
-fn query_index(socket: &PathBuf, query: &str) -> Option<Vec<PaletteFile>> {
+fn query_index(socket: &PathBuf, query: &str, limit: usize) -> Option<Vec<PaletteFile>> {
     let started = Instant::now();
     let mut stream = UnixStream::connect(socket).ok()?;
     let _ = stream.set_read_timeout(Some(SOCKET_TIMEOUT));
     let _ = stream.set_write_timeout(Some(SOCKET_TIMEOUT));
-    let request = serde_json::json!({ "query": query, "limit": RESULT_LIMIT });
+    let request = serde_json::json!({ "query": query, "limit": limit });
     writeln!(stream, "{request}").ok()?;
     let mut reader = BufReader::new(stream);
     let mut line = String::new();
@@ -153,7 +164,7 @@ fn query_index(socket: &PathBuf, query: &str) -> Option<Vec<PaletteFile>> {
                             path: result.get("path")?.as_str()?.to_string(),
                         })
                     })
-                    .take(RESULT_LIMIT)
+                    .take(limit)
                     .collect()
             })
             .unwrap_or_default(),

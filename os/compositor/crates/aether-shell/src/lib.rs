@@ -182,6 +182,31 @@ struct PaletteState {
     selected: usize,
 }
 
+/// Virtualised file explorer. `matches` caches filtered file indices so only
+/// the visible slice enters the render plan.
+#[derive(Clone, Debug)]
+pub struct ExplorerState {
+    query: String,
+    selected: usize,
+    scroll: usize,
+    visible: usize,
+    matches: Vec<usize>,
+    dirty: bool,
+}
+
+impl Default for ExplorerState {
+    fn default() -> Self {
+        Self {
+            query: String::new(),
+            selected: 0,
+            scroll: 0,
+            visible: 14,
+            matches: Vec::new(),
+            dirty: true,
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct FrameItem {
     pub surface: SurfaceId,
@@ -242,6 +267,7 @@ pub struct Shell {
     output_workspaces: HashMap<OutputId, usize>,
     overlay_output: Option<OutputId>,
     palette: PaletteState,
+    explorer: Option<ExplorerState>,
     launchers: Vec<PaletteLauncher>,
     files: Vec<PaletteFile>,
     files_prefiltered: bool,
@@ -275,6 +301,7 @@ impl Shell {
             output_workspaces: HashMap::from([(1, 0)]),
             overlay_output: Some(1),
             palette: PaletteState::default(),
+            explorer: None,
             launchers: Vec::new(),
             files: Vec::new(),
             files_prefiltered: false,
@@ -1014,6 +1041,9 @@ impl Shell {
         self.files = files;
         self.files_prefiltered = false;
         self.palette.selected = 0;
+        if let Some(explorer) = self.explorer.as_mut() {
+            explorer.dirty = true;
+        }
     }
 
     /// Replace the file list with results already matched by an external
@@ -1023,6 +1053,9 @@ impl Shell {
         self.files = files;
         self.files_prefiltered = true;
         self.palette.selected = 0;
+        if let Some(explorer) = self.explorer.as_mut() {
+            explorer.dirty = true;
+        }
     }
 
     pub fn files(&self) -> &[PaletteFile] {
@@ -1036,6 +1069,233 @@ impl Shell {
 
     pub fn palette_query(&self) -> &str {
         &self.palette.query
+    }
+
+    /// Explorer panel rect, centred in the primary output.
+    pub fn explorer_rect(&self) -> Rect {
+        let bounds = self
+            .primary_output()
+            .map(|output| output.rect)
+            .unwrap_or_else(|| Rect::from_size(self.viewport));
+        let width = 900.min(bounds.width.saturating_sub(64)).max(1);
+        let height = 600.min(bounds.height.saturating_sub(64)).max(1);
+        Rect::new(
+            bounds.x + (bounds.width.saturating_sub(width) / 2) as i32,
+            bounds.y + (bounds.height.saturating_sub(height) / 2) as i32,
+            width,
+            height,
+        )
+    }
+
+    pub fn open_explorer(&mut self) -> Option<()> {
+        if self.explorer.is_none() {
+            self.explorer = Some(ExplorerState::default());
+        }
+        Some(())
+    }
+
+    pub fn close_explorer(&mut self) {
+        self.explorer = None;
+    }
+
+    pub fn explorer_open(&self) -> bool {
+        self.explorer.is_some()
+    }
+
+    pub fn explorer_query(&self) -> &str {
+        self.explorer
+            .as_ref()
+            .map(|explorer| explorer.query.as_str())
+            .unwrap_or("")
+    }
+
+    pub fn explorer_selected(&self) -> usize {
+        self.explorer
+            .as_ref()
+            .map(|explorer| explorer.selected)
+            .unwrap_or(0)
+    }
+
+    pub fn explorer_scroll(&self) -> usize {
+        self.explorer
+            .as_ref()
+            .map(|explorer| explorer.scroll)
+            .unwrap_or(0)
+    }
+
+    pub fn explorer_visible_rows(&self) -> usize {
+        self.explorer
+            .as_ref()
+            .map(|explorer| explorer.visible)
+            .unwrap_or(0)
+    }
+
+    pub fn explorer_match_count(&self) -> usize {
+        let Some(explorer) = self.explorer.as_ref() else {
+            return 0;
+        };
+        let _ = explorer;
+        let mut explorer = self.explorer.clone();
+        if let Some(state) = explorer.as_mut() {
+            self.refresh_explorer(state);
+            state.matches.len()
+        } else {
+            0
+        }
+    }
+
+    fn refresh_explorer(&self, explorer: &mut ExplorerState) {
+        if !explorer.dirty {
+            return;
+        }
+        let query = explorer.query.to_lowercase();
+        explorer.matches = self
+            .files
+            .iter()
+            .enumerate()
+            .filter_map(|(index, file)| {
+                palette_score(&query, &file.name).map(|score| (score, index))
+            })
+            .collect::<Vec<_>>()
+            .into_iter()
+            .map(|(_, index)| index)
+            .collect();
+        explorer.dirty = false;
+        if explorer.selected >= explorer.matches.len() {
+            explorer.selected = explorer.matches.len().saturating_sub(1);
+        }
+        let max_scroll = explorer.matches.len().saturating_sub(explorer.visible);
+        explorer.scroll = explorer.scroll.min(max_scroll);
+    }
+
+    /// Only the visible window of file references, never the full list.
+    pub fn visible_explorer_rows(&self) -> Vec<&PaletteFile> {
+        let Some(explorer) = self.explorer.as_ref() else {
+            return Vec::new();
+        };
+        let mut state = explorer.clone();
+        self.refresh_explorer(&mut state);
+        state
+            .matches
+            .iter()
+            .skip(state.scroll)
+            .take(state.visible)
+            .filter_map(|index| self.files.get(*index))
+            .collect()
+    }
+
+    /// Selected file index in `files`, resolving cached matches.
+    pub fn explorer_selected_file(&self) -> Option<PaletteFile> {
+        let explorer = self.explorer.as_ref()?;
+        let mut state = explorer.clone();
+        self.refresh_explorer(&mut state);
+        let index = *state.matches.get(state.selected)?;
+        self.files.get(index).cloned()
+    }
+
+    /// Select the visible row under `point`; returns the absolute index.
+    pub fn explorer_select_at(&mut self, point: Point) -> Option<usize> {
+        let rect = self.explorer_rect();
+        let content_top = rect.y + 96;
+        if point.x < rect.x || point.x >= rect.right() as i32 {
+            return None;
+        }
+        if point.y < content_top
+            || point.y >= content_top + self.explorer_visible_rows() as i32 * 28
+        {
+            return None;
+        }
+        let row = ((point.y - content_top) / 28) as usize;
+        let Some(mut state) = self.explorer.clone() else {
+            return None;
+        };
+        self.refresh_explorer(&mut state);
+        let index = state.scroll + row;
+        if index >= state.matches.len() {
+            return None;
+        }
+        state.selected = index;
+        self.explorer = Some(state);
+        Some(index)
+    }
+
+    pub fn explorer_push_char(&mut self, character: char) -> bool {
+        let Some(explorer) = self.explorer.as_mut() else {
+            return false;
+        };
+        if character.is_control() || explorer.query.chars().count() >= 64 {
+            return false;
+        }
+        explorer.query.push(character);
+        explorer.selected = 0;
+        explorer.scroll = 0;
+        explorer.dirty = true;
+        true
+    }
+
+    pub fn explorer_backspace(&mut self) -> bool {
+        let Some(explorer) = self.explorer.as_mut() else {
+            return false;
+        };
+        let changed = explorer.query.pop().is_some();
+        if changed {
+            explorer.selected = 0;
+            explorer.scroll = 0;
+            explorer.dirty = true;
+        }
+        changed
+    }
+
+    fn clamp_explorer(&self, explorer: &mut ExplorerState) {
+        let max_scroll = explorer.matches.len().saturating_sub(explorer.visible);
+        explorer.scroll = explorer.scroll.min(max_scroll);
+        if explorer.selected < explorer.scroll {
+            explorer.scroll = explorer.selected;
+        } else if explorer.selected >= explorer.scroll + explorer.visible {
+            explorer.scroll = explorer.selected + 1 - explorer.visible;
+        }
+    }
+
+    pub fn explorer_move(&mut self, delta: isize) -> bool {
+        let Some(mut state) = self.explorer.clone() else {
+            return false;
+        };
+        self.refresh_explorer(&mut state);
+        if state.matches.is_empty() {
+            return false;
+        }
+        let len = state.matches.len() as isize;
+        state.selected = (state.selected as isize + delta).rem_euclid(len) as usize;
+        self.clamp_explorer(&mut state);
+        self.explorer = Some(state);
+        true
+    }
+
+    pub fn explorer_page(&mut self, direction: isize) -> bool {
+        let Some(explorer) = self.explorer.as_ref() else {
+            return false;
+        };
+        let page = explorer.visible as isize;
+        self.explorer_move(direction * page)
+    }
+
+    pub fn explorer_scroll_by(&mut self, delta: isize) -> bool {
+        let Some(mut state) = self.explorer.clone() else {
+            return false;
+        };
+        self.refresh_explorer(&mut state);
+        if state.matches.is_empty() {
+            return false;
+        }
+        let max_scroll = state.matches.len().saturating_sub(state.visible) as isize;
+        state.scroll = (state.scroll as isize + delta).clamp(0, max_scroll) as usize;
+        state.selected = state.selected.max(state.scroll).min(
+            (state.scroll + state.visible)
+                .min(state.matches.len())
+                .saturating_sub(1),
+        );
+        self.explorer = Some(state);
+        true
     }
 
     /// Filtered palette entries. A leading prefix narrows providers:
@@ -2939,5 +3199,83 @@ mod parity_tests {
         let p95 = samples[(samples.len() - 1) * 95 / 100];
         println!("palette_10k_p95_ms={p95:.3}");
         assert!(p95 < 10.0, "p95 {p95}ms exceeds 10ms");
+    }
+}
+
+#[cfg(test)]
+mod explorer_tests {
+    use super::*;
+
+    fn shell_with_files(count: usize) -> Shell {
+        let mut shell = Shell::new(Size::new(1280, 800), LayoutConfig::default(), 120);
+        shell.set_files(
+            (0..count)
+                .map(|index| PaletteFile {
+                    name: format!("file-{index:05}.txt"),
+                    detail: "file".to_string(),
+                    path: format!("/tmp/file-{index:05}.txt"),
+                })
+                .collect(),
+        );
+        shell.open_explorer().unwrap();
+        shell
+    }
+
+    #[test]
+    fn virtualises_ten_thousand_rows() {
+        let mut shell = shell_with_files(10_000);
+        assert_eq!(shell.explorer_visible_rows(), 14);
+        assert_eq!(shell.visible_explorer_rows().len(), 14);
+        assert_eq!(shell.explorer_match_count(), 10_000);
+        assert!(shell.explorer_move(13));
+        assert_eq!(shell.explorer_selected(), 13);
+        assert!(shell.explorer_move(1));
+        assert_eq!(shell.explorer_scroll(), 1);
+        assert!(shell.explorer_page(1));
+        assert!(shell.explorer_scroll() > 1);
+        assert!(shell.explorer_page(-1));
+        assert!(shell.explorer_move(-1000));
+        assert!(shell.explorer_selected() < 10_000);
+        assert_eq!(shell.visible_explorer_rows().len(), 14);
+    }
+
+    #[test]
+    fn filters_without_rebuilding_the_visible_list() {
+        let mut shell = shell_with_files(10_000);
+        for character in "file-0000".chars() {
+            assert!(shell.explorer_push_char(character));
+        }
+        assert!(shell.explorer_match_count() >= 10);
+        assert!(shell.visible_explorer_rows().len() <= 14);
+        assert!(shell.explorer_selected_file().is_some());
+        let before = shell.explorer_match_count();
+        assert!(shell.explorer_backspace());
+        assert!(shell.explorer_match_count() >= before);
+    }
+
+    #[test]
+    #[ignore = "perf: run with --release --ignored and record p95"]
+    fn explorer_scroll_10k_p95_bench() {
+        let mut shell = shell_with_files(10_000);
+        let mut samples = Vec::new();
+        for index in 0..200 {
+            let started = std::time::Instant::now();
+            shell.explorer_page(if index % 2 == 0 { 1 } else { -1 });
+            samples.push(started.elapsed().as_secs_f64() * 1000.0);
+        }
+        samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let p95 = samples[(samples.len() - 1) * 95 / 100];
+        println!("explorer_10k_p95_ms={p95:.3}");
+        assert!(p95 < 1.0, "p95 {p95}ms exceeds 1ms");
+    }
+
+    #[test]
+    fn row_hit_testing_and_activation() {
+        let mut shell = shell_with_files(100);
+        let rect = shell.explorer_rect();
+        let point = Point::new(rect.x + 20, rect.y + 96 + 28 * 3 + 4);
+        assert_eq!(shell.explorer_select_at(point), Some(3));
+        let file = shell.explorer_selected_file().unwrap();
+        assert_eq!(file.name, "file-00003.txt");
     }
 }

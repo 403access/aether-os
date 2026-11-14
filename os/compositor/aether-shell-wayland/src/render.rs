@@ -216,6 +216,7 @@ impl App {
         renderer: &mut GlesRenderer,
         output: Option<OutputId>,
     ) -> ComposedFrame {
+        self.poll_status();
         let mut elements: Vec<AetherRenderElement> = Vec::new();
         // DRM compositors are output-sized; translate extended-desktop
         // coordinates into the output's local space. Winit (None) keeps the
@@ -280,9 +281,12 @@ impl App {
             .map(|output| output.id)
             .unwrap_or(1);
         let chrome_output = output.unwrap_or(primary);
-        let palette_here = output.is_none()
-            || self.shell.overlay_output() == Some(chrome_output)
-            || self.shell.overlay_output().is_none();
+        let palette_here = !self.shell.explorer_open()
+            && (output.is_none()
+                || self.shell.overlay_output() == Some(chrome_output)
+                || self.shell.overlay_output().is_none());
+        let explorer_here =
+            self.shell.explorer_open() && (output.is_none() || output == Some(primary));
 
         let mut chrome: Vec<(AetherRect, [f32; 4])> = Vec::new();
         let mut labels: Vec<(String, i32, i32, u32, [u8; 4])> = Vec::new();
@@ -426,6 +430,117 @@ impl App {
                         ));
                     }
                 }
+            }
+
+            if explorer_here {
+                let rect = self.shell.explorer_rect();
+                chrome.push((rect, [0.04, 0.12, 0.16, 0.97]));
+                chrome.push((
+                    AetherRect::new(rect.x, rect.y, rect.width, 36),
+                    [0.09, 0.42, 0.5, 1.0],
+                ));
+                labels.push((
+                    "Aether Explorer".into(),
+                    rect.x + 14,
+                    rect.y + 10,
+                    2,
+                    [235, 252, 255, 255],
+                ));
+                let count = format!("{} files", self.shell.explorer_match_count());
+                labels.push((
+                    count.clone(),
+                    rect.x + rect.width as i32 - text_width(&count, 1) as i32 - 14,
+                    rect.y + 14,
+                    1,
+                    [179, 235, 250, 255],
+                ));
+                let input =
+                    AetherRect::new(rect.x + 16, rect.y + 48, rect.width.saturating_sub(32), 28);
+                chrome.push((input, [0.03, 0.12, 0.16, 1.0]));
+                let query = self.shell.explorer_query();
+                if query.is_empty() {
+                    labels.push((
+                        "Search files...".into(),
+                        input.x + 10,
+                        input.y + 10,
+                        1,
+                        [122, 173, 189, 255],
+                    ));
+                } else {
+                    labels.push((
+                        format!("> {query}_"),
+                        input.x + 10,
+                        input.y + 10,
+                        1,
+                        [235, 252, 255, 255],
+                    ));
+                }
+
+                let rows = self.shell.visible_explorer_rows();
+                let scroll = self.shell.explorer_scroll();
+                let selected = self.shell.explorer_selected();
+                let row_height = 28;
+                for (row, file) in rows.iter().enumerate() {
+                    let index = scroll + row;
+                    let y = rect.y + 92 + row as i32 * row_height;
+                    let row_rect = AetherRect::new(
+                        rect.x + 12,
+                        y,
+                        rect.width.saturating_sub(32),
+                        row_height as u32,
+                    );
+                    if index == selected {
+                        chrome.push((row_rect, [0.09, 0.42, 0.5, 1.0]));
+                        chrome.push((
+                            AetherRect::new(row_rect.x, row_rect.y, 3, row_rect.height),
+                            [0.22, 0.84, 1.0, 1.0],
+                        ));
+                    }
+                    labels.push((
+                        file.name.clone(),
+                        row_rect.x + 10,
+                        row_rect.y + 9,
+                        1,
+                        if index == selected {
+                            [235, 252, 255, 255]
+                        } else {
+                            [217, 247, 255, 255]
+                        },
+                    ));
+                    labels.push((
+                        file.detail.clone(),
+                        row_rect.x + row_rect.width as i32
+                            - text_width(&file.detail, 1) as i32
+                            - 10,
+                        row_rect.y + 9,
+                        1,
+                        [122, 173, 189, 255],
+                    ));
+                }
+                let track = AetherRect::new(rect.x + rect.width as i32 - 8, rect.y + 92, 4, 392);
+                chrome.push((track, [0.03, 0.12, 0.16, 1.0]));
+                let matches = self.shell.explorer_match_count().max(1);
+                let visible = self.shell.explorer_visible_rows().max(1);
+                let thumb = ((visible as f32 / matches as f32) * track.height as f32)
+                    .clamp(12.0, track.height as f32) as u32;
+                let offset = ((scroll as f32 / matches as f32) * track.height as f32) as i32;
+                chrome.push((
+                    AetherRect::new(
+                        track.x,
+                        track.y + offset.min(track.height as i32 - thumb as i32),
+                        track.width,
+                        thumb,
+                    ),
+                    [0.22, 0.84, 1.0, 1.0],
+                ));
+                let footer = "Up/Down move   PgUp/PgDn page   Enter open   Esc close";
+                labels.push((
+                    footer.into(),
+                    rect.x + 16,
+                    rect.y + rect.height as i32 - 24,
+                    1,
+                    [128, 184, 199, 255],
+                ));
             }
 
             if self.shell.fullscreen_window_on(chrome_output).is_none() {

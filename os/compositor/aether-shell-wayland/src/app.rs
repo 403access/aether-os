@@ -489,6 +489,12 @@ fn cursor_for(state: &App) -> CursorShape {
         }
         return CursorShape::Arrow;
     }
+    if state.shell.explorer_open() {
+        let rect = state.shell.explorer_rect();
+        if rect.contains(point) {
+            return CursorShape::Pointer;
+        }
+    }
     if state.shell.workspace_at_global(point).is_some() {
         return CursorShape::Pointer;
     }
@@ -692,6 +698,7 @@ impl App {
         let close: Keysym = keysyms::KEY_q.into();
         let maximize: Keysym = keysyms::KEY_m.into();
         let fullscreen_key: Keysym = keysyms::KEY_f.into();
+        let explorer_key: Keysym = keysyms::KEY_e.into();
 
         if modifiers.shift {
             let target = if keysym == one {
@@ -777,6 +784,10 @@ impl App {
             }
             return true;
         }
+        if keysym == explorer_key {
+            self.toggle_explorer();
+            return true;
+        }
         if keysym == fullscreen_key {
             if let Some(id) = self.shell.focused_window() {
                 let fullscreen = !self.shell.is_fullscreen(id);
@@ -810,6 +821,68 @@ impl App {
         let output = self.output_under_pointer();
         self.shell.toggle_overlay_on(output);
         self.mark_full_damage();
+    }
+
+    fn toggle_explorer(&mut self) {
+        if self.shell.explorer_open() {
+            self.shell.close_explorer();
+        } else {
+            self.shell.close_overlay();
+            let _ = self.shell.open_explorer();
+            if let Some(worker) = self.index_worker.as_mut() {
+                let generation = worker.request_explorer();
+                println!("aether-shell: explorer index generation {generation}");
+            }
+        }
+        self.mark_full_damage();
+    }
+
+    fn handle_explorer_key(&mut self, keysym: Keysym) {
+        let escape: Keysym = keysyms::KEY_Escape.into();
+        let enter: Keysym = keysyms::KEY_Return.into();
+        let up: Keysym = keysyms::KEY_Up.into();
+        let down: Keysym = keysyms::KEY_Down.into();
+        let page_up: Keysym = keysyms::KEY_Page_Up.into();
+        let page_down: Keysym = keysyms::KEY_Page_Down.into();
+        let backspace: Keysym = keysyms::KEY_BackSpace.into();
+        if keysym == escape {
+            self.shell.close_explorer();
+            self.mark_full_damage();
+            return;
+        }
+        if keysym == enter {
+            if let Some(file) = self.shell.explorer_selected_file() {
+                self.open_path(&file.path);
+            }
+            self.shell.close_explorer();
+            self.mark_full_damage();
+            return;
+        }
+        if keysym == up {
+            self.shell.explorer_move(-1);
+            return;
+        }
+        if keysym == down {
+            self.shell.explorer_move(1);
+            return;
+        }
+        if keysym == page_up {
+            self.shell.explorer_page(-1);
+            return;
+        }
+        if keysym == page_down {
+            self.shell.explorer_page(1);
+            return;
+        }
+        if keysym == backspace {
+            self.shell.explorer_backspace();
+            return;
+        }
+        if let Some(character) = char::from_u32(xkb::keysym_to_utf32(keysym)) {
+            if !character.is_control() {
+                self.shell.explorer_push_char(character);
+            }
+        }
     }
 
     fn combined_launchers(&self) -> Vec<PaletteLauncher> {
@@ -1332,7 +1405,6 @@ impl App {
         display.dispatch_clients(self)?;
         display.flush_clients()?;
         self.poll_index_results();
-        self.poll_status();
         if self.agent_sessions.poll() {
             self.refresh_launchers();
             println!(
@@ -1398,6 +1470,7 @@ impl App {
         let old_overlay = self.shell.overlay_rect();
         let mut shortcut = false;
         let mut palette_key = false;
+        let mut explorer_key = false;
         keyboard.input::<(), _>(
             self,
             key_code,
@@ -1417,6 +1490,12 @@ impl App {
                         palette_key = true;
                     }
                     FilterResult::Intercept(())
+                } else if state.shell.explorer_open() {
+                    if pressed {
+                        state.handle_explorer_key(sym);
+                        explorer_key = true;
+                    }
+                    FilterResult::Intercept(())
                 } else {
                     FilterResult::Forward
                 }
@@ -1431,6 +1510,8 @@ impl App {
         if shortcut {
             // Shortcuts may move/close/raise windows or switch workspaces.
             self.mark_full_damage();
+        } else if explorer_key {
+            self.mark_explorer_damage();
         } else if palette_key {
             let new_overlay = self.shell.overlay_rect();
             if let Some(rect) = old_overlay {
@@ -1584,6 +1665,9 @@ impl App {
         if self.shell.overlay().is_some() {
             self.mark_overlay_damage();
         }
+        if self.shell.explorer_open() {
+            self.mark_explorer_damage();
+        }
         self.end_input(started);
     }
 
@@ -1667,7 +1751,20 @@ impl App {
         };
 
         if state == ButtonState::Pressed {
-            self.pointer_captured = modal || over_picker;
+            self.pointer_captured = modal || over_picker || self.shell.explorer_open();
+            if self.shell.explorer_open() {
+                if self.shell.explorer_select_at(point).is_some() {
+                    self.pointer_captured = true;
+                } else if !self.shell.explorer_rect().contains(point) {
+                    self.shell.close_explorer();
+                    self.mark_full_damage();
+                }
+                self.mark_explorer_damage();
+                self.cursor = cursor_for(self);
+                self.mark_cursor_damage(self.pointer_pos);
+                self.end_input(started);
+                return;
+            }
             if over_divider && mouse_button == Some(MouseButton::Left) {
                 self.resize_drag = Some(ResizeDrag {
                     last_ratio: self.shell.master_ratio(),
@@ -1820,6 +1917,21 @@ impl App {
     /// Pointer axis (scroll) event.
     pub fn pointer_axis(&mut self, horizontal: f64, vertical: f64, source: AxisSource, time: u32) {
         let started = self.begin_input();
+        if self.shell.explorer_open() {
+            let point = AetherPoint::new(
+                self.pointer_pos.x.round() as i32,
+                self.pointer_pos.y.round() as i32,
+            );
+            if self.shell.explorer_rect().contains(point) {
+                if vertical != 0.0 {
+                    self.shell
+                        .explorer_scroll_by(if vertical > 0.0 { 3 } else { -3 });
+                }
+                self.mark_explorer_damage();
+                self.end_input(started);
+                return;
+            }
+        }
         let mut axis = AxisFrame::new(time).source(source);
         if horizontal != 0.0 {
             axis = axis.value(smithay::backend::input::Axis::Horizontal, horizontal);
@@ -1873,6 +1985,13 @@ impl App {
         }
     }
 
+    fn mark_explorer_damage(&mut self) {
+        if self.shell.explorer_open() {
+            let rect = self.shell.explorer_rect();
+            self.mark_damage_rect(rect);
+        }
+    }
+
     fn window_rect(&self, id: WindowId) -> Option<AetherRect> {
         self.shell
             .windows()
@@ -1913,7 +2032,7 @@ impl App {
         &self.status
     }
 
-    fn poll_status(&mut self) {
+    pub(crate) fn poll_status(&mut self) {
         // Sample only while a frame is already due. A timer-driven sample would
         // itself create damage and break the zero-frame idle gate; values
         // refresh on the next input-driven frame instead.

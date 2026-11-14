@@ -116,7 +116,7 @@ fn serve(stream: UnixStream, index: Arc<RwLock<Index>>, delay_ms: usize) {
             .get("limit")
             .and_then(|value| value.as_u64())
             .unwrap_or(8)
-            .clamp(1, 100) as usize;
+            .clamp(1, 20_000) as usize;
         let hits = index.read().unwrap().query(&query, limit);
         if delay_ms > 0 {
             thread::sleep(Duration::from_millis(delay_ms as u64));

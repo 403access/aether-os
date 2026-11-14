@@ -50,6 +50,11 @@ result focuses the window and switches to its workspace; the smoke test types
 capture is produced by `smoke-picker-xvfb.sh`, which drives the click with
 `xdotool` and asserts the shell log.*
 
+![Virtualised file explorer](/img/smithay-explorer.png)
+
+*`Super+E` opens the explorer; typing filters, arrows/PgUp/PgDn move, Enter opens
+the selected file. Only the visible rows are composed.*
+
 ![Status bar and two tiled terminal clients](/img/smithay-status.png)
 
 *The status bar shows agent sessions, CPU, memory, audio and frame time on the

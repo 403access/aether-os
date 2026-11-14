@@ -81,11 +81,11 @@ Deliverables:
   their rects; keyboard/pointer focus, buttons and axis; two terminals verified.
 - ✅ Workspace shortcuts (`Super+1/2/3`), window moves, close, labelled
   indicators, a clickable workspace picker, an interactive command palette
-  (typed query, filtering, selection, actions) and a draggable master/stack
-  split. Picker, divider and palette input are verified by xdotool smoke tests.
-- ⏳ App/file/agent palette providers, mouse row activation, IME support,
-  interactive window move, maximize/fullscreen, cursor theme, per-client damage,
-  udev/DRM.
+  (typed query, filtering, workspace/window providers, row clicks, actions) and
+  a draggable master/stack split. Picker, divider and palette input are verified
+  by xdotool smoke tests.
+- ⏳ App/file/agent palette providers, IME support, interactive window move,
+  maximize/fullscreen, cursor theme, per-client damage, udev/DRM.
 - ⏳ udev/DRM backend, libinput seat, wgpu renderer, output hotplug.
 - Scene graph with damage tracking; shell chrome in one draw pass.
 - Tiling layout, focus, keybindings; one workspace per output.

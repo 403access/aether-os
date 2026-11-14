@@ -27,15 +27,22 @@ aether-shell (policy) ──> FramePlan ──> aether-shell-smithay (Linux)
 
 ![The shell overlay above a client](/img/smithay-overlay.png)
 
-*`Super+Space` toggles the modal shell overlay above clients. Header, search row,
-workspace results and hints are real bitmap text rasterized by `aether-text`; the
-labelled bars at top-left are workspace indicators (active is bright).*
+*`Super+Space` toggles the modal command palette above clients. Header, search
+row, workspace/window results and hints are real bitmap text rasterized by
+`aether-text`; the labelled bars at top-left are workspace indicators (active is
+bright). Titles come from the xdg-shell clients.*
 
 ![Filtering the palette by typing](/img/smithay-palette.png)
 
 *Typing filters the palette. The selected row has a cyan edge and brighter
-background; `Enter` runs it. `smoke-palette-xvfb.sh` types `web` with `xdotool`,
-captures this frame and asserts the switch to workspace 3.*
+background; clicking it or pressing `Enter` runs it. `smoke-palette-xvfb.sh`
+types `web`, captures this frame and clicks the row to switch workspace.*
+
+![Filtering to a client window](/img/smithay-palette-window.png)
+
+*The same palette lists client windows with their workspace. Activating the
+result focuses the window and switches to its workspace; the smoke test types
+`term`, presses `Enter` and asserts the return to workspace 1.*
 
 ![Clicking the second workspace indicator](/img/smithay-workspace-picker.png)
 
@@ -67,9 +74,12 @@ ratio.*
   and axis; keyboard input goes to the focused surface.
 - The shell overlay is drawn above clients (`Super+Space`) and is **modal**:
   keystrokes edit the palette instead of leaking to the focused client.
-- **Interactive palette.** Typing filters workspace commands
-  (case-insensitive prefix/substring), `Up/Down` wraps the selection, `Enter`
-  switches workspace or closes the palette, `Backspace` edits and `Esc` closes.
+- **Interactive palette with providers.** Results currently come from
+  workspaces and client windows (titles are kept in sync via xdg
+  `title_changed`). Typing filters them (case-insensitive prefix/substring),
+  `Up/Down` wraps, `Enter` or a row click activates, `Backspace` edits and `Esc`
+  closes. The list slides to keep the selection visible, and pointer hover
+  selects a row.
 - Workspace switching and window moves via shortcuts, with three labelled
   workspace indicator bars at the top-left:
   `Super+1/2/3`, `Super+Shift+1/2/3`, `Super+Q` to close.
@@ -97,15 +107,15 @@ ratio.*
 | `Up/Down` | Move the palette selection (wraps) |
 | `Enter` | Run the selected palette entry |
 | `Backspace` | Delete a query character |
+| *Click row* | Activate a palette result |
 | `Super+1/2/3` | Switch workspace |
 | `Super+Shift+1/2/3` | Move the focused client to a workspace |
 | `Super+Q` | Close the focused client |
 
 ## What is not implemented
 
-- **Palette providers.** The palette currently offers workspaces and close.
-  Apps, files, windows and agent sessions are not providers yet, and rows cannot
-  be clicked with the pointer.
+- **More palette providers.** Workspaces, windows and close exist; apps, files
+  and agent sessions do not.
 - **Text input methods.** Printable keys are mapped from keysyms; there is no
   `text-input`/IME protocol support yet.
 - **Text cache/atlas.** Every frame rebuilds small RGBA text buffers; a cached

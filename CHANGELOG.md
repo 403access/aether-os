@@ -24,10 +24,14 @@ semantic versioning with release codenames (0.1 = “Kestrel”).
   smoke. Adds an interactive command palette: typed queries filter workspace
   commands, Up/Down wraps selection, Enter switches workspace or closes, and
   Backspace edits. Input is press-only (shortcuts no longer fire twice) and the
-  palette path is verified by an xdotool typing smoke. Fixes compositor chrome
-  draw order so panels/rows layer correctly. More palette providers, window
-  move, cursor theming, per-client damage and udev/DRM remain. Nix dev shell
-  `.#smithay`, demo/client/picker/resize/palette smoke scripts, ADR-0012.
+  palette path is verified by an xdotool typing smoke. Adds window results to the
+  palette (titles sync through xdg `title_changed`), clickable/hover rows, a
+  sliding result window and `FocusWindow` actions that switch to the window's
+  workspace. The smoke clicks a row and then focuses a filtered window. Fixes
+  compositor chrome draw order so panels/rows layer correctly. App/file/agent
+  providers, IME, window move, cursor theming, per-client damage and udev/DRM
+  remain. Nix dev shell `.#smithay`, demo/client/picker/resize/palette smoke
+  scripts, ADR-0012.
 - **Backend-neutral shell state** — `aether-shell` owns windows, workspaces, focus,
   floating windows, the overlay and `FramePlan`, with no Wayland/GPU dependency.
   `aether-preview` renders frame plans to PNG (`aether-shell-preview`), providing

@@ -1763,7 +1763,14 @@ impl App {
                     None
                 };
                 if let Some(zone) = zone {
+                    let before = self.window_rect(drag.id);
                     if self.shell.snap_window(drag.id, zone) {
+                        if let Some(before) = before {
+                            self.mark_damage_rect(before);
+                        }
+                        if let Some(after) = self.window_rect(drag.id) {
+                            self.mark_damage_rect(after);
+                        }
                         self.configure_all();
                         println!("aether-shell: window snapped id={} zone={zone:?}", drag.id);
                     }

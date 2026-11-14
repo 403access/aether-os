@@ -1,3 +1,13 @@
+## v0.1.0-alpha.62
+
+- Fix input-path damage precision: palette typing damages the overlay rect,
+  pointer motion damages old/new cursor and moved window rects, shortcuts and
+  layout changes mark full, and forwarded scroll/keys add no compositor damage.
+  Removes the blanket full-scene repaint per input event (winit and DRM).
+- Log `cleared_area` in DRM frame stats and regenerate typing/evidence logs.
+- Correct the P2 ledger: G1 is implemented but unverified until G5; the
+  historical blocker list is marked fixed.
+
 ## v0.1.0-alpha.61
 
 - Gate instrumentation: per-output pacing deadlines, damage-aware composition,

@@ -152,6 +152,10 @@ drag and both toggles with `xdotool` and asserts each transition.*
   work between clients. The compositor forwards data-device and primary focus
   with keyboard focus so selection offers reach the right client. DnD and
   clipboard persistence after the source exits are not implemented.
+- **Idle frame skipping.** Input events and client commits mark the compositor
+  dirty; otherwise it stops presenting and stops sending frame callbacks. Dirty
+  frames still redraw the full window (partial per-client damage is future
+  work). `AETHER_FRAME_LOG=1` logs each presented frame.
 - **Pointer cursor feedback.** The winit window's system cursor changes with
   the hover target: `ColResize` on the master/stack divider, `Pointer` on
   workspace chips and palette rows, `Text` on the palette input, `Move` over a
@@ -208,7 +212,8 @@ drag and both toggles with `xdotool` and asserts each transition.*
 - **Fullscreen and multi-output edge snapping** are not implemented. Single
   output halves/maximize, floating resize and edge snapping work. Popups and
   drag-and-drop are ignored.
-- **Per-client damage.** Full-window redraw remains.
+- **Per-client damage.** Dirty frames redraw the full window; idle frames are
+  skipped, but partial damage tracking is not wired in yet.
 - **Popups, drag-and-drop and grabs** are accepted/ignored at the protocol level.
 - **udev/DRM backend.** The target path for the 7700K (no X server) is not written;
   winit is the development adapter.
@@ -250,11 +255,13 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-desktop-xvfb.sh  # launch a discovered .desktop app
 ./os/compositor/aether-shell-smithay/smoke-files-xvfb.sh    # search/open a fixture file
 ./os/compositor/aether-shell-smithay/smoke-clipboard-xvfb.sh # clipboard + primary between terminals
+./os/compositor/aether-shell-smithay/smoke-idle-xvfb.sh      # idle frame skipping
 ```
 
 The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. The picker,
 resize, palette, window, cursor and provider smokes require `xdotool`, which the
-`.#smithay` dev shell provides (`wl-copy`/`wl-paste` for the clipboard smoke).
+`.#smithay` dev shell provides (`wl-copy`/`wl-paste` for the clipboard smoke and
+the idle-frame smoke for `AETHER_FRAME_LOG`).
 Set `AETHER_TERMINAL` to change the built-in
 terminal launcher. Desktop apps come from `XDG_DATA_HOME`/`XDG_DATA_DIRS`
 (`~/.local/share` and `/usr/local/share:/usr/share` by default). The file index

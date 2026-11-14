@@ -31,6 +31,10 @@ name = "aether-desktop"
 version = "0.1.0"
 
 [[package]]
+name = "aether-files"
+version = "0.1.0"
+
+[[package]]
 name = "aether-geometry"
 version = "0.1.0"
 

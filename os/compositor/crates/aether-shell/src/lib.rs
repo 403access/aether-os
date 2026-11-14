@@ -108,6 +108,7 @@ pub enum PaletteAction {
     FocusWindow(WindowId),
     LaunchApp(usize),
     SpawnTerminal,
+    OpenFile(usize),
     Close,
 }
 
@@ -118,6 +119,14 @@ pub struct PaletteLauncher {
     pub detail: String,
     pub program: String,
     pub args: Vec<String>,
+}
+
+/// A file the palette can open. The backend hands the path to an opener.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PaletteFile {
+    pub name: String,
+    pub detail: String,
+    pub path: String,
 }
 
 /// Edge zones a moving window can snap into on release.
@@ -190,6 +199,7 @@ pub struct Shell {
     overlay: Option<SurfaceId>,
     palette: PaletteState,
     launchers: Vec<PaletteLauncher>,
+    files: Vec<PaletteFile>,
     viewport: Size,
     next_id: WindowId,
 }
@@ -210,6 +220,7 @@ impl Shell {
             overlay: None,
             palette: PaletteState::default(),
             launchers: Vec::new(),
+            files: Vec::new(),
             viewport,
             next_id: 1,
         }
@@ -763,6 +774,21 @@ impl Shell {
         self.launchers.get(index).cloned()
     }
 
+    /// Replace the filename index shown for non-empty queries.
+    pub fn set_files(&mut self, files: Vec<PaletteFile>) {
+        self.files = files;
+        self.palette.selected = 0;
+    }
+
+    pub fn files(&self) -> &[PaletteFile] {
+        &self.files
+    }
+
+    /// Clone a file by its palette index.
+    pub fn file(&self, index: usize) -> Option<PaletteFile> {
+        self.files.get(index).cloned()
+    }
+
     pub fn palette_query(&self) -> &str {
         &self.palette.query
     }
@@ -813,7 +839,33 @@ impl Shell {
             scored.push((score, command_offset, new_terminal));
         }
 
-        let window_offset = command_offset + 1;
+        let file_offset = command_offset + 1;
+        if !query.is_empty() {
+            let mut hits: Vec<(u8, usize, PaletteEntry)> = self
+                .files
+                .iter()
+                .enumerate()
+                .filter_map(|(index, file)| {
+                    palette_score(&query, &file.name).map(|score| {
+                        (
+                            score,
+                            index,
+                            PaletteEntry {
+                                title: file.name.clone(),
+                                detail: file.detail.clone(),
+                                action: PaletteAction::OpenFile(index),
+                            },
+                        )
+                    })
+                })
+                .collect();
+            hits.sort_by_key(|(score, index, _)| (*score, *index));
+            for (rank, (score, _, entry)) in hits.into_iter().take(8).enumerate() {
+                scored.push((score, file_offset + rank, entry));
+            }
+        }
+
+        let window_offset = file_offset + 8;
         for (offset, window) in self.windows().into_iter().enumerate() {
             let detail = format!("window {} - workspace {}", window.id, window.workspace + 1);
             if let Some(score) = palette_score(&query, &window.title) {
@@ -1647,6 +1699,39 @@ mod tests {
             .iter()
             .any(|entry| entry.title == "Terminal"));
         assert!(!shell.set_window_title(999, "missing"));
+    }
+
+    #[test]
+    fn palette_searches_files_only_with_a_query() {
+        let mut shell = shell();
+        shell.set_files(vec![
+            PaletteFile {
+                name: "notes-alpha.txt".into(),
+                detail: "notes".into(),
+                path: "/home/user/notes-alpha.txt".into(),
+            },
+            PaletteFile {
+                name: "beta.md".into(),
+                detail: String::new(),
+                path: "/home/user/beta.md".into(),
+            },
+        ]);
+
+        assert!(shell
+            .palette_entries()
+            .iter()
+            .all(|entry| entry.title != "notes-alpha.txt"));
+
+        for character in "alpha".chars() {
+            assert!(shell.palette_push_char(character));
+        }
+        let entries = shell.palette_entries();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].title, "notes-alpha.txt");
+        assert_eq!(entries[0].action, PaletteAction::OpenFile(0));
+        let file = shell.file(0).expect("file");
+        assert_eq!(file.path, "/home/user/notes-alpha.txt");
+        assert!(shell.file(2).is_none());
     }
 
     #[test]

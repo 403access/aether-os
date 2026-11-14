@@ -14,6 +14,10 @@ name = "aether-desktop"
 version = "0.1.0"
 
 [[package]]
+name = "aether-files"
+version = "0.1.0"
+
+[[package]]
 name = "aether-geometry"
 version = "0.1.0"
 
@@ -52,6 +56,7 @@ name = "aether-shell-smithay"
 version = "0.1.0"
 dependencies = [
  "aether-desktop",
+ "aether-files",
  "aether-geometry",
  "aether-layout",
  "aether-scene",

@@ -15,8 +15,8 @@ use std::sync::Arc;
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect, Size as AetherSize};
 use aether_layout::LayoutConfig;
 use aether_shell::{
-    PaletteAction, PaletteLauncher, Shell, SnapZone, WindowId, WindowSpec, MIN_FLOATING_HEIGHT,
-    MIN_FLOATING_WIDTH, PALETTE_VISIBLE_ROWS, WORKSPACE_INDICATOR_BAR_HEIGHT,
+    PaletteAction, PaletteFile, PaletteLauncher, Shell, SnapZone, WindowId, WindowSpec,
+    MIN_FLOATING_HEIGHT, MIN_FLOATING_WIDTH, PALETTE_VISIBLE_ROWS, WORKSPACE_INDICATOR_BAR_HEIGHT,
 };
 use aether_text::{text_width, TextBitmap};
 use smithay::backend::allocator::Fourcc;
@@ -125,6 +125,11 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     let launcher_count = launchers.len();
     state.shell.set_launchers(launchers);
     println!("aether-shell-smithay: loaded {launcher_count} desktop apps");
+
+    let files = file_index();
+    let file_count = files.len();
+    state.shell.set_files(files);
+    println!("aether-shell-smithay: indexed {file_count} files");
 
     let (mut backend, mut winit) = winit::init_from_attributes::<GlesRenderer>(
         WindowAttributes::default()
@@ -979,6 +984,39 @@ fn desktop_data_dirs() -> Vec<std::path::PathBuf> {
     dirs
 }
 
+fn file_roots() -> Vec<std::path::PathBuf> {
+    if let Some(roots) = std::env::var_os("AETHER_FILE_ROOTS") {
+        return std::env::split_paths(&roots).collect();
+    }
+    std::env::var_os("HOME")
+        .map(std::path::PathBuf::from)
+        .into_iter()
+        .collect()
+}
+
+fn file_index() -> Vec<PaletteFile> {
+    let limit = std::env::var("AETHER_FILE_LIMIT")
+        .ok()
+        .and_then(|value| value.parse().ok())
+        .unwrap_or(2_000usize);
+    let depth = std::env::var("AETHER_FILE_DEPTH")
+        .ok()
+        .and_then(|value| value.parse().ok())
+        .unwrap_or(5usize);
+    aether_files::scan(&file_roots(), limit, depth)
+        .into_iter()
+        .map(|entry| PaletteFile {
+            name: entry.name,
+            detail: if entry.detail.is_empty() {
+                "file".to_string()
+            } else {
+                entry.detail
+            },
+            path: entry.path.to_string_lossy().to_string(),
+        })
+        .collect()
+}
+
 fn desktop_launchers() -> Vec<PaletteLauncher> {
     aether_desktop::discover(&desktop_data_dirs())
         .into_iter()
@@ -1276,6 +1314,12 @@ impl App {
                 self.shell.close_overlay();
                 self.spawn_terminal();
             }
+            PaletteAction::OpenFile(index) => {
+                self.shell.close_overlay();
+                if let Some(file) = self.shell.file(index) {
+                    self.open_path(&file.path);
+                }
+            }
             PaletteAction::Close => {
                 self.shell.close_overlay();
             }
@@ -1290,6 +1334,19 @@ impl App {
 
     fn spawn_launcher(&mut self, launcher: PaletteLauncher) {
         self.spawn_program(&launcher.program, &launcher.args, &launcher.name);
+    }
+
+    fn open_path(&self, path: &str) {
+        let opener = std::env::var("AETHER_OPENER").unwrap_or_else(|_| "xdg-open".to_string());
+        let mut command = std::process::Command::new(&opener);
+        command.arg(path);
+        command.env("WAYLAND_DISPLAY", &self.socket_name);
+        match command.spawn() {
+            Ok(child) => println!("aether-shell-smithay: opened {path} (pid {})", child.id()),
+            Err(error) => {
+                eprintln!("aether-shell-smithay: opener {opener:?} failed for {path:?}: {error}")
+            }
+        }
     }
 
     fn spawn_program(&self, program: &str, args: &[String], label: &str) {

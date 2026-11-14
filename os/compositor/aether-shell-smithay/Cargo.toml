@@ -21,3 +21,4 @@ aether-shell = { path = "../crates/aether-shell" }
 aether-scene = { path = "../crates/aether-scene" }
 aether-text = { path = "../crates/aether-text" }
 aether-desktop = { path = "../crates/aether-desktop" }
+aether-files = { path = "../crates/aether-files" }

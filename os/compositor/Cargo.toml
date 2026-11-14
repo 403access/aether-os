@@ -9,6 +9,7 @@ members = [
   "crates/aether-shell",
   "crates/aether-text",
   "crates/aether-desktop",
+  "crates/aether-files",
   "crates/aether-preview",
 ]
 resolver = "2"
@@ -28,6 +29,7 @@ aether-scene = { path = "crates/aether-scene" }
 aether-shell = { path = "crates/aether-shell" }
 aether-text = { path = "crates/aether-text" }
 aether-desktop = { path = "crates/aether-desktop" }
+aether-files = { path = "crates/aether-files" }
 
 [profile.release]
 lto = "thin"

@@ -1,0 +1,10 @@
+[package]
+name = "aether-files"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Bounded filename index for the Aether palette"
+
+[lib]
+name = "aether_files"
+path = "src/lib.rs"

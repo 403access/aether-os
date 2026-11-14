@@ -113,6 +113,12 @@ right tile is untouched. Input-driven frames use full damage for safety.
 `smoke-damage-xvfb.sh` schedules `sleep 1; echo ...` and asserts a partial frame
 with the 681x768 master rect.*
 
+![A desktop app installed after startup appearing in the palette](/img/smithay-provider-refresh.png)
+
+*Opening the palette rescans desktop entries and the file roots, so apps or files
+installed while the compositor is running appear without a restart. The smoke
+asserts the reload count and launches the new entry.*
+
 ![The same window maximized](/img/smithay-window-maximized.png)
 
 *`Super+M` maximizes the focused window to the full output; pressing it again
@@ -143,7 +149,7 @@ drag and both toggles with `xdotool` and asserts each transition.*
   `weston-terminal`) into the compositor. Installed applications are discovered
   from XDG `.desktop` files at startup and appear as `LaunchApp` entries.
   A bounded filename index (`aether-files`) adds `OpenFile` results for non-empty
-  queries. Typing filters them (case-insensitive prefix/substring),
+  queries. Both providers are rescanned when the palette opens. Typing filters them (case-insensitive prefix/substring),
   `Up/Down` wraps, `Enter` or a row click activates, `Backspace` edits and `Esc`
   closes. The list slides to keep the selection visible, and pointer hover
   selects a row.
@@ -210,8 +216,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
 - **Agent-session provider and full-text files.** Desktop apps, the terminal
   command and a bounded filename index work; the system content indexer and an
   agent-session provider are not wired in yet.
-- **Desktop-entry refresh, icons, actions and D-Bus activation.** The app list is
-  scanned once at startup and only `Exec` is used.
+- **Desktop-entry icons, actions and D-Bus activation.** Entries are rescanned on
+  palette open, but only `Exec` is used; icons, desktop actions and D-Bus
+  activation are not implemented.
 - **Text input methods.** Printable keys are mapped from keysyms; there is no
   `text-input`/IME protocol support yet.
 - **Text cache/atlas.** Every frame rebuilds small RGBA text buffers; a cached
@@ -267,6 +274,7 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-clipboard-xvfb.sh # clipboard + primary between terminals
 ./os/compositor/aether-shell-smithay/smoke-idle-xvfb.sh      # idle frame skipping
 ./os/compositor/aether-shell-smithay/smoke-damage-xvfb.sh    # partial window damage
+./os/compositor/aether-shell-smithay/smoke-refresh-xvfb.sh   # live provider refresh
 ```
 
 The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. The picker,

@@ -365,6 +365,31 @@ impl Shell {
         self.workspaces.len() - 1
     }
 
+    /// Add a window directly on an output's currently visible workspace.
+    /// New clients never appear on a workspace that output is not showing.
+    pub fn add_window_on_output(&mut self, spec: WindowSpec, output: OutputId) -> WindowId {
+        if !self.outputs.iter().any(|candidate| candidate.id == output) {
+            return self.add_window(spec);
+        }
+        let target = self.output_workspace(output);
+        let id = self.add_window(spec);
+        if let Some(window) = self.windows.get_mut(&id) {
+            let previous = window.workspace;
+            if previous != target {
+                if let Some(workspace) = self.workspaces.get_mut(previous) {
+                    workspace.windows.retain(|candidate| *candidate != id);
+                }
+                if let Some(workspace) = self.workspaces.get_mut(target) {
+                    workspace.windows.push(id);
+                }
+                window.workspace = target;
+            }
+            window.output = output;
+        }
+        self.relayout();
+        id
+    }
+
     pub fn add_window(&mut self, spec: WindowSpec) -> WindowId {
         let id = self.next_id;
         self.next_id += 1;
@@ -466,11 +491,9 @@ impl Shell {
         }
 
         self.active = index;
-        if let Some(primary) = self.primary_output().map(|output| output.id) {
-            self.output_workspaces.insert(primary, index);
-        }
         let primary = self.primary_output().map(|output| output.id).unwrap_or(1);
-        self.focus = self.visible_windows_on(primary).last().copied();
+        self.output_workspaces.insert(primary, index);
+        self.focus = self.last_window_on_workspace(primary, index);
         self.relayout();
         true
     }
@@ -1528,8 +1551,8 @@ impl Shell {
             .is_some_and(|primary| primary.id == output)
         {
             self.active = workspace;
-            self.focus = self.visible_windows_on(output).last().copied();
         }
+        self.focus = self.last_window_on_workspace(output, workspace);
         self.relayout();
         true
     }
@@ -1550,6 +1573,22 @@ impl Shell {
         }
         self.relayout();
         true
+    }
+
+    /// Last window on an output's workspace, used to pick focus before the
+    /// scene has been relaid out.
+    fn last_window_on_workspace(&self, output: OutputId, workspace: usize) -> Option<WindowId> {
+        self.workspaces
+            .get(workspace)?
+            .windows
+            .iter()
+            .rev()
+            .find(|id| {
+                self.windows
+                    .get(id)
+                    .is_some_and(|window| window.output == output)
+            })
+            .copied()
     }
 
     /// Visible window ids on an output, topmost first.
@@ -1938,6 +1977,40 @@ mod tests {
         assert_eq!(restored_first.rect, before_first);
         assert_eq!(restored_second.rect, before_second);
         assert!(!shell.toggle_maximized(999));
+    }
+
+    #[test]
+    fn new_windows_use_their_outputs_workspace() {
+        let mut shell = shell();
+        shell.add_workspace("web");
+        assert!(shell.set_outputs(vec![
+            OutputInfo {
+                id: 1,
+                name: "left".into(),
+                rect: Rect::new(0, 0, 800, 600),
+                scale: 1.0,
+                primary: true,
+            },
+            OutputInfo {
+                id: 2,
+                name: "right".into(),
+                rect: Rect::new(800, 0, 1024, 768),
+                scale: 1.0,
+                primary: false,
+            },
+        ]));
+        assert!(shell.set_output_workspace(2, 1));
+        let id = shell.add_window_on_output(WindowSpec::new("two", "app"), 2);
+        let window = shell
+            .windows()
+            .into_iter()
+            .find(|window| window.id == id)
+            .unwrap();
+        assert_eq!(window.output, 2);
+        assert_eq!(window.workspace, 1);
+        assert!(shell.visible_windows_on(2).contains(&id));
+        assert!(!shell.visible_windows_on(1).contains(&id));
+        assert!(window.rect.x >= 800);
     }
 
     #[test]

@@ -5,10 +5,16 @@
 # VM devices. Those belong to os/nixos (physical) or os/vm (development).
 {
   lib,
+  pkgs,
   ...
 }: {
   i18n.defaultLocale = "en_US.UTF-8";
   console.keyMap = "us";
 
   nix.settings.experimental-features = ["nix-command" "flakes"];
+
+  # EGL/GBM runtime: /run/opengl-driver supplies the GBM DRI backend and the
+  # glvnd vendor files that Mesa's libgbm dlopens. Both the native DRM backend
+  # and the cage/winit fallback need this.
+  hardware.graphics.enable = true;
 }

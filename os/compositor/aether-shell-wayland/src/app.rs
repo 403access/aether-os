@@ -83,10 +83,8 @@ impl XdgShellHandler for App {
         let title = toplevel_title(&surface).unwrap_or_else(|| "Wayland client".to_string());
         let mut spec = WindowSpec::new(title, "wayland.client");
         spec.preferred_size = AetherSize::new(800, 600);
-        let id = self.shell.add_window(spec);
-        self.windows.insert(id, surface.clone());
-        // Place new windows on the output under the pointer, falling back to
-        // the primary output. The shell owns per-output workspace assignment.
+        // Place new windows on the output under the pointer (falling back to
+        // the primary) and on that output's visible workspace.
         let point = AetherPoint::new(
             self.pointer_pos.x.round() as i32,
             self.pointer_pos.y.round() as i32,
@@ -94,10 +92,10 @@ impl XdgShellHandler for App {
         let output = self
             .shell
             .output_at(point)
-            .or_else(|| self.shell.primary_output().map(|output| output.id));
-        if let Some(output) = output {
-            self.shell.set_window_output(id, output);
-        }
+            .or_else(|| self.shell.primary_output().map(|output| output.id))
+            .unwrap_or(1);
+        let id = self.shell.add_window_on_output(spec, output);
+        self.windows.insert(id, surface.clone());
         self.focus = Some(surface.wl_surface().clone());
         self.configure_window(id);
     }
@@ -697,7 +695,7 @@ impl App {
             return false;
         }
 
-        let target = if keysym == one {
+        let workspace_target = if keysym == one {
             Some(0)
         } else if keysym == two {
             Some(1)
@@ -706,7 +704,30 @@ impl App {
         } else {
             None
         };
-        if let Some(workspace) = target {
+        // Super+Alt+1/2/3 switches the workspace shown on the output under
+        // the pointer, leaving the primary output untouched.
+        if modifiers.alt {
+            if let Some(workspace) = workspace_target {
+                let point = AetherPoint::new(
+                    self.pointer_pos.x.round() as i32,
+                    self.pointer_pos.y.round() as i32,
+                );
+                let output = self
+                    .shell
+                    .output_at(point)
+                    .or_else(|| self.shell.primary_output().map(|output| output.id))
+                    .unwrap_or(1);
+                if self.shell.set_output_workspace(output, workspace) {
+                    self.sync_focus();
+                    self.configure_all();
+                    self.mark_full_damage();
+                    println!("aether-shell: output {output} workspace -> {workspace}");
+                }
+                return true;
+            }
+            return false;
+        }
+        if let Some(workspace) = workspace_target {
             self.switch_workspace(workspace);
             return true;
         }
@@ -854,15 +875,20 @@ impl App {
             }
             PaletteAction::FocusWindow(id) => {
                 self.shell.close_overlay();
-                let workspace = self
+                let target = self
                     .shell
                     .windows()
                     .into_iter()
                     .find(|window| window.id == id)
-                    .map(|window| window.workspace);
-                if let Some(workspace) = workspace {
-                    if workspace != self.shell.active_workspace() {
-                        self.switch_workspace(workspace);
+                    .map(|window| (window.output, window.workspace));
+                if let Some((output, workspace)) = target {
+                    if self.shell.output_workspace(output) != workspace {
+                        let primary = self.shell.primary_output().map(|output| output.id);
+                        if Some(output) == primary {
+                            self.switch_workspace(workspace);
+                        } else {
+                            self.shell.set_output_workspace(output, workspace);
+                        }
                     }
                     if self.shell.focus_window(id) {
                         self.sync_focus();

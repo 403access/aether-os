@@ -42,6 +42,8 @@
 
   # Small, sparse disk. Grow with qemu-img if you need more.
   virtualisation.diskSize = 4096;
+  # The VM may run under TCG when nested KVM is unavailable. Override QEMU
+  # memory/cores at launch (`QEMU_OPTS="-m 2048 -smp 2"`) if boot is slow.
 
   # The upstream image modules do not add a serial console; keep the behaviour
   # the old nixos-generators qcow-efi format provided. The console= parameters
@@ -116,18 +118,27 @@
       TTYPath = "/dev/tty7";
       StandardInput = "tty";
       StandardOutput = "journal";
-      TimeoutStartSec = 120;
+      TimeoutStartSec = 300;
     };
     script = ''
-      ${pkgs.kbd}/bin/chvt 7 || true
-      export XDG_RUNTIME_DIR=/run/user/$(id -u)
-      mkdir -p "$XDG_RUNTIME_DIR" 2>/dev/null || true
-      ${pkgs.aether-shell-drm}/bin/aether-shell-drm --frames 120 >/tmp/aether-drm.log 2>&1
-      status=$?
       {
-        echo "AETHER_VM_DRM_STATUS=$status"
-        tail -20 /tmp/aether-drm.log
-      } > /dev/ttyAMA0
+        echo "AETHER_VM_DRM_BEGIN"
+        echo "AETHER_VM_DRM_UID=$(id -u)"
+        ls -l /dev/dri || true
+        ${pkgs.systemd}/bin/loginctl session-status 2>&1 | head -20 || true
+      } >>/dev/ttyAMA0
+      ${pkgs.kbd}/bin/chvt 7 || true
+      sleep 3
+      export XDG_RUNTIME_DIR=/run/user/$(id -u)
+      export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath [ pkgs.libGL pkgs.mesa pkgs.libgbm ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+      export LIBGL_DRIVERS_PATH="${pkgs.mesa}/lib/dri"
+      export GBM_BACKENDS_PATH="${pkgs.mesa}/lib/gbm"
+      # virtio-gpu under TCG; use the software rasterizer for composition.
+      export MESA_LOADER_DRIVER_OVERRIDE=llvmpipe
+      export LIBGL_ALWAYS_SOFTWARE=1
+      mkdir -p "$XDG_RUNTIME_DIR" 2>/dev/null || true
+      timeout -k 10 480 ${pkgs.aether-shell-drm}/bin/aether-shell-drm --frames 1 >>/dev/ttyAMA0 2>&1
+      echo "AETHER_VM_DRM_STATUS=$?" >>/dev/ttyAMA0
     '';
   };
 

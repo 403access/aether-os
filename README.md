@@ -45,10 +45,11 @@ the next phase; first boot lands in a console, not the finished desktop.
 | NixOS system + installer ISO | ✅ evaluates (`nix flake check`); not booted in CI | `os/nixos` |
 | aarch64 development VM target | ✅ built + booted headless in ~10–12 s (HVF) | `os/vm` |
 | disko disk layout + install script | ✅ written, evaluation-checked | `os/nixos/disko.nix`, `scripts/install.sh` |
-| Compositor core + shell state + preview | ✅ 92 core + 5 backend Rust tests | `os/compositor` |
+| Compositor core + shell state + preview | ✅ 93 core + 5 shared + 3 DRM Rust tests | `os/compositor` |
 | Smithay winit backend (Linux-only) | ✅ clients, palette + index + live agents, desktop actions, clipboard, outputs, text-input, window mgmt, cursors, partial damage | `os/compositor/aether-shell-smithay` |
+| Native DRM backend (Linux-only) | ✅ libseat + KMS page-flips, libinput, udev hotplug, per-output workspaces, cage fallback | `os/compositor/aether-shell-drm` |
 | Target preflight | ✅ UEFI/KMS/input/memory checks with fixtures | `scripts/target-check.sh` |
-| DRM bring-up session | ✅ cage owns KMS/seat0 on tty7, launches the winit adapter | `os/nixos/services.nix` |
+| DRM session | ✅ native backend on tty7, cage + winit fallback | `os/nixos/services.nix` |
 | Compositor UI (`aether-shell`) | ⏳ roadmap P2 | — |
 | WebRTC remote display | ⏳ roadmap P7 | — |
 

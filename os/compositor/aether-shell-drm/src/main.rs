@@ -131,11 +131,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     let seat_name = session.seat();
     println!("aether-shell-drm: seat {seat_name}");
 
+    println!("aether-shell-drm: creating libinput context");
     let mut libinput_context =
         Libinput::new_with_udev::<LibinputSessionInterface<LibSeatSession>>(session.clone().into());
     libinput_context
         .udev_assign_seat(&seat_name)
         .map_err(|error| format!("libinput seat assignment failed: {error:?}"))?;
+    println!("aether-shell-drm: libinput ready");
     let libinput_backend = LibinputInputBackend::new(libinput_context.clone());
 
     let handle = event_loop.handle();
@@ -190,7 +192,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .ok()
         .flatten()
         .and_then(|path| DrmNode::from_path(path).ok());
-    let mut ordered = initial;
+    let mut ordered: Vec<(u64, std::path::PathBuf)> = initial;
     if let Some(primary) = primary {
         ordered.sort_by_key(|(_, path)| {
             DrmNode::from_path(path)
@@ -198,9 +200,20 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .unwrap_or(true)
         });
     }
-    for (_, path) in ordered {
-        if let Ok(node) = DrmNode::from_path(&path) {
-            state.add_device(node, &path);
+    // logind can take a moment to activate the tty session and grant DRM
+    // access, especially on cold boot. Retry briefly before giving up.
+    for attempt in 0..10 {
+        for (_, path) in &ordered {
+            if let Ok(node) = DrmNode::from_path(path) {
+                state.add_device(node, path);
+            }
+        }
+        if !state.devices.is_empty() {
+            break;
+        }
+        if attempt < 9 {
+            println!("aether-shell-drm: no usable DRM device yet; retrying");
+            std::thread::sleep(Duration::from_millis(500));
         }
     }
 
@@ -252,17 +265,33 @@ impl DrmState {
     }
 
     fn open_device(&mut self, node: DrmNode, path: &Path) -> Result<DeviceBackend, Box<dyn Error>> {
-        let file = self.session.open(
-            path,
-            OFlags::RDWR | OFlags::CLOEXEC | OFlags::NOCTTY | OFlags::NONBLOCK,
-        )?;
+        println!("aether-shell-drm: opening {}", path.display());
+        let file = match self.session.open(path, OFlags::RDWR | OFlags::CLOEXEC) {
+            Ok(file) => file,
+            Err(error) => {
+                eprintln!(
+                    "aether-shell-drm: libseat open {} failed ({error}); trying direct open",
+                    path.display()
+                );
+                std::fs::OpenOptions::new()
+                    .read(true)
+                    .write(true)
+                    .open(path)?
+                    .into()
+            }
+        };
         let fd = DrmDeviceFd::new(DeviceFd::from(file));
         let (drm, notifier) = DrmDevice::new(fd.clone(), true)?;
+        println!("aether-shell-drm: DRM device ready");
 
         let gbm = GbmDevice::new(fd.clone())?;
+        println!("aether-shell-drm: GBM device ready");
         let egl_display = unsafe { EGLDisplay::new(gbm.clone())? };
+        println!("aether-shell-drm: EGL display ready");
         let egl_context = EGLContext::new(&egl_display)?;
+        println!("aether-shell-drm: EGL context ready");
         let renderer = unsafe { GlesRenderer::new(egl_context)? };
+        println!("aether-shell-drm: GLES renderer ready");
 
         let render_formats: Vec<Format> = renderer
             .egl_context()
@@ -338,6 +367,10 @@ impl DrmState {
                 return;
             }
         };
+        println!(
+            "aether-shell-drm: connector scan -> {} usable output(s)",
+            connected.len()
+        );
 
         let present: Vec<connector::Handle> = connected
             .iter()
@@ -375,7 +408,12 @@ impl DrmState {
 
     fn add_output(&mut self, node: DrmNode, candidate: ConnectorCandidate) {
         let next_id = self.next_output_id;
-        let x = self
+        let existing_outputs: usize = self
+            .devices
+            .values()
+            .map(|device| device.surfaces.len())
+            .sum();
+        let max_right = self
             .app
             .shell()
             .outputs()
@@ -383,6 +421,7 @@ impl DrmState {
             .map(|output| output.rect.right())
             .max()
             .unwrap_or(0) as i32;
+        let x = output_origin(existing_outputs, max_right);
         let name = candidate.name.clone();
         let (width, height) = candidate.mode.size();
 
@@ -426,6 +465,10 @@ impl DrmState {
         };
 
         let planes = manager.device().planes(&candidate.crtc).ok();
+        println!(
+            "aether-shell-drm: enabling {} {}x{} on {:?}",
+            candidate.name, width, height, candidate.crtc
+        );
         let elements: DrmOutputRenderElements<GlesRenderer, AetherRenderElement> =
             DrmOutputRenderElements::default();
         let drm_output = match manager.initialize_output(
@@ -447,6 +490,7 @@ impl DrmState {
             }
         };
 
+        println!("aether-shell-drm: connector {} enabled", candidate.name);
         surfaces.insert(
             candidate.crtc,
             OutputSurface {
@@ -477,7 +521,7 @@ impl DrmState {
         if let Some(device) = self.devices.get_mut(&node) {
             if let Some(surface) = device.surfaces.get_mut(&crtc) {
                 let _ = surface.drm_output.frame_submitted();
-                surface.dirty = true;
+                surface.dirty = self.app.needs_frame();
             }
         }
     }
@@ -577,6 +621,9 @@ impl DrmState {
                     Err(RenderFrameError::PrepareFrame(FrameError::EmptyFrame)) => {
                         surface.dirty = false;
                     }
+                    Err(RenderFrameError::PrepareFrame(FrameError::NoFreeSlotsError)) => {
+                        // A flip is still in flight; retry after its VBlank.
+                    }
                     Err(error) => {
                         eprintln!("aether-shell-drm: render failed: {error}");
                         surface.dirty = false;
@@ -607,6 +654,12 @@ fn enumerate_connectors(
 
     for handle in resources.connectors() {
         let connector = drm.get_connector(*handle, false)?;
+        println!(
+            "aether-shell-drm: connector {} state {:?} modes {}",
+            connector,
+            connector.state(),
+            connector.modes().len()
+        );
         if connector.state() != connector::State::Connected {
             continue;
         }

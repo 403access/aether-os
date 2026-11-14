@@ -17,9 +17,15 @@ deliberately layered so a failure points at one boundary.
 | Unit / DOM / integration | `bun test` | Logic, ranking, capabilities, planners, components, cross-thread ring, filesystem | **206 total** (17 DOM, ~15 integration) |
 | Architecture boundary | `bun test` | VM ↔ reference imports, security posture, flake modules | 7 (included above) |
 | E2E | Playwright | Assembled marketing site, docs, install pages, VM page | **14** |
-| Rust | `cargo test` | Scene, layout, damage, pacing, shell state, palette/commands, desktop entries/actions, filename index, picker, split/move/resize/snap/maximize/fullscreen, outputs, text, cursors, preview | **92** |
-| Rust (Smithay backend) | `cargo test --manifest-path os/compositor/aether-shell-smithay/Cargo.toml` | Damage conversion, agent snapshots | **5** |
+| Rust | `cargo test` | Scene, layout, damage, pacing, shell state, palette/commands, desktop entries/actions, filename index, picker, split/move/resize/snap/maximize/fullscreen, per-output workspaces, text, cursors, preview | **93** |
+| Rust (shared Wayland) | `cargo test --manifest-path os/compositor/aether-shell-wayland/Cargo.toml` | Damage conversion, agent snapshots | **5** |
+| Rust (DRM backend) | `cargo test --manifest-path os/compositor/aether-shell-drm/Cargo.toml` | Output origin, frame-count argument | **3** |
 | Performance | `packages/bench` | Regressions vs baseline | 6 metrics |
+
+The native backend has two extra checks: `os/compositor/aether-shell-drm/smoke-drm-probe.sh`
+(clear failure without DRM, short run with it) and the VM boot check
+(`scripts/vm-run.sh --drm-smoke` on KVM hosts, `scripts/vm-drm-tcg.sh` under
+TCG), which asserts `AETHER_VM_DRM_STATUS=0` on the serial console.
 
 Run everything:
 

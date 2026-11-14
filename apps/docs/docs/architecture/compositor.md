@@ -119,11 +119,13 @@ The backend contract is intentionally small: it receives rectangles/layers and a
 damage region, then maps compositor surfaces and presents. Client buffers and
 input are backend concerns. See ADR-0011.
 
-The first native backend is `aether-shell-smithay` (winit/EGL, Linux-only,
+The development backend is `aether-shell-smithay` (winit/EGL, Linux-only,
 standalone crate). It opens a real window, presents the same frame plan, accepts
 xdg-shell clients, routes input and uploads `aether-text` buffers as Smithay
-memory elements; see [Smithay backend](/architecture/smithay-backend). The
-udev/DRM target backend is still open.
+memory elements. The protocol state, input policy and composition now live in
+`aether-shell-wayland`, shared with the native `aether-shell-drm` backend
+(libseat + KMS page-flips + libinput + udev hotplug). See
+[Smithay backend](/architecture/smithay-backend).
 
 Damage is implemented in `aether-damage` and consumed by `aether-scene`; both are
 tested without a GPU:

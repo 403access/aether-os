@@ -66,6 +66,13 @@
     after = ["systemd-user-sessions.service"];
     serviceConfig = {
       User = "oliver";
+      # Smithay dlopens libEGL/libgbm; give it the store paths directly so it
+      # does not depend on the login shell's graphics environment.
+      Environment = [
+        "LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.libGL pkgs.mesa pkgs.libgbm ]}"
+        "LIBGL_DRIVERS_PATH=${pkgs.mesa}/lib/dri"
+        "GBM_BACKENDS_PATH=${pkgs.mesa}/lib/gbm"
+      ];
       PAMName = "login";
       TTYPath = "/dev/tty7";
       StandardInput = "tty";

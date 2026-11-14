@@ -290,6 +290,7 @@ drag and both toggles with `xdotool` and asserts each transition.*
 | *Click row* | Activate a palette result |
 | `Super+1/2/3` | Switch workspace |
 | `Super+Shift+1/2/3` | Move the focused client to a workspace |
+| `Super+Alt+1/2/3` | Switch the workspace on the output under the pointer |
 | `Super+Q` | Close the focused client |
 | `Super+M` | Toggle maximize for the focused window |
 | `Super+F` | Toggle fullscreen for the focused window |
@@ -329,7 +330,9 @@ devices, libinput seat and Wayland display in one process:
 - **Session and devices.** `LibSeatSession` opens `/dev/dri/cardN` through
   libseat (logind or seatd). Each GPU gets a `DrmDevice`, `GbmDevice`,
   `EGLDisplay`/`GlesRenderer`, `GbmAllocator`, `GbmFramebufferExporter` and a
-  `DrmOutputManager`.
+  `DrmOutputManager`. If the broker refuses a node (seen with a root-only TCG
+  smoke session), the backend logs it and retries with a direct open before
+  failing; libseat remains the normal path.
 - **Outputs.** Connectors are enumerated through the DRM control API. A
   connected connector with modes picks its preferred mode and a free CRTC,
   creates a `wl_output` and an `OutputInfo` (laid out left-to-right), and
@@ -373,6 +376,8 @@ nix develop .#smithay
 
 # in the shell:
 cargo build --manifest-path os/compositor/aether-shell-smithay/Cargo.toml
+cargo build --manifest-path os/compositor/aether-shell-wayland/Cargo.toml
+cargo build --manifest-path os/compositor/aether-shell-drm/Cargo.toml
 
 # client-capable mode on a normal X11/Wayland session (prints the socket name):
 ./os/compositor/aether-shell-smithay/target/debug/aether-shell-smithay
@@ -411,6 +416,26 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-agent-ipc-xvfb.sh   # live agent session IPC
 ./os/compositor/aether-shell-smithay/smoke-dnd-xvfb.sh         # client drag and drop
 ```
+
+Native DRM runs on a VT with seat access (or through the installed session
+wrapper). It needs Mesa's libglvnd/GBM paths because Smithay loads `libEGL` and
+the GBM DRI backend dynamically:
+
+```bash
+# from a logind/seat session on the target (aether-session exports the Mesa
+# and libglvnd paths):
+nix run .#aether-shell-drm -- --frames 120
+# bring-up check (runs briefly with DRM, or asserts a clear error without it):
+BIN="$(nix build .#aether-shell-drm --no-link --print-out-paths)/bin/aether-shell-drm" \
+  ./os/compositor/aether-shell-drm/smoke-drm-probe.sh
+```
+
+The VM target runs the same binary on virtio-gpu: `scripts/vm-run.sh
+--drm-smoke` boots the disk image on a KVM host, waits for
+`AETHER_VM_DRM_STATUS` on the serial console and fails on a non-zero status.
+`scripts/vm-drm-tcg.sh` does the same with the `system.build.vm` runner and
+TCG (and is the path used when nested KVM is unavailable); it needs a Linux
+host because the runner uses virtiofsd.
 
 The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. Most use
 `xdotool`; the output smoke uses `wayland-info`; both are in the `.#smithay` dev

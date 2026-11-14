@@ -197,6 +197,9 @@
 
         aether-session = final.writeShellScriptBin "aether-session" ''
           export XDG_RUNTIME_DIR="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+          export LD_LIBRARY_PATH="${final.lib.makeLibraryPath [ final.libGL final.mesa final.libgbm ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          export LIBGL_DRIVERS_PATH="${final.mesa}/lib/dri"
+          export GBM_BACKENDS_PATH="${final.mesa}/lib/gbm"
           mkdir -p "$XDG_RUNTIME_DIR" 2>/dev/null || true
           ${final.aether-shell-drm}/bin/aether-shell-drm
           status=$?
@@ -288,6 +291,7 @@
         # replacement for nixos-generators' `qcow-efi` (qcow2 + ESP +
         # systemd-boot).
         vm-image = vm.config.system.build.images.qemu-efi;
+        vm = vm.config.system.build.vm;
         index-service = vmPkgs.aether-index-service;
         aether-shell-smithay = vmPkgs.aether-shell-smithay;
         aether-shell-drm = vmPkgs.aether-shell-drm;

@@ -225,11 +225,12 @@ drag and both toggles with `xdotool` and asserts each transition.*
   normal; other transforms fall back to the window. When nothing is dirty, the
   compositor stops presenting and stops sending frame callbacks. `AETHER_FRAME_LOG=1` logs each
   frame with `damage=full` or `damage=partial [...]`.
-- **Software cursors.** Cursor shapes are rendered in-frame by `aether-cursor`
-  (white fill, black outline, explicit hotspot) above all other elements. The
-  winit system cursor is hidden. Shapes follow the hover target: arrow, pointer,
-  text, move, grabbing, horizontal and diagonal resize. This is backend-neutral
-  and ready for a DRM backend.
+- **Software cursors and Xcursor themes.** Cursor shapes are rendered in-frame
+  by `aether-cursor` above all elements; the platform cursor is hidden. Built-in
+  white/black bitmaps are the fallback. `AETHER_CURSOR_THEME`/`XCURSOR_THEME`
+  and `XCURSOR_PATH` (plus standard icon dirs) select Xcursor images, parsed
+  directly with scale-aware hotspots. Named client cursors are mapped to the
+  same shapes; client-provided cursor surfaces currently fall back.
 - **Window move, resize and maximize.** `Alt+left-drag` promotes a tiled window
   to its preferred floating size and moves it; floating positions persist across
   relayouts and snap flush to output edges while moving. Releasing at the left
@@ -278,9 +279,8 @@ drag and both toggles with `xdotool` and asserts each transition.*
   `text-input`/IME protocol support yet.
 - **Text cache/atlas.** Every frame rebuilds small RGBA text buffers; a cached
   atlas is needed before text-heavy apps.
-- **Xcursor themes and client cursor images.** Cursors are built-in bitmaps;
-  loading system themes, animated cursors and `wl_cursor` images from clients is
-  not implemented.
+- **Client cursor surfaces and animation.** Named cursors and Xcursor theme
+  images work; `wl_cursor` surface images and animated cursors are not rendered.
 - **Multi-output** is not implemented: there is one hard-coded output, no
   hotplug and no per-output workspaces. Fullscreen, maximize, halves, floating
   resize and single-output snapping work. Popups and drag-and-drop are ignored.

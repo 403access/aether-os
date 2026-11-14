@@ -1,0 +1,10 @@
+[package]
+name = "aether-desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "XDG desktop-entry discovery and launch parsing for the Aether palette"
+
+[lib]
+name = "aether_desktop"
+path = "src/lib.rs"

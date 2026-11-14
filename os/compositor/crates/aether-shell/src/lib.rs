@@ -106,8 +106,18 @@ pub struct PaletteEntry {
 pub enum PaletteAction {
     SwitchWorkspace(usize),
     FocusWindow(WindowId),
+    LaunchApp(usize),
     SpawnTerminal,
     Close,
+}
+
+/// An application the palette can launch. The backend spawns it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PaletteLauncher {
+    pub name: String,
+    pub detail: String,
+    pub program: String,
+    pub args: Vec<String>,
 }
 
 /// Edge zones a moving window can snap into on release.
@@ -179,6 +189,7 @@ pub struct Shell {
     focus: Option<WindowId>,
     overlay: Option<SurfaceId>,
     palette: PaletteState,
+    launchers: Vec<PaletteLauncher>,
     viewport: Size,
     next_id: WindowId,
 }
@@ -198,6 +209,7 @@ impl Shell {
             focus: None,
             overlay: None,
             palette: PaletteState::default(),
+            launchers: Vec::new(),
             viewport,
             next_id: 1,
         }
@@ -736,6 +748,21 @@ impl Shell {
         }
     }
 
+    /// Replace the application launchers shown in the palette.
+    pub fn set_launchers(&mut self, launchers: Vec<PaletteLauncher>) {
+        self.launchers = launchers;
+        self.palette.selected = 0;
+    }
+
+    pub fn launchers(&self) -> &[PaletteLauncher] {
+        &self.launchers
+    }
+
+    /// Clone a launcher by its palette index.
+    pub fn launcher(&self, index: usize) -> Option<PaletteLauncher> {
+        self.launchers.get(index).cloned()
+    }
+
     pub fn palette_query(&self) -> &str {
         &self.palette.query
     }
@@ -761,7 +788,22 @@ impl Shell {
             }
         }
 
-        let command_offset = self.workspaces.len();
+        let launcher_offset = self.workspaces.len();
+        for (index, launcher) in self.launchers.iter().enumerate() {
+            if let Some(score) = palette_score(&query, &launcher.name) {
+                scored.push((
+                    score,
+                    launcher_offset + index,
+                    PaletteEntry {
+                        title: launcher.name.clone(),
+                        detail: launcher.detail.clone(),
+                        action: PaletteAction::LaunchApp(index),
+                    },
+                ));
+            }
+        }
+
+        let command_offset = launcher_offset + self.launchers.len();
         let new_terminal = PaletteEntry {
             title: "New terminal".to_string(),
             detail: "launch".to_string(),
@@ -1605,6 +1647,52 @@ mod tests {
             .iter()
             .any(|entry| entry.title == "Terminal"));
         assert!(!shell.set_window_title(999, "missing"));
+    }
+
+    #[test]
+    fn palette_lists_application_launchers() {
+        let mut shell = shell();
+        shell.set_launchers(vec![
+            PaletteLauncher {
+                name: "Example Editor".into(),
+                detail: "application".into(),
+                program: "example-editor".into(),
+                args: vec!["--new".into()],
+            },
+            PaletteLauncher {
+                name: "Browser".into(),
+                detail: "application".into(),
+                program: "browser".into(),
+                args: Vec::new(),
+            },
+        ]);
+
+        let titles: Vec<String> = shell
+            .palette_entries()
+            .into_iter()
+            .map(|entry| entry.title)
+            .collect();
+        assert_eq!(
+            titles,
+            [
+                "main",
+                "Example Editor",
+                "Browser",
+                "New terminal",
+                "Close palette"
+            ]
+        );
+
+        for character in "edit".chars() {
+            assert!(shell.palette_push_char(character));
+        }
+        let entries = shell.palette_entries();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].action, PaletteAction::LaunchApp(0));
+        let launcher = shell.launcher(0).expect("launcher");
+        assert_eq!(launcher.program, "example-editor");
+        assert_eq!(launcher.args, ["--new"]);
+        assert!(shell.launcher(2).is_none());
     }
 
     #[test]

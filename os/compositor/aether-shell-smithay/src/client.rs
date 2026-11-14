@@ -15,8 +15,8 @@ use std::sync::Arc;
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect, Size as AetherSize};
 use aether_layout::LayoutConfig;
 use aether_shell::{
-    PaletteAction, Shell, SnapZone, WindowId, WindowSpec, MIN_FLOATING_HEIGHT, MIN_FLOATING_WIDTH,
-    PALETTE_VISIBLE_ROWS, WORKSPACE_INDICATOR_BAR_HEIGHT,
+    PaletteAction, PaletteLauncher, Shell, SnapZone, WindowId, WindowSpec, MIN_FLOATING_HEIGHT,
+    MIN_FLOATING_WIDTH, PALETTE_VISIBLE_ROWS, WORKSPACE_INDICATOR_BAR_HEIGHT,
 };
 use aether_text::{text_width, TextBitmap};
 use smithay::backend::allocator::Fourcc;
@@ -120,6 +120,11 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         .to_string();
     let mut clients = Vec::new();
     state.socket_name = socket_name.clone();
+
+    let launchers = desktop_launchers();
+    let launcher_count = launchers.len();
+    state.shell.set_launchers(launchers);
+    println!("aether-shell-smithay: loaded {launcher_count} desktop apps");
 
     let (mut backend, mut winit) = winit::init_from_attributes::<GlesRenderer>(
         WindowAttributes::default()
@@ -960,6 +965,36 @@ impl SeatHandler for App {
     }
 }
 
+fn desktop_data_dirs() -> Vec<std::path::PathBuf> {
+    let mut dirs = Vec::new();
+    if let Some(data_home) = std::env::var_os("XDG_DATA_HOME") {
+        dirs.push(std::path::PathBuf::from(data_home));
+    } else if let Some(home) = std::env::var_os("HOME") {
+        dirs.push(std::path::PathBuf::from(home).join(".local/share"));
+    }
+    let data_dirs = std::env::var_os("XDG_DATA_DIRS")
+        .unwrap_or_else(|| std::ffi::OsString::from("/usr/local/share:/usr/share"));
+    dirs.extend(std::env::split_paths(&data_dirs));
+    dirs.dedup();
+    dirs
+}
+
+fn desktop_launchers() -> Vec<PaletteLauncher> {
+    aether_desktop::discover(&desktop_data_dirs())
+        .into_iter()
+        .map(|entry| PaletteLauncher {
+            detail: if entry.comment.is_empty() {
+                "application".to_string()
+            } else {
+                entry.comment
+            },
+            name: entry.name,
+            program: entry.program,
+            args: entry.args,
+        })
+        .collect()
+}
+
 fn toplevel_title(surface: &ToplevelSurface) -> Option<String> {
     with_states(surface.wl_surface(), |states| {
         states
@@ -1231,6 +1266,12 @@ impl App {
                     self.configure_all();
                 }
             }
+            PaletteAction::LaunchApp(index) => {
+                self.shell.close_overlay();
+                if let Some(launcher) = self.shell.launcher(index) {
+                    self.spawn_launcher(launcher);
+                }
+            }
             PaletteAction::SpawnTerminal => {
                 self.shell.close_overlay();
                 self.spawn_terminal();
@@ -1244,14 +1285,25 @@ impl App {
     fn spawn_terminal(&mut self) {
         let program =
             std::env::var("AETHER_TERMINAL").unwrap_or_else(|_| "weston-terminal".to_string());
-        let mut command = std::process::Command::new(&program);
+        self.spawn_program(&program, &[], "terminal");
+    }
+
+    fn spawn_launcher(&mut self, launcher: PaletteLauncher) {
+        self.spawn_program(&launcher.program, &launcher.args, &launcher.name);
+    }
+
+    fn spawn_program(&self, program: &str, args: &[String], label: &str) {
+        let mut command = std::process::Command::new(program);
+        command.args(args);
         command.env("WAYLAND_DISPLAY", &self.socket_name);
         match command.spawn() {
             Ok(child) => println!(
-                "aether-shell-smithay: spawned terminal (pid {})",
+                "aether-shell-smithay: spawned app {label} (pid {})",
                 child.id()
             ),
-            Err(error) => eprintln!("aether-shell-smithay: terminal {program:?} failed: {error}"),
+            Err(error) => {
+                eprintln!("aether-shell-smithay: app {label} ({program:?}) failed: {error}")
+            }
         }
     }
 

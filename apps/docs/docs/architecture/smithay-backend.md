@@ -56,6 +56,18 @@ capture is produced by `smoke-picker-xvfb.sh`, which drives the click with
 `smoke-resize-xvfb.sh` drives the drag with `xdotool` and asserts the applied
 ratio.*
 
+![Alt-dragging a tiled client into a floating window](/img/smithay-window-move.png)
+
+*`Alt+left-drag` promotes a tiled client to a floating window at its preferred
+size, then follows the pointer. The other client re-tiles underneath; rendering
+uses compositor z-order so the moved window stays on top.*
+
+![The same window maximized](/img/smithay-window-maximized.png)
+
+*`Super+M` maximizes the focused window to the full output; pressing it again
+restores the previous floating/tiled state. `smoke-window-xvfb.sh` drives the
+drag and both toggles with `xdotool` and asserts each transition.*
+
 ![The `--demo` FramePlan view](/img/smithay-window.png)
 
 *`--demo` mode: tiled shell surfaces and the overlay, rendered from the same
@@ -88,6 +100,11 @@ ratio.*
   leak to a client underneath. The seat advertises `wl_pointer`.
 - **Interactive layout resize.** Dragging the gap between the master and stack
   updates the split ratio (clamped 0.2–0.8) and reconfigures clients live.
+- **Window move and maximize.** `Alt+left-drag` promotes a tiled window to its
+  preferred floating size and moves it; floating positions persist across
+  relayouts. `Super+M` maximizes to the full output and restores the previous
+  state. Client surfaces render in shell z-order, so raised/floating/maximized
+  windows stay above others.
 - Compositor chrome renders real text through `aether-text`: workspace names,
   overlay header/search/results/footer and shortcut hints. Bitmaps are uploaded
   as Smithay `MemoryRenderBuffer` elements above client surfaces.
@@ -111,6 +128,8 @@ ratio.*
 | `Super+1/2/3` | Switch workspace |
 | `Super+Shift+1/2/3` | Move the focused client to a workspace |
 | `Super+Q` | Close the focused client |
+| `Super+M` | Toggle maximize for the focused window |
+| `Alt+left-drag` | Move a window (promotes tiles to floating) |
 
 ## What is not implemented
 
@@ -121,8 +140,8 @@ ratio.*
 - **Text cache/atlas.** Every frame rebuilds small RGBA text buffers; a cached
   atlas is needed before text-heavy apps.
 - **Cursor theming** and hover cursor feedback.
-- **Interactive window move**, maximize/fullscreen, popups and drag-and-drop are
-  ignored. Tiled divider resizing works; floating move does not.
+- **Floating-window resize, snapping and fullscreen** are not implemented.
+  Popups and drag-and-drop are ignored.
 - **Per-client damage.** Full-window redraw remains.
 - **Popups, drag-and-drop and grabs** are accepted/ignored at the protocol level.
 - **udev/DRM backend.** The target path for the 7700K (no X server) is not written;
@@ -159,11 +178,12 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-picker-xvfb.sh   # xdotool workspace click
 ./os/compositor/aether-shell-smithay/smoke-resize-xvfb.sh   # xdotool divider drag
 ./os/compositor/aether-shell-smithay/smoke-palette-xvfb.sh  # xdotool typed query
+./os/compositor/aether-shell-smithay/smoke-window-xvfb.sh   # xdotool move + maximize
 ```
 
 The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. The picker,
-resize and palette smokes require `xdotool`, which the `.#smithay` dev shell
-provides.
+resize, palette and window smokes require `xdotool`, which the `.#smithay` dev
+shell provides.
 
 The environment sets:
 

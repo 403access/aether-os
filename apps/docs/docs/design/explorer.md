@@ -95,7 +95,7 @@ The compositor explorer is a **full-output workspace**, not a floating dialog:
 | Double-click file | Open in owning application |
 | `↑` / `↓` | Move selection |
 | `Enter` | Open selection |
-| `Backspace` | Up one level |
+| `Backspace` | Edit the filter (delete a character) |
 | Type | Filter current pane |
 | `⌘K` | Palette (files mode preselected by context) |
 | Drag | Copy/move with a modifier; explicit drop target |

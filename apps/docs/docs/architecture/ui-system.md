@@ -82,19 +82,29 @@ overlay focus (palette) → window focus → global shortcuts
 
 | Chord | Action |
 | --- | --- |
-| `⌘K` | Palette |
-| `⌘Tab` | Cycle surfaces |
-| `⌘1..9` | Workspace |
-| `⌘H / ⌘L` | Shrink / grow master |
-| `⌘J / ⌘K` | Focus next / previous window |
-| `⌘⇧Q` | Close surface |
-| `⌘⇧L` | Lock session |
-| `⌘A` | Audio overlay (routes, presets) |
-| `⌘⇧A` | Agent overlay |
-| `⌘⇧R` | Recording indicator / stop |
+| `Super+Space` | Palette |
+| `Super+Return` | New terminal |
+| `Super+E` | Explorer |
+| `Super+C` | Chat |
+| `Super+A` | Audio overlay |
+| `Super+/` | Shortcut cheat sheet |
+| `Super+Tab` / `Super+Shift+Tab` | Focus next / previous (MRU) |
+| `Super+J` / `Super+K` | Focus next / previous |
+| `Super+Q` | Close window |
+| `Super+M` | Maximize / restore |
+| `Super+F` | Fullscreen / restore |
+| `Super+H` / `Super+L` | Narrow / widen master |
+| `Super+1..3` | Switch workspace |
+| `Super+Shift+1..3` | Move window to workspace |
+| `Super+Alt+1..3` | Switch the output's workspace |
+| `Alt+Left drag` | Move / float |
+| `Alt+Right drag` | Resize floating |
+| `Esc` | Close the open overlay |
 
-The map is compiled into the shell. Remapping is a config file read at startup; a
-bad map fails validation and falls back to defaults with a visible warning.
+The map is compiled into the shell from `aether-shell-wayland/src/keymap.rs`; the
+same table drives the `Super+/` cheat sheet. Remapping is a config file read at
+startup; a bad map fails validation and falls back to defaults with a visible
+warning.
 
 ## Accessibility
 

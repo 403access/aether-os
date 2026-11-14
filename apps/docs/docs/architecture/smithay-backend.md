@@ -306,13 +306,19 @@ drag and both toggles with `xdotool` and asserts each transition.*
 | Shortcut | Action |
 | --- | --- |
 | `Super+Space` | Toggle the palette |
+| `Super+Return` | Spawn a terminal |
 | `Super+E` | Toggle the file explorer |
 | `Super+C` | Toggle the streaming chat drawer |
+| `Super+A` | Toggle the audio overlay |
+| `Super+/` | Toggle the shortcut cheat sheet |
 | `Super+Tab` / `Super+Shift+Tab` | Cycle MRU focus (forward/back) |
+| `Super+J` / `Super+K` | Focus next / previous |
+| `Super+H` / `Super+L` | Narrow / widen the master pane |
 | `Esc` | Close the overlay |
 | *Typing* | Filter palette entries while the overlay is open |
-| `Up/Down` | Move the palette selection (wraps) |
-| `Enter` | Run the selected palette entry |
+| `Up/Down` | Move the palette/explorer/audio selection |
+| `Enter` | Run the selected palette entry or route |
+| `P` | Cycle audio latency presets |
 | `Backspace` | Delete a query character |
 | *Click row* | Activate a palette result |
 | `Super+1/2/3` | Switch workspace |
@@ -324,6 +330,8 @@ drag and both toggles with `xdotool` and asserts each transition.*
 | `Alt+left-drag` | Move a window (promotes tiles to floating) |
 | `Alt+right-drag` | Resize a floating window from the nearest corner |
 | *Release at edge* | Snap to left/right half, or maximize at the top |
+
+The complete daily-use manual is [Using Aether](/getting-started/using-aether).
 
 ## What is not implemented
 

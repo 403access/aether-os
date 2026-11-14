@@ -18,7 +18,8 @@ Determinism, latency and a small resident footprint are the goals.
   repository. The NixOS system and a live installer ISO evaluate, and the install
   path for the reference machine is written end to end. The compositor surfaces and
   audio layer are implemented; P5 agent supervision and later application work remain. See the{" "}
-  <a href="/roadmap">roadmap</a> and the <a href="/getting-started/install">install guide</a>.
+  <a href="/roadmap">roadmap</a>, the <a href="/getting-started/install">install guide</a>
+  and the <a href="/getting-started/using-aether">daily-use manual</a>.
 </div>
 
 ## The thesis

@@ -80,6 +80,10 @@ bun run bench            # benchmarks; `bun run bench:check` gates regressions
 bun run build            # assembles a single deployable tree in apps/web/dist
 ```
 
+Daily-use manual and global hotkeys:
+[`apps/docs/docs/getting-started/using-aether.md`](apps/docs/docs/getting-started/using-aether.md).
+Open `Super+/` inside the compositor for the same cheat sheet.
+
 `bun run build` produces one artifact: the marketing site at `/` and the docs at
 `/docs/`, which is exactly what the GitHub Pages workflow publishes.
 

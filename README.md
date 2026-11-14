@@ -54,6 +54,7 @@ its two target gates are budgets until run on the 7700K.
 | DRM session | ✅ native backend on tty7, cage + winit fallback | `os/nixos/services.nix` |
 | Shell surfaces | ✅ palette/explorer/chat/status/audio, 10k palette p95 1.11 ms, explorer scroll p95 0.004 ms | `os/compositor` |
 | Audio | ✅ PipeWire/WirePlumber + Bluetooth policy, overlay, presets, per-app moves, mic capability gate; target latency/xrun gates pending | `os/compositor/crates/aether-audio`, `os/nixos/services.nix` |
+| Agent sandbox | ✅ Landlock + seccomp + per-agent UID + rlimits + optional cgroup v2; supervisor/red-team still P5 | `os/compositor/crates/aether-sandbox` |
 | Installer + full live ISO | ✅ `.#iso` and `.#live-iso` (x86_64; live ISO requires an x86_64 builder) | `os/nixos/installer.nix`, `os/live` |
 | System index daemon | ✅ inotify, socket queries, event ring (6 tests) | `os/index/aether-index` |
 | WebRTC remote display | ⏳ roadmap P7 | — |
@@ -76,7 +77,7 @@ bun run dev:docs         # documentation   → http://localhost:4322/docs/
 bun run test:unit        # 221 package tests (bun test)
 bun run test:e2e         # 14 Playwright specs against the assembled build
 bun run typecheck        # strict TS across the monorepo
-bun run os:test          # Rust compositor/shell/audio workspace tests
+bun run os:test          # Rust compositor/shell/audio/sandbox workspace tests
 bun run bench            # benchmarks; `bun run bench:check` gates regressions
 bun run build            # assembles a single deployable tree in apps/web/dist
 ```

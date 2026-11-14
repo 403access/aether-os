@@ -140,6 +140,24 @@
           };
         };
 
+        aether-sandbox = final.rustPlatform.buildRustPackage {
+          pname = "aether-sandbox";
+          version = "0.1.0";
+          src = sceneSource;
+          cargoLock.lockFile = ./os/compositor/Cargo.lock;
+          cargoBuildFlags = ["-p" "aether-sandbox"];
+          doCheck = false;
+          installPhase = ''
+            mkdir -p $out/bin
+            install -Dm755 "$(find target -path '*/release/aether-sandbox' -type f | head -1)" $out/bin/aether-sandbox
+          '';
+          meta = with final.lib; {
+            description = "Aether kernel-enforced agent sandbox (Landlock, seccomp, UID, cgroups)";
+            license = licenses.mit;
+            platforms = ["x86_64-linux" "aarch64-linux"];
+          };
+        };
+
         aether-audio = final.rustPlatform.buildRustPackage {
           pname = "aether-audio";
           version = "0.1.0";
@@ -323,6 +341,7 @@
         index-service = pkgs.aether-index-service;
         aether-index = pkgs.aether-index;
         aether-audio = pkgs.aether-audio;
+        aether-sandbox = pkgs.aether-sandbox;
         aether-shell-smithay = pkgs.aether-shell-smithay;
         aether-shell-drm = pkgs.aether-shell-drm;
         aether-session = pkgs.aether-session;
@@ -357,6 +376,7 @@
         index-service = vmPkgs.aether-index-service;
         aether-index = vmPkgs.aether-index;
         aether-audio = vmPkgs.aether-audio;
+        aether-sandbox = vmPkgs.aether-sandbox;
         aether-shell-smithay = vmPkgs.aether-shell-smithay;
         aether-shell-drm = vmPkgs.aether-shell-drm;
         aether-terminal = vmPkgs.aether-terminal;

@@ -170,13 +170,18 @@ suite proves microphone denial. Live input peaks are a P5 supervisor wiring item
 
 Deliverables:
 
-- `aetherd`: planner integration, admission control, capability issuance, audit.
+- ✅ `aether-sandbox`: kernel-enforced process tier (Landlock, seccomp, UID,
+  rlimits, optional cgroup v2), packaged and tested on Linux.
+- ⏳ `aetherd`: supervisor wiring, planner integration, admission control,
+  capability issuance and audit.
 - Landlock + seccomp profiles per language runtime.
 - Chat UI with tool-call traces and cancellation.
 - Red-team suite: six agents attempting cross-reads and escapes.
 
 **Gate.** Six concurrent agents; zero cross-agent reads in the suite; audit chain
 verifies after a forced kill.
+
+The sandbox runtime is landed; the supervisor and red-team suite still gate P5.
 
 **Dependencies.** P3, P4 (for audio-capable agents). **Risk:** seccomp profiles
 breaking legitimate workloads; model latency dominating UX.

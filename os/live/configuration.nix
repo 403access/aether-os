@@ -70,6 +70,7 @@
     cage
     aether-index
     aether-audio
+    aether-sandbox
     aether-shell-drm
     aether-shell-smithay
     aether-session

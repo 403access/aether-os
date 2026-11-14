@@ -75,6 +75,7 @@
     curl
     git
     aether-audio
+    aether-sandbox
     aether-shell-drm
     aether-terminal
     cage

@@ -67,10 +67,14 @@ fs.write fs:/work/aether/scratch  → read/write on the scratch subtree only
 
 No path outside the allowlist is visible to the agent, even if it guesses the path.
 
-**Syscalls.** A per-language profile (Rust/Python/Node) allows the minimum known
-set. `execve` is allowed once (the agent binary), then blocked. `socket` is blocked
-unless the agent holds `net`. `ptrace`, `bpf`, `perf_event_open`, `mount`, `unshare`
-and `keyctl` are always blocked.
+**Syscalls.** The shipped profile is a seccomp-BPF deny-list, not a per-language
+allowlist yet. It removes the syscalls that escape the process boundary:
+`ptrace`, `bpf`, `perf_event_open`, `userfaultfd`, `mount`, `pivot_root`,
+`unshare`, `setns`, `keyctl`, module loading, kexec, `open_by_handle_at`,
+`process_vm_*` and io_uring. The socket family is denied unless the agent holds
+`net`. `execve` remains available because the sandbox applies before the first
+exec; Landlock's execute allowlist is what limits subsequent executables. A
+per-language allowlist is future work.
 
 **Identity.** Each agent gets a UID from a reserved range. Even a Landlock bypass
 fails to read another agent's files because the UID owns nothing else.
@@ -93,6 +97,38 @@ kernel:
 
 VT-x and VT-d are required. If IOMMU is unavailable, the planner blocks the tier
 rather than falling back to emulation.
+
+## Implementation: `aether-sandbox`
+
+The process tier is implemented in `os/compositor/crates/aether-sandbox`:
+
+```bash
+aether-sandbox check
+aether-sandbox plan --read /work/aether --write /work/aether/scratch
+aether-sandbox run --read /work/aether --write /work/aether/scratch \
+  -- /usr/bin/python3 /work/aether/agent.py
+```
+
+What happens between fork and exec:
+
+1. `setgroups([])` then `setgid`/`setuid` to a deterministic UID in 4001–4095
+   (the production supervisor must run with root/CAP_SETUID).
+2. `prctl(PR_SET_NO_NEW_PRIVS, 1)`.
+3. `RLIMIT_AS` (memory), `RLIMIT_NPROC` (256) and `RLIMIT_CPU` (timeout).
+4. Landlock read/execute rules for runtime paths and agent inputs; read/write
+   rules only for the scratch subtree.
+5. seccomp-BPF deny-list, including the socket family unless `--net`.
+6. `exec` the agent binary directly.
+
+There is no wrapper process and no shell, so the per-agent cost is one ruleset
+installation, not an extra context switch or proxy. `--no-uid` exists for CI and
+development; production must omit it. cgroup v2 limits (`memory.max`,
+`cpu.weight`, `pids.max`) are applied by `spawn_in_cgroup` when the supervisor
+passes a writable cgroup root.
+
+The implementation is packaged as `.#aether-sandbox` on the target and live
+images. Linux integration tests prove an allowed file is readable, an
+unallowlisted secret is denied, and an out-of-scratch write is denied.
 
 ## The planner
 
@@ -202,7 +238,8 @@ The mitigations are policy and audit, not magic.
 | Planner unit tests (blocked/escalated plans) | ✅ now |
 | Capability table tests (expiry, delegation, cascade) | ✅ now |
 | Cross-thread ring isolation test | ✅ now |
-| Real Landlock profile under a test harness | P1 |
+| Real Landlock profile under a test harness | ✅ `aether-sandbox` tests |
+| Seccomp denies `unshare` / network syscalls | ✅ now (`aether-sandbox`) |
 | Seccomp profile fuzzing | P5 |
 | Red-team suite: six agents attempting cross-read | P5 |
 | MicroVM escape test corpus | P8 |

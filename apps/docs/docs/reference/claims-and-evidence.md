@@ -77,6 +77,16 @@ source. Everything else is a target or an aspiration.
 | Zero xruns, 10-minute 64-frame stress | **Budget** | `scripts/audio-stress.sh`; target run pending |
 | Input meter matches `pw-top` within 5% | **Not claimed** | Surface is fixture-driven; live peak sampling lands with P5 |
 
+## Agent sandbox (P5)
+
+| Claim | Label | Evidence |
+| --- | --- | --- |
+| Landlock denies a file outside the allowlist | **Measured (Linux unit test)** | `aether-sandbox` integration test |
+| An out-of-scratch write is denied | **Measured (Linux unit test)** | `aether-sandbox` integration test |
+| Seccomp denies `unshare` inside the sandbox | **Measured (Linux integration test)** | `aether-sandbox` runs `unshare` under the filter |
+| Seccomp network syscalls are denied unless `net` | **Measured (filter test)** | `denied_syscalls` assertions; syscall fuzzing is P5 |
+| Sandbox overhead | **Not claimed** | No helper process; rules install once between fork and exec, but no target benchmark yet |
+
 ## Concurrency
 
 | Claim | Label | Evidence |

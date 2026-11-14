@@ -1,0 +1,19 @@
+[package]
+name = "aether-sandbox"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Kernel-enforced agent sandbox: Landlock, seccomp, UID and cgroup limits"
+
+[lib]
+name = "aether_sandbox"
+path = "src/lib.rs"
+
+[[bin]]
+name = "aether-sandbox"
+path = "src/main.rs"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+landlock = "0.4"
+seccompiler = "0.5"
+libc = "0.2"

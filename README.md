@@ -47,6 +47,7 @@ the next phase; first boot lands in a console, not the finished desktop.
 | disko disk layout + install script | ✅ written, evaluation-checked | `os/nixos/disko.nix`, `scripts/install.sh` |
 | Compositor core + shell state + preview | ✅ 88 Rust tests | `os/compositor` |
 | Smithay winit backend (Linux-only) | ✅ clients, palette + Bun index search, clipboard, outputs, text-input, window mgmt, software cursors, partial damage | `os/compositor/aether-shell-smithay` |
+| Target preflight | ✅ UEFI/KMS/input/memory checks with fixtures | `scripts/target-check.sh` |
 | Compositor UI (`aether-shell`) | ⏳ roadmap P2 | — |
 | WebRTC remote display | ⏳ roadmap P7 | — |
 

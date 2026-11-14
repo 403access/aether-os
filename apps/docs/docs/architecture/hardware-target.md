@@ -49,6 +49,12 @@ On this CPU that would be a lie. Aether instead uses:
 The cost is a context switch instead of an instruction. The gain is that the
 isolation actually exists. See [agent isolation](/architecture/agent-isolation).
 
+## Preflight
+
+Run `scripts/target-check.sh` on the machine (or with `--root /mnt` before
+install) to verify UEFI, i915, `/dev/dri`, connected KMS connectors, input
+devices and memory. See [Target preflight](/ops/target-check).
+
 ## Capacity math
 
 ```text

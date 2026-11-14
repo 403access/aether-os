@@ -98,6 +98,8 @@ Deliverables:
   software cursors in-frame. A Bun index service supplies content-ranked file
   results over a Unix socket, watches roots for live updates, and falls back to
   the bounded scan when absent.
+- ✅ Target preflight (`scripts/target-check.sh`) checks UEFI, i915, DRM/KMS,
+  connectors, input and memory with fixture coverage.
 - ⏳ Live agent-session IPC, native inotify indexing, desktop-entry SVG
   icons/theme inheritance/actions/DBus, clipboard persistence/DnD, IME
   engine/input-method service, multi-output/hotplug, xcursor themes/client

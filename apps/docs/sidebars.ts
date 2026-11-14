@@ -67,6 +67,7 @@ const sidebars: SidebarsConfig = {
         "ops/build-and-release",
         "ops/observability",
         "ops/security-threat-model",
+        "ops/target-check",
       ],
     },
     {

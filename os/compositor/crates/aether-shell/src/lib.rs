@@ -109,6 +109,14 @@ pub enum PaletteAction {
     Close,
 }
 
+/// Edge zones a moving window can snap into on release.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SnapZone {
+    LeftHalf,
+    RightHalf,
+    Maximize,
+}
+
 #[derive(Clone, Debug, Default)]
 struct PaletteState {
     query: String,
@@ -608,6 +616,45 @@ impl Shell {
         window.floating_rect = Some(rect);
         self.relayout();
         Some(rect)
+    }
+
+    /// Snap a window to a half or maximize it. Halves stay floating so they can
+    /// be moved or resized afterwards.
+    pub fn snap_window(&mut self, id: WindowId, zone: SnapZone) -> bool {
+        let Some(window) = self.windows.get(&id) else {
+            return false;
+        };
+        if window.maximized {
+            return false;
+        }
+        let viewport = Rect::from_size(self.viewport);
+        if zone == SnapZone::Maximize {
+            let was_maximized = self.is_maximized(id);
+            return if was_maximized {
+                true
+            } else {
+                self.toggle_maximized(id)
+            };
+        }
+        let half = viewport.width / 2;
+        let rect = match zone {
+            SnapZone::LeftHalf => Rect::new(viewport.x, viewport.y, half, viewport.height),
+            SnapZone::RightHalf => Rect::new(
+                viewport.x + half as i32,
+                viewport.y,
+                viewport.width - half,
+                viewport.height,
+            ),
+            SnapZone::Maximize => unreachable!(),
+        };
+        if let Some(window) = self.windows.get_mut(&id) {
+            window.floating = true;
+            window.maximized = false;
+            window.restore = None;
+            window.floating_rect = Some(rect);
+        }
+        self.relayout();
+        true
     }
 
     /// Resize a floating window, enforcing the minimum size and output bounds.
@@ -1267,6 +1314,35 @@ mod tests {
             .unwrap();
         assert!(info.floating);
         assert_eq!(info.rect, rect);
+    }
+
+    #[test]
+    fn snapping_places_windows_in_halves() {
+        let mut shell = shell();
+        let id = shell.add_window(WindowSpec {
+            title: "snappy".into(),
+            app_id: "test".into(),
+            preferred_size: Size::new(320, 200),
+            floating: true,
+        });
+
+        assert!(shell.snap_window(id, SnapZone::LeftHalf));
+        let info = shell.windows().into_iter().find(|w| w.id == id).unwrap();
+        assert_eq!(info.rect, Rect::new(0, 0, 400, 600));
+        assert!(info.floating);
+        assert!(!info.maximized);
+
+        assert!(shell.snap_window(id, SnapZone::RightHalf));
+        let info = shell.windows().into_iter().find(|w| w.id == id).unwrap();
+        assert_eq!(info.rect, Rect::new(400, 0, 400, 600));
+
+        assert!(shell.snap_window(id, SnapZone::Maximize));
+        let info = shell.windows().into_iter().find(|w| w.id == id).unwrap();
+        assert_eq!(info.rect, Rect::from_size(shell.viewport()));
+        assert!(info.maximized);
+
+        assert!(!shell.snap_window(id, SnapZone::LeftHalf));
+        assert!(!shell.snap_window(999, SnapZone::LeftHalf));
     }
 
     #[test]

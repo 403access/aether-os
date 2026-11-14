@@ -98,6 +98,30 @@ if ! grep -q "window resized id=2 rect=Some(Rect { x: 280, y: 50, width: 620, he
   exit 1
 fi
 
+# Alt+drag the resized window to the left edge and release to snap it into the
+# left half of the output.
+xdotool keydown alt
+sleep 0.3
+xdotool mousemove 500 300
+xdotool mousedown 1
+sleep 0.3
+xdotool mousemove 3 300
+xdotool mouseup 1
+xdotool keyup alt
+sleep 1
+import -window root "${OUT}/window-snap.png"
+
+if ! grep -q "window snapped id=2 zone=LeftHalf" "${OUT}/window-app.log"; then
+  echo "error: releasing at the left edge did not snap the window" >&2
+  cat "${OUT}/window-app.log" >&2
+  exit 1
+fi
+if ! grep -q "window moved id=2 rect=Some(Rect { x: 0, y: 0, width: 640, height: 800 })" "${OUT}/window-app.log"; then
+  echo "error: snapped window does not occupy the left half" >&2
+  cat "${OUT}/window-app.log" >&2
+  exit 1
+fi
+
 # Maximize, capture, then restore.
 xdotool key super+m
 sleep 1
@@ -118,4 +142,4 @@ if ! grep -q "maximized -> false" "${OUT}/window-app.log"; then
 fi
 
 cat "${OUT}/window-app.log"
-echo "wrote ${OUT}/window-move.png, window-resize.png, window-maximized.png, window-restored.png"
+echo "wrote ${OUT}/window-move.png, window-resize.png, window-snap.png, window-maximized.png, window-restored.png"

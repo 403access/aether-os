@@ -15,7 +15,7 @@ use std::sync::Arc;
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect, Size as AetherSize};
 use aether_layout::LayoutConfig;
 use aether_shell::{
-    PaletteAction, Shell, WindowId, WindowSpec, MIN_FLOATING_HEIGHT, MIN_FLOATING_WIDTH,
+    PaletteAction, Shell, SnapZone, WindowId, WindowSpec, MIN_FLOATING_HEIGHT, MIN_FLOATING_WIDTH,
     PALETTE_VISIBLE_ROWS, WORKSPACE_INDICATOR_BAR_HEIGHT,
 };
 use aether_text::{text_width, TextBitmap};
@@ -428,6 +428,30 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                         );
                     }
                     if let Some(drag) = state.window_drag.take() {
+                        let position = state.pointer_pos;
+                        let point = AetherPoint::new(
+                            position.x.round() as i32,
+                            position.y.round() as i32,
+                        );
+                        let viewport = state.shell.viewport();
+                        let zone = if point.x <= 8 {
+                            Some(SnapZone::LeftHalf)
+                        } else if point.x >= viewport.width as i32 - 8 {
+                            Some(SnapZone::RightHalf)
+                        } else if point.y <= 8 {
+                            Some(SnapZone::Maximize)
+                        } else {
+                            None
+                        };
+                        if let Some(zone) = zone {
+                            if state.shell.snap_window(drag.id, zone) {
+                                state.configure_all();
+                                println!(
+                                    "aether-shell-smithay: window snapped id={} zone={zone:?}",
+                                    drag.id
+                                );
+                            }
+                        }
                         let rect = state
                             .shell
                             .windows()

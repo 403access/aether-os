@@ -14,7 +14,10 @@ use std::sync::Arc;
 
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect, Size as AetherSize};
 use aether_layout::LayoutConfig;
-use aether_shell::{PaletteAction, Shell, WindowId, WindowSpec, WORKSPACE_INDICATOR_BAR_HEIGHT};
+use aether_shell::{
+    PaletteAction, Shell, WindowId, WindowSpec, PALETTE_VISIBLE_ROWS,
+    WORKSPACE_INDICATOR_BAR_HEIGHT,
+};
 use aether_text::{text_width, TextBitmap};
 use smithay::backend::allocator::Fourcc;
 use smithay::backend::input::{
@@ -47,8 +50,8 @@ use smithay::reexports::winit::window::WindowAttributes;
 use smithay::utils::{Physical, Rectangle, Serial, Size as SSize, Transform, SERIAL_COUNTER};
 use smithay::wayland::buffer::BufferHandler;
 use smithay::wayland::compositor::{
-    with_surface_tree_downward, CompositorClientState, CompositorHandler, CompositorState,
-    SurfaceAttributes, TraversalAction,
+    with_states, with_surface_tree_downward, CompositorClientState, CompositorHandler,
+    CompositorState, SurfaceAttributes, TraversalAction,
 };
 use smithay::wayland::selection::data_device::{
     ClientDndGrabHandler, DataDeviceHandler, DataDeviceState, ServerDndGrabHandler,
@@ -56,6 +59,7 @@ use smithay::wayland::selection::data_device::{
 use smithay::wayland::selection::SelectionHandler;
 use smithay::wayland::shell::xdg::{
     PopupSurface, PositionerState, ToplevelSurface, XdgShellHandler, XdgShellState,
+    XdgToplevelSurfaceData,
 };
 use smithay::wayland::shm::{ShmHandler, ShmState};
 
@@ -206,6 +210,11 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                 } else {
                     let point =
                         AetherPoint::new(position.x.round() as i32, position.y.round() as i32);
+                    if state.shell.overlay().is_some() {
+                        if let Some(index) = state.shell.palette_row_at(point) {
+                            state.shell.palette_select(index);
+                        }
+                    }
                     let chrome_owns_pointer = state.shell.overlay().is_some()
                         || state.shell.workspace_at(point).is_some();
                     if chrome_owns_pointer {
@@ -294,9 +303,12 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     } else if let Some(workspace) = state.shell.workspace_at(point) {
                         state.switch_workspace(workspace);
                     } else if modal {
-                        // Clicking outside the panel dismisses the overlay;
-                        // clicks inside are consumed by the compositor.
-                        if state
+                        // Rows are buttons; clicking elsewhere inside the panel
+                        // is consumed and clicking outside dismisses it.
+                        if let Some(index) = state.shell.palette_row_at(point) {
+                            state.shell.palette_select(index);
+                            state.activate_palette();
+                        } else if state
                             .shell
                             .overlay_rect()
                             .is_some_and(|rect| !rect.contains(point))
@@ -447,12 +459,18 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                             [128, 184, 199, 255],
                         ));
                     }
-                    for (row, entry) in entries.iter().take(4).enumerate() {
+                    let start = state.shell.palette_visible_start();
+                    for (row, entry) in entries
+                        .iter()
+                        .skip(start)
+                        .take(PALETTE_VISIBLE_ROWS)
+                        .enumerate()
+                    {
                         let y = rect.y + 96 + row as i32 * 48;
                         if y + 32 < rect.y + rect.height as i32 {
                             let row_rect =
                                 AetherRect::new(rect.x + 16, y, rect.width.saturating_sub(32), 32);
-                            let active = row == selected;
+                            let active = start + row == selected;
                             chrome.push((
                                 row_rect,
                                 if active {
@@ -677,12 +695,25 @@ impl XdgShellHandler for App {
     }
 
     fn new_toplevel(&mut self, surface: ToplevelSurface) {
-        let mut spec = WindowSpec::new("Wayland client", "wayland.client");
+        let title = toplevel_title(&surface).unwrap_or_else(|| "Wayland client".to_string());
+        let mut spec = WindowSpec::new(title, "wayland.client");
         spec.preferred_size = AetherSize::new(800, 600);
         let id = self.shell.add_window(spec);
         self.windows.insert(id, surface.clone());
         self.focus = Some(surface.wl_surface().clone());
         self.configure_window(id);
+    }
+
+    fn title_changed(&mut self, surface: ToplevelSurface) {
+        let Some(title) = toplevel_title(&surface) else {
+            return;
+        };
+        let id = self.windows.iter().find_map(|(id, toplevel)| {
+            (toplevel.wl_surface() == surface.wl_surface()).then_some(*id)
+        });
+        if let Some(id) = id {
+            self.shell.set_window_title(id, title);
+        }
     }
 
     fn new_popup(&mut self, _surface: PopupSurface, _positioner: PositionerState) {}
@@ -766,6 +797,16 @@ impl SeatHandler for App {
         _image: smithay::input::pointer::CursorImageStatus,
     ) {
     }
+}
+
+fn toplevel_title(surface: &ToplevelSurface) -> Option<String> {
+    with_states(surface.wl_surface(), |states| {
+        states
+            .data_map
+            .get::<XdgToplevelSurfaceData>()
+            .and_then(|data| data.lock().ok())
+            .and_then(|attributes| attributes.title.clone())
+    })
 }
 
 #[derive(Clone, Copy)]
@@ -874,6 +915,40 @@ impl App {
         self.shell.toggle_overlay();
     }
 
+    fn activate_palette(&mut self) {
+        let Some(action) = self.shell.palette_activate() else {
+            return;
+        };
+        println!("aether-shell-smithay: palette action {action:?}");
+        match action {
+            PaletteAction::SwitchWorkspace(index) => {
+                self.shell.close_overlay();
+                self.switch_workspace(index);
+            }
+            PaletteAction::FocusWindow(id) => {
+                self.shell.close_overlay();
+                let workspace = self
+                    .shell
+                    .windows()
+                    .into_iter()
+                    .find(|window| window.id == id)
+                    .map(|window| window.workspace);
+                if let Some(workspace) = workspace {
+                    if workspace != self.shell.active_workspace() {
+                        self.switch_workspace(workspace);
+                    }
+                    if self.shell.focus_window(id) {
+                        self.sync_focus();
+                    }
+                    self.configure_all();
+                }
+            }
+            PaletteAction::Close => {
+                self.shell.close_overlay();
+            }
+        }
+    }
+
     fn handle_palette_key(&mut self, keysym: Keysym) {
         let enter: Keysym = keysyms::KEY_Return.into();
         let keypad_enter: Keysym = keysyms::KEY_KP_Enter.into();
@@ -882,18 +957,7 @@ impl App {
         let backspace: Keysym = keysyms::KEY_BackSpace.into();
 
         if keysym == enter || keysym == keypad_enter {
-            if let Some(action) = self.shell.palette_activate() {
-                println!("aether-shell-smithay: palette action {action:?}");
-                match action {
-                    PaletteAction::SwitchWorkspace(index) => {
-                        self.shell.close_overlay();
-                        self.switch_workspace(index);
-                    }
-                    PaletteAction::Close => {
-                        self.shell.close_overlay();
-                    }
-                }
-            }
+            self.activate_palette();
             return;
         }
         if keysym == up {

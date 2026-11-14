@@ -49,10 +49,16 @@ sleep "${SETTLE}"
 export DISPLAY=":${DISPLAY_NUM}"
 WINDOW_ID="$(xdotool search --name "Aether OS" | head -1)"
 xdotool windowfocus "${WINDOW_ID}"
+xdotool mousemove 0 0
+xdotool key Up Up
+sleep 1
+import -window root "${OUT}/palette-default.png"
 xdotool type --delay 120 "web"
 sleep 1
 import -window root "${OUT}/palette-query.png"
-xdotool key Return
+
+# Click the first result row (workspace "web") instead of pressing Enter.
+xdotool mousemove 600 300 click 1
 sleep 1
 
 if ! grep -q 'palette query -> "web"' "${OUT}/palette-app.log"; then
@@ -61,7 +67,7 @@ if ! grep -q 'palette query -> "web"' "${OUT}/palette-app.log"; then
   exit 1
 fi
 if ! grep -q "palette action SwitchWorkspace(2)" "${OUT}/palette-app.log"; then
-  echo "error: Enter did not activate the web workspace" >&2
+  echo "error: row click did not activate the web workspace" >&2
   cat "${OUT}/palette-app.log" >&2
   exit 1
 fi
@@ -71,5 +77,25 @@ if ! grep -q "workspace -> 2" "${OUT}/palette-app.log"; then
   exit 1
 fi
 
+# Reopen and filter to the client window provider, then activate with Enter.
+xdotool key super+space
+sleep 1
+xdotool type --delay 120 "term"
+sleep 1
+import -window root "${OUT}/palette-window.png"
+xdotool key Return
+sleep 1
+
+if ! grep -q "palette action FocusWindow(1)" "${OUT}/palette-app.log"; then
+  echo "error: Enter did not focus the filtered window" >&2
+  cat "${OUT}/palette-app.log" >&2
+  exit 1
+fi
+if ! grep -q "workspace -> 0" "${OUT}/palette-app.log"; then
+  echo "error: focusing the window did not return to workspace 0" >&2
+  cat "${OUT}/palette-app.log" >&2
+  exit 1
+fi
+
 cat "${OUT}/palette-app.log"
-echo "wrote ${OUT}/palette-query.png"
+echo "wrote ${OUT}/palette-query.png and ${OUT}/palette-window.png"

@@ -40,6 +40,15 @@ pub const WORKSPACE_INDICATOR_SPACING: i32 = 76;
 /// Hit height including the label below the bar.
 pub const WORKSPACE_INDICATOR_HIT_HEIGHT: u32 = 26;
 
+/// Visible rows in the palette list.
+pub const PALETTE_VISIBLE_ROWS: usize = 4;
+/// Height of one result row.
+pub const PALETTE_ROW_HEIGHT: u32 = 32;
+/// Vertical distance between result rows.
+pub const PALETTE_ROW_SPACING: u32 = 48;
+/// Y offset of the first result row inside the overlay rect.
+pub const PALETTE_CONTENT_TOP: i32 = 96;
+
 #[derive(Clone, Debug)]
 pub struct WindowSpec {
     pub title: String,
@@ -88,6 +97,7 @@ pub struct PaletteEntry {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PaletteAction {
     SwitchWorkspace(usize),
+    FocusWindow(WindowId),
     Close,
 }
 
@@ -219,6 +229,17 @@ impl Shell {
 
     pub fn window_count(&self) -> usize {
         self.windows.len()
+    }
+
+    /// Update the title used for window lists and the palette.
+    pub fn set_window_title(&mut self, id: WindowId, title: impl Into<String>) -> bool {
+        match self.windows.get_mut(&id) {
+            Some(window) => {
+                window.spec.title = title.into();
+                true
+            }
+            None => false,
+        }
     }
 
     pub fn workspace_count(&self) -> usize {
@@ -480,13 +501,28 @@ impl Shell {
             }
         }
 
+        for (offset, window) in self.windows().into_iter().enumerate() {
+            let detail = format!("window {} - workspace {}", window.id, window.workspace + 1);
+            if let Some(score) = palette_score(&query, &window.title) {
+                scored.push((
+                    score,
+                    self.workspaces.len() + offset,
+                    PaletteEntry {
+                        title: window.title,
+                        detail,
+                        action: PaletteAction::FocusWindow(window.id),
+                    },
+                ));
+            }
+        }
+
         let close = PaletteEntry {
             title: "Close palette".to_string(),
             detail: "Esc".to_string(),
             action: PaletteAction::Close,
         };
         if let Some(score) = palette_score(&query, &close.title) {
-            scored.push((score, self.workspaces.len(), close));
+            scored.push((score, self.workspaces.len() + self.windows.len(), close));
         }
 
         scored.sort_by_key(|(score, order, _)| (*score, *order));
@@ -501,6 +537,62 @@ impl Shell {
         } else {
             self.palette.selected.min(len - 1)
         }
+    }
+
+    /// Select an entry by index. Returns whether the index is valid.
+    pub fn palette_select(&mut self, index: usize) -> bool {
+        if index >= self.palette_entries().len() {
+            return false;
+        }
+        self.palette.selected = index;
+        true
+    }
+
+    /// First entry shown in the four-row result window. Sliding the window
+    /// keeps the selection visible without an explicit scroll state.
+    pub fn palette_visible_start(&self) -> usize {
+        let len = self.palette_entries().len();
+        if len <= PALETTE_VISIBLE_ROWS {
+            0
+        } else {
+            self.palette_selected()
+                .saturating_sub(PALETTE_VISIBLE_ROWS - 1)
+                .min(len - PALETTE_VISIBLE_ROWS)
+        }
+    }
+
+    /// Screen rect of a visible palette row (0-based within the window).
+    pub fn palette_row_rect(&self, row: usize) -> Option<Rect> {
+        if row >= PALETTE_VISIBLE_ROWS {
+            return None;
+        }
+        let overlay = self.overlay_rect()?;
+        Some(Rect::new(
+            overlay.x + 16,
+            overlay.y + PALETTE_CONTENT_TOP + row as i32 * PALETTE_ROW_SPACING as i32,
+            overlay.width.saturating_sub(32),
+            PALETTE_ROW_HEIGHT,
+        ))
+    }
+
+    /// Entry index under a screen point, accounting for the sliding window.
+    pub fn palette_row_at(&self, point: Point) -> Option<usize> {
+        let overlay = self.overlay_rect()?;
+        let content_left = overlay.x + 16;
+        let content_right = overlay.x + overlay.width as i32 - 16;
+        if point.x < content_left || point.x >= content_right {
+            return None;
+        }
+        let relative = point.y - overlay.y - PALETTE_CONTENT_TOP;
+        if relative < 0 {
+            return None;
+        }
+        let row = relative as usize / PALETTE_ROW_SPACING as usize;
+        if row >= PALETTE_VISIBLE_ROWS {
+            return None;
+        }
+        let index = self.palette_visible_start() + row;
+        (index < self.palette_entries().len()).then_some(index)
     }
 
     /// Append a printable character to the query. Returns whether it changed.
@@ -977,6 +1069,82 @@ mod tests {
 
         assert!(shell.palette_backspace());
         assert_eq!(shell.palette_entries().len(), 1);
+    }
+
+    #[test]
+    fn window_titles_update_and_reach_the_palette() {
+        let mut shell = shell();
+        let id = window(&mut shell, "initial");
+        assert!(shell.set_window_title(id, "Terminal"));
+        assert_eq!(
+            shell
+                .windows()
+                .into_iter()
+                .find(|w| w.id == id)
+                .unwrap()
+                .title,
+            "Terminal"
+        );
+        assert!(shell
+            .palette_entries()
+            .iter()
+            .any(|entry| entry.title == "Terminal"));
+        assert!(!shell.set_window_title(999, "missing"));
+    }
+
+    #[test]
+    fn palette_lists_and_filters_windows() {
+        let mut shell = shell();
+        shell.add_workspace("code");
+        let terminal = window(&mut shell, "Terminal");
+        let editor = window(&mut shell, "Editor");
+
+        let entries = shell.palette_entries();
+        assert!(entries.iter().any(|entry| entry.title == "Terminal"));
+        assert!(entries.iter().any(|entry| entry.title == "Editor"));
+
+        assert!(shell.palette_push_char('e'));
+        assert!(shell.palette_push_char('d'));
+        assert!(shell.palette_push_char('i'));
+        assert!(shell.palette_push_char('t'));
+        let entries = shell.palette_entries();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].title, "Editor");
+        assert_eq!(entries[0].action, PaletteAction::FocusWindow(editor));
+        assert_ne!(entries[0].action, PaletteAction::FocusWindow(terminal));
+    }
+
+    #[test]
+    fn palette_rows_slide_with_selection() {
+        let mut shell = shell();
+        for title in ["one", "two", "three", "four", "five"] {
+            window(&mut shell, title);
+        }
+        shell.open_overlay();
+
+        assert_eq!(shell.palette_entries().len(), 7);
+        assert_eq!(shell.palette_visible_start(), 0);
+        let first = shell.palette_row_rect(0).expect("row 0");
+        assert_eq!(first.x, 76);
+        assert_eq!(first.y, 90 + 96);
+        assert_eq!(
+            shell.palette_row_at(Point::new(first.x + 2, first.y + 2)),
+            Some(0)
+        );
+        assert_eq!(shell.palette_row_at(Point::new(20, first.y + 2)), None);
+
+        for _ in 0..4 {
+            shell.palette_move_selection(1);
+        }
+        assert_eq!(shell.palette_selected(), 4);
+        assert_eq!(shell.palette_visible_start(), 1);
+        assert_eq!(
+            shell.palette_row_at(Point::new(first.x + 2, first.y + 2)),
+            Some(1)
+        );
+        assert!(shell.palette_select(6));
+        assert_eq!(shell.palette_selected(), 6);
+        assert!(!shell.palette_select(7));
     }
 
     #[test]

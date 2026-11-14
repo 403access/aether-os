@@ -36,7 +36,8 @@ export AETHER_TEST_CLIENT="${AETHER_TEST_CLIENT:-weston-terminal}"
 export AETHER_TEST_CLIENT_COUNT="${AETHER_TEST_CLIENT_COUNT:-2}"
 
 PASTE_FILE="${OUT}/clipboard-paste.txt"
-rm -f "${PASTE_FILE}"
+PRIMARY_FILE="${OUT}/primary-paste.txt"
+rm -f "${PASTE_FILE}" "${PRIMARY_FILE}"
 
 Xvfb ":${DISPLAY_NUM}" -screen 0 "${WIDTH}x${HEIGHT}x24" -ac >"${OUT}/xvfb-clipboard.log" 2>&1 &
 XVFB_PID=$!
@@ -85,5 +86,32 @@ if ! grep -q "aether-clip-test" "${PASTE_FILE}"; then
   exit 1
 fi
 
+# Repeat with the primary selection (middle-click clipboard).
+xdotool mousemove 300 300 click 1
+sleep 0.5
+xdotool type --delay 25 "printf 'aether-primary-test' | wl-copy --primary"
+xdotool key Return
+sleep 1
+
+xdotool mousemove 900 300 click 1
+sleep 0.5
+xdotool type --delay 25 "wl-paste --primary > \"${PRIMARY_FILE}\""
+xdotool key Return
+sleep 2
+import -window root "${OUT}/clipboard-primary.png"
+
+if [ ! -f "${PRIMARY_FILE}" ]; then
+  echo "error: wl-paste --primary did not create ${PRIMARY_FILE}" >&2
+  cat "${OUT}/clipboard-app.log" >&2
+  exit 1
+fi
+if ! grep -q "aether-primary-test" "${PRIMARY_FILE}"; then
+  echo "error: primary selection content did not match" >&2
+  cat "${PRIMARY_FILE}" >&2
+  cat "${OUT}/clipboard-app.log" >&2
+  exit 1
+fi
+
 cat "${OUT}/clipboard-app.log"
 echo "clipboard content: $(cat "${PASTE_FILE}")"
+echo "primary content: $(cat "${PRIMARY_FILE}")"

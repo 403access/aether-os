@@ -60,6 +60,9 @@ use smithay::wayland::selection::data_device::{
     set_data_device_focus, ClientDndGrabHandler, DataDeviceHandler, DataDeviceState,
     ServerDndGrabHandler,
 };
+use smithay::wayland::selection::primary_selection::{
+    set_primary_focus, PrimarySelectionHandler, PrimarySelectionState,
+};
 use smithay::wayland::selection::SelectionHandler;
 use smithay::wayland::shell::xdg::{
     PopupSurface, PositionerState, ToplevelSurface, XdgShellHandler, XdgShellState,
@@ -85,6 +88,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         shm_state,
         seat_state,
         data_device_state: DataDeviceState::new::<App>(&dh),
+        primary_selection_state: PrimarySelectionState::new::<App>(&dh),
         seat,
         shell: {
             let mut shell = Shell::new(
@@ -931,6 +935,12 @@ impl DataDeviceHandler for App {
     }
 }
 
+impl PrimarySelectionHandler for App {
+    fn primary_selection_state(&self) -> &PrimarySelectionState {
+        &self.primary_selection_state
+    }
+}
+
 impl ClientDndGrabHandler for App {}
 impl ServerDndGrabHandler for App {
     fn send(&mut self, _mime_type: String, _fd: std::os::unix::io::OwnedFd, _seat: Seat<Self>) {}
@@ -966,10 +976,11 @@ impl SeatHandler for App {
     }
 
     fn focus_changed(&mut self, seat: &Seat<Self>, focused: Option<&WlSurface>) {
-        // Offer/refresh the clipboard selection for the newly focused client so
-        // copy/paste works across clients.
+        // Offer/refresh clipboard and primary selections for the newly focused
+        // client so copy/paste works across clients.
         let client = focused.and_then(|surface| surface.client());
-        set_data_device_focus(&self.display_handle, seat, client);
+        set_data_device_focus(&self.display_handle, seat, client.clone());
+        set_primary_focus(&self.display_handle, seat, client);
     }
     fn cursor_image(
         &mut self,
@@ -1174,6 +1185,7 @@ struct App {
     shm_state: ShmState,
     seat_state: SeatState<Self>,
     data_device_state: DataDeviceState,
+    primary_selection_state: PrimarySelectionState,
     seat: Seat<Self>,
     shell: Shell,
     windows: HashMap<WindowId, ToplevelSurface>,
@@ -1498,3 +1510,4 @@ smithay::delegate_compositor!(App);
 smithay::delegate_shm!(App);
 smithay::delegate_seat!(App);
 smithay::delegate_data_device!(App);
+smithay::delegate_primary_selection!(App);

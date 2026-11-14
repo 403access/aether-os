@@ -25,6 +25,7 @@ A decision that is reversed gets a new ADR; records are not rewritten.
 | [0011](/adr/0011-backend-neutral-shell) | Backend-neutral shell state and preview | Accepted |
 | [0012](/adr/0012-smithay-standalone-backend) | Smithay backend as a standalone Linux crate | Accepted |
 | [0013](/adr/0013-bitmap-text) | Bitmap text for compositor chrome | Accepted |
+| [0014](/adr/0014-desktop-app-discovery) | XDG desktop-entry app discovery | Accepted |
 
 ## When to write one
 

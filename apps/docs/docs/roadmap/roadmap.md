@@ -84,11 +84,12 @@ Deliverables:
   (typed query, filtering, workspace/window providers, row clicks, actions), a
   draggable master/stack split, Alt+drag move, Alt+right-drag corner resize,
   edge snapping, half-snap on release, `Super+M` maximize with restore, hover
-  cursor feedback and a `New terminal` palette command that spawns a real
-  client. Picker, divider, palette input/commands, window management and cursor
-  mapping are verified by xdotool smoke tests.
-- ⏳ App/file/agent palette providers, IME support, fullscreen, multi-output
-  snapping, DRM cursor images/themes, per-client damage, udev/DRM.
+  cursor feedback, a `New terminal` command and XDG `.desktop` app discovery
+  that launches real clients. Picker, divider, palette input/commands, desktop
+  launch, window management and cursor mapping are verified by xdotool smokes.
+- ⏳ File/agent palette providers, desktop-entry live refresh/icons/actions/DBus,
+  IME support, fullscreen, multi-output snapping, DRM cursor images/themes,
+  per-client damage, udev/DRM.
 - ⏳ udev/DRM backend, libinput seat, wgpu renderer, output hotplug.
 - Scene graph with damage tracking; shell chrome in one draw pass.
 - Tiling layout, focus, keybindings; one workspace per output.

@@ -90,6 +90,11 @@ It has no fontconfig, FreeType or glyph-atlas dependency, so labels and overlay
 copy render identically in the preview and in native backends. It is the shared
 text layer for the shell and for apps that draw simple chrome.
 
+`aether-desktop` discovers applications from XDG `.desktop` files and turns
+`Exec` into a program/argument list for the palette launcher. It skips hidden,
+non-application and terminal-only entries, has no D-Bus or icon dependency, and
+is tested without a desktop session.
+
 `aether-preview` renders frames with a small software rasteriser, so the shell
 can be inspected without a display server:
 

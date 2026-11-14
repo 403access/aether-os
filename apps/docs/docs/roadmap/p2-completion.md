@@ -15,6 +15,39 @@ files it touches, a measurable "done when", and the evidence it must leave behin
 A task is complete when its acceptance criterion is demonstrated, not when the diff
 merges — the same rule as the phase gates.
 
+## Execution ledger
+
+| Task | Status | Evidence / blocker |
+| --- | --- | --- |
+| G1 deadline loop | ✅ | per-output pacers, idle blocking dispatch |
+| G2 frame damage | ✅ | `ComposedFrame.damage`, per-output compose, drain-once |
+| G3 instrumentation | ✅ | `frames.ndjson` + `frame-stats.py` + summary |
+| G4 connector output model | ✅ | refresh/physical size from mode/monitor, shortfall log |
+| G5 reference run | ⛔ hardware | `scripts/p2-measure.sh` runbook; needs the 7700K |
+| G6 queue depth | ✅ | in-flight/dropped counters, non-zero exit above 1 |
+| C1 text cache | ✅ | content-keyed buffer cache, `AETHER_TEXT_STATS` |
+| C2 partial clears | ✅ | damage-region clears, `cleared_area` in stats |
+| C3 occlusion | ⏸ deferred | no measured overdraw win after G2/C1/C2 |
+| C4 renderer ADR | ✅ | [ADR-0016](/adr/0016-gles-vs-wgpu) |
+| L1 async index | ✅ | coalescing worker, generation discard, slow-index smoke |
+| L2 index churn | ✅ | visible+1 cap, identical-result skip |
+| V1 backend CI | ✅ | PR build/clippy/test + curated smokes; nightly full |
+| V2 frontend tests | ✅/partial | 16 standalone tests; compose needs an EGL fixture |
+| V3 DRM smoke | ✅ wired | VM script + `drm-vm.yml` self-hosted KVM runner |
+| F1 fractional scaling | ⏸ deferred | needs fractional-scale protocol + physical composition |
+| F2 capture protocol | ⏸ deferred | no Smithay screencopy module; needs protocol + dmabuf |
+| F3 SVG/theme/DBus icons | ✅ | resvg SVG, `Inherits=`, `busctl` activation |
+| F4 DnD | ✅ | client MIME negotiation + DnD smoke |
+| F5 status bar | ✅ | agents/CPU/memory/audio/frame time, hidden stops polling |
+| D1 native DRM ADR | ✅ | [ADR-0017](/adr/0017-native-drm-first) |
+| D2 GLES/wgpu ADR | ✅ | [ADR-0016](/adr/0016-gles-vs-wgpu) |
+| D3 roadmap P2 | ✅ | rewritten |
+| D4 limitations | ✅ | stale buffer-damage/text claims removed |
+| D5 claims ledger | ✅ | P2 dev-host proxies labelled |
+
+Deferred items are explicitly outside the gate (see non-goals). G5 is the only
+gate blocker that cannot be closed off-hardware.
+
 ## Baseline at snapshot
 
 | Area | State | Evidence |

@@ -106,6 +106,7 @@ pub struct PaletteEntry {
 pub enum PaletteAction {
     SwitchWorkspace(usize),
     FocusWindow(WindowId),
+    SpawnTerminal,
     Close,
 }
 
@@ -760,12 +761,23 @@ impl Shell {
             }
         }
 
+        let command_offset = self.workspaces.len();
+        let new_terminal = PaletteEntry {
+            title: "New terminal".to_string(),
+            detail: "launch".to_string(),
+            action: PaletteAction::SpawnTerminal,
+        };
+        if let Some(score) = palette_score(&query, &new_terminal.title) {
+            scored.push((score, command_offset, new_terminal));
+        }
+
+        let window_offset = command_offset + 1;
         for (offset, window) in self.windows().into_iter().enumerate() {
             let detail = format!("window {} - workspace {}", window.id, window.workspace + 1);
             if let Some(score) = palette_score(&query, &window.title) {
                 scored.push((
                     score,
-                    self.workspaces.len() + offset,
+                    window_offset + offset,
                     PaletteEntry {
                         title: window.title,
                         detail,
@@ -781,7 +793,7 @@ impl Shell {
             action: PaletteAction::Close,
         };
         if let Some(score) = palette_score(&query, &close.title) {
-            scored.push((score, self.workspaces.len() + self.windows.len(), close));
+            scored.push((score, window_offset + self.windows.len(), close));
         }
 
         scored.sort_by_key(|(score, order, _)| (*score, *order));
@@ -1532,7 +1544,10 @@ mod tests {
             .into_iter()
             .map(|entry| entry.title)
             .collect();
-        assert_eq!(titles, ["main", "code", "web", "Close palette"]);
+        assert_eq!(
+            titles,
+            ["main", "code", "web", "New terminal", "Close palette"]
+        );
 
         assert!(shell.palette_push_char('c'));
         let titles: Vec<String> = shell
@@ -1593,6 +1608,18 @@ mod tests {
     }
 
     #[test]
+    fn palette_exposes_the_terminal_launcher() {
+        let mut shell = shell();
+        assert!(shell.palette_push_char('n'));
+        assert!(shell.palette_push_char('e'));
+        assert!(shell.palette_push_char('w'));
+        let entries = shell.palette_entries();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].title, "New terminal");
+        assert_eq!(entries[0].action, PaletteAction::SpawnTerminal);
+    }
+
+    #[test]
     fn palette_lists_and_filters_windows() {
         let mut shell = shell();
         shell.add_workspace("code");
@@ -1622,7 +1649,7 @@ mod tests {
         }
         shell.open_overlay();
 
-        assert_eq!(shell.palette_entries().len(), 7);
+        assert_eq!(shell.palette_entries().len(), 8);
         assert_eq!(shell.palette_visible_start(), 0);
         let first = shell.palette_row_rect(0).expect("row 0");
         assert_eq!(first.x, 76);
@@ -1642,9 +1669,9 @@ mod tests {
             shell.palette_row_at(Point::new(first.x + 2, first.y + 2)),
             Some(1)
         );
-        assert!(shell.palette_select(6));
-        assert_eq!(shell.palette_selected(), 6);
-        assert!(!shell.palette_select(7));
+        assert!(shell.palette_select(7));
+        assert_eq!(shell.palette_selected(), 7);
+        assert!(!shell.palette_select(8));
     }
 
     #[test]
@@ -1655,7 +1682,7 @@ mod tests {
 
         assert_eq!(shell.palette_selected(), 0);
         assert!(shell.palette_move_selection(-1));
-        assert_eq!(shell.palette_selected(), 2);
+        assert_eq!(shell.palette_selected(), 3);
         assert_eq!(shell.palette_activate(), Some(PaletteAction::Close));
 
         assert!(shell.palette_move_selection(1));

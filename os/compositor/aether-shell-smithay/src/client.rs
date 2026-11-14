@@ -109,6 +109,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         pointer_captured: false,
         modifiers: ModifiersState::default(),
         cursor: CursorIcon::Default,
+        socket_name: String::new(),
     };
 
     let listener = ListeningSocket::bind_auto("aether", 0..8)?;
@@ -118,6 +119,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         .unwrap_or("aether-0")
         .to_string();
     let mut clients = Vec::new();
+    state.socket_name = socket_name.clone();
 
     let (mut backend, mut winit) = winit::init_from_attributes::<GlesRenderer>(
         WindowAttributes::default()
@@ -1104,6 +1106,7 @@ struct App {
     pointer_captured: bool,
     modifiers: ModifiersState,
     cursor: CursorIcon,
+    socket_name: String,
 }
 
 impl App {
@@ -1228,9 +1231,27 @@ impl App {
                     self.configure_all();
                 }
             }
+            PaletteAction::SpawnTerminal => {
+                self.shell.close_overlay();
+                self.spawn_terminal();
+            }
             PaletteAction::Close => {
                 self.shell.close_overlay();
             }
+        }
+    }
+
+    fn spawn_terminal(&mut self) {
+        let program =
+            std::env::var("AETHER_TERMINAL").unwrap_or_else(|_| "weston-terminal".to_string());
+        let mut command = std::process::Command::new(&program);
+        command.env("WAYLAND_DISPLAY", &self.socket_name);
+        match command.spawn() {
+            Ok(child) => println!(
+                "aether-shell-smithay: spawned terminal (pid {})",
+                child.id()
+            ),
+            Err(error) => eprintln!("aether-shell-smithay: terminal {program:?} failed: {error}"),
         }
     }
 

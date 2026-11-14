@@ -54,7 +54,7 @@ not need. Aether removes them:
 | disko layout + install script | ✅ written, evaluation-checked | `os/nixos/disko.nix`, `scripts/install.sh` |
 | aarch64 development VM | ✅ build + booted headless (~10–12 s) | `os/vm` |
 | Smithay winit backend | ✅ clients, palette + index + live agents, desktop actions, clipboard, outputs, text-input, window mgmt, cursors, partial damage | `os/compositor/aether-shell-smithay` |
-| Compositor core + shell state + preview | ✅ 89 Rust tests | `os/compositor` |
+| Compositor core + shell state + preview | ✅ 92 Rust tests | `os/compositor` |
 | Compositor UI (`aether-shell`) | ⏳ P2 | — |
 | Remote display | ⏳ P7 | — |
 

@@ -139,6 +139,12 @@ To use QEMU's native macOS window instead of VNC:
 VM_GUI_DISPLAY=cocoa ./scripts/vm-run.sh --gui
 ```
 
+![Aether VM desktop over VNC](/img/vm-gui.png)
+
+*Verified capture from `--gui`: workspace pills and the status bar are rendered by
+`aether-shell-drm` on tty8; `Super+Space` opens the same palette as the nested
+compositor.*
+
 The VM has no installed application set beyond `aether-terminal`, `aether-audio`
 and the compositor. Press `Super+Space`, choose **New terminal**, and a
 Water-themed foot terminal opens inside the VM desktop. SSH remains available at

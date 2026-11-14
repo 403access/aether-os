@@ -181,6 +181,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
   work between clients. The compositor forwards data-device and primary focus
   with keyboard focus so selection offers reach the right client. DnD and
   clipboard persistence after the source exits are not implemented.
+- **Text-input plumbing.** `zwp_text_input_manager_v3` is advertised and
+  text-input focus follows keyboard focus (enter/leave). An input-method engine
+  (fcitx/maliit) is not bundled yet, so IMEs cannot produce commits without one.
 - **Output globals.** A single 1280x800@60 `wl_output` is advertised with
   `zxdg_output_manager_v1` geometry, scale 1 and physical dimensions. Toplevels
   receive `wl_output.enter` on map and leave on destroy. `smoke-output-xvfb.sh`
@@ -299,6 +302,7 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-fullscreen-xvfb.sh # Super+F fullscreen
 ./os/compositor/aether-shell-smithay/smoke-agents-xvfb.sh     # external agent launcher
 ./os/compositor/aether-shell-smithay/smoke-output-xvfb.sh     # wl_output/xdg-output globals
+./os/compositor/aether-shell-smithay/smoke-text-input-xvfb.sh # zwp_text_input_manager_v3
 ```
 
 The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. Most use

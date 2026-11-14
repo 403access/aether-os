@@ -93,10 +93,11 @@ Deliverables:
   Palette app/file/external-launcher providers refresh on open; agent sessions
   can be published through the external manifest. Fullscreen uses xdg
   fullscreen state and hides shell chrome. A single 1280x800@60 output is
-  advertised with xdg-output geometry.
+  advertised with xdg-output geometry. `zwp_text_input_manager_v3` is advertised
+  with focus following the keyboard.
 - ⏳ Live agent-session IPC, system content index integration, desktop-entry
   SVG icons/theme inheritance/actions/DBus, clipboard persistence/DnD, IME
-  support, multi-output/hotplug, DRM cursor images/themes,
+  engine/input-method service, multi-output/hotplug, DRM cursor images/themes,
   buffer-damage/occlusion, udev/DRM.
 - ⏳ udev/DRM backend, libinput seat, wgpu renderer, output hotplug.
 - Scene graph with damage tracking; shell chrome in one draw pass.

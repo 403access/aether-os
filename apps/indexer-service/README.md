@@ -24,3 +24,24 @@ Protocol: newline-delimited JSON. Request `{"query":"...","limit":8}`, response
 The service watches the roots with `fs.watch` and upserts/removes files as they
 change (set `AETHER_INDEX_WATCH=0` to disable). The compositor falls back to
 `aether-files` when `AETHER_INDEX_SOCKET` is unset.
+
+## NixOS
+
+The flake packages it as `.#index-service` (standalone Bun binary). The VM
+target runs it as a user service:
+
+```nix
+systemd.user.services.aether-index = {
+  wantedBy = ["default.target"];
+  serviceConfig = {
+    ExecStart = "${pkgs.aether-index-service}/bin/aether-index-service";
+    Environment = [
+      "AETHER_INDEX_SOCKET=%t/aether-index.sock"
+      "AETHER_INDEX_ROOTS=%h"
+    ];
+    Restart = "on-failure";
+  };
+};
+```
+
+Point the compositor's `AETHER_INDEX_SOCKET` at the same `%t` path.

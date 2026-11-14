@@ -188,8 +188,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
   queries. External launchers from `AETHER_PALETTE_JSON` can add agent-session
   or tool commands. With `AETHER_INDEX_SOCKET`, the Bun index service supplies
   content-ranked file results per query and watches roots for live updates;
-  otherwise the bounded local scan is used. All providers are rescanned when
-  the palette opens. Typing filters them (case-insensitive prefix/substring),
+  otherwise the bounded local scan is used. The service is packaged as
+  `.#index-service` and runs as a systemd user unit in the VM target. All
+  providers are rescanned when the palette opens. Typing filters them (case-insensitive prefix/substring),
   `Up/Down` wraps, `Enter` or a row click activates, `Backspace` edits and `Esc`
   closes. The list slides to keep the selection visible, and pointer hover
   selects a row.

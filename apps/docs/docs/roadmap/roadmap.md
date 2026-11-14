@@ -96,8 +96,8 @@ Deliverables:
   advertised with xdg-output geometry. `zwp_text_input_manager_v3` is advertised
   with focus following the keyboard. `aether-cursor` draws backend-neutral
   software cursors in-frame. A Bun index service supplies content-ranked file
-  results over a Unix socket, watches roots for live updates, and falls back to
-  the bounded scan when absent.
+  results over a Unix socket, watches roots for live updates, falls back to the
+  bounded scan when absent, and is packaged as a NixOS user service.
 - ✅ Target preflight (`scripts/target-check.sh`) checks UEFI, i915, DRM/KMS,
   connectors, input and memory with fixture coverage.
 - ⏳ Live agent-session IPC, native inotify indexing, desktop-entry SVG

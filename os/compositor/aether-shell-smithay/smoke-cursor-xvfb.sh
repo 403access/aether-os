@@ -81,7 +81,7 @@ xdotool key super+space
 sleep 0.5
 xdotool mousemove 500 300
 assert_cursor Pointer
-xdotool mousemove 500 255
+xdotool mousemove 500 220
 assert_cursor Text
 import -window root "${OUT}/software-cursor.png"
 xdotool key Escape

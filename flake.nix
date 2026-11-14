@@ -53,6 +53,10 @@
             xvfb
             weston
             foot
+            (shellPkgs.writeShellScriptBin "aether-terminal" ''
+              export LANG="''${LANG:-C.UTF-8}"
+              exec ${shellPkgs.foot}/bin/foot -c ${./os/compositor/aether-shell-smithay/foot/foot.ini} -T "Wayland Terminal" "$@"
+            '')
             wayland-utils
             wl-clipboard
             wl-clip-persist

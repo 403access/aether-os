@@ -80,6 +80,17 @@
         src = ./os/compositor;
         filter = path: _type: builtins.baseNameOf path != "target";
       };
+
+      indexSource = nixpkgs.lib.fileset.toSource {
+        root = ./.;
+        fileset = nixpkgs.lib.fileset.unions [
+          ./apps/indexer-service
+          ./packages/indexer
+          ./packages/protocol
+          ./tsconfig.json
+          ./package.json
+        ];
+      };
     in {
       overlays.default = final: prev: {
         aether-scene = final.rustPlatform.buildRustPackage {
@@ -97,6 +108,30 @@
             description = "Aether compositor scene graph, damage tracking and frame pacing";
             license = licenses.mit;
             platforms = ["x86_64-linux"];
+          };
+        };
+
+        aether-index-service = final.stdenvNoCC.mkDerivation {
+          pname = "aether-index-service";
+          version = "0.1.0";
+          src = indexSource;
+          nativeBuildInputs = [final.bun];
+          dontConfigure = true;
+          buildPhase = ''
+            runHook preBuild
+            export HOME=$TMPDIR
+            bun build apps/indexer-service/src/main.ts --compile --outfile aether-index-service
+            runHook postBuild
+          '';
+          installPhase = ''
+            runHook preInstall
+            install -Dm755 aether-index-service $out/bin/aether-index-service
+            runHook postInstall
+          '';
+          meta = with final.lib; {
+            description = "Aether system index service (Unix socket)";
+            license = licenses.mit;
+            platforms = ["x86_64-linux" "aarch64-linux"];
           };
         };
       };
@@ -127,6 +162,7 @@
         iso = self.nixosConfigurations.installer.config.system.build.isoImage;
         installer-iso = self.packages.${system}.iso;
         aether-scene = pkgs.aether-scene;
+        index-service = pkgs.aether-index-service;
       };
 
       # ---------------------------------------------------------------------
@@ -136,15 +172,24 @@
       # users; VM-only settings must never leak into kestrel.
       # ---------------------------------------------------------------------
       packages.aarch64-linux = let
+        vmPkgs = import nixpkgs {
+          system = "aarch64-linux";
+          overlays = [self.overlays.default];
+          config.allowUnfree = true;
+        };
         vm = nixpkgs.lib.nixosSystem {
           system = "aarch64-linux";
-          modules = [./os/vm/configuration.nix];
+          modules = [
+            { nixpkgs.overlays = [ self.overlays.default ]; }
+            ./os/vm/configuration.nix
+          ];
         };
       in {
         # NixOS's built-in image support: `qemu-efi` is the upstream
         # replacement for nixos-generators' `qcow-efi` (qcow2 + ESP +
         # systemd-boot).
         vm-image = vm.config.system.build.images.qemu-efi;
+        index-service = vmPkgs.aether-index-service;
         default = vm.config.system.build.images.qemu-efi;
       };
 

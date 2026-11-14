@@ -80,6 +80,22 @@
 
   nix.settings.trusted-users = ["root" "aether"];
 
+  # System index service for the VM user. The compositor target would point
+  # AETHER_INDEX_SOCKET at the same path.
+  systemd.user.services.aether-index = {
+    description = "Aether system index service";
+    wantedBy = ["default.target"];
+    serviceConfig = {
+      ExecStart = "${pkgs.aether-index-service}/bin/aether-index-service";
+      Environment = [
+        "AETHER_INDEX_SOCKET=%t/aether-index.sock"
+        "AETHER_INDEX_ROOTS=%h"
+        "AETHER_INDEX_LIMIT=5000"
+      ];
+      Restart = "on-failure";
+    };
+  };
+
   # A deterministic marker for headless smoke tests. It only writes to the
   # serial console; it does not power off or modify the system.
   systemd.services.aether-vm-report = {

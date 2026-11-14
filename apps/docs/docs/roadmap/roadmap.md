@@ -83,9 +83,10 @@ Deliverables:
   indicators, a clickable workspace picker, an interactive command palette
   (typed query, filtering, workspace/window providers, row clicks, actions), a
   draggable master/stack split, Alt+drag move, Alt+right-drag corner resize,
-  edge snapping, half-snap on release, `Super+M` maximize with restore and
-  hover cursor feedback. Picker, divider, palette input, window management and
-  cursor mapping are verified by xdotool smoke tests.
+  edge snapping, half-snap on release, `Super+M` maximize with restore, hover
+  cursor feedback and a `New terminal` palette command that spawns a real
+  client. Picker, divider, palette input/commands, window management and cursor
+  mapping are verified by xdotool smoke tests.
 - ⏳ App/file/agent palette providers, IME support, fullscreen, multi-output
   snapping, DRM cursor images/themes, per-client damage, udev/DRM.
 - ⏳ udev/DRM backend, libinput seat, wgpu renderer, output hotplug.

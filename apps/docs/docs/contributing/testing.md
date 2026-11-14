@@ -17,7 +17,7 @@ deliberately layered so a failure points at one boundary.
 | Unit / DOM / integration | `bun test` | Logic, ranking, capabilities, planners, components, cross-thread ring, filesystem | **206 total** (17 DOM, ~15 integration) |
 | Architecture boundary | `bun test` | VM ↔ reference imports, security posture, flake modules | 7 (included above) |
 | E2E | Playwright | Assembled marketing site, docs, install pages, VM page | **14** |
-| Rust | `cargo test` | Scene, layout, damage, pacing, shell state, palette/providers, picker, split/move/resize/snap/maximize, text, preview | **72** |
+| Rust | `cargo test` | Scene, layout, damage, pacing, shell state, palette/commands, picker, split/move/resize/snap/maximize, text, preview | **73** |
 | Performance | `packages/bench` | Regressions vs baseline | 6 metrics |
 
 Run everything:

@@ -74,6 +74,17 @@ uses compositor z-order so the moved window stays on top.*
 and the top edge maximizes. Snapped halves stay floating, so they can be moved
 or resized again. The smoke test asserts the 640x800 left-half rect.*
 
+![Running the New terminal palette command](/img/smithay-new-terminal.png)
+
+*The palette also exposes commands. "New terminal" launches
+`$AETHER_TERMINAL` (default `weston-terminal`); the spawned client connects,
+tiles and appears in the window provider.*
+
+![Two clients after running New terminal](/img/smithay-new-terminal-open.png)
+
+*`smoke-provider-xvfb.sh` types `new`, presses Enter, then asserts the action,
+the spawned process and a second Wayland client connection.*
+
 ![The same window maximized](/img/smithay-window-maximized.png)
 
 *`Super+M` maximizes the focused window to the full output; pressing it again
@@ -98,9 +109,10 @@ drag and both toggles with `xdotool` and asserts each transition.*
   and axis; keyboard input goes to the focused surface.
 - The shell overlay is drawn above clients (`Super+Space`) and is **modal**:
   keystrokes edit the palette instead of leaking to the focused client.
-- **Interactive palette with providers.** Results currently come from
-  workspaces and client windows (titles are kept in sync via xdg
-  `title_changed`). Typing filters them (case-insensitive prefix/substring),
+- **Interactive palette with providers.** Results come from workspaces, client
+  windows (titles stay in sync via xdg `title_changed`) and commands. The first
+  command, `New terminal`, spawns `AETHER_TERMINAL` (default
+  `weston-terminal`) into the compositor. Typing filters them (case-insensitive prefix/substring),
   `Up/Down` wraps, `Enter` or a row click activates, `Backspace` edits and `Esc`
   closes. The list slides to keep the selection visible, and pointer hover
   selects a row.
@@ -154,8 +166,8 @@ drag and both toggles with `xdotool` and asserts each transition.*
 
 ## What is not implemented
 
-- **More palette providers.** Workspaces, windows and close exist; apps, files
-  and agent sessions do not.
+- **Full app/file/agent providers.** There is a terminal command, but no
+  `.desktop` scanning, file index or agent-session provider yet.
 - **Text input methods.** Printable keys are mapped from keysyms; there is no
   `text-input`/IME protocol support yet.
 - **Text cache/atlas.** Every frame rebuilds small RGBA text buffers; a cached
@@ -203,11 +215,12 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-palette-xvfb.sh  # xdotool typed query
 ./os/compositor/aether-shell-smithay/smoke-window-xvfb.sh   # xdotool move + maximize
 ./os/compositor/aether-shell-smithay/smoke-cursor-xvfb.sh   # hover cursor mapping
+./os/compositor/aether-shell-smithay/smoke-provider-xvfb.sh # spawn a client from the palette
 ```
 
 The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. The picker,
-resize, palette, window and cursor smokes require `xdotool`, which the `.#smithay`
-dev shell provides.
+resize, palette, window, cursor and provider smokes require `xdotool`, which the
+`.#smithay` dev shell provides. Set `AETHER_TERMINAL` to change the launcher.
 
 The environment sets:
 

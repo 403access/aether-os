@@ -27,7 +27,7 @@ describe("palette parity fixture", () => {
   test("prefix modes match the Rust parser", () => {
     for (const entry of fixture.modes) {
       const parsed = parsePaletteQuery(entry.input);
-      expect(parsed.mode).toBe(entry.mode);
+      expect(parsed.mode as string).toBe(entry.mode);
       expect(parsed.term).toBe(entry.term);
     }
   });

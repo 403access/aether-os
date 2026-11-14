@@ -55,7 +55,7 @@ not need. Aether removes them:
 | aarch64 development VM | ✅ build + booted headless (~10–12 s) | `os/vm` |
 | Smithay winit backend | ✅ clients, palette + index + live agents, desktop actions, clipboard, outputs, text-input, window mgmt, cursors, partial damage | `os/compositor/aether-shell-smithay` |
 | Native DRM backend | ✅ libseat + KMS page-flips, libinput, udev hotplug, per-output workspaces | `os/compositor/aether-shell-drm` |
-| Compositor core + shell state + preview | ✅ 99 core + 16 shared + 4 DRM Rust tests | `os/compositor` |
+| Compositor core + shell state + preview | ✅ 110 core + 19 shared + 4 DRM + 6 index Rust tests | `os/compositor` |
 | Compositor UI (`aether-shell`) | ⏳ P2 | — |
 | Remote display | ⏳ P7 | — |
 

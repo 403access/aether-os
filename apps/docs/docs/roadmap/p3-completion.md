@@ -35,6 +35,23 @@ its acceptance check is demonstrated and its evidence is committed.
 P3-T1 → P3-T2 → P3-T3 → P3-T4 → P3-T5 → P3-T6. T3/T4 depend on the shell state
 introduced by T2 only for scoring reuse; they can land independently.
 
+## Verification
+
+| Check | Result |
+| --- | --- |
+| Core Rust | 110 tests |
+| Shared Wayland | 19 tests |
+| DRM backend | 4 tests |
+| `aether-index` | 6 tests |
+| TypeScript | 217 tests across 22 files |
+| E2E | 14 |
+| Xvfb smokes | 26, including explorer/chat/focus/slow-index |
+| Palette 10k p95 | 1.11 ms (release) |
+| Explorer 10k scroll p95 | 0.004 ms (release) |
+| Chat stream | 52 presented frames / 3 s |
+| Design parity | 6 colors + 30 px rows |
+| Docs / Nix | build and `nix flake check --no-build` pass |
+
 ## Non-goals
 
 - Replacing the GLES renderer.

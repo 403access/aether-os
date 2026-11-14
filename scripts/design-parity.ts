@@ -17,13 +17,13 @@ const explorerCss = readFileSync(join(root, "packages/ui/src/ui.css"), "utf8");
 function token(name: string): number {
   const match = tokens.match(new RegExp(`--ds-${name}:\\s*#([0-9a-fA-F]{6})`));
   if (match === null) throw new Error(`missing token --ds-${name}`);
-  return Number.parseInt(match[1], 16);
+  return Number.parseInt(match[1]!, 16);
 }
 
 function constant(name: string): number {
   const match = design.match(new RegExp(`pub const ${name}: u32 = 0x([0-9A-Fa-f]{6});`));
   if (match === null) throw new Error(`missing design constant ${name}`);
-  return Number.parseInt(match[1], 16);
+  return Number.parseInt(match[1]!, 16);
 }
 
 const pairs: Array<[string, string]> = [

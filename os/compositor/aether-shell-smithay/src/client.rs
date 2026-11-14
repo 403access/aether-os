@@ -113,49 +113,47 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     state.spawn_test_clients();
 
     loop {
-        let status = winit.dispatch_new_events(|event| {
-            state.mark_full_damage();
-            match event {
-                WinitEvent::Resized { size, scale_factor } => {
-                    let logical = logical_size(size, scale_factor);
-                    state.shell_mut().set_viewport(logical);
-                    state.configure_all();
-                }
-                WinitEvent::Focus(_) => {}
-                WinitEvent::Input(InputEvent::Keyboard { event }) => {
-                    state.keyboard_key(
-                        &keyboard,
-                        event.key_code(),
-                        event.state(),
-                        event.time_msec(),
-                    );
-                }
-                WinitEvent::Input(InputEvent::PointerMotionAbsolute { event }) => {
-                    let logical = state.shell().viewport();
-                    let position = event.position_transformed(SSize::from((
-                        logical.width as i32,
-                        logical.height as i32,
-                    )));
-                    state.pointer_motion(position, event.time_msec());
-                }
-                WinitEvent::Input(InputEvent::PointerAxis { event }) => {
-                    let source = event.source();
-                    let horizontal = event.amount(Axis::Horizontal).unwrap_or_else(|| {
-                        event.amount_v120(Axis::Horizontal).unwrap_or(0.0) * 15.0 / 120.0
-                    });
-                    let vertical = event.amount(Axis::Vertical).unwrap_or_else(|| {
-                        event.amount_v120(Axis::Vertical).unwrap_or(0.0) * 15.0 / 120.0
-                    });
-                    state.pointer_axis(horizontal, vertical, source, event.time_msec());
-                }
-                WinitEvent::Input(InputEvent::PointerButton { event }) => {
-                    state.pointer_button(event.button_code(), event.state(), event.time_msec());
-                }
-                WinitEvent::CloseRequested => {
-                    state.request_close();
-                }
-                _ => {}
+        let status = winit.dispatch_new_events(|event| match event {
+            WinitEvent::Resized { size, scale_factor } => {
+                state.mark_full_damage();
+                let logical = logical_size(size, scale_factor);
+                state.shell_mut().set_viewport(logical);
+                state.configure_all();
             }
+            WinitEvent::Focus(_) => {}
+            WinitEvent::Input(InputEvent::Keyboard { event }) => {
+                state.keyboard_key(
+                    &keyboard,
+                    event.key_code(),
+                    event.state(),
+                    event.time_msec(),
+                );
+            }
+            WinitEvent::Input(InputEvent::PointerMotionAbsolute { event }) => {
+                let logical = state.shell().viewport();
+                let position = event.position_transformed(SSize::from((
+                    logical.width as i32,
+                    logical.height as i32,
+                )));
+                state.pointer_motion(position, event.time_msec());
+            }
+            WinitEvent::Input(InputEvent::PointerAxis { event }) => {
+                let source = event.source();
+                let horizontal = event.amount(Axis::Horizontal).unwrap_or_else(|| {
+                    event.amount_v120(Axis::Horizontal).unwrap_or(0.0) * 15.0 / 120.0
+                });
+                let vertical = event.amount(Axis::Vertical).unwrap_or_else(|| {
+                    event.amount_v120(Axis::Vertical).unwrap_or(0.0) * 15.0 / 120.0
+                });
+                state.pointer_axis(horizontal, vertical, source, event.time_msec());
+            }
+            WinitEvent::Input(InputEvent::PointerButton { event }) => {
+                state.pointer_button(event.button_code(), event.state(), event.time_msec());
+            }
+            WinitEvent::CloseRequested => {
+                state.request_close();
+            }
+            _ => {}
         });
 
         if matches!(status, PumpStatus::Exit(_)) || state.close_requested() {

@@ -19,8 +19,8 @@ merges — the same rule as the phase gates.
 
 | Task | Status | Evidence / blocker |
 | --- | --- | --- |
-| G1 deadline loop | ✅ | per-output pacers, idle blocking dispatch |
-| G2 frame damage | ✅ | `ComposedFrame.damage`, per-output compose, drain-once |
+| G1 deadline loop | ✅ implemented / ⏳ verified | per-output pacers, idle blocking dispatch; p99 needs G5 |
+| G2 frame damage | ✅ | precise input damage, per-output compose, drain-once; `typing-damage.log` |
 | G3 instrumentation | ✅ | `frames.ndjson` + `frame-stats.py` + summary |
 | G4 connector output model | ✅ | refresh/physical size from mode/monitor, shortfall log |
 | G5 reference run | ⛔ hardware | `scripts/p2-measure.sh` runbook; needs the 7700K |
@@ -60,20 +60,24 @@ gate blocker that cannot be closed off-hardware.
 | CI | Linux backend job is manual; 2 of 23 smokes | `.github/workflows/smithay.yml` |
 | **Gate** | **0 of 3 measured** | See below |
 
-### Why the gate is still open
+### Why the gate was open at the snapshot
 
-These are the concrete blockers, each a task below:
+This list is historical (`3addb30`). The items marked **fixed** below have since
+been addressed; the only remaining gate blocker is G5.
 
-1. The DRM loop polls every 16 ms (`main.rs:231`), capping presentation at 62.5 Hz.
-2. `ComposedFrame` carries no damage (`render.rs:205`), any damage marks every output
-   dirty (`main.rs:234–235`), and the frontend's damage is then discarded
-   (`let _ = app.take_damage();`, `main.rs:646`).
-3. There is no frame instrumentation: no present interval, dropped-frame or
-   input→damage timestamp.
-4. Chrome text is rasterized and uploaded during every `compose()` (`render.rs:508–512`),
-   even when unchanged.
-5. The palette index query blocks the compositor loop with a 250 ms socket timeout
-   (`aether-shell-wayland/src/app.rs:834`, called from the key handler at `:1388`).
+These were the concrete blockers, each a task below:
+
+1. ~~The DRM loop polls every 16 ms~~ — **fixed** (G1).
+2. ~~`ComposedFrame` carries no damage~~ — **fixed** (G2). Input handlers now
+   mark only what they changed: palette typing damages the overlay rect, motion
+   damages old/new cursor and moved window rects, shortcuts mark the layout.
+   Evidence: `evidence/p2/typing-damage.log`, `typing-frames.ndjson`.
+3. ~~No frame instrumentation~~ — **fixed** (G3).
+4. ~~Chrome text rasterized every frame~~ — **fixed** (C1).
+5. ~~Palette index query blocks~~ — **fixed** (L1).
+
+**Current blocker:** G5, the reference-machine measurement. G1's p99 is
+implemented but unverified until that run.
 
 ## The gate
 
@@ -96,11 +100,11 @@ the repository's velocity makes them noise.
 
 ### G1 · Deadline-driven present loop
 
-**Status.** Every DRM output owns a `FramePacer` built from its reported
-refresh; the loop sleeps to the earliest deadline (`None` when idle), presents
-only when due, and re-anchors after `queue_frame`. `--frames` keeps a bounded
-16 ms poll for deterministic runs. Evidence: pacer counters in
-`frames.ndjson`; 120 Hz p99 remains a reference-machine measurement (G5).
+**Status: implemented, unverified.** Every DRM output owns a `FramePacer` built
+from its reported refresh; the loop sleeps to the earliest deadline (`None` when
+idle), presents only when due, and re-anchors after `queue_frame`. `--frames`
+keeps a bounded 16 ms poll for deterministic runs. The p99 acceptance criterion
+requires G5; this task is not marked ✅ until then.
 
 
 **Why.** `event_loop.dispatch(Some(Duration::from_millis(16)))` is a fixed poll
@@ -127,12 +131,14 @@ reported and non-zero only when frames are actually late.
 
 ### G2 · Carry damage through the frame plan — ✅ done
 
-**Status.** `ComposedFrame` now carries local damage, `App::output_damage` clips
+**Status.** `ComposedFrame` carries local damage, `App::output_damage` clips
 global damage per output, the DRM presenter composes only affected outputs and
-drains damage once (deferring when a flip is still in flight). The
-`let _ = app.take_damage()` discard is gone. Evidence:
-[`damage.log`](/evidence/p2/damage.log) from `AETHER_FRAME_LOG`, plus three
-`damage_for_bounds` unit tests in `app.rs`.
+drains damage once. Input damage is precise: `begin_input` no longer marks
+anything; keyboard palette keys damage the overlay rect, motion damages old/new
+cursor and moved window rects, shortcuts/layout changes mark full. The winit
+adapter's blanket per-event `mark_full_damage` was removed. Evidence:
+`typing-damage.log` (680×420 overlay damage per keystroke, not full output),
+`typing-frames.ndjson`, `damage.log`, and three `damage_for_bounds` tests.
 
 **Why.** The frontend computes damage and then throws it away. Marking all outputs
 dirty on any damage means every keystroke redraws the whole 1440p scene — the largest
@@ -288,8 +294,10 @@ buffer uploads; the counter is zero across 120 consecutive frames.
 ### C2 · Avoid full-output clears
 
 **Status.** Both presenters clear only the computed damage list (full only on
-first frame/mode change/full damage). `frames.ndjson` records `damage_area` and
-`cleared_area` for comparison.
+first frame/mode change/full damage). The winit path passes the damage slice to
+`Frame::clear`; the DRM path hands the same damage to `DrmCompositor` and logs
+`cleared_area` alongside `damage_area`. Evidence: `frames.ndjson` (winit) and
+the DRM NDJSON schema includes both fields.
 
 
 **Why.** `frame.clear(...)` with the full damage rect paints 1440p every frame even

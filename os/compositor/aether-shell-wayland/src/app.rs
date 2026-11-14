@@ -662,6 +662,7 @@ impl App {
             println!("aether-shell: workspace -> {workspace}");
             self.sync_focus();
             self.configure_all();
+            self.mark_full_damage();
         }
     }
 
@@ -808,6 +809,7 @@ impl App {
         }
         let output = self.output_under_pointer();
         self.shell.toggle_overlay_on(output);
+        self.mark_full_damage();
     }
 
     fn combined_launchers(&self) -> Vec<PaletteLauncher> {
@@ -885,7 +887,7 @@ impl App {
             files.len()
         );
         self.shell.set_indexed_files(files);
-        self.mark_full_damage();
+        self.mark_overlay_damage();
     }
 
     fn activate_palette(&mut self) {
@@ -893,6 +895,7 @@ impl App {
             return;
         };
         println!("aether-shell-smithay: palette action {action:?}");
+        self.mark_full_damage();
         match action {
             PaletteAction::SwitchWorkspace(index) => {
                 let output = self.shell.overlay_output().unwrap_or(1);
@@ -1388,6 +1391,10 @@ impl App {
     ) {
         let started = self.begin_input();
         let pressed = state == KeyState::Pressed;
+        let old_cursor = self.cursor;
+        let old_overlay = self.shell.overlay_rect();
+        let mut shortcut = false;
+        let mut palette_key = false;
         keyboard.input::<(), _>(
             self,
             key_code,
@@ -1398,11 +1405,13 @@ impl App {
                 state.modifiers = *modifiers;
                 let sym = keysym.modified_sym();
                 if pressed && state.handle_shortcut(modifiers, sym) {
+                    shortcut = true;
                     FilterResult::Intercept(())
                 } else if state.shell.overlay().is_some() {
                     if pressed {
                         state.handle_palette_key(sym);
                         state.refresh_index_results();
+                        palette_key = true;
                     }
                     FilterResult::Intercept(())
                 } else {
@@ -1411,8 +1420,26 @@ impl App {
             },
         );
         self.modifiers = keyboard.modifier_state();
-        self.cursor = cursor_for(self);
-        self.mark_full_damage();
+        let new_cursor = cursor_for(self);
+        self.cursor = new_cursor;
+        if new_cursor != old_cursor {
+            self.mark_cursor_damage(self.pointer_pos);
+        }
+        if shortcut {
+            // Shortcuts may move/close/raise windows or switch workspaces.
+            self.mark_full_damage();
+        } else if palette_key {
+            if let Some(rect) = old_overlay {
+                self.mark_damage_rect(rect);
+            }
+            if let Some(rect) = self.shell.overlay_rect() {
+                self.mark_damage_rect(rect);
+            } else {
+                // Enter/activation closed the palette and may have launched or
+                // switched workspace.
+                self.mark_full_damage();
+            }
+        }
         self.end_input(started);
     }
 
@@ -1437,9 +1464,11 @@ impl App {
     /// Absolute pointer motion in logical compositor coordinates.
     pub fn pointer_motion(&mut self, position: SPoint<f64, Logical>, time: u32) {
         let started = self.begin_input();
+        let old_position = self.pointer_pos;
+        let old_cursor = self.cursor;
         self.pointer_pos = position;
-        self.cursor = cursor_for(self);
-        self.mark_full_damage();
+        let new_cursor = cursor_for(self);
+        self.cursor = new_cursor;
 
         if let Some(resize) = self.window_resize {
             let point = AetherPoint::new(position.x.round() as i32, position.y.round() as i32);
@@ -1475,13 +1504,27 @@ impl App {
                     rect.height = height as u32;
                 }
             }
+            let before = self.window_rect(resize.id);
             if self.shell.resize_floating(resize.id, rect) {
+                if let Some(before) = before {
+                    self.mark_damage_rect(before);
+                }
+                if let Some(after) = self.window_rect(resize.id) {
+                    self.mark_damage_rect(after);
+                }
                 self.configure_all();
             }
         } else if let Some(drag) = self.window_drag {
             let x = (position.x - drag.offset_x).round() as i32;
             let y = (position.y - drag.offset_y).round() as i32;
+            let before = self.window_rect(drag.id);
             if self.shell.move_floating(drag.id, AetherPoint::new(x, y)) {
+                if let Some(before) = before {
+                    self.mark_damage_rect(before);
+                }
+                if let Some(after) = self.window_rect(drag.id) {
+                    self.mark_damage_rect(after);
+                }
                 self.configure_all();
             }
         } else if let Some(mut drag) = self.resize_drag {
@@ -1504,6 +1547,7 @@ impl App {
                 drag.last_ratio = ratio;
                 self.resize_drag = Some(drag);
                 if self.shell.set_master_ratio(ratio) {
+                    self.mark_full_damage();
                     self.configure_all();
                 }
             }
@@ -1526,6 +1570,13 @@ impl App {
             } else {
                 self.forward_pointer_motion(None, position, time);
             }
+        }
+        if old_cursor != new_cursor || old_position != position {
+            self.mark_cursor_damage(old_position);
+            self.mark_cursor_damage(position);
+        }
+        if self.shell.overlay().is_some() {
+            self.mark_overlay_damage();
         }
         self.end_input(started);
     }
@@ -1645,6 +1696,7 @@ impl App {
                             offset_y: position.y - rect.y as f64,
                         });
                         self.pointer_captured = true;
+                        self.mark_full_damage();
                         self.configure_all();
                         println!("aether-shell: window drag started id={id} rect={rect:?}");
                     }
@@ -1662,6 +1714,7 @@ impl App {
                             start_rect: rect,
                         });
                         self.pointer_captured = true;
+                        self.mark_full_damage();
                         self.configure_all();
                         println!(
                             "aether-shell: window resize started id={id} rect={rect:?} corner={corner:?}"
@@ -1747,7 +1800,7 @@ impl App {
             pointer.frame(self);
         }
         self.cursor = cursor_for(self);
-        self.mark_full_damage();
+        self.mark_cursor_damage(self.pointer_pos);
         self.end_input(started);
     }
 
@@ -1772,7 +1825,7 @@ impl App {
         let pointer = self.seat.get_pointer().expect("seat pointer");
         pointer.axis(self, axis);
         pointer.frame(self);
-        self.mark_full_damage();
+        // Scrolling is forwarded to the client; its commit carries the damage.
         self.end_input(started);
     }
 
@@ -1781,10 +1834,38 @@ impl App {
         self.scale = if scale > 0.0 { scale } else { 1.0 };
     }
 
-    /// Timestamp at the start of input handling.
+    /// Timestamp at the start of input handling. Damage is added by each
+    /// handler for exactly what it changed.
     pub fn begin_input(&mut self) -> std::time::Instant {
-        self.mark_full_damage();
         std::time::Instant::now()
+    }
+
+    /// Damage around a cursor position (old and new positions are both
+    /// marked by callers), independent of window content.
+    pub fn mark_cursor_damage(&mut self, position: SPoint<f64, Logical>) {
+        const RADIUS: i32 = 32;
+        let x = position.x.round() as i32;
+        let y = position.y.round() as i32;
+        self.mark_damage_rect(AetherRect::new(
+            x - RADIUS,
+            y - RADIUS,
+            (RADIUS * 2) as u32,
+            (RADIUS * 2) as u32,
+        ));
+    }
+
+    fn mark_overlay_damage(&mut self) {
+        if let Some(rect) = self.shell.overlay_rect() {
+            self.mark_damage_rect(rect);
+        }
+    }
+
+    fn window_rect(&self, id: WindowId) -> Option<AetherRect> {
+        self.shell
+            .windows()
+            .into_iter()
+            .find(|window| window.id == id)
+            .map(|window| window.rect)
     }
 
     /// Record input arrival → damage commit latency.
@@ -1866,6 +1947,12 @@ impl App {
     }
 
     pub fn mark_full_damage(&mut self) {
+        if std::env::var_os("AETHER_DAMAGE_TRACE").is_some() {
+            eprintln!(
+                "FULL_DAMAGE at\n{}",
+                std::backtrace::Backtrace::force_capture()
+            );
+        }
         self.full_damage = true;
         self.damage.clear();
     }

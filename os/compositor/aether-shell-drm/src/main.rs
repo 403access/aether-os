@@ -765,7 +765,7 @@ impl DrmState {
                                 append_stat(
                                     path,
                                     &format!(
-                                        "{{\"kind\":\"present\",\"output\":{},\"width\":{},\"height\":{},\"refresh_hz\":{},\"interval_ns\":{},\"missed\":{},\"queue_depth\":{},\"max_queue_depth\":{},\"input_to_damage_ns\":{},\"damage_area\":{}}}",
+                                        "{{\"kind\":\"present\",\"output\":{},\"width\":{},\"height\":{},\"refresh_hz\":{},\"interval_ns\":{},\"missed\":{},\"queue_depth\":{},\"max_queue_depth\":{},\"input_to_damage_ns\":{},\"damage_area\":{},\"cleared_area\":{}}}",
                                         surface.id,
                                         surface.width,
                                         surface.height,
@@ -775,6 +775,7 @@ impl DrmState {
                                         surface.in_flight,
                                         surface.max_queue_depth,
                                         app.last_input_to_damage_ns(),
+                                        damage_area(&damage),
                                         damage_area(&damage),
                                     ),
                                 );

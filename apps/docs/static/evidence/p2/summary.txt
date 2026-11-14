@@ -1,4 +1,4 @@
-frames: 37
-present interval ns: p50=55030810 p95=1122248253 p99=1123025921
-input -> damage ns: p50=23584 p95=117501 p99=188585 max=1551890
+frames: 21
+present interval ns: p50=130131017 p95=1183911153 p99=1183911153
+input -> damage ns: p50=38917 p95=93542 p99=93542 max=232335
 queue depth: 0 (max 0), missed deadlines max 0, damage area max 1024000

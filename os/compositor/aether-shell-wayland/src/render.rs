@@ -714,9 +714,9 @@ impl App {
                 if let Some(buffer) = self.chrome_round(3, 18, 2, [56, 214, 255, 160]) {
                     panels.push((buffer, bubble.x + 1, bubble.y + 16));
                 }
-                let mut y = bubble.y as i32 + 14;
+                let mut y = bubble.y + 14;
                 let bottom = bubble.y + bubble.height as i32 - 12;
-                let text_left = bubble.x as i32 + 18;
+                let text_left = bubble.x + 18;
                 let max_width = bubble.width as i32 - 36;
                 let chat_lines: Vec<aether_shell::ChatLine> =
                     self.shell.visible_chat_lines().to_vec();
@@ -763,7 +763,7 @@ impl App {
                 }
                 let track = AetherRect::new(
                     rect.x + width - 10,
-                    bubble.y as i32 + 10,
+                    bubble.y + 10,
                     4,
                     bubble.height.saturating_sub(20),
                 );
@@ -1037,7 +1037,7 @@ impl App {
                         if index == selected {
                             [233, 251, 255, 255]
                         } else {
-                            [233, 251, 255, 255]
+                            [217, 247, 255, 255]
                         },
                     ));
                     labels.push((extension, type_x, row_rect.y + 9, 0, [165, 219, 229, 255]));

@@ -598,6 +598,9 @@ pub(crate) struct CursorCacheEntry {
     pub(crate) hotspot_y: i32,
 }
 
+/// Cache key for rasterized rounded panels: size, radius, fill and border.
+pub(crate) type PanelCacheKey = (u32, u32, u32, [u8; 4], Option<[u8; 4]>);
+
 pub struct App {
     display_handle: DisplayHandle,
     compositor_state: CompositorState,
@@ -634,8 +637,7 @@ pub struct App {
     pub(crate) text_rasterizations: u64,
     pub(crate) font: Option<FontRenderer>,
     pub(crate) chrome_icons: HashMap<(String, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
-    pub(crate) chrome_panels:
-        HashMap<(u32, u32, u32, [u8; 4], Option<[u8; 4]>), Arc<MemoryRenderBuffer>>,
+    pub(crate) chrome_panels: HashMap<PanelCacheKey, Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_rounds: HashMap<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_tops: HashMap<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_background: HashMap<(u32, u32), Arc<MemoryRenderBuffer>>,

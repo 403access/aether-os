@@ -108,7 +108,7 @@ backend.
 | Phase | Work |
 | --- | --- |
 | P0 (done) | Pure crates, shell state, preview, tests, demo, facade |
-| P2 (started) | `aether-shell-smithay`: clients tile/configure, palette with workspace/window/app/file providers and terminal command, clipboard, picker, split, move/resize/snap/maximize, cursors, idle frame skipping; agent provider, fullscreen, partial damage and udev/DRM next |
+| P2 (started) | `aether-shell-smithay`: clients tile/configure, palette with workspace/window/app/file providers and terminal command, clipboard, picker, split, move/resize/snap/maximize, cursors, idle skipping and partial window damage; agent provider, fullscreen, surface damage/occlusion and udev/DRM next |
 | P2 | Text/atlas and scene-graph UI primitives |
 | P3 | Shell layers (palette/chat) consume the same crates |
 

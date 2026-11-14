@@ -50,7 +50,9 @@ use smithay::reexports::winit::dpi::LogicalSize;
 use smithay::reexports::winit::platform::pump_events::PumpStatus;
 use smithay::reexports::winit::window::CursorIcon;
 use smithay::reexports::winit::window::WindowAttributes;
-use smithay::utils::{Physical, Rectangle, Serial, Size as SSize, Transform, SERIAL_COUNTER};
+use smithay::utils::{
+    Physical, Point as SPoint, Rectangle, Serial, Size as SSize, Transform, SERIAL_COUNTER,
+};
 use smithay::wayland::buffer::BufferHandler;
 use smithay::wayland::compositor::{
     with_states, with_surface_tree_downward, CompositorClientState, CompositorHandler,
@@ -118,7 +120,8 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         modifiers: ModifiersState::default(),
         cursor: CursorIcon::Default,
         socket_name: String::new(),
-        dirty: true,
+        full_damage: true,
+        damage: Vec::new(),
     };
 
     let listener = ListeningSocket::bind_auto("aether", 0..8)?;
@@ -179,7 +182,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
 
     loop {
         let status = winit.dispatch_new_events(|event| {
-            state.dirty = true;
+            state.mark_full_damage();
             match event {
             WinitEvent::Resized { size, scale_factor } => {
                 state.window_size = size;
@@ -543,9 +546,24 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         }
 
         let mut frame_damage = None;
-        if state.dirty {
+        let has_damage = state.full_damage || !state.damage.is_empty();
+        if has_damage {
             let size = backend.window_size();
-            let damage = Rectangle::from_size(size);
+            let full = Rectangle::from_size(size);
+            let damage: Vec<Rectangle<i32, Physical>> = if state.full_damage {
+                vec![full]
+            } else {
+                state
+                    .damage
+                    .iter()
+                    .filter_map(|rect| rect.intersection(full))
+                    .collect()
+            };
+            let damage_label = if state.full_damage {
+                "full".to_string()
+            } else {
+                format!("partial {:?}", state.damage)
+            };
 
             {
                 let (renderer, mut framebuffer) = backend.bind()?;
@@ -766,10 +784,10 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     .collect();
 
                 let mut frame = renderer.render(&mut framebuffer, size, Transform::Flipped180)?;
-                frame.clear(Color32F::new(0.01, 0.06, 0.08, 1.0), &[damage])?;
+                frame.clear(Color32F::new(0.01, 0.06, 0.08, 1.0), &damage)?;
                 // Client surfaces are painted over the shell background.
                 if !elements.is_empty() {
-                    draw_render_elements(&mut frame, 1.0, &elements, &[damage])?;
+                    draw_render_elements(&mut frame, 1.0, &elements, &damage)?;
                 }
                 if !chrome.is_empty() {
                     // `draw_render_elements` treats the slice as topmost-first and
@@ -796,10 +814,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                         })
                         .collect();
                     draw_render_elements::<GlesRenderer, f64, SolidColorRenderElement>(
-                        &mut frame,
-                        1.0,
-                        &elements,
-                        &[damage],
+                        &mut frame, 1.0, &elements, &damage,
                     )?;
                 }
                 if !text_elements.is_empty() {
@@ -807,7 +822,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                         GlesRenderer,
                         f64,
                         MemoryRenderBufferRenderElement<GlesRenderer>,
-                    >(&mut frame, 1.0, &text_elements, &[damage])?;
+                    >(&mut frame, 1.0, &text_elements, &damage)?;
                 }
                 let _ = frame.finish()?;
             }
@@ -818,11 +833,12 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     start_time.elapsed().as_millis() as u32,
                 );
             }
-            state.dirty = false;
+            state.full_damage = false;
+            state.damage.clear();
             frame_damage = Some(damage);
             rendered_frames += 1;
             if std::env::var_os("AETHER_FRAME_LOG").is_some() {
-                println!("aether-shell-smithay: frame {rendered_frames}");
+                println!("aether-shell-smithay: frame {rendered_frames} damage={damage_label}");
             }
         }
 
@@ -837,7 +853,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         display.dispatch_clients(&mut state)?;
         display.flush_clients()?;
         if let Some(damage) = frame_damage {
-            backend.submit(Some(&[damage]))?;
+            backend.submit(Some(&damage))?;
         }
 
         if !spawned_client {
@@ -977,7 +993,22 @@ impl CompositorHandler for App {
 
     fn commit(&mut self, surface: &WlSurface) {
         on_commit_buffer_handler::<Self>(surface);
-        self.dirty = true;
+        let id = self
+            .windows
+            .iter()
+            .find_map(|(id, toplevel)| (toplevel.wl_surface() == surface).then_some(*id));
+        match id.and_then(|id| {
+            self.shell
+                .windows()
+                .into_iter()
+                .find(|window| window.id == id)
+        }) {
+            Some(window) if window.workspace == self.shell.active_workspace() => {
+                self.mark_window_damage(window.rect);
+            }
+            Some(_) => {}
+            None => self.mark_full_damage(),
+        }
     }
 }
 
@@ -1223,10 +1254,26 @@ struct App {
     modifiers: ModifiersState,
     cursor: CursorIcon,
     socket_name: String,
-    dirty: bool,
+    full_damage: bool,
+    damage: Vec<Rectangle<i32, Physical>>,
 }
 
 impl App {
+    fn mark_full_damage(&mut self) {
+        self.full_damage = true;
+        self.damage.clear();
+    }
+
+    fn mark_window_damage(&mut self, rect: AetherRect) {
+        if self.full_damage {
+            return;
+        }
+        self.damage.push(Rectangle::new(
+            SPoint::from((rect.x, rect.y)),
+            SSize::from((rect.width as i32, rect.height as i32)),
+        ));
+    }
+
     fn switch_workspace(&mut self, workspace: usize) {
         if self.shell.switch_workspace(workspace) {
             println!("aether-shell-smithay: workspace -> {workspace}");

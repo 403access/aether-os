@@ -287,6 +287,7 @@ impl App {
                 || self.shell.overlay_output().is_none());
         let explorer_here =
             self.shell.explorer_open() && (output.is_none() || output == Some(primary));
+        let chat_here = self.shell.chat_open() && (output.is_none() || output == Some(primary));
 
         let mut chrome: Vec<(AetherRect, [f32; 4])> = Vec::new();
         let mut labels: Vec<(String, i32, i32, u32, [u8; 4])> = Vec::new();
@@ -430,6 +431,70 @@ impl App {
                         ));
                     }
                 }
+            }
+
+            if chat_here {
+                let rect = self.shell.chat_rect();
+                chrome.push((rect, [0.04, 0.12, 0.16, 0.97]));
+                chrome.push((
+                    AetherRect::new(rect.x, rect.y, rect.width, 34),
+                    [0.09, 0.42, 0.5, 1.0],
+                ));
+                labels.push((
+                    "Aether Chat".into(),
+                    rect.x + 12,
+                    rect.y + 9,
+                    2,
+                    [235, 252, 255, 255],
+                ));
+                let mut y = rect.y + 46;
+                let bottom = rect.y + rect.height as i32 - 34;
+                for line in self.shell.visible_chat_lines() {
+                    let row_height = if line.scale > 1 { 22 } else { 15 };
+                    if y + row_height > bottom {
+                        break;
+                    }
+                    let mut x = rect.x + 12 + line.indent;
+                    for span in &line.spans {
+                        let color = match span.kind {
+                            aether_shell::ChatSpanKind::Text => [220, 240, 245, 255],
+                            aether_shell::ChatSpanKind::Bold => [255, 255, 255, 255],
+                            aether_shell::ChatSpanKind::Code => [120, 230, 180, 255],
+                        };
+                        labels.push((span.text.clone(), x, y, line.scale, color));
+                        x += text_width(&span.text, line.scale) as i32;
+                    }
+                    y += row_height;
+                }
+                let track = AetherRect::new(
+                    rect.x + rect.width as i32 - 8,
+                    rect.y + 46,
+                    4,
+                    rect.height.saturating_sub(84),
+                );
+                chrome.push((track, [0.03, 0.12, 0.16, 1.0]));
+                let lines = self.shell.chat_line_count().max(1);
+                let visible = self.shell.chat_visible_rows().max(1);
+                let thumb = ((visible as f32 / lines as f32) * track.height as f32)
+                    .clamp(12.0, track.height as f32) as u32;
+                let offset =
+                    ((self.shell.chat_scroll() as f32 / lines as f32) * track.height as f32) as i32;
+                chrome.push((
+                    AetherRect::new(
+                        track.x,
+                        track.y + offset.min(track.height as i32 - thumb as i32),
+                        track.width,
+                        thumb,
+                    ),
+                    [0.22, 0.84, 1.0, 1.0],
+                ));
+                labels.push((
+                    "Esc close   PgUp/PgDn scroll".into(),
+                    rect.x + 12,
+                    rect.y + rect.height as i32 - 24,
+                    1,
+                    [128, 184, 199, 255],
+                ));
             }
 
             if explorer_here {

@@ -60,6 +60,7 @@ jobs:
               smoke-cursor-xvfb.sh \
               smoke-palette-xvfb.sh \
               smoke-explorer-xvfb.sh \
+              smoke-chat-xvfb.sh \
               smoke-fullscreen-xvfb.sh \
               smoke-provider-xvfb.sh \
               smoke-index-xvfb.sh \

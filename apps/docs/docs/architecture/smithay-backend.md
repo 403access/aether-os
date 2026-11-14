@@ -50,6 +50,11 @@ result focuses the window and switches to its workspace; the smoke test types
 capture is produced by `smoke-picker-xvfb.sh`, which drives the click with
 `xdotool` and asserts the shell log.*
 
+![Streaming chat drawer](/img/smithay-chat.png)
+
+*`Super+C` opens the chat drawer; tokens stream in as markdown and only the
+visible rows are composed.*
+
 ![Virtualised file explorer](/img/smithay-explorer.png)
 
 *`Super+E` opens the explorer; typing filters, arrows/PgUp/PgDn move, Enter opens

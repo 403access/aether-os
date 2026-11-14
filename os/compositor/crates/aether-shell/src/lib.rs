@@ -184,6 +184,52 @@ struct PaletteState {
 
 /// Virtualised file explorer. `matches` caches filtered file indices so only
 /// the visible slice enters the render plan.
+/// One styled span inside a chat row.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ChatSpan {
+    pub text: String,
+    pub kind: ChatSpanKind,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ChatSpanKind {
+    Text,
+    Bold,
+    Code,
+}
+
+/// One rendered chat row. Markdown is parsed as tokens arrive.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ChatLine {
+    pub spans: Vec<ChatSpan>,
+    pub scale: u32,
+    pub indent: i32,
+    pub code: bool,
+}
+
+#[derive(Clone, Debug)]
+pub struct ChatState {
+    lines: Vec<ChatLine>,
+    pending: String,
+    scroll: usize,
+    visible: usize,
+    code_block: bool,
+    width: usize,
+}
+
+impl Default for ChatState {
+    fn default() -> Self {
+        Self {
+            lines: Vec::new(),
+            pending: String::new(),
+            scroll: 0,
+            visible: 20,
+            code_block: false,
+            width: 44,
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct ExplorerState {
     query: String,
@@ -268,6 +314,7 @@ pub struct Shell {
     overlay_output: Option<OutputId>,
     palette: PaletteState,
     explorer: Option<ExplorerState>,
+    chat: Option<ChatState>,
     launchers: Vec<PaletteLauncher>,
     files: Vec<PaletteFile>,
     files_prefiltered: bool,
@@ -302,6 +349,7 @@ impl Shell {
             overlay_output: Some(1),
             palette: PaletteState::default(),
             explorer: None,
+            chat: None,
             launchers: Vec::new(),
             files: Vec::new(),
             files_prefiltered: false,
@@ -1069,6 +1117,103 @@ impl Shell {
 
     pub fn palette_query(&self) -> &str {
         &self.palette.query
+    }
+
+    pub fn chat_rect(&self) -> Rect {
+        let bounds = self
+            .primary_output()
+            .map(|output| output.rect)
+            .unwrap_or_else(|| Rect::from_size(self.viewport));
+        let width = 400.min(bounds.width.saturating_sub(32)).max(1);
+        Rect::new(
+            bounds.right() as i32 - width as i32 - 16,
+            bounds.y + 20,
+            width,
+            bounds.height.saturating_sub(40),
+        )
+    }
+
+    pub fn open_chat(&mut self) -> Option<()> {
+        if self.chat.is_none() {
+            self.chat = Some(ChatState::default());
+        }
+        Some(())
+    }
+
+    pub fn close_chat(&mut self) {
+        self.chat = None;
+    }
+
+    pub fn chat_open(&self) -> bool {
+        self.chat.is_some()
+    }
+
+    pub fn chat_line_count(&self) -> usize {
+        self.chat.as_ref().map(|chat| chat.lines.len()).unwrap_or(0)
+    }
+
+    pub fn chat_scroll(&self) -> usize {
+        self.chat.as_ref().map(|chat| chat.scroll).unwrap_or(0)
+    }
+
+    pub fn chat_visible_rows(&self) -> usize {
+        self.chat.as_ref().map(|chat| chat.visible).unwrap_or(0)
+    }
+
+    /// Lines that enter the render plan (bounded by the drawer height).
+    pub fn visible_chat_lines(&self) -> &[ChatLine] {
+        let Some(chat) = self.chat.as_ref() else {
+            return &[];
+        };
+        let end = (chat.scroll + chat.visible).min(chat.lines.len());
+        if chat.scroll >= end {
+            return &[];
+        }
+        &chat.lines[chat.scroll..end]
+    }
+
+    /// Feed a token (possibly containing newlines). Parsing is incremental.
+    pub fn chat_push_token(&mut self, token: &str) {
+        let Some(chat) = self.chat.as_mut() else {
+            return;
+        };
+        chat.pending.push_str(token);
+        while let Some(newline) = chat.pending.find('\n') {
+            let line: String = chat.pending.drain(..=newline).collect();
+            let line = line.trim_end_matches(['\n', '\r']);
+            chat_materialize(chat, line);
+        }
+        let max_scroll = chat.lines.len().saturating_sub(chat.visible);
+        if chat.scroll + chat.visible >= chat.lines.len().saturating_sub(chat.visible) {
+            chat.scroll = max_scroll;
+        }
+    }
+
+    pub fn chat_finish_stream(&mut self) {
+        let Some(chat) = self.chat.as_mut() else {
+            return;
+        };
+        if !chat.pending.is_empty() {
+            let line = std::mem::take(&mut chat.pending);
+            chat_materialize(chat, &line);
+        }
+    }
+
+    pub fn chat_scroll_by(&mut self, delta: isize) {
+        let Some(chat) = self.chat.as_mut() else {
+            return;
+        };
+        let max_scroll = chat.lines.len().saturating_sub(chat.visible) as isize;
+        chat.scroll = (chat.scroll as isize + delta).clamp(0, max_scroll) as usize;
+    }
+
+    pub fn chat_page(&mut self, direction: isize) {
+        let page = self
+            .chat
+            .as_ref()
+            .map(|chat| chat.visible as isize)
+            .unwrap_or(1);
+        self.chat_scroll_by(direction * page);
     }
 
     /// Explorer panel rect, centred in the primary output.
@@ -1990,6 +2135,210 @@ impl Shell {
             })
             .collect()
     }
+}
+
+fn chat_materialize(chat: &mut ChatState, line: &str) {
+    let trimmed = line.trim_end();
+    if trimmed.trim_start().starts_with("```") {
+        chat.code_block = !chat.code_block;
+        return;
+    }
+    let mut scale = 1;
+    let mut indent = 0;
+    let mut content = trimmed;
+    if chat.code_block {
+        let wrapped = chat_wrap(content, chat.width, 8);
+        for text in wrapped {
+            chat.lines.push(ChatLine {
+                spans: vec![ChatSpan {
+                    text,
+                    kind: ChatSpanKind::Code,
+                }],
+                scale,
+                indent: 8,
+                code: true,
+            });
+        }
+        return;
+    }
+    if let Some(rest) = trimmed.strip_prefix("# ") {
+        scale = 2;
+        content = rest;
+    } else if let Some(rest) = trimmed.strip_prefix("## ") {
+        scale = 2;
+        content = rest;
+    } else if let Some(rest) = trimmed
+        .strip_prefix("- ")
+        .or_else(|| trimmed.strip_prefix("* "))
+    {
+        indent = 4;
+        content = rest;
+    }
+    let mut spans = Vec::new();
+    if indent > 0 {
+        spans.push(ChatSpan {
+            text: "• ".to_string(),
+            kind: ChatSpanKind::Bold,
+        });
+    }
+    spans.extend(chat_inline(content));
+    if spans.is_empty() {
+        chat.lines.push(ChatLine {
+            spans: Vec::new(),
+            scale,
+            indent,
+            code: false,
+        });
+        return;
+    }
+    let text: String = spans.iter().map(|span| span.text.as_str()).collect();
+    if text.chars().count() <= chat.width {
+        chat.lines.push(ChatLine {
+            spans,
+            scale,
+            indent,
+            code: false,
+        });
+        return;
+    }
+    // Word-aware wrap, preserving span styling across rows.
+    let rows = wrap_chat_spans(spans, chat.width);
+    for (index, row) in rows.into_iter().enumerate() {
+        chat.lines.push(ChatLine {
+            spans: row,
+            scale,
+            indent: indent + if index > 0 && indent > 0 { 2 } else { 0 },
+            code: false,
+        });
+    }
+    if chat.lines.len() > 4000 {
+        let excess = chat.lines.len() - 3000;
+        chat.lines.drain(..excess);
+        chat.scroll = chat.scroll.saturating_sub(excess);
+    }
+}
+
+fn wrap_chat_spans(spans: Vec<ChatSpan>, width: usize) -> Vec<Vec<ChatSpan>> {
+    let mut rows = Vec::new();
+    let mut row: Vec<ChatSpan> = Vec::new();
+    let mut row_width = 0usize;
+    let mut push_chunk =
+        |row: &mut Vec<ChatSpan>, row_width: &mut usize, text: &str, kind: ChatSpanKind| {
+            if text.is_empty() {
+                return;
+            }
+            let length = text.chars().count();
+            if *row_width > 0 && *row_width + length > width {
+                rows.push(std::mem::take(row));
+                *row_width = 0;
+            }
+            let text = if *row_width == 0 {
+                text.trim_start().to_string()
+            } else {
+                text.to_string()
+            };
+            if text.is_empty() {
+                return;
+            }
+            if let Some(last) = row.last_mut() {
+                if last.kind == kind {
+                    last.text.push_str(&text);
+                    *row_width += text.chars().count();
+                    return;
+                }
+            }
+            *row_width += text.chars().count();
+            row.push(ChatSpan { text, kind });
+        };
+    for span in spans {
+        for chunk in span
+            .text
+            .split_inclusive(|character: char| character.is_whitespace())
+        {
+            push_chunk(&mut row, &mut row_width, chunk, span.kind);
+        }
+    }
+    if !row.is_empty() {
+        rows.push(row);
+    }
+    if rows.is_empty() {
+        rows.push(Vec::new());
+    }
+    rows
+}
+
+fn chat_wrap(text: &str, width: usize, indent: usize) -> Vec<String> {
+    let mut rows = Vec::new();
+    let mut row = String::new();
+    for word in text.split_whitespace() {
+        if !row.is_empty() && row.chars().count() + 1 + word.chars().count() > width {
+            rows.push(std::mem::take(&mut row));
+        }
+        if !row.is_empty() {
+            row.push(' ');
+        }
+        row.push_str(word);
+    }
+    if !row.is_empty() {
+        rows.push(row);
+    }
+    if rows.is_empty() {
+        rows.push(" ".repeat(indent.min(1)));
+    }
+    rows
+}
+
+fn chat_inline(text: &str) -> Vec<ChatSpan> {
+    let mut spans = Vec::new();
+    let mut current = String::new();
+    let mut chars = text.chars().peekable();
+    let mut push = |spans: &mut Vec<ChatSpan>, current: &mut String, kind: ChatSpanKind| {
+        if !current.is_empty() {
+            spans.push(ChatSpan {
+                text: std::mem::take(current),
+                kind,
+            });
+        }
+    };
+    while let Some(character) = chars.next() {
+        if character == '*' && chars.peek() == Some(&'*') {
+            chars.next();
+            push(&mut spans, &mut current, ChatSpanKind::Text);
+            let mut bold = String::new();
+            while let Some(next) = chars.next() {
+                if next == '*' && chars.peek() == Some(&'*') {
+                    chars.next();
+                    break;
+                }
+                bold.push(next);
+            }
+            if !bold.is_empty() {
+                spans.push(ChatSpan {
+                    text: bold,
+                    kind: ChatSpanKind::Bold,
+                });
+            }
+        } else if character == '`' {
+            push(&mut spans, &mut current, ChatSpanKind::Text);
+            let mut code = String::new();
+            for next in chars.by_ref() {
+                if next == '`' {
+                    break;
+                }
+                code.push(next);
+            }
+            if !code.is_empty() {
+                spans.push(ChatSpan {
+                    text: code,
+                    kind: ChatSpanKind::Code,
+                });
+            }
+        } else {
+            current.push(character);
+        }
+    }
+    push(&mut spans, &mut current, ChatSpanKind::Text);
+    spans
 }
 
 fn palette_score(query: &str, title: &str) -> Option<u8> {
@@ -3277,5 +3626,72 @@ mod explorer_tests {
         assert_eq!(shell.explorer_select_at(point), Some(3));
         let file = shell.explorer_selected_file().unwrap();
         assert_eq!(file.name, "file-00003.txt");
+    }
+}
+
+#[cfg(test)]
+mod chat_tests {
+    use super::*;
+
+    fn chat_shell() -> Shell {
+        let mut shell = Shell::new(Size::new(1280, 800), LayoutConfig::default(), 120);
+        shell.open_chat().unwrap();
+        shell
+    }
+
+    #[test]
+    fn parses_markdown_spans_and_blocks() {
+        let mut shell = chat_shell();
+        shell.chat_push_token("# Title\n");
+        shell.chat_push_token("- item with **bold** and `code`\n");
+        shell.chat_push_token("```\n");
+        shell.chat_push_token("let x = 1;\n");
+        shell.chat_push_token("```\n");
+        shell.chat_finish_stream();
+        let lines = shell.visible_chat_lines();
+        assert_eq!(lines.len(), 3);
+        assert_eq!(lines[0].scale, 2);
+        assert!(lines[1]
+            .spans
+            .iter()
+            .any(|span| span.kind == ChatSpanKind::Bold && span.text == "bold"));
+        assert!(lines[1]
+            .spans
+            .iter()
+            .any(|span| span.kind == ChatSpanKind::Code && span.text == "code"));
+        assert!(lines[2].code);
+    }
+
+    #[test]
+    fn streams_and_bounds_a_long_conversation() {
+        let mut shell = chat_shell();
+        for index in 0..1000 {
+            shell.chat_push_token(&format!("token-{index} "));
+            if index % 12 == 0 {
+                shell.chat_push_token("\n");
+            }
+        }
+        shell.chat_finish_stream();
+        assert!(shell.chat_line_count() >= 80);
+        assert!(shell.visible_chat_lines().len() <= shell.chat_visible_rows());
+        shell.chat_page(-1);
+        assert!(shell.chat_scroll() < shell.chat_line_count());
+        shell.chat_page(1);
+        assert!(shell.chat_scroll() > 0);
+    }
+
+    #[test]
+    fn wraps_long_paragraphs() {
+        let mut shell = chat_shell();
+        shell.chat_push_token(&"word ".repeat(100));
+        shell.chat_push_token("\n");
+        shell.chat_finish_stream();
+        assert!(shell.chat_line_count() > 3);
+        assert!(shell.visible_chat_lines().iter().all(|line| line
+            .spans
+            .iter()
+            .map(|span| span.text.chars().count())
+            .sum::<usize>()
+            <= 48));
     }
 }

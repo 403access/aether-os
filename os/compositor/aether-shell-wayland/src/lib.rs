@@ -6,6 +6,7 @@
 
 mod agents;
 mod app;
+mod chat_demo;
 mod damage;
 mod index_worker;
 mod render;

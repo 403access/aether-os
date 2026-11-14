@@ -1,3 +1,10 @@
+## v0.1.0-alpha.66
+
+- Add the `Super+C` chat drawer: streaming markdown headings, lists, bold and
+  inline code, incremental parsing, autoscroll and bounded visible rows.
+  `AETHER_CHAT_DEMO=1` streams a sample; the smoke records continuous frames.
+- Populate the status bar from a startup sample.
+
 ## v0.1.0-alpha.65
 
 - Add the virtualised explorer layer (`Super+E`): cached filtered indices,

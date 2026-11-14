@@ -9,6 +9,7 @@ use std::error::Error;
 use std::sync::Arc;
 
 use crate::agents::{parse_launchers, AgentSessions};
+use crate::chat_demo::ChatDemo;
 use crate::damage::buffer_damage_to_logical;
 use crate::index_worker::{should_apply, IndexWorker};
 use crate::status::{StatusSnapshot, SAMPLE_INTERVAL};
@@ -489,6 +490,9 @@ fn cursor_for(state: &App) -> CursorShape {
         }
         return CursorShape::Arrow;
     }
+    if state.shell.chat_open() && state.shell.chat_rect().contains(point) {
+        return CursorShape::Arrow;
+    }
     if state.shell.explorer_open() {
         let rect = state.shell.explorer_rect();
         if rect.contains(point) {
@@ -636,6 +640,7 @@ pub struct App {
     agent_sessions: AgentSessions,
     status: StatusSnapshot,
     status_cpu: Option<crate::status::CpuTimes>,
+    chat_demo: Option<ChatDemo>,
     status_last: std::time::Instant,
     status_enabled: bool,
     frame_time_ms: f32,
@@ -699,6 +704,7 @@ impl App {
         let maximize: Keysym = keysyms::KEY_m.into();
         let fullscreen_key: Keysym = keysyms::KEY_f.into();
         let explorer_key: Keysym = keysyms::KEY_e.into();
+        let chat_key: Keysym = keysyms::KEY_c.into();
 
         if modifiers.shift {
             let target = if keysym == one {
@@ -788,6 +794,10 @@ impl App {
             self.toggle_explorer();
             return true;
         }
+        if keysym == chat_key {
+            self.toggle_chat();
+            return true;
+        }
         if keysym == fullscreen_key {
             if let Some(id) = self.shell.focused_window() {
                 let fullscreen = !self.shell.is_fullscreen(id);
@@ -823,11 +833,67 @@ impl App {
         self.mark_full_damage();
     }
 
+    fn toggle_chat(&mut self) {
+        if self.shell.chat_open() {
+            self.shell.close_chat();
+        } else {
+            self.shell.close_overlay();
+            self.shell.close_explorer();
+            let _ = self.shell.open_chat();
+        }
+        self.mark_full_damage();
+    }
+
+    fn handle_chat_key(&mut self, keysym: Keysym) {
+        let escape: Keysym = keysyms::KEY_Escape.into();
+        let up: Keysym = keysyms::KEY_Up.into();
+        let down: Keysym = keysyms::KEY_Down.into();
+        let page_up: Keysym = keysyms::KEY_Page_Up.into();
+        let page_down: Keysym = keysyms::KEY_Page_Down.into();
+        if keysym == escape {
+            self.shell.close_chat();
+            self.mark_full_damage();
+        } else if keysym == up {
+            self.shell.chat_scroll_by(-1);
+        } else if keysym == down {
+            self.shell.chat_scroll_by(1);
+        } else if keysym == page_up {
+            self.shell.chat_page(-1);
+        } else if keysym == page_down {
+            self.shell.chat_page(1);
+        }
+    }
+
+    /// Stream a token into the chat drawer (external producers/tests).
+    pub fn push_chat_token(&mut self, token: &str) {
+        if !self.shell.chat_open() {
+            let _ = self.shell.open_chat();
+        }
+        self.shell.chat_push_token(token);
+        self.mark_chat_damage();
+    }
+
+    fn poll_chat_demo(&mut self) {
+        let tokens = self
+            .chat_demo
+            .as_ref()
+            .map(|demo| demo.drain())
+            .unwrap_or_default();
+        if tokens.is_empty() {
+            return;
+        }
+        for token in tokens {
+            self.shell.chat_push_token(&token);
+        }
+        self.mark_chat_damage();
+    }
+
     fn toggle_explorer(&mut self) {
         if self.shell.explorer_open() {
             self.shell.close_explorer();
         } else {
             self.shell.close_overlay();
+            self.shell.close_chat();
             let _ = self.shell.open_explorer();
             if let Some(worker) = self.index_worker.as_mut() {
                 let generation = worker.request_explorer();
@@ -1235,6 +1301,7 @@ impl App {
             agent_sessions: AgentSessions::bind(None),
             status: StatusSnapshot::default(),
             status_cpu: None,
+            chat_demo: None,
             status_last: std::time::Instant::now(),
             status_enabled: std::env::var("AETHER_STATUS")
                 .map(|value| value != "0")
@@ -1249,6 +1316,14 @@ impl App {
         );
         if let Some(socket) = state.index_socket.clone() {
             state.index_worker = Some(IndexWorker::spawn(std::path::PathBuf::from(socket)));
+        }
+        state.status = StatusSnapshot::sample(None, state.agent_sessions.session_count(), 0.0);
+        state.status_cpu = crate::status::read_cpu();
+        state.status_last = std::time::Instant::now();
+        if std::env::var_os("AETHER_CHAT_DEMO").is_some() {
+            let _ = state.shell.open_chat();
+            state.chat_demo = Some(ChatDemo::spawn());
+            state.mark_full_damage();
         }
         state.refresh_launchers();
         let file_count = if state.index_socket.is_some() {
@@ -1405,6 +1480,7 @@ impl App {
         display.dispatch_clients(self)?;
         display.flush_clients()?;
         self.poll_index_results();
+        self.poll_chat_demo();
         if self.agent_sessions.poll() {
             self.refresh_launchers();
             println!(
@@ -1471,6 +1547,7 @@ impl App {
         let mut shortcut = false;
         let mut palette_key = false;
         let mut explorer_key = false;
+        let mut chat_key_pressed = false;
         keyboard.input::<(), _>(
             self,
             key_code,
@@ -1496,6 +1573,12 @@ impl App {
                         explorer_key = true;
                     }
                     FilterResult::Intercept(())
+                } else if state.shell.chat_open() {
+                    if pressed {
+                        state.handle_chat_key(sym);
+                        chat_key_pressed = true;
+                    }
+                    FilterResult::Intercept(())
                 } else {
                     FilterResult::Forward
                 }
@@ -1512,6 +1595,8 @@ impl App {
             self.mark_full_damage();
         } else if explorer_key {
             self.mark_explorer_damage();
+        } else if chat_key_pressed {
+            self.mark_chat_damage();
         } else if palette_key {
             let new_overlay = self.shell.overlay_rect();
             if let Some(rect) = old_overlay {
@@ -1751,7 +1836,18 @@ impl App {
         };
 
         if state == ButtonState::Pressed {
-            self.pointer_captured = modal || over_picker || self.shell.explorer_open();
+            self.pointer_captured =
+                modal || over_picker || self.shell.explorer_open() || self.shell.chat_open();
+            if self.shell.chat_open() {
+                if self.shell.chat_rect().contains(point) {
+                    self.mark_chat_damage();
+                } else {
+                    self.shell.close_chat();
+                    self.mark_full_damage();
+                }
+                self.end_input(started);
+                return;
+            }
             if self.shell.explorer_open() {
                 if self.shell.explorer_select_at(point).is_some() {
                     self.pointer_captured = true;
@@ -1917,6 +2013,21 @@ impl App {
     /// Pointer axis (scroll) event.
     pub fn pointer_axis(&mut self, horizontal: f64, vertical: f64, source: AxisSource, time: u32) {
         let started = self.begin_input();
+        if self.shell.chat_open() {
+            let point = AetherPoint::new(
+                self.pointer_pos.x.round() as i32,
+                self.pointer_pos.y.round() as i32,
+            );
+            if self.shell.chat_rect().contains(point) {
+                if vertical != 0.0 {
+                    self.shell
+                        .chat_scroll_by(if vertical > 0.0 { 3 } else { -3 });
+                }
+                self.mark_chat_damage();
+                self.end_input(started);
+                return;
+            }
+        }
         if self.shell.explorer_open() {
             let point = AetherPoint::new(
                 self.pointer_pos.x.round() as i32,
@@ -1981,6 +2092,13 @@ impl App {
 
     fn mark_overlay_damage(&mut self) {
         if let Some(rect) = self.shell.overlay_rect() {
+            self.mark_damage_rect(rect);
+        }
+    }
+
+    fn mark_chat_damage(&mut self) {
+        if self.shell.chat_open() {
+            let rect = self.shell.chat_rect();
             self.mark_damage_rect(rect);
         }
     }

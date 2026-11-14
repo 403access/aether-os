@@ -49,6 +49,6 @@ introduced by T2 only for scoring reuse; they can land independently.
 | P3-T1 | ✅ | Rust daemon, inotify, socket, ring; `artifacts/p3/index-smoke.log` |
 | P3-T2 | ✅ | prefix modes, subsequence scoring, TS/Rust fixture, 10k p95 1.11 ms |
 | P3-T3 | ✅ | cached match indices, 14-row render window, 10k p95 0.004 ms, `evidence/p3-explorer.log` |
-| P3-T4 | ⏳ | |
+| P3-T4 | ✅ | streamed markdown drawer, bounded rows, 52 frames during a 3s stream |
 | P3-T5 | ⏳ | |
 | P3-T6 | ⏳ | |

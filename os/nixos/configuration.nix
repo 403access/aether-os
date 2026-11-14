@@ -82,6 +82,8 @@
       pavucontrol
       wireplumber
       wl-clip-persist
+      cage
+      aether-shell-smithay
       intel-gpu-tools
       vulkan-tools
       libva-utils

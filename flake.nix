@@ -82,6 +82,15 @@
         filter = path: _type: builtins.baseNameOf path != "target";
       };
 
+      makeSmithaySource = p:
+        p.runCommand "aether-smithay-src" {} ''
+          mkdir -p $out
+          cp -r ${sceneSource}/aether-shell-smithay $out/
+          cp -r ${sceneSource}/crates $out/
+          cp ${sceneSource}/Cargo.toml $out/
+          cp ${sceneSource}/Cargo.lock $out/
+        '';
+
       indexSource = nixpkgs.lib.fileset.toSource {
         root = ./.;
         fileset = nixpkgs.lib.fileset.unions [
@@ -109,6 +118,38 @@
             description = "Aether compositor scene graph, damage tracking and frame pacing";
             license = licenses.mit;
             platforms = ["x86_64-linux"];
+          };
+        };
+
+        aether-shell-smithay = final.rustPlatform.buildRustPackage {
+          pname = "aether-shell-smithay";
+          version = "0.1.0";
+          src = makeSmithaySource final;
+          sourceRoot = "aether-smithay-src/aether-shell-smithay";
+          cargoLock.lockFile = ./os/compositor/aether-shell-smithay/Cargo.lock;
+          nativeBuildInputs = [final.pkg-config];
+          buildInputs = with final; [
+            wayland
+            libxkbcommon
+            libGL
+            mesa
+            libx11
+            libxcursor
+            libxi
+            libxrandr
+            libxinerama
+            libxext
+            libxcb
+          ];
+          doCheck = false;
+          installPhase = ''
+            mkdir -p $out/bin
+            cp target/aarch64-unknown-linux-gnu/release/aether-shell-smithay $out/bin/aether-shell-smithay
+          '';
+          meta = with final.lib; {
+            description = "Aether Smithay/winit compositor (development adapter)";
+            license = licenses.mit;
+            platforms = ["x86_64-linux" "aarch64-linux"];
           };
         };
 
@@ -164,6 +205,7 @@
         installer-iso = self.packages.${system}.iso;
         aether-scene = pkgs.aether-scene;
         index-service = pkgs.aether-index-service;
+        aether-shell-smithay = pkgs.aether-shell-smithay;
       };
 
       # ---------------------------------------------------------------------
@@ -191,6 +233,7 @@
         # systemd-boot).
         vm-image = vm.config.system.build.images.qemu-efi;
         index-service = vmPkgs.aether-index-service;
+        aether-shell-smithay = vmPkgs.aether-shell-smithay;
         default = vm.config.system.build.images.qemu-efi;
       };
 

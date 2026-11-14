@@ -98,6 +98,13 @@ skipping hidden entries and heavy build directories. The palette only shows file
 results for non-empty queries; running one invokes `AETHER_OPENER` (default
 `xdg-open`). The smoke uses a fixture tree and a deterministic opener script.*
 
+![Copying in one terminal and pasting in another](/img/smithay-clipboard.png)
+
+*Client-to-client clipboard works through `wl_data_device`: keyboard focus is
+forwarded with `set_data_device_focus`, so the newly focused client receives the
+selection offer. The smoke copies with `wl-copy` in one terminal and pastes with
+`wl-paste` in the other.*
+
 ![The same window maximized](/img/smithay-window-maximized.png)
 
 *`Super+M` maximizes the focused window to the full output; pressing it again
@@ -140,6 +147,10 @@ drag and both toggles with `xdotool` and asserts each transition.*
   leak to a client underneath. The seat advertises `wl_pointer`.
 - **Interactive layout resize.** Dragging the gap between the master and stack
   updates the split ratio (clamped 0.2–0.8) and reconfigures clients live.
+- **Client clipboard.** `wl_data_device` copy/paste works between clients. The
+  compositor forwards the data-device focus with keyboard focus so selection
+  offers reach the right client. Primary selection, DnD and clipboard
+  persistence after the source exits are not implemented.
 - **Pointer cursor feedback.** The winit window's system cursor changes with
   the hover target: `ColResize` on the master/stack divider, `Pointer` on
   workspace chips and palette rows, `Text` on the palette input, `Move` over a
@@ -237,11 +248,13 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-provider-xvfb.sh # spawn a client from the palette
 ./os/compositor/aether-shell-smithay/smoke-desktop-xvfb.sh  # launch a discovered .desktop app
 ./os/compositor/aether-shell-smithay/smoke-files-xvfb.sh    # search/open a fixture file
+./os/compositor/aether-shell-smithay/smoke-clipboard-xvfb.sh # copy/paste between terminals
 ```
 
 The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. The picker,
 resize, palette, window, cursor and provider smokes require `xdotool`, which the
-`.#smithay` dev shell provides. Set `AETHER_TERMINAL` to change the built-in
+`.#smithay` dev shell provides (`wl-copy`/`wl-paste` for the clipboard smoke).
+Set `AETHER_TERMINAL` to change the built-in
 terminal launcher. Desktop apps come from `XDG_DATA_HOME`/`XDG_DATA_DIRS`
 (`~/.local/share` and `/usr/local/share:/usr/share` by default). The file index
 uses `AETHER_FILE_ROOTS` (default `$HOME`), `AETHER_FILE_LIMIT` (default 2000),

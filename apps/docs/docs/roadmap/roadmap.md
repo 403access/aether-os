@@ -85,12 +85,14 @@ Deliverables:
   draggable master/stack split, Alt+drag move, Alt+right-drag corner resize,
   edge snapping, half-snap on release, `Super+M` maximize with restore, hover
   cursor feedback, a `New terminal` command, XDG `.desktop` app discovery and a
-  bounded filename index with `OpenFile`. Picker, divider, palette
-  input/commands, desktop/file launch, window management and cursor mapping are
-  verified by xdotool smokes.
+  bounded filename index with `OpenFile`. Clipboard copy/paste works between
+  clients via data-device focus forwarding. Picker, divider, palette
+  input/commands, desktop/file launch, clipboard, window management and cursor
+  mapping are verified by xdotool smokes.
 - ⏳ Agent-session provider, system content index integration, desktop-entry live
-  refresh/icons/actions/DBus, IME support, fullscreen, multi-output snapping,
-  DRM cursor images/themes, per-client damage, udev/DRM.
+  refresh/icons/actions/DBus, clipboard persistence/primary/DnD, IME support,
+  fullscreen, multi-output snapping, DRM cursor images/themes, per-client
+  damage, udev/DRM.
 - ⏳ udev/DRM backend, libinput seat, wgpu renderer, output hotplug.
 - Scene graph with damage tracking; shell chrome in one draw pass.
 - Tiling layout, focus, keybindings; one workspace per output.

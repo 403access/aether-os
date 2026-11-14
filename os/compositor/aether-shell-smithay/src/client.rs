@@ -21,7 +21,7 @@ use aether_cursor::{render as render_cursor, CursorShape, CursorTheme};
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect, Size as AetherSize};
 use aether_layout::LayoutConfig;
 use aether_shell::{
-    PaletteAction, PaletteFile, PaletteLauncher, Shell, SnapZone, WindowId, WindowSpec,
+    OutputInfo, PaletteAction, PaletteFile, PaletteLauncher, Shell, SnapZone, WindowId, WindowSpec,
     MIN_FLOATING_HEIGHT, MIN_FLOATING_WIDTH, PALETTE_VISIBLE_ROWS, WORKSPACE_INDICATOR_BAR_HEIGHT,
 };
 use aether_text::{text_width, TextBitmap};
@@ -210,9 +210,14 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     let start_time = std::time::Instant::now();
     state.window_size = backend.window_size();
     state.scale = backend.scale_factor();
-    state
-        .shell
-        .set_viewport(logical_size(state.window_size, state.scale));
+    let logical = logical_size(state.window_size, state.scale);
+    state.shell.set_outputs(vec![OutputInfo {
+        id: 1,
+        name: "Aether-1".to_string(),
+        rect: AetherRect::from_size(logical),
+        scale: state.scale,
+        primary: true,
+    }]);
     state.configure_all();
     if args.iter().any(|arg| arg == "--overlay") || std::env::var("AETHER_OVERLAY").is_ok() {
         state.toggle_overlay();
@@ -247,7 +252,14 @@ pub fn run() -> Result<(), Box<dyn Error>> {
             WinitEvent::Resized { size, scale_factor } => {
                 state.window_size = size;
                 state.scale = scale_factor;
-                state.shell.set_viewport(logical_size(size, scale_factor));
+                let logical = logical_size(size, scale_factor);
+                state.shell.set_outputs(vec![OutputInfo {
+                    id: 1,
+                    name: "Aether-1".to_string(),
+                    rect: AetherRect::from_size(logical),
+                    scale: scale_factor,
+                    primary: true,
+                }]);
                 state.configure_all();
             }
             WinitEvent::Focus(_) => {}

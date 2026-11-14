@@ -26,6 +26,17 @@ use aether_pacing::FramePacer;
 use aether_scene::{Layer, Scene, SurfaceId};
 
 pub type WindowId = u64;
+pub type OutputId = u64;
+
+/// A logical output in the shell's extended desktop.
+#[derive(Clone, Debug, PartialEq)]
+pub struct OutputInfo {
+    pub id: OutputId,
+    pub name: String,
+    pub rect: Rect,
+    pub scale: f64,
+    pub primary: bool,
+}
 
 /// Top-left of the first workspace indicator.
 pub const WORKSPACE_INDICATOR_X: i32 = 10;
@@ -200,6 +211,7 @@ pub struct Shell {
     active: usize,
     focus: Option<WindowId>,
     overlay: Option<SurfaceId>,
+    outputs: Vec<OutputInfo>,
     palette: PaletteState,
     launchers: Vec<PaletteLauncher>,
     files: Vec<PaletteFile>,
@@ -222,6 +234,13 @@ impl Shell {
             active: 0,
             focus: None,
             overlay: None,
+            outputs: vec![OutputInfo {
+                id: 1,
+                name: "output-1".to_string(),
+                rect: Rect::from_size(viewport),
+                scale: 1.0,
+                primary: true,
+            }],
             palette: PaletteState::default(),
             launchers: Vec::new(),
             files: Vec::new(),
@@ -1123,11 +1142,63 @@ impl Shell {
         self.scene.add_damage(window.surface, rect)
     }
 
+    /// Replace the output list. The viewport becomes the bounding box of all
+    /// outputs, and a primary output is guaranteed.
+    pub fn set_outputs(&mut self, mut outputs: Vec<OutputInfo>) -> bool {
+        if outputs.is_empty() {
+            return false;
+        }
+        if !outputs.iter().any(|output| output.primary) {
+            outputs[0].primary = true;
+        }
+        let width = outputs
+            .iter()
+            .map(|output| output.rect.right().max(0) as u32)
+            .max()
+            .unwrap_or(1)
+            .max(1);
+        let height = outputs
+            .iter()
+            .map(|output| output.rect.bottom().max(0) as u32)
+            .max()
+            .unwrap_or(1)
+            .max(1);
+        self.outputs = outputs;
+        self.viewport = Size::new(width, height);
+        self.scene.resize_viewport(self.viewport);
+        self.relayout();
+        true
+    }
+
+    pub fn outputs(&self) -> &[OutputInfo] {
+        &self.outputs
+    }
+
+    pub fn primary_output(&self) -> Option<&OutputInfo> {
+        self.outputs
+            .iter()
+            .find(|output| output.primary)
+            .or_else(|| self.outputs.first())
+    }
+
+    pub fn output_at(&self, point: Point) -> Option<OutputId> {
+        self.outputs
+            .iter()
+            .find(|output| output.rect.contains(point))
+            .map(|output| output.id)
+    }
+
     pub fn set_viewport(&mut self, viewport: Size) {
         if viewport == self.viewport {
             return;
         }
         self.viewport = viewport;
+        if let Some(primary) = self.outputs.iter_mut().find(|output| output.primary) {
+            primary.rect = Rect::from_size(viewport);
+        } else if let Some(first) = self.outputs.first_mut() {
+            first.rect = Rect::from_size(viewport);
+            first.primary = true;
+        }
         self.scene.resize_viewport(viewport);
         self.relayout();
     }
@@ -1697,6 +1768,67 @@ mod tests {
         assert_eq!(restored_first.rect, before_first);
         assert_eq!(restored_second.rect, before_second);
         assert!(!shell.toggle_maximized(999));
+    }
+
+    #[test]
+    fn multiple_outputs_extend_the_desktop_and_hotplug_reflows() {
+        let mut shell = shell();
+        let first = window(&mut shell, "first");
+        let second = window(&mut shell, "second");
+        assert_eq!(shell.outputs().len(), 1);
+        assert_eq!(
+            shell.primary_output().unwrap().rect,
+            Rect::new(0, 0, 800, 600)
+        );
+
+        assert!(shell.set_outputs(vec![
+            OutputInfo {
+                id: 1,
+                name: "left".into(),
+                rect: Rect::new(0, 0, 800, 600),
+                scale: 1.0,
+                primary: true,
+            },
+            OutputInfo {
+                id: 2,
+                name: "right".into(),
+                rect: Rect::new(800, 0, 1024, 768),
+                scale: 1.0,
+                primary: false,
+            },
+        ]));
+        assert_eq!(shell.viewport(), Size::new(1824, 768));
+        assert_eq!(shell.output_at(Point::new(1700, 400)), Some(2));
+        assert_eq!(shell.output_at(Point::new(1900, 400)), None);
+        let windows = shell.windows();
+        assert!(windows.iter().any(|window| window.rect.right() > 800));
+        assert_eq!(
+            windows
+                .iter()
+                .find(|window| window.id == first)
+                .unwrap()
+                .rect
+                .height,
+            752
+        );
+
+        assert!(shell.set_outputs(vec![OutputInfo {
+            id: 1,
+            name: "only".into(),
+            rect: Rect::new(0, 0, 1280, 720),
+            scale: 1.0,
+            primary: true,
+        }]));
+        assert_eq!(shell.viewport(), Size::new(1280, 720));
+        assert_eq!(shell.outputs()[0].name, "only");
+        let second_rect = shell
+            .windows()
+            .into_iter()
+            .find(|window| window.id == second)
+            .unwrap()
+            .rect;
+        assert_eq!(second_rect.bottom(), 712);
+        assert!(!shell.set_outputs(Vec::new()));
     }
 
     #[test]

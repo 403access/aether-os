@@ -116,6 +116,7 @@
   systemd.services.aether-vm-drm = {
     description = "Aether native DRM boot check";
     wantedBy = ["multi-user.target"];
+    unitConfig.ConditionPathExists = "!/sys/firmware/qemu_fw_cfg/by_name/opt/aether/gui/raw";
     after = ["systemd-user-sessions.service" "systemd-logind.service"];
     serviceConfig = {
       PAMName = "login";
@@ -184,8 +185,12 @@
   systemd.services.aether-vm-session = {
     description = "Aether VM graphics session";
     wantedBy = ["multi-user.target"];
-    after = ["aether-vm-drm.service" "systemd-user-sessions.service" "systemd-logind.service"];
-    unitConfig.ConditionPathExists = ["|/dev/dri/card0" "|/dev/dri/card1"];
+    after = ["systemd-user-sessions.service" "systemd-logind.service"];
+    unitConfig.ConditionPathExists = [
+      "/sys/firmware/qemu_fw_cfg/by_name/opt/aether/gui/raw"
+      "|/dev/dri/card0"
+      "|/dev/dri/card1"
+    ];
     serviceConfig = {
       PAMName = "login";
       TTYPath = "/dev/tty8";

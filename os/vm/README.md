@@ -48,8 +48,8 @@ Artifacts are copied to `artifacts/vm/` (gitignored).
 ./scripts/vm-smoke.sh        # headless boot, waits for AETHER_VM_READY
 ```
 
-`--gui` attaches a virtio GPU, keyboard and tablet, waits for the DRM check to
-finish, then starts `aether-vm-session` on tty8. Open `vnc://127.0.0.1:5905`, or
+`--gui` attaches a virtio GPU, keyboard and tablet plus a fw_cfg marker. The
+marker skips the DRM check and starts `aether-vm-session` on tty8. Open `vnc://127.0.0.1:5905`, or
 use `VM_GUI_DISPLAY=cocoa` for a native QEMU window. `VM_VNC_DISPLAY=6` selects
 `127.0.0.1:5906`. `Ctrl-A X` quits QEMU.
 

@@ -77,6 +77,7 @@ if [ "${GUI}" = "1" ]; then
     -device virtio-gpu-pci
     -device virtio-keyboard-pci
     -device virtio-tablet-pci
+    -fw_cfg "name=opt/aether/gui,string=1"
   )
   if [ "${VM_GUI_DISPLAY:-vnc}" = "cocoa" ]; then
     GUI_ARGS+=(-display cocoa,show-cursor=on)

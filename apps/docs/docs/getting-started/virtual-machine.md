@@ -115,10 +115,10 @@ graphical session.
 ./scripts/vm-run.sh --gui
 ```
 
-This attaches a `virtio-gpu-pci`, virtio keyboard/tablet, a persistent QEMU
-process and a VNC server. The DRM bring-up check still runs first on tty7 for
-about 120 seconds; afterwards `aether-vm-session` starts the compositor on tty8.
-Connect while it runs:
+This attaches a `virtio-gpu-pci`, virtio keyboard/tablet, a QEMU fw_cfg marker, a
+persistent QEMU process and a VNC server. The marker makes `aether-vm-session`
+start the compositor on **tty8** and skips the tty7 DRM bring-up check, so the
+GUI does not wait for the 120-second test. Connect:
 
 ```bash
 open vnc://127.0.0.1:5905
@@ -205,7 +205,7 @@ the first-boot checklist, not a substitute for it.
 | systemd multi-user, DHCP, SSH | enabled |
 | `helix`, `tmux`, `htop`, `git` | installed |
 | PipeWire | **not enabled**; `aether-audio` CLI is installed for route inspection |
-| Compositor | installed; `--drm-smoke` runs tty7 for ~120 s; `--gui` then runs a persistent session on tty8 |
+| Compositor | installed; `--drm-smoke` runs tty7 for ~120 s; `--gui` runs a persistent session on tty8 |
 | Agent daemons | not installed |
 | Firewall | disabled (user-mode NAT only) |
 | Passwordless sudo | enabled for convenience |

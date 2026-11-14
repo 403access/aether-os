@@ -69,7 +69,6 @@ struct OutputSurface {
     id: OutputId,
     connector: connector::Handle,
     drm_output: AetherDrmOutput,
-    dirty: bool,
 }
 
 struct DrmState {
@@ -115,10 +114,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                             if let Err(error) = device.manager.activate(false) {
                                 eprintln!("aether-shell-drm: DRM activate failed: {error:?}");
                             }
-                            for surface in device.surfaces.values_mut() {
-                                surface.dirty = true;
-                            }
                         }
+                        // The session may have modeset behind our back.
+                        state.app.mark_output_damage();
                     }
                 },
             )?;
@@ -225,7 +223,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     state.app.flush_focus(&state.keyboard);
-    state.mark_all_dirty();
+    state.app.mark_output_damage();
     state.render_all();
     state.app.spawn_test_clients();
 
@@ -244,9 +242,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         event_loop.dispatch(Some(Duration::from_millis(16)), &mut state)?;
         state.app.poll_clients(&mut state.display)?;
         state.app.flush_focus(&state.keyboard);
-        if state.app.needs_frame() {
-            state.mark_all_dirty();
-        }
         let presented = state.render_all();
         state.app.configure_all();
         if presented {
@@ -528,7 +523,6 @@ impl DrmState {
                 id: next_id,
                 connector: candidate.connector.handle(),
                 drm_output,
-                dirty: true,
             },
         );
         self.next_output_id += 1;
@@ -552,7 +546,6 @@ impl DrmState {
         if let Some(device) = self.devices.get_mut(&node) {
             if let Some(surface) = device.surfaces.get_mut(&crtc) {
                 let _ = surface.drm_output.frame_submitted();
-                surface.dirty = self.app.needs_frame();
             }
         }
     }
@@ -608,27 +601,29 @@ impl DrmState {
             InputEvent::DeviceAdded { .. } | InputEvent::DeviceRemoved { .. } => {}
             _ => {}
         }
-        self.mark_all_dirty();
-    }
-
-    fn mark_all_dirty(&mut self) {
-        for device in self.devices.values_mut() {
-            for surface in device.surfaces.values_mut() {
-                surface.dirty = true;
-            }
-        }
     }
 
     fn render_all(&mut self) -> bool {
         let DrmState { app, devices, .. } = self;
         let mut presented = false;
+        let mut attempted = false;
+        let mut deferred = false;
         for device in devices.values_mut() {
             let DeviceBackend {
                 renderer, surfaces, ..
             } = device;
             for surface in surfaces.values_mut() {
-                if !surface.dirty {
+                let Some((full, damage)) = app.output_damage(Some(surface.id)) else {
                     continue;
+                };
+                attempted = true;
+                if std::env::var_os("AETHER_FRAME_LOG").is_some() {
+                    println!(
+                        "aether-shell-drm: output {} damage {} {:?}",
+                        surface.id,
+                        if full { "full" } else { "partial" },
+                        damage
+                    );
                 }
                 let composed = app.compose(renderer, Some(surface.id));
                 let rendered = surface.drm_output.render_frame(
@@ -639,30 +634,36 @@ impl DrmState {
                 );
                 match rendered {
                     Ok(frame) => {
-                        surface.dirty = false;
                         if frame.is_empty {
                             continue;
                         }
                         if let Err(error) = surface.drm_output.queue_frame(()) {
                             eprintln!("aether-shell-drm: queue_frame failed: {error}");
+                            deferred = true;
                         } else {
                             presented = true;
                         }
                     }
-                    Err(RenderFrameError::PrepareFrame(FrameError::EmptyFrame)) => {
-                        surface.dirty = false;
-                    }
+                    Err(RenderFrameError::PrepareFrame(FrameError::EmptyFrame)) => {}
                     Err(RenderFrameError::PrepareFrame(FrameError::NoFreeSlotsError)) => {
-                        // A flip is still in flight; retry after its VBlank.
+                        // Keep the damage for the next VBlank instead of
+                        // dropping or queueing a second frame.
+                        deferred = true;
                     }
                     Err(error) => {
                         eprintln!("aether-shell-drm: render failed: {error}");
-                        surface.dirty = false;
                     }
                 }
             }
         }
-        let _ = app.take_damage();
+        // Drain damage exactly once. If an output is still flipping, keep it
+        // for the next pass; a redundant repaint is cheaper than a lost one.
+        if attempted && !deferred {
+            let _ = app.take_damage();
+        } else if !attempted && app.needs_frame() {
+            // Damage outside every output (or no outputs); do not wedge the loop.
+            let _ = app.take_damage();
+        }
         presented
     }
 }

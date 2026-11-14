@@ -205,6 +205,8 @@ impl RenderElement<GlesRenderer> for AetherRenderElement {
 pub struct ComposedFrame {
     pub elements: Vec<AetherRenderElement>,
     pub clear: Color32F,
+    /// Damage in this output's local physical coordinates.
+    pub damage: Vec<Rectangle<i32, Physical>>,
 }
 
 impl App {
@@ -653,9 +655,14 @@ impl App {
 
         // Everything above is bottom-up; compositors expect topmost-first.
         elements.reverse();
+        let damage = self
+            .output_damage(output)
+            .map(|(_, damage)| damage)
+            .unwrap_or_default();
         ComposedFrame {
             elements,
             clear: BACKGROUND,
+            damage,
         }
     }
 }

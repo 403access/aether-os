@@ -85,7 +85,14 @@ reported and non-zero only when frames are actually late.
 
 **Record.** `artifacts/perf/p2/pacing.json` with per-output interval samples.
 
-### G2 · Carry damage through the frame plan
+### G2 · Carry damage through the frame plan — ✅ done
+
+**Status.** `ComposedFrame` now carries local damage, `App::output_damage` clips
+global damage per output, the DRM presenter composes only affected outputs and
+drains damage once (deferring when a flip is still in flight). The
+`let _ = app.take_damage()` discard is gone. Evidence:
+[`damage.log`](/evidence/p2/damage.log) from `AETHER_FRAME_LOG`, plus three
+`damage_for_bounds` unit tests in `app.rs`.
 
 **Why.** The frontend computes damage and then throws it away. Marking all outputs
 dirty on any damage means every keystroke redraws the whole 1440p scene — the largest

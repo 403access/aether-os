@@ -1,0 +1,124 @@
+aether-shell: indexed 0 files
+aether-shell: loaded 0 desktop apps, 0 files on WAYLAND_DISPLAY=aether-0
+aether-shell: output Aether-1 1280x800 at 0+0 (1 total)
+aether-shell-smithay: compositor on winit window
+aether-shell: spawned test client (pid 64413)
+aether-shell: spawned test client (pid 64414)
+aether-shell-smithay: frame damage=full
+aether-shell: client connected
+aether-shell: client connected
+could not load cursor 'dnd-move'
+could not load cursor 'dnd-copy'
+could not load cursor 'dnd-none'
+could not load cursor 'dnd-move'
+could not load cursor 'dnd-copy'
+could not load cursor 'dnd-none'
+Fontconfig error: Cannot load default config file: File not found
+Fontconfig error: Cannot load default config file: File not found
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 707, y: 16, width: 557, height: 768 }]
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 707, y: 16, width: 557, height: 768 }]
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=full
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]
+aether-shell-smithay: frame damage=partial [Rectangle<smithay::utils::geometry::Physical> { x: 16, y: 16, width: 681, height: 768 }]

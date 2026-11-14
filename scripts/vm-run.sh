@@ -83,7 +83,7 @@ if [ "${MODE}" = "--drm-smoke" ]; then
       grep -E "AETHER_VM_|aether-shell" "${LOG}" | tail -30
       STATUS_LINE="$(grep "AETHER_VM_DRM_STATUS=" "${LOG}" | tail -1)"
       case "${STATUS_LINE}" in
-        *"=0") exit 0 ;;
+        *"=0"*) exit 0 ;;
         *) die "native DRM backend failed: ${STATUS_LINE}" ;;
       esac
     fi

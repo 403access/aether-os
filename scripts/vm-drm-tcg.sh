@@ -39,5 +39,7 @@ fi
 
 tail -40 "${OUT}/serial.log" | grep -E "AETHER_VM_|aether-shell|aether-shell-drm" || true
 STATUS="$(grep "AETHER_VM_DRM_STATUS=" "${OUT}/serial.log" | tail -1)"
-[ "${STATUS##*=}" = "0" ] || die "native DRM backend failed: ${STATUS}"
+STATUS="${STATUS##*=}"
+STATUS="${STATUS%$'\r'}"
+[ "${STATUS}" = "0" ] || die "native DRM backend failed (status ${STATUS})"
 say "native DRM backend passed on virtio-gpu"

@@ -77,6 +77,7 @@ use smithay::wayland::selection::data_device::{
 use smithay::wayland::selection::primary_selection::{
     set_primary_focus, PrimarySelectionHandler, PrimarySelectionState,
 };
+use smithay::wayland::selection::wlr_data_control::{DataControlHandler, DataControlState};
 use smithay::wayland::selection::SelectionHandler;
 use smithay::wayland::shell::xdg::{
     PopupSurface, PositionerState, ToplevelSurface, XdgShellHandler, XdgShellState,
@@ -122,6 +123,10 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     output.create_global::<App>(&dh);
     println!("aether-shell-smithay: output Aether-1 1280x800@60");
 
+    let primary_selection_state = PrimarySelectionState::new::<App>(&dh);
+    let data_control_state =
+        DataControlState::new::<App, _>(&dh, Some(&primary_selection_state), |_| true);
+
     let mut state = App {
         display_handle: dh.clone(),
         compositor_state,
@@ -129,7 +134,8 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         shm_state,
         seat_state,
         data_device_state: DataDeviceState::new::<App>(&dh),
-        primary_selection_state: PrimarySelectionState::new::<App>(&dh),
+        primary_selection_state,
+        data_control_state,
         output,
         seat,
         shell: {
@@ -515,6 +521,38 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     } else if let Some(id) = state.shell.window_at(point) {
                         state.shell.focus_window(id);
                         state.sync_focus();
+                        // Ensure the client has an up-to-date pointer position
+                        // before the button, even if no motion arrived at this
+                        // point after a focus change.
+                        if let Some(rect) = state
+                            .shell
+                            .windows()
+                            .into_iter()
+                            .find(|window| window.id == id)
+                            .map(|window| window.rect)
+                        {
+                            let local = smithay::utils::Point::from((
+                                point.x as f64 - rect.x as f64,
+                                point.y as f64 - rect.y as f64,
+                            ));
+                            let surface = state
+                                .windows
+                                .get(&id)
+                                .map(|toplevel| toplevel.wl_surface().clone());
+                            let serial = SERIAL_COUNTER.next_serial();
+                            let time = Event::time_msec(&event);
+                            let pointer = state.seat.get_pointer().expect("seat pointer");
+                            pointer.motion(
+                                &mut state,
+                                surface.map(|surface| (surface, local)),
+                                &MotionEvent {
+                                    location: local,
+                                    serial,
+                                    time,
+                                },
+                            );
+                            pointer.frame(&mut state);
+                        }
                     }
                 }
 
@@ -1163,6 +1201,12 @@ impl PrimarySelectionHandler for App {
     }
 }
 
+impl DataControlHandler for App {
+    fn data_control_state(&self) -> &DataControlState {
+        &self.data_control_state
+    }
+}
+
 impl ClientDndGrabHandler for App {}
 impl ServerDndGrabHandler for App {
     fn send(&mut self, _mime_type: String, _fd: std::os::unix::io::OwnedFd, _seat: Seat<Self>) {}
@@ -1574,6 +1618,7 @@ struct App {
     seat_state: SeatState<Self>,
     data_device_state: DataDeviceState,
     primary_selection_state: PrimarySelectionState,
+    data_control_state: DataControlState,
     output: Output,
     seat: Seat<Self>,
     shell: Shell,
@@ -2045,6 +2090,7 @@ smithay::delegate_shm!(App);
 smithay::delegate_seat!(App);
 smithay::delegate_data_device!(App);
 smithay::delegate_primary_selection!(App);
+smithay::delegate_data_control!(App);
 smithay::delegate_output!(App);
 smithay::delegate_text_input_manager!(App);
 smithay::delegate_input_method_manager!(App);

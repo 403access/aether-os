@@ -50,6 +50,7 @@
             weston
             wayland-utils
             wl-clipboard
+            wl-clip-persist
             xdotool
             imagemagick
           ];

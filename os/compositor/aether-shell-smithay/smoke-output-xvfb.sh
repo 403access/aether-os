@@ -56,6 +56,7 @@ WAYLAND_DISPLAY="${SOCKET}" wayland-info >"${OUT}/wayland-info.txt" 2>&1 || true
 for expected in \
   "interface: 'wl_output'" \
   "interface: 'zxdg_output_manager_v1'" \
+  "interface: 'zwlr_data_control_manager_v1'" \
   "logical_width: 1280" \
   "logical_height: 800" \
   "width: 1280 px" \

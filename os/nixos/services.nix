@@ -56,6 +56,19 @@
   services.printing.enable = false;
   services.fwupd.enable = false;
 
+  # Keep clipboard data after the source client exits. wlr-data-control is
+  # advertised by the compositor; the helper re-owns the selection.
+  systemd.user.services.aether-clip-persist = {
+    description = "Aether clipboard persistence";
+    wantedBy = ["default.target"];
+    serviceConfig = {
+      ExecStart = "${pkgs.wl-clip-persist}/bin/wl-clip-persist --clipboard both";
+      Environment = ["WAYLAND_DISPLAY=aether-0"];
+      Restart = "on-failure";
+      RestartSec = 2;
+    };
+  };
+
   systemd = {
     # Faster shutdown: 10 s instead of 90 s.
     settings.Manager.DefaultTimeoutStopSec = "10s";

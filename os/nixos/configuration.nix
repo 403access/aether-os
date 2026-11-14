@@ -81,6 +81,7 @@
       alsa-utils
       pavucontrol
       wireplumber
+      wl-clip-persist
       intel-gpu-tools
       vulkan-tools
       libva-utils

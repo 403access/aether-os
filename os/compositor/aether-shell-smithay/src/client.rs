@@ -73,6 +73,7 @@ use smithay::wayland::shell::xdg::{
     XdgToplevelSurfaceData,
 };
 use smithay::wayland::shm::{ShmHandler, ShmState};
+use smithay::wayland::text_input::{TextInputManagerState, TextInputSeat};
 
 pub fn run() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = std::env::args().collect();
@@ -86,6 +87,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     let seat = seat_state.new_wl_seat(&dh, "aether");
 
     let _output_manager_state = OutputManagerState::new_with_xdg_output::<App>(&dh);
+    let _text_input_manager_state = TextInputManagerState::new::<App>(&dh);
     let output = Output::new(
         "Aether-1".to_string(),
         PhysicalProperties {
@@ -1157,6 +1159,14 @@ impl SeatHandler for App {
         let client = focused.and_then(|surface| surface.client());
         set_data_device_focus(&self.display_handle, seat, client.clone());
         set_primary_focus(&self.display_handle, seat, client);
+
+        // Text-input focus follows keyboard focus, so clients can use IMEs.
+        let text_input = seat.text_input();
+        text_input.leave();
+        text_input.set_focus(focused.cloned());
+        if focused.is_some() {
+            text_input.enter();
+        }
     }
     fn cursor_image(
         &mut self,
@@ -1824,3 +1834,4 @@ smithay::delegate_seat!(App);
 smithay::delegate_data_device!(App);
 smithay::delegate_primary_selection!(App);
 smithay::delegate_output!(App);
+smithay::delegate_text_input_manager!(App);

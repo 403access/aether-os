@@ -6,13 +6,11 @@
 
 use std::collections::HashMap;
 use std::error::Error;
-use std::io::{BufRead, BufReader, Write};
-use std::os::unix::net::UnixStream;
 use std::sync::Arc;
-use std::time::Duration;
 
 use crate::agents::{parse_launchers, AgentSessions};
 use crate::damage::buffer_damage_to_logical;
+use crate::index_worker::{should_apply, IndexWorker};
 use aether_cursor::{CursorShape, CursorTheme};
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect, Size as AetherSize};
 use aether_layout::LayoutConfig;
@@ -618,6 +616,8 @@ pub struct App {
     full_damage: bool,
     damage: Vec<Rectangle<i32, Physical>>,
     pub(crate) icons: HashMap<String, MemoryRenderBuffer>,
+    pub(crate) text_cache: HashMap<(String, u32, [u8; 4]), MemoryRenderBuffer>,
+    pub(crate) text_rasterizations: u64,
     pub(crate) cursor_buffers: HashMap<CursorShape, CursorCacheEntry>,
     pub(crate) cursor_theme: Option<CursorTheme>,
     pub(crate) client_cursor: Option<CursorShape>,
@@ -625,8 +625,10 @@ pub struct App {
     pub(crate) cursor_hidden: bool,
     index_socket: Option<String>,
     index_query: String,
+    index_worker: Option<IndexWorker>,
     agent_sessions: AgentSessions,
     pub(crate) input_method_popups: Vec<InputMethodPopupSurface>,
+    last_input_to_damage_ns: u64,
 }
 
 struct OutputEntry {
@@ -832,10 +834,7 @@ impl App {
     }
 
     fn refresh_index_results(&mut self) {
-        let Some(socket) = self.index_socket.clone() else {
-            return;
-        };
-        if self.shell.overlay().is_none() {
+        if self.index_socket.is_none() || self.shell.overlay().is_none() {
             return;
         }
         let query = self.shell.palette_query().to_string();
@@ -844,50 +843,43 @@ impl App {
         }
         self.index_query = query.clone();
         if query.trim().is_empty() {
+            if let Some(worker) = self.index_worker.as_mut() {
+                worker.cancel();
+            }
             self.shell.set_indexed_files(Vec::new());
+            self.mark_full_damage();
             return;
         }
+        if let Some(worker) = self.index_worker.as_mut() {
+            let generation = worker.request(query);
+            println!("aether-shell: index query generation {generation}");
+        }
+    }
 
-        let Ok(mut stream) = UnixStream::connect(&socket) else {
-            println!("aether-shell-smithay: index connect failed {socket:?}");
+    /// Drain the latest index result without blocking. Results for superseded
+    /// queries are discarded; identical result sets do not recompose.
+    pub fn poll_index_results(&mut self) {
+        let Some((generation, files)) = self.index_worker.as_ref().and_then(|worker| worker.poll())
+        else {
             return;
         };
-        let _ = stream.set_read_timeout(Some(Duration::from_millis(250)));
-        let _ = stream.set_write_timeout(Some(Duration::from_millis(250)));
-        let request = serde_json::json!({ "query": query, "limit": 8 });
-        if writeln!(stream, "{request}").is_err() {
+        let current = self
+            .index_worker
+            .as_ref()
+            .map(|worker| worker.current_generation())
+            .unwrap_or(0);
+        if !should_apply(generation, current) {
             return;
         }
-        let mut reader = BufReader::new(stream);
-        let mut line = String::new();
-        if reader.read_line(&mut line).is_err() {
-            println!("aether-shell-smithay: index read failed");
+        if self.shell.files() == files.as_slice() {
             return;
         }
-        let Ok(value) = serde_json::from_str::<serde_json::Value>(&line) else {
-            return;
-        };
-        let files: Vec<PaletteFile> = value
-            .get("results")
-            .and_then(|results| results.as_array())
-            .map(|results| {
-                results
-                    .iter()
-                    .filter_map(|result| {
-                        Some(PaletteFile {
-                            name: result.get("title")?.as_str()?.to_string(),
-                            detail: result
-                                .get("subtitle")
-                                .and_then(|value| value.as_str())
-                                .unwrap_or("indexed file")
-                                .to_string(),
-                            path: result.get("path")?.as_str()?.to_string(),
-                        })
-                    })
-                    .collect()
-            })
-            .unwrap_or_default();
+        println!(
+            "aether-shell: index results generation {generation}: {} rows",
+            files.len()
+        );
         self.shell.set_indexed_files(files);
+        self.mark_full_damage();
     }
 
     fn activate_palette(&mut self) {
@@ -1145,6 +1137,8 @@ impl App {
             full_damage: true,
             damage: Vec::new(),
             icons: HashMap::new(),
+            text_cache: HashMap::new(),
+            text_rasterizations: 0,
             cursor_buffers: HashMap::new(),
             cursor_theme: Some(CursorTheme::discover()),
             client_cursor: None,
@@ -1152,8 +1146,10 @@ impl App {
             cursor_hidden: false,
             index_socket: std::env::var("AETHER_INDEX_SOCKET").ok(),
             index_query: String::new(),
+            index_worker: None,
             agent_sessions: AgentSessions::bind(None),
             input_method_popups: Vec::new(),
+            last_input_to_damage_ns: 0,
         };
 
         state.agent_sessions = AgentSessions::bind(
@@ -1237,10 +1233,11 @@ impl App {
             output.enter(&surface);
         }
         println!(
-            "aether-shell: output {} {}x{} at {}+{} ({} total)",
+            "aether-shell: output {} {}x{}@{}Hz at {}+{} ({} total)",
             info.name,
             info.rect.width,
             info.rect.height,
+            info.refresh_hz,
             info.rect.x,
             info.rect.y,
             self.shell.outputs().len()
@@ -1312,6 +1309,7 @@ impl App {
         }
         display.dispatch_clients(self)?;
         display.flush_clients()?;
+        self.poll_index_results();
         if self.agent_sessions.poll() {
             self.refresh_launchers();
             println!(
@@ -1371,6 +1369,7 @@ impl App {
         state: KeyState,
         time: u32,
     ) {
+        let started = self.begin_input();
         let pressed = state == KeyState::Pressed;
         keyboard.input::<(), _>(
             self,
@@ -1397,6 +1396,7 @@ impl App {
         self.modifiers = keyboard.modifier_state();
         self.cursor = cursor_for(self);
         self.mark_full_damage();
+        self.end_input(started);
     }
 
     pub fn cursor(&self) -> CursorShape {
@@ -1419,6 +1419,7 @@ impl App {
 
     /// Absolute pointer motion in logical compositor coordinates.
     pub fn pointer_motion(&mut self, position: SPoint<f64, Logical>, time: u32) {
+        let started = self.begin_input();
         self.pointer_pos = position;
         self.cursor = cursor_for(self);
         self.mark_full_damage();
@@ -1509,6 +1510,7 @@ impl App {
                 self.forward_pointer_motion(None, position, time);
             }
         }
+        self.end_input(started);
     }
 
     /// Relative pointer motion (libinput mice/touchpads).
@@ -1574,6 +1576,7 @@ impl App {
     /// Pointer button press/release. Compositor chrome, alt-drag and window
     /// focus are handled here; unconsumed buttons go to the focused client.
     pub fn pointer_button(&mut self, button: u32, state: ButtonState, time: u32) {
+        let started = self.begin_input();
         let position = self.pointer_pos;
         let point = AetherPoint::new(position.x.round() as i32, position.y.round() as i32);
         let modal = self.shell.overlay().is_some();
@@ -1728,10 +1731,12 @@ impl App {
         }
         self.cursor = cursor_for(self);
         self.mark_full_damage();
+        self.end_input(started);
     }
 
     /// Pointer axis (scroll) event.
     pub fn pointer_axis(&mut self, horizontal: f64, vertical: f64, source: AxisSource, time: u32) {
+        let started = self.begin_input();
         let mut axis = AxisFrame::new(time).source(source);
         if horizontal != 0.0 {
             axis = axis.value(smithay::backend::input::Axis::Horizontal, horizontal);
@@ -1751,11 +1756,31 @@ impl App {
         pointer.axis(self, axis);
         pointer.frame(self);
         self.mark_full_damage();
+        self.end_input(started);
     }
 
     /// Replace the scale used by the backend (winit HiDPI).
     pub fn set_scale(&mut self, scale: f64) {
         self.scale = if scale > 0.0 { scale } else { 1.0 };
+    }
+
+    /// Timestamp at the start of input handling.
+    pub fn begin_input(&mut self) -> std::time::Instant {
+        self.mark_full_damage();
+        std::time::Instant::now()
+    }
+
+    /// Record input arrival → damage commit latency.
+    pub fn end_input(&mut self, start: std::time::Instant) {
+        self.last_input_to_damage_ns = start.elapsed().as_nanos() as u64;
+    }
+
+    pub fn last_input_to_damage_ns(&self) -> u64 {
+        self.last_input_to_damage_ns
+    }
+
+    pub fn text_rasterizations(&self) -> u64 {
+        self.text_rasterizations
     }
 
     /// Whether compositor content changed since the last presented frame.
@@ -1905,5 +1930,117 @@ mod tests {
         let (full, local) = damage_for_bounds(true, &[], bounds).unwrap();
         assert!(full);
         assert_eq!(local, vec![rect(0, 0, 100, 80)]);
+    }
+}
+
+#[cfg(test)]
+mod app_tests {
+    use super::*;
+    use smithay::output::{Mode as OutputMode, Output, PhysicalProperties, Scale, Subpixel};
+    use smithay::utils::Transform;
+
+    fn test_app() -> (Display<App>, App) {
+        let dir = std::env::temp_dir().join(format!("aether-test-{}", std::process::id()));
+        let _ = std::fs::create_dir_all(&dir);
+        std::env::set_var("XDG_RUNTIME_DIR", &dir);
+        std::env::remove_var("AETHER_INDEX_SOCKET");
+        std::env::remove_var("AETHER_AGENT_SOCKET");
+        let display: Display<App> = Display::new().expect("display");
+        let (app, _keyboard) = App::new(&display.handle()).expect("app");
+        (display, app)
+    }
+
+    fn output(name: &str) -> Output {
+        let output = Output::new(
+            name.to_string(),
+            PhysicalProperties {
+                size: (300, 200).into(),
+                subpixel: Subpixel::Unknown,
+                make: "Aether".into(),
+                model: name.into(),
+            },
+        );
+        let mode = OutputMode {
+            size: (800, 600).into(),
+            refresh: 120_000,
+        };
+        output.set_preferred(mode);
+        output.change_current_state(
+            Some(mode),
+            Some(Transform::Normal),
+            Some(Scale::Integer(1)),
+            Some((0, 0).into()),
+        );
+        output
+    }
+
+    #[test]
+    fn take_damage_drains_once() {
+        let (_display, mut app) = test_app();
+        app.mark_full_damage();
+        assert!(app.needs_frame());
+        let (full, damage) = app.take_damage();
+        assert!(full);
+        assert!(damage.is_empty());
+        assert!(!app.needs_frame());
+        let (full, damage) = app.take_damage();
+        assert!(!full);
+        assert!(damage.is_empty());
+
+        app.mark_damage_rect(AetherRect::new(10, 20, 30, 40));
+        let (full, damage) = app.take_damage();
+        assert!(!full);
+        assert_eq!(damage.len(), 1);
+        assert!(!app.needs_frame());
+    }
+
+    #[test]
+    fn add_and_remove_output_updates_the_shell() {
+        let (_display, mut app) = test_app();
+        app.add_output(
+            OutputInfo {
+                id: 2,
+                name: "right".into(),
+                rect: AetherRect::new(1280, 0, 800, 600),
+                scale: 1.0,
+                refresh_hz: 60,
+                physical_size_mm: (0, 0),
+                primary: false,
+            },
+            output("right"),
+        );
+        assert!(app.shell().outputs().iter().any(|o| o.id == 2));
+        assert_eq!(
+            app.shell().output_bounds(2),
+            AetherRect::new(1280, 0, 800, 600)
+        );
+        assert!(app.remove_output(2).is_some());
+        assert!(!app.shell().outputs().iter().any(|o| o.id == 2));
+    }
+
+    #[test]
+    fn output_damage_is_clipped_to_each_output() {
+        let (_display, mut app) = test_app();
+        app.add_output(
+            OutputInfo {
+                id: 2,
+                name: "right".into(),
+                rect: AetherRect::new(1280, 0, 800, 600),
+                scale: 1.0,
+                refresh_hz: 60,
+                physical_size_mm: (0, 0),
+                primary: false,
+            },
+            output("right"),
+        );
+        app.take_damage();
+        app.mark_damage_rect(AetherRect::new(1290, 10, 30, 40));
+        let (full, damage) = app.output_damage(Some(2)).expect("second output damage");
+        assert!(!full);
+        assert_eq!(
+            damage,
+            vec![Rectangle::new((10, 10).into(), (30, 40).into())]
+        );
+        assert!(app.output_damage(Some(1)).is_none());
     }
 }

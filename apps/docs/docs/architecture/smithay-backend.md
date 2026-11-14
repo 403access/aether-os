@@ -312,9 +312,10 @@ drag and both toggles with `xdotool` and asserts each transition.*
   rescans, hicolor/pixmap PNG icons and `[Desktop Action]` groups work; SVG
   icons, full icon-theme lookup and D-Bus activation are not implemented.
 - **XDG popup surfaces.** xdg-shell popup surfaces (menus/tooltips) are still
-  accepted and ignored; IME popup surfaces are rendered.
-- **Text cache/atlas.** Every frame rebuilds small RGBA text buffers; a cached
-  atlas is needed before text-heavy apps.
+  accepted and ignored; IME popup surfaces are rendered. Popup grabs are not
+  implemented.
+- **Text atlas.** Per-string RGBA buffers are cached by `(text, scale, colour)`;
+  a glyph atlas is still needed before text-heavy apps.
 - **Animated cursor frames.** Xcursor/theme and client cursor surfaces work; the
   first/current image is used, without timed animation frames.
 - **Per-output status bars.** Indicators and the palette are output-aware; a
@@ -323,9 +324,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
   Smithay also subtracts opaque regions when drawing the z-ordered element list,
   but nested subsurface damage is not tracked separately.
 - **XDG popups and popup grabs** are accepted/ignored; drag-and-drop works.
-- **Damage from client buffers** is tracked as a full-window redraw for now.
 
-The P2 gate remains: a real client window, 120 Hz pacing and input on the target.
+The P2 gate remains measured on the 7700K: sustained 120 Hz, zero queued frames
+and input → damage < 2 ms. See [P2 completion](/roadmap/p2-completion).
 
 ## Native DRM backend
 

@@ -59,7 +59,7 @@
   # DRM session. aether-shell-drm is the native single-process backend: it
   # owns seat0, libinput and KMS page-flips directly. If it cannot start
   # (no seat access, unknown GPU, crash) the wrapper falls back to cage
-  # running the winit adapter fullscreen.
+  # running the winit adapter fullscreen. Policy: ADR-0017.
   systemd.services.aether-session = {
     description = "Aether session (native DRM, cage fallback)";
     wantedBy = ["multi-user.target"];

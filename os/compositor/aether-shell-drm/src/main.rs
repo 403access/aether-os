@@ -17,8 +17,9 @@ use std::path::Path;
 use std::time::Duration;
 
 use aether_geometry::Rect as AetherRect;
+use aether_pacing::FramePacer;
 use aether_shell::{OutputId, OutputInfo};
-use aether_shell_wayland::{AetherRenderElement, App};
+use aether_shell_wayland::{append_stat, damage_area, AetherRenderElement, App};
 use calloop::EventLoop;
 use smithay::backend::allocator::gbm::{GbmAllocator, GbmBufferFlags, GbmDevice};
 use smithay::backend::allocator::{Format, Fourcc};
@@ -69,6 +70,15 @@ struct OutputSurface {
     id: OutputId,
     connector: connector::Handle,
     drm_output: AetherDrmOutput,
+    pacer: FramePacer,
+    width: i32,
+    height: i32,
+    refresh_hz: u32,
+    last_present_ns: Option<u64>,
+    last_queue_ns: Option<u64>,
+    in_flight: u32,
+    max_queue_depth: u32,
+    dropped: u64,
 }
 
 struct DrmState {
@@ -80,6 +90,8 @@ struct DrmState {
     handle: LoopHandle<'static, DrmState>,
     devices: HashMap<DrmNode, DeviceBackend>,
     next_output_id: OutputId,
+    clock_origin: std::time::Instant,
+    stats_path: Option<std::path::PathBuf>,
     frames: u32,
     max_frames: Option<u32>,
     max_seconds: Option<u64>,
@@ -150,6 +162,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         handle,
         devices: HashMap::new(),
         next_output_id: 1,
+        clock_origin: std::time::Instant::now(),
+        stats_path: std::env::var_os("AETHER_FRAME_STATS").map(std::path::PathBuf::from),
         frames: 0,
         max_frames,
         max_seconds,
@@ -239,7 +253,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let start = std::time::Instant::now();
     loop {
-        event_loop.dispatch(Some(Duration::from_millis(16)), &mut state)?;
+        let timeout = state.poll_timeout();
+        event_loop.dispatch(timeout, &mut state)?;
         state.app.poll_clients(&mut state.display)?;
         state.app.flush_focus(&state.keyboard);
         let presented = state.render_all();
@@ -251,14 +266,12 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
 
         state.frames += 1;
-        if state.max_frames.is_some_and(|limit| state.frames >= limit) {
-            return Ok(());
-        }
-        if state
-            .max_seconds
-            .is_some_and(|limit| start.elapsed() >= Duration::from_secs(limit))
+        if state.max_frames.is_some_and(|limit| state.frames >= limit)
+            || state
+                .max_seconds
+                .is_some_and(|limit| start.elapsed() >= Duration::from_secs(limit))
         {
-            return Ok(());
+            return state.finish();
         }
     }
 }
@@ -477,6 +490,8 @@ impl DrmState {
             name,
             rect: AetherRect::new(x, 0, width as u32, height as u32),
             scale: 1.0,
+            refresh_hz: u32::from(candidate.mode.vrefresh()).max(1),
+            physical_size_mm: candidate.connector.size().unwrap_or((0, 0)),
             primary: self.app.shell().primary_output().is_none(),
         };
 
@@ -497,6 +512,13 @@ impl DrmState {
         );
         let elements: DrmOutputRenderElements<GlesRenderer, AetherRenderElement> =
             DrmOutputRenderElements::default();
+        let refresh_hz = u32::from(candidate.mode.vrefresh()).max(1);
+        if refresh_hz < 120 {
+            eprintln!(
+                "aether-shell-drm: output {} refreshes at {refresh_hz} Hz, below the 120 Hz P2 gate",
+                candidate.name
+            );
+        }
         let drm_output = match manager.initialize_output(
             candidate.crtc,
             candidate.mode,
@@ -523,6 +545,15 @@ impl DrmState {
                 id: next_id,
                 connector: candidate.connector.handle(),
                 drm_output,
+                pacer: FramePacer::new(refresh_hz),
+                width: width as i32,
+                height: height as i32,
+                refresh_hz,
+                last_present_ns: None,
+                last_queue_ns: None,
+                in_flight: 0,
+                max_queue_depth: 0,
+                dropped: 0,
             },
         );
         self.next_output_id += 1;
@@ -543,9 +574,25 @@ impl DrmState {
     }
 
     fn frame_submitted(&mut self, node: DrmNode, crtc: crtc::Handle) {
+        let now = self.now_ns();
+        let stats_path = self.stats_path.clone();
         if let Some(device) = self.devices.get_mut(&node) {
             if let Some(surface) = device.surfaces.get_mut(&crtc) {
                 let _ = surface.drm_output.frame_submitted();
+                surface.in_flight = surface.in_flight.saturating_sub(1);
+                if let Some(path) = stats_path.as_deref() {
+                    let latency = surface
+                        .last_queue_ns
+                        .map(|queued| now.saturating_sub(queued))
+                        .unwrap_or(0);
+                    append_stat(
+                        path,
+                        &format!(
+                            "{{\"kind\":\"vblank\",\"output\":{},\"queue_depth\":{},\"flip_latency_ns\":{}}}",
+                            surface.id, surface.in_flight, latency
+                        ),
+                    );
+                }
             }
         }
     }
@@ -603,8 +650,61 @@ impl DrmState {
         }
     }
 
+    /// Print queue-depth evidence and fail when a frame was ever queued behind
+    /// another. G6 treats depth > 1 as a regression, not a warning.
+    fn finish(&self) -> Result<(), Box<dyn Error>> {
+        let mut max_depth = 0;
+        let mut dropped = 0;
+        for device in self.devices.values() {
+            for surface in device.surfaces.values() {
+                max_depth = max_depth.max(surface.max_queue_depth);
+                dropped += surface.dropped;
+            }
+        }
+        println!("aether-shell-drm: queue depth max {max_depth}, superseded {dropped} frame(s)");
+        if max_depth > 1 {
+            return Err(format!("frame queue depth {max_depth} exceeds 1").into());
+        }
+        Ok(())
+    }
+
+    fn now_ns(&self) -> u64 {
+        self.clock_origin.elapsed().as_nanos() as u64
+    }
+
+    /// Sleep until the earliest output deadline. Idle with no damage blocks
+    /// indefinitely, so there are no periodic wakeups.
+    fn poll_timeout(&self) -> Option<Duration> {
+        if !self.app.needs_frame() {
+            return None;
+        }
+        if self.max_frames.is_some() {
+            return Some(Duration::from_millis(16));
+        }
+        let now = self.now_ns();
+        let mut wait_ns = u64::MAX;
+        for device in self.devices.values() {
+            for surface in device.surfaces.values() {
+                let candidate = match surface.pacer.deadline() {
+                    None => 0,
+                    Some(deadline) => deadline.saturating_sub(now),
+                };
+                wait_ns = wait_ns.min(candidate);
+            }
+        }
+        if wait_ns == u64::MAX {
+            return Some(Duration::from_millis(1));
+        }
+        Some(Duration::from_nanos(wait_ns.max(1_000_000)))
+    }
+
     fn render_all(&mut self) -> bool {
-        let DrmState { app, devices, .. } = self;
+        let DrmState {
+            app,
+            devices,
+            stats_path,
+            ..
+        } = self;
         let mut presented = false;
         let mut attempted = false;
         let mut deferred = false;
@@ -616,6 +716,11 @@ impl DrmState {
                 let Some((full, damage)) = app.output_damage(Some(surface.id)) else {
                     continue;
                 };
+                let now = self.clock_origin.elapsed().as_nanos() as u64;
+                if !surface.pacer.should_present(now) {
+                    deferred = true;
+                    continue;
+                }
                 attempted = true;
                 if std::env::var_os("AETHER_FRAME_LOG").is_some() {
                     println!(
@@ -639,15 +744,45 @@ impl DrmState {
                         }
                         if let Err(error) = surface.drm_output.queue_frame(()) {
                             eprintln!("aether-shell-drm: queue_frame failed: {error}");
+                            surface.dropped += 1;
                             deferred = true;
                         } else {
+                            let interval = surface
+                                .last_present_ns
+                                .map(|last| now.saturating_sub(last))
+                                .unwrap_or(0);
+                            surface.last_present_ns = Some(now);
+                            surface.last_queue_ns = Some(now);
+                            surface.in_flight = surface.in_flight.saturating_add(1);
+                            surface.max_queue_depth =
+                                surface.max_queue_depth.max(surface.in_flight);
+                            surface.pacer.on_present(now);
                             presented = true;
+                            if let Some(path) = stats_path.as_deref() {
+                                append_stat(
+                                    path,
+                                    &format!(
+                                        "{{\"kind\":\"present\",\"output\":{},\"width\":{},\"height\":{},\"refresh_hz\":{},\"interval_ns\":{},\"missed\":{},\"queue_depth\":{},\"max_queue_depth\":{},\"input_to_damage_ns\":{},\"damage_area\":{}}}",
+                                        surface.id,
+                                        surface.width,
+                                        surface.height,
+                                        surface.refresh_hz,
+                                        interval,
+                                        surface.pacer.missed_deadlines(now),
+                                        surface.in_flight,
+                                        surface.max_queue_depth,
+                                        app.last_input_to_damage_ns(),
+                                        damage_area(&damage),
+                                    ),
+                                );
+                            }
                         }
                     }
                     Err(RenderFrameError::PrepareFrame(FrameError::EmptyFrame)) => {}
                     Err(RenderFrameError::PrepareFrame(FrameError::NoFreeSlotsError)) => {
                         // Keep the damage for the next VBlank instead of
                         // dropping or queueing a second frame.
+                        surface.dropped += 1;
                         deferred = true;
                     }
                     Err(error) => {

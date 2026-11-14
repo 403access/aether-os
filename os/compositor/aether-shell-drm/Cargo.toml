@@ -25,4 +25,5 @@ smithay = { version = "0.7", default-features = false, features = [
 calloop = "0.14"
 aether-geometry = { path = "../crates/aether-geometry" }
 aether-shell = { path = "../crates/aether-shell" }
+aether-pacing = { path = "../crates/aether-pacing" }
 aether-shell-wayland = { path = "../aether-shell-wayland" }

@@ -13,7 +13,7 @@ in-memory index that answers in single-digit milliseconds.
 ```text
   ┌──────────────────────────────────────────────────────────────┐
   │  aether-shell (Rust): compositor + scene graph + chrome      │
-  │  wgpu/Vulkan · damage-tracked · 120 Hz frame pacing          │
+  │  GLES/EGL · damage-tracked · 120 Hz frame pacing          │
   ├──────────────────────────────────────────────────────────────┤
   │  palette · chat · files · media · browser (thin native apps) │
   ├──────────────────────────────────────────────────────────────┤

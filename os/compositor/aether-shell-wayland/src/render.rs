@@ -514,24 +514,31 @@ impl App {
             }
         }
 
-        // Text labels.
+        // Text labels. Cache by content/scale/colour so static chrome does not
+        // rasterize and upload the same bitmap every frame.
+        let mut rasterized = false;
         for (text, x, y, scale, color) in &labels {
-            let bitmap = TextBitmap::render(text, *scale, *color);
-            if bitmap.is_empty() {
-                continue;
+            let key = (text.clone(), *scale, *color);
+            let buffer = self.text_cache.entry(key).or_insert_with(|| {
+                rasterized = true;
+                let bitmap = TextBitmap::render(text, *scale, *color);
+                MemoryRenderBuffer::from_slice(
+                    bitmap.pixels(),
+                    Fourcc::Abgr8888,
+                    (bitmap.width() as i32, bitmap.height() as i32),
+                    1,
+                    Transform::Normal,
+                    None,
+                )
+            });
+            if rasterized {
+                self.text_rasterizations += 1;
+                rasterized = false;
             }
-            let buffer = MemoryRenderBuffer::from_slice(
-                bitmap.pixels(),
-                Fourcc::Abgr8888,
-                (bitmap.width() as i32, bitmap.height() as i32),
-                1,
-                Transform::Normal,
-                None,
-            );
             if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
                 renderer,
                 ((*x - offset.0) as f64, (*y - offset.1) as f64),
-                &buffer,
+                buffer,
                 None,
                 None,
                 None,
@@ -655,6 +662,12 @@ impl App {
 
         // Everything above is bottom-up; compositors expect topmost-first.
         elements.reverse();
+        if std::env::var_os("AETHER_TEXT_STATS").is_some() {
+            println!(
+                "aether-shell: text rasterizations={} output={:?}",
+                self.text_rasterizations, output
+            );
+        }
         let damage = self
             .output_damage(output)
             .map(|(_, damage)| damage)

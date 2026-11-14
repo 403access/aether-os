@@ -7,7 +7,11 @@
 mod agents;
 mod app;
 mod damage;
+mod index_worker;
 mod render;
+mod stats;
 
 pub use app::App;
+pub use index_worker::{should_apply, IndexWorker};
 pub use render::{AetherRenderElement, ComposedFrame, BACKGROUND};
+pub use stats::{append as append_stat, damage_area};

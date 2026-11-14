@@ -1,0 +1,68 @@
+aether-shell: indexed 0 files
+aether-shell: loaded 0 desktop apps, 0 files on WAYLAND_DISPLAY=aether-0
+aether-shell: output Aether-1 1280x800 at 0+0 (1 total)
+aether-shell-smithay: reloaded 0 desktop apps, 0 files
+aether-shell-smithay: overlay enabled: Some(Rect { x: 300, y: 190, width: 680, height: 420 })
+aether-shell-smithay: compositor on winit window
+aether-shell: spawned test client (pid 68144)
+aether-shell-smithay: cursor -> Pointer
+aether-shell: text rasterizations=15 output=None
+aether-shell: client connected
+could not load cursor 'dnd-move'
+could not load cursor 'dnd-copy'
+could not load cursor 'dnd-none'
+Fontconfig error: Cannot load default config file: File not found
+aether-shell: text rasterizations=15 output=None
+aether-shell: text rasterizations=15 output=None
+aether-shell: text rasterizations=15 output=None
+aether-shell: text rasterizations=15 output=None
+aether-shell-smithay: cursor -> Arrow
+aether-shell: text rasterizations=17 output=None
+aether-shell: text rasterizations=17 output=None
+aether-shell: text rasterizations=18 output=None
+aether-shell: text rasterizations=18 output=None
+aether-shell-smithay: palette query -> "w"
+aether-shell: text rasterizations=21 output=None
+aether-shell: text rasterizations=21 output=None
+aether-shell-smithay: palette query -> "we"
+aether-shell: text rasterizations=22 output=None
+aether-shell: text rasterizations=22 output=None
+aether-shell-smithay: palette query -> "web"
+aether-shell: text rasterizations=23 output=None
+aether-shell: text rasterizations=23 output=None
+aether-shell-smithay: palette action SwitchWorkspace(2)
+aether-shell: output 1 workspace -> 2
+aether-shell: text rasterizations=25 output=None
+aether-shell: text rasterizations=25 output=None
+aether-shell-smithay: reloaded 0 desktop apps, 0 files
+aether-shell-smithay: cursor -> Pointer
+aether-shell: text rasterizations=25 output=None
+aether-shell: text rasterizations=25 output=None
+aether-shell: text rasterizations=25 output=None
+aether-shell-smithay: palette query -> "w"
+aether-shell: text rasterizations=25 output=None
+aether-shell: text rasterizations=25 output=None
+aether-shell-smithay: palette query -> "wa"
+aether-shell: text rasterizations=27 output=None
+aether-shell: text rasterizations=27 output=None
+aether-shell-smithay: palette query -> "way"
+aether-shell: text rasterizations=28 output=None
+aether-shell: text rasterizations=28 output=None
+aether-shell-smithay: palette query -> "wayl"
+aether-shell: text rasterizations=29 output=None
+aether-shell: text rasterizations=29 output=None
+aether-shell-smithay: palette query -> "wayla"
+aether-shell: text rasterizations=30 output=None
+aether-shell: text rasterizations=30 output=None
+aether-shell-smithay: palette query -> "waylan"
+aether-shell: text rasterizations=31 output=None
+aether-shell: text rasterizations=31 output=None
+aether-shell-smithay: palette query -> "wayland"
+aether-shell: text rasterizations=32 output=None
+aether-shell: text rasterizations=32 output=None
+aether-shell-smithay: palette action FocusWindow(1)
+aether-shell: workspace -> 0
+aether-shell-smithay: cursor -> Arrow
+aether-shell: text rasterizations=32 output=None
+aether-shell: text rasterizations=32 output=None
+aether-shell: text rasterizations=32 output=None

@@ -53,7 +53,7 @@ A power user running local AI agents on a 4-core workstation fights three things
 
 ### F1 — Shell and display
 
-- Wayland compositor written in Rust (Smithay), Vulkan/wgpu renderer.
+- Wayland compositor written in Rust (Smithay), GLES/EGL renderer; wgpu deferred ([ADR-0016](/adr/0016-gles-vs-wgpu)).
 - Tiling layout with keyboard-first navigation; floating surfaces for overlays.
 - Damage-tracked scene graph; one draw pass for shell chrome.
 - 120 Hz pacing with a deadline scheduler; graceful degradation to 60 Hz.

@@ -35,7 +35,7 @@ Rust and C/C++ compile to the same class of machine code. Rust wins here because
 
 - Memory safety without a GC, so no latency spikes.
 - Fearless concurrency for the compositor, indexer and audio paths.
-- A strong ecosystem for Wayland (Smithay), rendering (wgpu), and async I/O.
+- A strong ecosystem for Wayland (Smithay), rendering (GLES/EGL, wgpu deferred), and async I/O.
 
 The browser is still C++ (WebKit), the kernel is C, and mpv is C. Rust is the glue
 and the hot path where we control it, not a religion.

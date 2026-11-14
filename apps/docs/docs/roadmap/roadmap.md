@@ -79,37 +79,29 @@ Deliverables:
   Linux crate so the core stays toolkit-free.
 - ✅ xdg-shell/shm clients map into shell windows, tile and are configured to
   their rects; keyboard/pointer focus, buttons and axis; two terminals verified.
-- ✅ Workspace shortcuts (`Super+1/2/3`), window moves, close, labelled
-  indicators, a clickable workspace picker, an interactive command palette
-  (typed query, filtering, workspace/window providers, row clicks, actions), a
-  draggable master/stack split, Alt+drag move, Alt+right-drag corner resize,
-  edge snapping, half-snap on release, `Super+M` maximize with restore, hover
-  cursor feedback, a `New terminal` command, XDG `.desktop` app discovery and a
-  bounded filename index with `OpenFile`. Clipboard and primary-selection
-  copy/paste work between clients via focus forwarding. Picker, divider, palette
-  input/commands, desktop/file launch, clipboard, window management and cursor
-  mapping are verified by xdotool smokes. Idle frames are skipped; client
-  commits use surface/buffer damage when available and fall back to the window
-  rect.
-  Palette app/file/external-launcher providers refresh on open; agent sessions
-  can be published through the external manifest. Fullscreen uses xdg
-  fullscreen state and hides shell chrome. A single 1280x800@60 output is
-  advertised with xdg-output geometry. `zwp_text_input_manager_v3` is advertised
-  with focus following the keyboard. `aether-cursor` draws backend-neutral
-  software cursors in-frame. A Bun index service supplies content-ranked file
-  results over a Unix socket, watches roots for live updates, falls back to the
-  bounded scan when absent, and is packaged as a NixOS user service.
-- ✅ Target preflight (`scripts/target-check.sh`) checks UEFI, i915, DRM/KMS,
-  connectors, input and memory with fixture coverage.
-- ⏳ Live agent-session IPC, native inotify indexing, desktop-entry SVG
-  icons/theme inheritance/DBus, clipboard persistence/DnD, IME
-  engine/input-method service, client cursor surfaces,
-  udev/DRM.
-- ⏳ udev/DRM backend, libinput seat, wgpu renderer, output hotplug.
-- Scene graph with damage tracking; shell chrome in one draw pass.
-- Tiling layout, focus, keybindings; one workspace per output.
-- `os/compositor` pacing core wired to the 120 Hz deadline.
-- Cursor, fractional scaling, screenshot protocol.
+- ✅ Workspace shortcuts (`Super+1/2/3`, `Super+Alt+1/2/3` per output),
+  window moves, close, labelled indicators, a clickable workspace picker, an
+  interactive command palette (typed query, filtering, workspace/window
+  providers, row clicks, actions), a draggable master/stack split, Alt+drag
+  move, Alt+right-drag corner resize, edge snapping, half-snap on release,
+  `Super+M` maximize with restore, hover cursor feedback, a `New terminal`
+  command, XDG `.desktop` app discovery and a bounded filename index with
+  `OpenFile`. Clipboard and primary-selection copy/paste work between clients
+  via focus forwarding. Picker, divider, palette input/commands, desktop/file
+  launch, clipboard, window management, DnD and cursor mapping are verified by
+  xdotool smokes. Idle frames are skipped; client commits use surface/buffer
+  damage when available.
+- ✅ Native `aether-shell-drm`: libseat session, KMS page-flips, libinput,
+  udev hotplug, per-output workspaces and multi-output composition, with cage as
+  the fallback session ([ADR-0017](/adr/0017-native-drm-first)). Validated on a
+  virtio-gpu VM.
+- ✅ Live agent-session IPC, native inotify indexing, clipboard persistence,
+  client-to-client DnD, IME candidate popups, client cursor surfaces and
+  per-output workspace indicators/palette.
+- ✅ Renderer is GLES/EGL (wgpu deferred, [ADR-0016](/adr/0016-gles-vs-wgpu)).
+- ⏳ Desktop-entry SVG icons/theme inheritance/D-Bus, fractional scaling,
+  screenshot/capture protocol, per-output status bars, measured 120 Hz gate
+  metrics on the reference machine (see [P2 completion](/roadmap/p2-completion)).
 
 **Gate.** Sustained 120 Hz on a 1440p output with the palette open; no frames queued;
 input → damage commit < 2 ms.

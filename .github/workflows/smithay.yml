@@ -1,42 +1,84 @@
 name: smithay
 
-# Linux-only backend. Kept manual because it needs EGL/X11/Xvfb; the default CI
-# remains toolkit-free. Run this workflow when touching the backend or Smithay.
+# Linux-only compositor backends. PRs touching the compositor build and test all
+# three manifests and run a curated Xvfb smoke set. The full 23-smoke suite runs
+# nightly; the remaining smokes are manual via workflow_dispatch.
 on:
+  pull_request:
+    paths:
+      - "os/compositor/**"
+      - "flake.nix"
+      - "flake.lock"
+      - ".github/workflows/smithay.yml"
+  push:
+    branches: [main]
+    paths:
+      - "os/compositor/**"
+      - "flake.nix"
+      - "flake.lock"
+      - ".github/workflows/smithay.yml"
+  schedule:
+    - cron: "17 4 * * *"
   workflow_dispatch:
 
 jobs:
   build-and-present:
-    name: build + Xvfb presentation
+    name: build + test + Xvfb smokes
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@v31
         with:
           extra_nix_config: |
             experimental-features = nix-command flakes
-      - name: Build backend
-        run: |
-          nix develop .#smithay --command \
-            cargo build --manifest-path os/compositor/aether-shell-smithay/Cargo.toml
-      - name: Clippy and format
+      - name: Build and clippy all backends
         run: |
           nix develop .#smithay --command bash -lc '
-            cargo fmt --manifest-path os/compositor/aether-shell-smithay/Cargo.toml -- --check
-            cargo clippy --manifest-path os/compositor/aether-shell-smithay/Cargo.toml -- -D warnings
+            set -euo pipefail
+            for crate in aether-shell-wayland aether-shell-smithay aether-shell-drm; do
+              cargo fmt --manifest-path os/compositor/$crate/Cargo.toml -- --check
+              cargo clippy --manifest-path os/compositor/$crate/Cargo.toml -- -D warnings
+              cargo build --manifest-path os/compositor/$crate/Cargo.toml
+            done
           '
-      - name: Present the FramePlan demo under Xvfb
+      - name: Test standalone backends
         run: |
-          nix develop .#smithay --command \
-            ./os/compositor/aether-shell-smithay/smoke-xvfb.sh
-      - name: Render a real Wayland client under Xvfb
+          nix develop .#smithay --command bash -lc '
+            set -euo pipefail
+            cargo test --manifest-path os/compositor/aether-shell-wayland/Cargo.toml
+            cargo test --manifest-path os/compositor/aether-shell-drm/Cargo.toml
+          '
+      - name: Curated presentation smokes
         run: |
-          nix develop .#smithay --command \
-            ./os/compositor/aether-shell-smithay/smoke-client-xvfb.sh
+          nix develop .#smithay --command bash -lc '
+            set -euo pipefail
+            BIN=os/compositor/aether-shell-smithay/target/debug/aether-shell-smithay
+            for smoke in \
+              smoke-damage-xvfb.sh \
+              smoke-idle-xvfb.sh \
+              smoke-cursor-xvfb.sh \
+              smoke-palette-xvfb.sh \
+              smoke-fullscreen-xvfb.sh \
+              smoke-provider-xvfb.sh \
+              smoke-index-xvfb.sh \
+              smoke-text-input-xvfb.sh \
+              smoke-agent-ipc-xvfb.sh \
+              smoke-clipboard-persist-xvfb.sh \
+              smoke-actions-xvfb.sh; do
+                echo "=== ${smoke}"
+                BIN="${BIN}" "./os/compositor/aether-shell-smithay/${smoke}"
+            done
+          '
+      - name: Frame stats summary
+        if: always()
+        run: |
+          if [ -f artifacts/perf/p2/frames.ndjson ]; then
+            python3 scripts/frame-stats.py artifacts/perf/p2/frames.ndjson
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: smithay-window
-          path: artifacts/smithay/
+          path: artifacts/
           retention-days: 14

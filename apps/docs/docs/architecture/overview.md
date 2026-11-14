@@ -12,7 +12,7 @@ boundary around every agent. Nothing else runs at idle.
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────┐
-│ aether-shell (Rust · Smithay · wgpu)                                    │
+│ aether-shell (Rust · Smithay · GLES/EGL)                               │
 │   compositor · tiling layout · scene graph · palette/chat/status layers │
 ├─────────────────────────────────────────────────────────────────────────┤
 │ clients: palette · chat · explorer · media (libmpv) · browser (WebKit)  │

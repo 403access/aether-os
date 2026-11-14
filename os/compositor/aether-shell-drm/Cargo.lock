@@ -66,6 +66,7 @@ name = "aether-shell-drm"
 version = "0.1.0"
 dependencies = [
  "aether-geometry",
+ "aether-pacing",
  "aether-shell",
  "aether-shell-wayland",
  "calloop",

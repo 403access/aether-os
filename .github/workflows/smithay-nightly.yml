@@ -1,0 +1,35 @@
+name: smithay-full
+
+# Nightly/manual full smoke sweep. PRs run the curated set in smithay.yml.
+on:
+  schedule:
+    - cron: "42 5 * * *"
+  workflow_dispatch:
+
+jobs:
+  full-suite:
+    name: full Xvfb smoke suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+      - name: Full smoke suite
+        run: |
+          nix develop .#smithay --command bash -lc '
+            set -euo pipefail
+            BIN=os/compositor/aether-shell-smithay/target/debug/aether-shell-smithay
+            for smoke in os/compositor/aether-shell-smithay/smoke-*.sh; do
+              echo "=== ${smoke}"
+              BIN="${BIN}" "${smoke}"
+            done
+          '
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smithay-full
+          path: artifacts/
+          retention-days: 14

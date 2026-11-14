@@ -10,7 +10,7 @@ use std::time::Instant;
 use aether_cursor::CursorShape;
 use aether_geometry::{Rect as AetherRect, Size as AetherSize};
 use aether_shell::OutputInfo;
-use aether_shell_wayland::App;
+use aether_shell_wayland::{append_stat, damage_area, App};
 use smithay::backend::input::{
     AbsolutePositionEvent, Axis, Event, InputEvent, KeyboardKeyEvent, PointerAxisEvent,
     PointerButtonEvent,
@@ -71,11 +71,31 @@ pub fn run() -> Result<(), Box<dyn Error>> {
             name: "Aether-1".to_string(),
             rect: AetherRect::from_size(logical),
             scale,
+            refresh_hz: backend
+                .window()
+                .current_monitor()
+                .and_then(|monitor| monitor.refresh_rate_millihertz())
+                .map(|milli| (milli / 1000).max(1) as u32)
+                .unwrap_or(60),
+            physical_size_mm: backend
+                .window()
+                .current_monitor()
+                .map(|monitor| monitor.size())
+                .map(|size| (size.width, size.height))
+                .unwrap_or((0, 0)),
             primary: true,
         },
         output,
     );
     state.configure_all();
+    if let Some(output) = state.shell().primary_output() {
+        if output.refresh_hz < 120 {
+            println!(
+                "aether-shell-smithay: host output refreshes at {} Hz, below the 120 Hz P2 gate",
+                output.refresh_hz
+            );
+        }
+    }
 
     if args.iter().any(|arg| arg == "--overlay") || std::env::var("AETHER_OVERLAY").is_ok() {
         state.toggle_overlay();
@@ -87,6 +107,8 @@ pub fn run() -> Result<(), Box<dyn Error>> {
 
     let mut frames = 0u32;
     let mut applied_cursor = CursorShape::Arrow;
+    let stats_path = std::env::var_os("AETHER_FRAME_STATS").map(std::path::PathBuf::from);
+    let mut last_present: Option<Instant> = None;
     println!("aether-shell-smithay: compositor on winit window");
     state.spawn_test_clients();
 
@@ -146,8 +168,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
             println!("aether-shell-smithay: cursor -> {applied_cursor:?}");
         }
 
-        let (full, damage) = state.take_damage();
-        if full || !damage.is_empty() {
+        if let Some((full, damage)) = state.output_damage(None) {
             let size = backend.window_size();
             let full_rect = Rectangle::from_size(size);
             let damage_label = if full {
@@ -173,6 +194,25 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     frame.clear(composed.clear, &damage)?;
                     draw_render_elements(&mut frame, 1.0, &composed.elements, &damage)?;
                     let _ = frame.finish()?;
+                    let now = Instant::now();
+                    let interval = last_present
+                        .map(|last| now.duration_since(last).as_nanos() as u64)
+                        .unwrap_or(0);
+                    last_present = Some(now);
+                    if let Some(path) = stats_path.as_deref() {
+                        append_stat(
+                            path,
+                            &format!(
+                                "{{\"kind\":\"present\",\"output\":1,\"width\":{},\"height\":{},\"refresh_hz\":60,\"interval_ns\":{},\"missed\":0,\"queue_depth\":0,\"max_queue_depth\":0,\"input_to_damage_ns\":{},\"damage_area\":{},\"cleared_area\":{}}}",
+                                size.w,
+                                size.h,
+                                interval,
+                                state.last_input_to_damage_ns(),
+                                damage_area(&composed.damage),
+                                damage_area(&damage),
+                            ),
+                        );
+                    }
                 }
                 state.send_frame_callbacks(start_time.elapsed().as_millis() as u32);
                 backend.submit(Some(&damage))?;
@@ -180,6 +220,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     println!("aether-shell-smithay: frame damage={damage_label}");
                 }
             }
+            let _ = state.take_damage();
         }
 
         state.poll_clients(&mut display)?;

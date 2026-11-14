@@ -63,6 +63,13 @@ the repository's velocity makes them noise.
 
 ### G1 · Deadline-driven present loop
 
+**Status.** Every DRM output owns a `FramePacer` built from its reported
+refresh; the loop sleeps to the earliest deadline (`None` when idle), presents
+only when due, and re-anchors after `queue_frame`. `--frames` keeps a bounded
+16 ms poll for deterministic runs. Evidence: pacer counters in
+`frames.ndjson`; 120 Hz p99 remains a reference-machine measurement (G5).
+
+
 **Why.** `event_loop.dispatch(Some(Duration::from_millis(16)))` is a fixed poll
 timeout. At 120 Hz the target interval is 8.33 ms, so the loop cannot present fast
 enough no matter how fast rendering is.
@@ -121,6 +128,14 @@ output only, no full-output clears, and no composition of unaffected outputs; id
 
 ### G3 · Frame instrumentation
 
+**Status.** `AETHER_FRAME_STATS=<path>` writes NDJSON present/vblank records
+with output mode, interval, missed deadlines, queue depth, input→damage and
+damage area; `scripts/frame-stats.py` emits p50/p95/p99 and fails when queue
+depth exceeds 1. Evidence:
+[`frames.ndjson`](/evidence/p2/frames.ndjson) and
+[`summary.txt`](/evidence/p2/summary.txt) from the winit palette run.
+
+
 **Why.** None of the three gate numbers can be produced today.
 
 **Touch.** `aether-shell-wayland/src/app.rs` (input timestamps), `render.rs`
@@ -142,6 +157,11 @@ raw samples, on both the winit host (off-target) and the DRM backend (on-target)
 **Record.** `artifacts/perf/p2/frames.ndjson` + generated summary.
 
 ### G4 · Output model from the connector
+
+**Status.** `OutputInfo` carries `refresh_hz` and `physical_size_mm`; DRM
+derives both from the connector/mode, winit from the monitor, pacers use the
+same refresh, and a sub-120 Hz output logs an explicit gate shortfall.
+
 
 **Why.** The DRM path selects the EDID preferred mode, but `OutputInfo` does not
 carry refresh and nothing asserts that the pacer and the advertised Wayland mode
@@ -181,6 +201,12 @@ or an ADR waives one with data.
 
 ### G6 · Prove nothing is queued
 
+**Status.** In-flight slots and superseded frames are tracked per output; the
+process exits non-zero if max queue depth exceeds 1. The 10-minute stress run
+is the G5 reference measurement; the assertion is already enforced for every
+DRM run (including the VM smoke).
+
+
 **Why.** "No frames queued" is a separate promise from "fast frames".
 
 **Touch.** `aether-shell-drm/src/main.rs`, `aether-shell-wayland` render path.
@@ -200,6 +226,11 @@ count under injected slowness, with no unbounded latency growth.
 
 ### C1 · Cache chrome text
 
+**Status.** Text buffers are cached by `(text, scale, colour)`; static frames
+perform no rasterization/upload. `AETHER_TEXT_STATS` exposes the counter.
+Evidence: `evidence/p2/text-stats.log`.
+
+
 **Why.** `compose()` rebuilds the element list and calls `TextBitmap::render` +
 `MemoryRenderBuffer::from_slice` for every label on every frame (`render.rs:508–512`).
 With the palette open that is dozens of rasterizations and texture uploads per frame.
@@ -218,6 +249,11 @@ buffer uploads; the counter is zero across 120 consecutive frames.
 
 ### C2 · Avoid full-output clears
 
+**Status.** Both presenters clear only the computed damage list (full only on
+first frame/mode change/full damage). `frames.ndjson` records `damage_area` and
+`cleared_area` for comparison.
+
+
 **Why.** `frame.clear(...)` with the full damage rect paints 1440p every frame even
 for a 3 px damage region.
 
@@ -231,6 +267,11 @@ updates.
 
 ### C3 · Occlusion (deferrable)
 
+**Status.** Closed as deferred: G2/C1/C2 remove the measured redundant work,
+and no silhouette/overdraw number currently justifies opaque-region
+subtraction. Revisit after G5 if p99 remains render-bound.
+
+
 **Why.** Overdraw is the remaining predictable cost after C1/C2.
 
 **Do.** Use Smithay's opaque-region subtraction across the z-ordered element list;
@@ -240,6 +281,9 @@ measure before and after. Ship only if it moves the p99.
 numbers that justified not doing it.
 
 ### C4 · Renderer decision (ADR, not a rewrite)
+
+**Status.** [ADR-0016](/adr/0016-gles-vs-wgpu) keeps GLES/EGL and defers wgpu.
+
 
 **Why.** The roadmap names wgpu; the implementation is GLES/EGL. That is a deviation
 without a record, and it is not currently the bottleneck.
@@ -254,6 +298,13 @@ GLES unless the numbers justify the port.
 ## L — Latency hygiene
 
 ### L1 · Non-blocking palette index query
+
+**Status.** A latest-only worker coalesces keystrokes, queries off-thread with
+generation tags and 250 ms socket timeouts, and the compositor drains results
+without blocking. Empty queries cancel in-flight work. Unit tests cover stale
+discard and latest-only queueing; the slow-service smoke remains L1 evidence to
+add under V3.
+
 
 **Why.** `refresh_index_results()` runs synchronously on the compositor thread for
 every palette keystroke, with 250 ms socket timeouts (`app.rs:834`). A slow or hung
@@ -276,6 +327,10 @@ this with a deliberately slow service.
 
 ### L2 · Cap index result churn
 
+**Status.** Results are capped at the visible rows plus one, identical result
+sets skip `set_indexed_files`, and an unchanged query is not resent.
+
+
 **Do.** Limit returned rows to the visible count plus one; reuse `PaletteFile`
 allocations; skip re-render when the result set is unchanged.
 
@@ -286,6 +341,11 @@ allocations; skip re-render when the result set is unchanged.
 ## V — Verification
 
 ### V1 · Put the real backend in CI
+
+**Status.** `smithay.yml` now triggers on compositor PRs, builds/clippies/tests
+all three manifests and runs eleven curated smokes; `smithay-nightly.yml` runs
+the full set.
+
 
 **Why.** `smithay.yml` is `workflow_dispatch` only, builds one manifest, and runs 2
 of 23 smokes. The compositor's core is the least tested code in the repository.
@@ -301,6 +361,11 @@ of 23 smokes. The compositor's core is the least tested code in the repository.
 **Done when.** A PR that breaks `take_damage()` or `compose()` fails CI.
 
 ### V2 · Unit tests for the frontend
+
+**Status.** Added `damage_for_bounds` (3), app damage/output/add-remove tests
+(3), and index worker tests (2): 13 standalone Wayland tests. Compose layer
+ordering still needs a headless renderer fixture.
+
 
 **Do.** Cover `compose()` per output (visibility, z-order, chrome, cursor layers),
 `take_damage()` semantics (full vs partial, drain-once), `add_output`/`remove_output`
@@ -337,11 +402,11 @@ queue depth ≤ 1, and clean shutdown. Document what only real hardware can prov
 
 | ID | Task | Done when |
 | --- | --- | --- |
-| D1 | ADR: native DRM first, cage as fallback session policy | Accepted; `services.nix` comment links it |
-| D2 | ADR: GLES vs wgpu (see C4) | Accepted; roadmap line updated |
-| D3 | Rewrite the P2 roadmap bullet | It no longer claims a single 1280×800@60 output or lists landed items as ⏳ |
-| D4 | Fix `smithay-backend.md` limitations | The "buffer damage is a full-window redraw" claim is removed |
-| D5 | Claims & evidence for P2 | Every P2 number labelled measured, budgeted or speculative, with machine and kernel |
+| D1 | ADR: native DRM first, cage as fallback session policy — ✅ [ADR-0017](/adr/0017-native-drm-first) | Accepted; `services.nix` comment links it |
+| D2 | ADR: GLES vs wgpu — ✅ [ADR-0016](/adr/0016-gles-vs-wgpu) | Accepted; roadmap line updated |
+| D3 | Rewrite the P2 roadmap bullet — ✅ | No single-output/60 Hz claim; landed items are ✅ |
+| D4 | Fix `smithay-backend.md` limitations — ✅ | Stale buffer-damage/text-cache claims removed |
+| D5 | Claims & evidence for P2 — ✅ | Dev-host proxies labelled; gate numbers remain budgets |
 
 ---
 

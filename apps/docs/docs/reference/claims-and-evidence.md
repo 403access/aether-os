@@ -45,6 +45,17 @@ source. Everything else is a target or an aspiration.
 | Glass-to-glass < 40 ms | **Budget** | P7 gate |
 | Input → paint < 16 ms | **Budget** | P2 gate |
 
+## Compositor (P2)
+
+| Claim | Label | Evidence |
+| --- | --- | --- |
+| Input → damage p50 ≈ 24 µs, p99 ≈ 190 µs | **Measured (dev host)** | Xvfb/winit palette run, `evidence/p2/frames.ndjson`, `scripts/frame-stats.py` |
+| Chrome text rasterizes once per unique label | **Measured (dev host)** | `AETHER_TEXT_STATS` counter stable across static frames |
+| Present interval p50 ≈ 55 ms | **Not a performance claim** | Xvfb + xdotool sleeps; only proves the delta loop runs |
+| Sustained 120 Hz, p99 < 12.5 ms | **Budget** | P2 gate, reference machine; not measured here |
+| Queue depth ≤ 1 | **Budget** | P2 gate; tracked by G6, VM instrumentation |
+| Input → damage < 2 ms | **Budget** | P2 gate; dev-host proxy is measured above |
+
 ## Concurrency
 
 | Claim | Label | Evidence |

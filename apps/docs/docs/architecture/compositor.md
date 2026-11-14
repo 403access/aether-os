@@ -29,7 +29,7 @@ depend on these crates; they never depend on the shell or a toolkit. See
 
 ## Responsibilities
 
-- Wayland compositor (Smithay) with a Vulkan/wgpu renderer.
+- Wayland compositor (Smithay) with a GLES/EGL renderer (wgpu deferred, [ADR-0016](/adr/0016-gles-vs-wgpu)).
 - Scene graph of surfaces, including shell-owned overlays (palette, chat, status).
 - Tiling layout and focus management.
 - Frame pacing and damage tracking.

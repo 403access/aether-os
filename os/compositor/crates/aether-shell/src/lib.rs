@@ -35,6 +35,8 @@ pub struct OutputInfo {
     pub name: String,
     pub rect: Rect,
     pub scale: f64,
+    pub refresh_hz: u32,
+    pub physical_size_mm: (u32, u32),
     pub primary: bool,
 }
 
@@ -243,6 +245,8 @@ impl Shell {
                 name: "output-1".to_string(),
                 rect: Rect::from_size(viewport),
                 scale: 1.0,
+                refresh_hz: 60,
+                physical_size_mm: (0, 0),
                 primary: true,
             }],
             output_workspaces: HashMap::from([(1, 0)]),
@@ -2067,6 +2071,8 @@ mod tests {
                 name: "left".into(),
                 rect: Rect::new(0, 0, 800, 600),
                 scale: 1.0,
+                refresh_hz: 60,
+                physical_size_mm: (0, 0),
                 primary: true,
             },
             OutputInfo {
@@ -2074,6 +2080,8 @@ mod tests {
                 name: "right".into(),
                 rect: Rect::new(800, 0, 1024, 768),
                 scale: 1.0,
+                refresh_hz: 60,
+                physical_size_mm: (0, 0),
                 primary: false,
             },
         ]));
@@ -2112,6 +2120,8 @@ mod tests {
                 name: "left".into(),
                 rect: Rect::new(0, 0, 800, 600),
                 scale: 1.0,
+                refresh_hz: 60,
+                physical_size_mm: (0, 0),
                 primary: true,
             },
             OutputInfo {
@@ -2119,6 +2129,8 @@ mod tests {
                 name: "right".into(),
                 rect: Rect::new(800, 0, 1024, 768),
                 scale: 1.0,
+                refresh_hz: 60,
+                physical_size_mm: (0, 0),
                 primary: false,
             },
         ]));
@@ -2139,6 +2151,8 @@ mod tests {
                 name: "left".into(),
                 rect: Rect::new(0, 0, 800, 600),
                 scale: 1.0,
+                refresh_hz: 60,
+                physical_size_mm: (0, 0),
                 primary: true,
             },
             OutputInfo {
@@ -2146,6 +2160,8 @@ mod tests {
                 name: "right".into(),
                 rect: Rect::new(800, 0, 1024, 768),
                 scale: 1.0,
+                refresh_hz: 60,
+                physical_size_mm: (0, 0),
                 primary: false,
             },
         ]));
@@ -2156,6 +2172,8 @@ mod tests {
             name: "left".into(),
             rect: Rect::new(0, 0, 1280, 720),
             scale: 1.0,
+            refresh_hz: 60,
+            physical_size_mm: (0, 0),
             primary: true,
         }]));
         assert_eq!(shell.overlay_output(), Some(1));
@@ -2173,6 +2191,8 @@ mod tests {
                 name: "left".into(),
                 rect: Rect::new(0, 0, 800, 600),
                 scale: 1.0,
+                refresh_hz: 60,
+                physical_size_mm: (0, 0),
                 primary: true,
             },
             OutputInfo {
@@ -2180,6 +2200,8 @@ mod tests {
                 name: "right".into(),
                 rect: Rect::new(800, 0, 1024, 768),
                 scale: 1.0,
+                refresh_hz: 60,
+                physical_size_mm: (0, 0),
                 primary: false,
             },
         ]));
@@ -2204,6 +2226,8 @@ mod tests {
                 name: "left".into(),
                 rect: Rect::new(0, 0, 800, 600),
                 scale: 1.0,
+                refresh_hz: 60,
+                physical_size_mm: (0, 0),
                 primary: true,
             },
             OutputInfo {
@@ -2211,6 +2235,8 @@ mod tests {
                 name: "right".into(),
                 rect: Rect::new(800, 0, 1024, 768),
                 scale: 1.0,
+                refresh_hz: 60,
+                physical_size_mm: (0, 0),
                 primary: false,
             },
         ]));
@@ -2245,6 +2271,8 @@ mod tests {
                 name: "left".into(),
                 rect: Rect::new(0, 0, 800, 600),
                 scale: 1.0,
+                refresh_hz: 60,
+                physical_size_mm: (0, 0),
                 primary: true,
             },
             OutputInfo {
@@ -2252,6 +2280,8 @@ mod tests {
                 name: "right".into(),
                 rect: Rect::new(800, 0, 1024, 768),
                 scale: 1.0,
+                refresh_hz: 60,
+                physical_size_mm: (0, 0),
                 primary: false,
             },
         ]));
@@ -2301,6 +2331,8 @@ mod tests {
             name: "only".into(),
             rect: Rect::new(0, 0, 1280, 720),
             scale: 1.0,
+            refresh_hz: 60,
+            physical_size_mm: (0, 0),
             primary: true,
         }]));
         assert_eq!(shell.viewport(), Size::new(1280, 720));

@@ -53,7 +53,12 @@ const sidebars: SidebarsConfig = {
       type: "category",
       label: "Roadmap",
       collapsed: false,
-      items: ["roadmap/roadmap", "roadmap/risks", "roadmap/design-system-and-explorer"],
+      items: [
+        "roadmap/roadmap",
+        "roadmap/p2-completion",
+        "roadmap/risks",
+        "roadmap/design-system-and-explorer",
+      ],
     },
     {
       type: "category",

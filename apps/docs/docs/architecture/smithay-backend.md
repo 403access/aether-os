@@ -120,6 +120,12 @@ installed while the compositor is running appear without a restart. `Icon=` is
 resolved to a hicolor/pixmap PNG and rendered at 16×16 in the row. The smoke
 asserts the reload count and launches the new entry.*
 
+![A terminal in fullscreen with shell chrome hidden](/img/smithay-fullscreen.png)
+
+*`Super+F` sends `xdg_toplevel` fullscreen state, covers the output and hides the
+workspace indicators; `Esc`/`Super+F` restores the previous tiled or floating
+state.*
+
 ![The same window maximized](/img/smithay-window-maximized.png)
 
 *`Super+M` maximizes the focused window to the full output; pressing it again
@@ -209,6 +215,7 @@ drag and both toggles with `xdotool` and asserts each transition.*
 | `Super+Shift+1/2/3` | Move the focused client to a workspace |
 | `Super+Q` | Close the focused client |
 | `Super+M` | Toggle maximize for the focused window |
+| `Super+F` | Toggle fullscreen for the focused window |
 | `Alt+left-drag` | Move a window (promotes tiles to floating) |
 | `Alt+right-drag` | Resize a floating window from the nearest corner |
 | *Release at edge* | Snap to left/right half, or maximize at the top |
@@ -227,8 +234,8 @@ drag and both toggles with `xdotool` and asserts each transition.*
   atlas is needed before text-heavy apps.
 - **Cursor themes on the DRM backend.** The winit adapter uses system cursor
   icons; a DRM target needs client cursor images and an xcursor theme.
-- **Fullscreen and multi-output edge snapping** are not implemented. Single
-  output halves/maximize, floating resize and edge snapping work. Popups and
+- **Multi-output edge snapping** is not implemented. Fullscreen, maximize,
+  halves, floating resize and single-output snapping work. Popups and
   drag-and-drop are ignored.
 - **Buffer-coordinate damage and occlusion.** Surface-coordinate damage is used;
   buffer-coordinate damage falls back to the window, and opaque-region
@@ -277,6 +284,7 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-idle-xvfb.sh      # idle frame skipping
 ./os/compositor/aether-shell-smithay/smoke-damage-xvfb.sh    # partial window damage
 ./os/compositor/aether-shell-smithay/smoke-refresh-xvfb.sh   # live provider refresh
+./os/compositor/aether-shell-smithay/smoke-fullscreen-xvfb.sh # Super+F fullscreen
 ```
 
 The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. The picker,

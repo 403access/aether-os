@@ -90,10 +90,11 @@ Deliverables:
   input/commands, desktop/file launch, clipboard, window management and cursor
   mapping are verified by xdotool smokes. Idle frames are skipped; client
   commits use surface damage when available and fall back to the window rect.
-  Palette app/file providers refresh on open.
+  Palette app/file providers refresh on open. Fullscreen uses xdg fullscreen
+  state and hides shell chrome.
 - ⏳ Agent-session provider, system content index integration, desktop-entry
   SVG icons/theme inheritance/actions/DBus, clipboard persistence/DnD, IME
-  support, fullscreen, multi-output snapping, DRM cursor images/themes,
+  support, multi-output snapping, DRM cursor images/themes,
   buffer-damage/occlusion, udev/DRM.
 - ⏳ udev/DRM backend, libinput seat, wgpu renderer, output hotplug.
 - Scene graph with damage tracking; shell chrome in one draw pass.

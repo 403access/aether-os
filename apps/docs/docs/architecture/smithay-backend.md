@@ -62,6 +62,12 @@ ratio.*
 size, then follows the pointer. The other client re-tiles underneath; rendering
 uses compositor z-order so the moved window stays on top.*
 
+![Resizing the floating window from its corner](/img/smithay-window-resize.png)
+
+*`Alt+right-drag` resizes a floating window from the nearest corner, with a
++160x120 minimum. Moving a window near an output edge snaps it flush. The smoke
++test shrinks the window from 800x600 to 620x500 and asserts the rect.*
+
 ![The same window maximized](/img/smithay-window-maximized.png)
 
 *`Super+M` maximizes the focused window to the full output; pressing it again
@@ -100,11 +106,12 @@ drag and both toggles with `xdotool` and asserts each transition.*
   leak to a client underneath. The seat advertises `wl_pointer`.
 - **Interactive layout resize.** Dragging the gap between the master and stack
   updates the split ratio (clamped 0.2–0.8) and reconfigures clients live.
-- **Window move and maximize.** `Alt+left-drag` promotes a tiled window to its
-  preferred floating size and moves it; floating positions persist across
-  relayouts. `Super+M` maximizes to the full output and restores the previous
-  state. Client surfaces render in shell z-order, so raised/floating/maximized
-  windows stay above others.
+- **Window move, resize and maximize.** `Alt+left-drag` promotes a tiled window
+  to its preferred floating size and moves it; floating positions persist across
+  relayouts and snap to output edges. `Alt+right-drag` resizes from the nearest
+  corner with a minimum size. `Super+M` maximizes to the full output and
+  restores the previous state. Client surfaces render in shell z-order, so
+  raised/floating/maximized windows stay above others.
 - Compositor chrome renders real text through `aether-text`: workspace names,
   overlay header/search/results/footer and shortcut hints. Bitmaps are uploaded
   as Smithay `MemoryRenderBuffer` elements above client surfaces.
@@ -130,6 +137,7 @@ drag and both toggles with `xdotool` and asserts each transition.*
 | `Super+Q` | Close the focused client |
 | `Super+M` | Toggle maximize for the focused window |
 | `Alt+left-drag` | Move a window (promotes tiles to floating) |
+| `Alt+right-drag` | Resize a floating window from the nearest corner |
 
 ## What is not implemented
 
@@ -140,8 +148,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
 - **Text cache/atlas.** Every frame rebuilds small RGBA text buffers; a cached
   atlas is needed before text-heavy apps.
 - **Cursor theming** and hover cursor feedback.
-- **Floating-window resize, snapping and fullscreen** are not implemented.
-  Popups and drag-and-drop are ignored.
+- **Fullscreen, half/tile snapping and multi-output edge snapping** are not
+  implemented. Floating resize and output-edge snapping work. Popups and
+  drag-and-drop are ignored.
 - **Per-client damage.** Full-window redraw remains.
 - **Popups, drag-and-drop and grabs** are accepted/ignored at the protocol level.
 - **udev/DRM backend.** The target path for the 7700K (no X server) is not written;

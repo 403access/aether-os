@@ -31,11 +31,13 @@ semantic versioning with release codenames (0.1 = “Kestrel”).
   compositor chrome draw order so panels/rows layer correctly. Adds window
   management: `Alt+left-drag` promotes a tile to its preferred floating size and
   moves it, floating positions persist across relayouts, and `Super+M` maximizes
-  with restore. Client rendering now follows shell z-order instead of HashMap
-  order, fixing raised/floating windows being covered. App/file/agent providers,
-  IME, floating resize/snapping, fullscreen, cursor theming, per-client damage
-  and udev/DRM remain. Nix dev shell `.#smithay`, demo/client/picker/resize/
-  palette/window smoke scripts, ADR-0012.
+  with restore. Adds `Alt+right-drag` corner resizing with a 160x120 minimum
+  and output-edge snapping while moving. Client rendering now follows shell
+  z-order instead of HashMap order, fixing raised/floating windows being
+  covered. App/file/agent providers, IME, fullscreen, half/tile snapping,
+  cursor theming, per-client damage and udev/DRM remain. Nix dev shell
+  `.#smithay`, demo/client/picker/resize/palette/window smoke scripts,
+  ADR-0012.
 - **Backend-neutral shell state** — `aether-shell` owns windows, workspaces, focus,
   floating windows, the overlay and `FramePlan`, with no Wayland/GPU dependency.
   `aether-preview` renders frame plans to PNG (`aether-shell-preview`), providing

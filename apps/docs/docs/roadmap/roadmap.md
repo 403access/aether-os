@@ -82,11 +82,11 @@ Deliverables:
 - ✅ Workspace shortcuts (`Super+1/2/3`), window moves, close, labelled
   indicators, a clickable workspace picker, an interactive command palette
   (typed query, filtering, workspace/window providers, row clicks, actions), a
-  draggable master/stack split, Alt+drag window move and `Super+M` maximize with
-  restore. Picker, divider, palette input and window move/maximize are verified
-  by xdotool smoke tests.
-- ⏳ App/file/agent palette providers, IME support, floating resize/snapping,
-  fullscreen, cursor theme, per-client damage, udev/DRM.
+  draggable master/stack split, Alt+drag move, Alt+right-drag corner resize,
+  edge snapping and `Super+M` maximize with restore. Picker, divider, palette
+  input and window management are verified by xdotool smoke tests.
+- ⏳ App/file/agent palette providers, IME support, fullscreen, half/tile
+  snapping, cursor theme, per-client damage, udev/DRM.
 - ⏳ udev/DRM backend, libinput seat, wgpu renderer, output hotplug.
 - Scene graph with damage tracking; shell chrome in one draw pass.
 - Tiling layout, focus, keybindings; one workspace per output.

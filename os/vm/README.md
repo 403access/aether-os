@@ -9,8 +9,8 @@ machine without touching the real installation target.
 | --- | --- | --- |
 | CPU | i7-7700K, custom kernel fragment | generic aarch64 kernel |
 | Storage | XFS root/nix/home, ext4 scratch | ext4 qcow2 image |
-| Audio | PipeWire + WirePlumber | disabled |
-| Daemons | aetherd/index planned | not installed |
+| Audio | PipeWire + WirePlumber | PipeWire service disabled; `aether-audio` CLI installed |
+| Daemons | aetherd/index planned | index user service installed; no agent supervisor |
 | Users | `oliver`, locked root | `aether`, password login |
 | Sudo | password required | passwordless |
 | Firewall | enabled | disabled (user-mode NAT) |
@@ -67,6 +67,8 @@ Measured on the development Mac (M3, HVF, 4 vCPU, 4 GiB): **multi-user in ~10–
 
 ## Not the product
 
-There is no compositor, no agent supervisor and no reference kernel here. This
-image proves the base boots and is useful for testing packaging, systemd units
-and future shell integration. The P1 hardware gate still requires the i7-7700K.
+The compositor is installed; `--gui` starts a persistent session on tty8 after
+the DRM check. There is no agent supervisor, no PipeWire service and no reference
+kernel here. This image proves the base boots and is useful for testing packaging,
+systemd units and shell integration. The P1 hardware gate still requires the
+i7-7700K.

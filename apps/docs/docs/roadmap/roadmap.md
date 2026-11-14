@@ -90,9 +90,10 @@ Deliverables:
   input/commands, desktop/file launch, clipboard, window management and cursor
   mapping are verified by xdotool smokes. Idle frames are skipped; client
   commits use surface damage when available and fall back to the window rect.
-  Palette app/file providers refresh on open. Fullscreen uses xdg fullscreen
-  state and hides shell chrome.
-- ⏳ Agent-session provider, system content index integration, desktop-entry
+  Palette app/file/external-launcher providers refresh on open; agent sessions
+  can be published through the external manifest. Fullscreen uses xdg
+  fullscreen state and hides shell chrome.
+- ⏳ Live agent-session IPC, system content index integration, desktop-entry
   SVG icons/theme inheritance/actions/DBus, clipboard persistence/DnD, IME
   support, multi-output snapping, DRM cursor images/themes,
   buffer-damage/occlusion, udev/DRM.

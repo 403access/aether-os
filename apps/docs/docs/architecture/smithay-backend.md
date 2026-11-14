@@ -126,6 +126,13 @@ asserts the reload count and launches the new entry.*
 workspace indicators; `Esc`/`Super+F` restores the previous tiled or floating
 state.*
 
+![An external agent-session launcher in the palette](/img/smithay-agent-launcher.png)
+
+*External processes can publish launchers in a JSON manifest
+(`AETHER_PALETTE_JSON`). Agent supervisors can expose current sessions this way;
+the manifest is reloaded with the desktop/file providers when the palette opens.
+The smoke writes an `Agent Session Alpha` entry and launches it.*
+
 ![The same window maximized](/img/smithay-window-maximized.png)
 
 *`Super+M` maximizes the focused window to the full output; pressing it again
@@ -157,7 +164,8 @@ drag and both toggles with `xdotool` and asserts each transition.*
   from XDG `.desktop` files at startup and appear as `LaunchApp` entries with
   optional PNG icons.
   A bounded filename index (`aether-files`) adds `OpenFile` results for non-empty
-  queries. Both providers are rescanned when the palette opens. Typing filters them (case-insensitive prefix/substring),
+  queries. External launchers from `AETHER_PALETTE_JSON` can add agent-session
+  or tool commands. All providers are rescanned when the palette opens. Typing filters them (case-insensitive prefix/substring),
   `Up/Down` wraps, `Enter` or a row click activates, `Backspace` edits and `Esc`
   closes. The list slides to keep the selection visible, and pointer hover
   selects a row.
@@ -222,9 +230,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
 
 ## What is not implemented
 
-- **Agent-session provider and full-text files.** Desktop apps, the terminal
-  command and a bounded filename index work; the system content indexer and an
-  agent-session provider are not wired in yet.
+- **Live agent IPC and full-text files.** Agent sessions can be published as
+  external launchers, but there is no live agent-session socket yet; file search
+  is name-only, not the system content indexer.
 - **Desktop-entry SVG icons, theme inheritance, actions and D-Bus activation.**
   Entries rescans and hicolor/pixmap PNG icons work; SVG icons, full icon-theme
   lookup, desktop actions and D-Bus activation are not implemented.
@@ -285,6 +293,7 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-damage-xvfb.sh    # partial window damage
 ./os/compositor/aether-shell-smithay/smoke-refresh-xvfb.sh   # live provider refresh
 ./os/compositor/aether-shell-smithay/smoke-fullscreen-xvfb.sh # Super+F fullscreen
+./os/compositor/aether-shell-smithay/smoke-agents-xvfb.sh     # external agent launcher
 ```
 
 The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. The picker,
@@ -295,7 +304,8 @@ Set `AETHER_TERMINAL` to change the built-in
 terminal launcher. Desktop apps come from `XDG_DATA_HOME`/`XDG_DATA_DIRS`
 (`~/.local/share` and `/usr/local/share:/usr/share` by default). The file index
 uses `AETHER_FILE_ROOTS` (default `$HOME`), `AETHER_FILE_LIMIT` (default 2000),
-`AETHER_FILE_DEPTH` (default 5) and `AETHER_OPENER` (default `xdg-open`).
+`AETHER_FILE_DEPTH` (default 5), `AETHER_OPENER` (default `xdg-open`) and
+`AETHER_PALETTE_JSON` (external launchers).
 
 The environment sets:
 

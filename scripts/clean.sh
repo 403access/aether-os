@@ -128,8 +128,14 @@ if [ "${YES}" != "1" ]; then
   esac
 fi
 
+FAILED=0
 for path in "${UNIQUE[@]}"; do
-  rm -rf -- "${path}"
+  # Nix-copied artifacts can be read-only; restore owner write before removal.
+  chmod -R u+w -- "${path}" 2>/dev/null || true
+  if ! rm -rf -- "${path}" 2>/dev/null; then
+    echo "warning: could not remove ${path}" >&2
+    FAILED=1
+  fi
 done
 
 if [ "${DOCKER}" = "1" ]; then
@@ -141,5 +147,10 @@ if [ "${DOCKER}" = "1" ]; then
   fi
 fi
 
+if [ "${FAILED}" = "1" ]; then
+  echo "Clean incomplete: some generated paths are not writable by this user." >&2
+  echo "Re-run as the owner or remove those paths manually." >&2
+  exit 1
+fi
 echo "Clean complete."
 git status --short 2>/dev/null || true

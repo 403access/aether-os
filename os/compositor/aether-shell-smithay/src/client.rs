@@ -413,6 +413,22 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                             );
                             pointer.frame(&mut state);
                         }
+                    } else {
+                        // No client under the pointer: clear the pointer target
+                        // and let an active grab (DnD, resize) see the motion.
+                        let serial = SERIAL_COUNTER.next_serial();
+                        let time = Event::time_msec(&event);
+                        let pointer = state.seat.get_pointer().expect("seat pointer");
+                        pointer.motion(
+                            &mut state,
+                            None,
+                            &MotionEvent {
+                                location: position,
+                                serial,
+                                time,
+                            },
+                        );
+                        pointer.frame(&mut state);
                     }
                 }
             }

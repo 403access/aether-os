@@ -62,7 +62,7 @@ assert_cursor() {
 
 # Master/stack divider.
 xdotool mousemove 702 400
-assert_cursor ColResize
+assert_cursor ResizeHorizontal
 
 # Workspace chip.
 xdotool mousemove 100 20
@@ -70,7 +70,7 @@ assert_cursor Pointer
 
 # Client window, then Alt over it.
 xdotool mousemove 400 400
-assert_cursor Default
+assert_cursor Arrow
 xdotool keydown alt
 xdotool mousemove 401 400
 assert_cursor Move

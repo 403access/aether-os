@@ -7,6 +7,10 @@
 
 #![forbid(unsafe_code)]
 
+pub mod theme;
+
+pub use theme::{parse_xcursor, CursorTheme};
+
 /// Cursor shapes used by the shell.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum CursorShape {
@@ -18,6 +22,35 @@ pub enum CursorShape {
     ResizeNwse,
     ResizeNesw,
     ResizeHorizontal,
+}
+
+impl CursorShape {
+    /// Xcursor theme names to try for this shape.
+    pub fn cursor_names(self) -> &'static [&'static str] {
+        match self {
+            CursorShape::Arrow => &["default", "left_ptr"],
+            CursorShape::Pointer => &["pointer", "hand2", "hand1", "hand"],
+            CursorShape::Text => &["text", "xterm"],
+            CursorShape::Move => &["move", "fleur", "all-scroll"],
+            CursorShape::Grabbing => &["grabbing", "hand2", "fleur"],
+            CursorShape::ResizeNwse => &[
+                "nwse-resize",
+                "top_left_corner",
+                "bottom_right_corner",
+                "bd_double_arrow",
+                "fd_double_arrow",
+            ],
+            CursorShape::ResizeNesw => &[
+                "nesw-resize",
+                "top_right_corner",
+                "bottom_left_corner",
+                "crossed_circle",
+            ],
+            CursorShape::ResizeHorizontal => {
+                &["ew-resize", "sb_h_double_arrow", "left_side", "right_side"]
+            }
+        }
+    }
 }
 
 /// A rendered cursor bitmap with straight RGBA pixels and a hotspot.

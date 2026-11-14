@@ -16,7 +16,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use crate::damage::buffer_damage_to_logical;
-use aether_cursor::{render as render_cursor, CursorShape};
+use aether_cursor::{render as render_cursor, CursorShape, CursorTheme};
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect, Size as AetherSize};
 use aether_layout::LayoutConfig;
 use aether_shell::{
@@ -42,7 +42,9 @@ use smithay::backend::renderer::utils::{draw_render_elements, on_commit_buffer_h
 use smithay::backend::renderer::{Color32F, Frame, Renderer};
 use smithay::backend::winit::{self, WinitEvent};
 use smithay::input::keyboard::{keysyms, xkb, FilterResult, Keysym, ModifiersState};
-use smithay::input::pointer::{AxisFrame, ButtonEvent, MotionEvent};
+use smithay::input::pointer::{
+    AxisFrame, ButtonEvent, CursorIcon as PointerIcon, CursorImageStatus, MotionEvent,
+};
 use smithay::input::{Seat, SeatHandler, SeatState};
 use smithay::output::{Mode as OutputMode, Output, PhysicalProperties, Scale, Subpixel};
 use smithay::reexports::wayland_protocols::xdg::shell::server::xdg_toplevel;
@@ -54,7 +56,6 @@ use smithay::reexports::wayland_server::{
 };
 use smithay::reexports::winit::dpi::LogicalSize;
 use smithay::reexports::winit::platform::pump_events::PumpStatus;
-use smithay::reexports::winit::window::CursorIcon;
 use smithay::reexports::winit::window::WindowAttributes;
 use smithay::utils::{
     Physical, Point as SPoint, Rectangle, Serial, Size as SSize, Transform, SERIAL_COUNTER,
@@ -152,12 +153,15 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         window_resize: None,
         pointer_captured: false,
         modifiers: ModifiersState::default(),
-        cursor: CursorIcon::Default,
+        cursor: CursorShape::Arrow,
         socket_name: String::new(),
         full_damage: true,
         damage: Vec::new(),
         icons: HashMap::new(),
         cursor_buffers: HashMap::new(),
+        cursor_theme: Some(CursorTheme::discover()),
+        client_cursor: None,
+        cursor_hidden: false,
         index_socket: std::env::var("AETHER_INDEX_SOCKET").ok(),
         index_query: String::new(),
     };
@@ -218,7 +222,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     let mut spawned_client = false;
     let mut frames = 0u32;
     let mut applied_focus: Option<WlSurface> = None;
-    let mut applied_cursor = CursorIcon::Default;
+    let mut applied_cursor = CursorShape::Arrow;
     backend.window().set_cursor_visible(false);
     let mut rendered_frames = 0u32;
 
@@ -580,7 +584,6 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         }
 
         if state.cursor != applied_cursor {
-            backend.window().set_cursor(state.cursor);
             println!("aether-shell-smithay: cursor -> {:?}", state.cursor);
             applied_cursor = state.cursor;
         }
@@ -882,10 +885,14 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     })
                     .collect();
 
-                let cursor_shape = cursor_shape(state.cursor);
+                let cursor_shape = state.cursor;
                 let position = state.pointer_pos;
+                let theme_bitmap = state
+                    .cursor_theme
+                    .as_ref()
+                    .and_then(|theme| theme.load(cursor_shape, 24));
                 let entry = state.cursor_buffers.entry(cursor_shape).or_insert_with(|| {
-                    let bitmap = render_cursor(cursor_shape);
+                    let bitmap = theme_bitmap.unwrap_or_else(|| render_cursor(cursor_shape));
                     let buffer = MemoryRenderBuffer::from_slice(
                         &bitmap.pixels,
                         Fourcc::Abgr8888,
@@ -900,20 +907,22 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                         hotspot_y: bitmap.hotspot_y,
                     }
                 });
-                let cursor_element = {
-                    let x = position.x.round() as i32 - entry.hotspot_x;
-                    let y = position.y.round() as i32 - entry.hotspot_y;
-                    MemoryRenderBufferRenderElement::from_buffer(
-                        renderer,
-                        (x as f64, y as f64),
-                        &entry.buffer,
-                        None,
-                        None,
-                        None,
-                        Kind::Unspecified,
-                    )
-                    .ok()
-                };
+                let cursor_element = (!state.cursor_hidden)
+                    .then(|| {
+                        let x = position.x.round() as i32 - entry.hotspot_x;
+                        let y = position.y.round() as i32 - entry.hotspot_y;
+                        MemoryRenderBufferRenderElement::from_buffer(
+                            renderer,
+                            (x as f64, y as f64),
+                            &entry.buffer,
+                            None,
+                            None,
+                            None,
+                            Kind::Unspecified,
+                        )
+                        .ok()
+                    })
+                    .flatten();
 
                 let mut frame = renderer.render(&mut framebuffer, size, Transform::Flipped180)?;
                 frame.clear(Color32F::new(0.01, 0.06, 0.08, 1.0), &damage)?;
@@ -1246,11 +1255,22 @@ impl SeatHandler for App {
             text_input.enter();
         }
     }
-    fn cursor_image(
-        &mut self,
-        _seat: &Seat<Self>,
-        _image: smithay::input::pointer::CursorImageStatus,
-    ) {
+    fn cursor_image(&mut self, _seat: &Seat<Self>, image: CursorImageStatus) {
+        match image {
+            CursorImageStatus::Hidden => {
+                self.cursor_hidden = true;
+                self.client_cursor = None;
+            }
+            CursorImageStatus::Named(icon) => {
+                self.cursor_hidden = false;
+                self.client_cursor = Some(pointer_shape(icon));
+            }
+            CursorImageStatus::Surface(_) => {
+                self.cursor_hidden = false;
+                self.client_cursor = None;
+            }
+        }
+        self.cursor = cursor_for(self);
     }
 }
 
@@ -1441,7 +1461,7 @@ struct WindowResize {
     start_rect: AetherRect,
 }
 
-fn cursor_for(state: &App) -> CursorIcon {
+fn cursor_for(state: &App) -> CursorShape {
     let position = state.pointer_pos;
     let point = AetherPoint::new(position.x.round() as i32, position.y.round() as i32);
 
@@ -1449,30 +1469,30 @@ fn cursor_for(state: &App) -> CursorIcon {
         return resize_cursor(resize.corner);
     }
     if state.window_drag.is_some() {
-        return CursorIcon::Grabbing;
+        return CursorShape::Grabbing;
     }
     if state.resize_drag.is_some() {
-        return CursorIcon::ColResize;
+        return CursorShape::ResizeHorizontal;
     }
     if let Some(overlay) = state.shell.overlay_rect() {
         if overlay.contains(point) {
             if state.shell.palette_row_at(point).is_some() {
-                return CursorIcon::Pointer;
+                return CursorShape::Pointer;
             }
             let input_top = overlay.y + 52;
             if point.y >= input_top && point.y < input_top + 28 {
-                return CursorIcon::Text;
+                return CursorShape::Text;
             }
         }
-        return CursorIcon::Default;
+        return CursorShape::Arrow;
     }
     if state.shell.workspace_at(point).is_some() {
-        return CursorIcon::Pointer;
+        return CursorShape::Pointer;
     }
     if let Some(gap) = state.shell.master_gap_rect() {
         let handle = AetherRect::new(gap.x - 5, gap.y, gap.width + 10, gap.height);
         if handle.contains(point) {
-            return CursorIcon::ColResize;
+            return CursorShape::ResizeHorizontal;
         }
     }
     if let Some(id) = state.shell.window_at(point) {
@@ -1488,30 +1508,33 @@ fn cursor_for(state: &App) -> CursorIcon {
                         return resize_cursor(corner);
                     }
                 }
-                return CursorIcon::Move;
+                return CursorShape::Move;
             }
         }
     }
-    CursorIcon::Default
+    if let Some(shape) = state.client_cursor {
+        return shape;
+    }
+    CursorShape::Arrow
 }
 
-fn cursor_shape(icon: CursorIcon) -> CursorShape {
+fn pointer_shape(icon: PointerIcon) -> CursorShape {
     match icon {
-        CursorIcon::Pointer => CursorShape::Pointer,
-        CursorIcon::Text => CursorShape::Text,
-        CursorIcon::Move => CursorShape::Move,
-        CursorIcon::Grabbing => CursorShape::Grabbing,
-        CursorIcon::NwseResize => CursorShape::ResizeNwse,
-        CursorIcon::NeswResize => CursorShape::ResizeNesw,
-        CursorIcon::ColResize => CursorShape::ResizeHorizontal,
+        PointerIcon::Pointer => CursorShape::Pointer,
+        PointerIcon::Text | PointerIcon::VerticalText => CursorShape::Text,
+        PointerIcon::Move | PointerIcon::AllScroll => CursorShape::Move,
+        PointerIcon::Grabbing => CursorShape::Grabbing,
+        PointerIcon::NwseResize => CursorShape::ResizeNwse,
+        PointerIcon::NeswResize => CursorShape::ResizeNesw,
+        PointerIcon::ColResize | PointerIcon::EwResize => CursorShape::ResizeHorizontal,
         _ => CursorShape::Arrow,
     }
 }
 
-fn resize_cursor(corner: ResizeCorner) -> CursorIcon {
+fn resize_cursor(corner: ResizeCorner) -> CursorShape {
     match corner {
-        ResizeCorner::TopLeft | ResizeCorner::BottomRight => CursorIcon::NwseResize,
-        ResizeCorner::TopRight | ResizeCorner::BottomLeft => CursorIcon::NeswResize,
+        ResizeCorner::TopLeft | ResizeCorner::BottomRight => CursorShape::ResizeNwse,
+        ResizeCorner::TopRight | ResizeCorner::BottomLeft => CursorShape::ResizeNesw,
     }
 }
 
@@ -1571,12 +1594,15 @@ struct App {
     window_resize: Option<WindowResize>,
     pointer_captured: bool,
     modifiers: ModifiersState,
-    cursor: CursorIcon,
+    cursor: CursorShape,
     socket_name: String,
     full_damage: bool,
     damage: Vec<Rectangle<i32, Physical>>,
     icons: HashMap<String, MemoryRenderBuffer>,
     cursor_buffers: HashMap<CursorShape, CursorCacheEntry>,
+    cursor_theme: Option<CursorTheme>,
+    client_cursor: Option<CursorShape>,
+    cursor_hidden: bool,
     index_socket: Option<String>,
     index_query: String,
 }

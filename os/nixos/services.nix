@@ -62,7 +62,7 @@
   systemd.services.aether-session = {
     description = "Aether session (cage DRM adapter)";
     wantedBy = ["multi-user.target"];
-    after = ["systemd-user-sessions.service" "aether-vm-report.service"];
+    after = ["systemd-user-sessions.service"];
     serviceConfig = {
       User = "oliver";
       PAMName = "login";

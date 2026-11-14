@@ -305,9 +305,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
 
 | Shortcut | Action |
 | --- | --- |
-| `Super+Space` | Toggle the palette |
-| `Super+Return` | Spawn a terminal |
-| `Super+E` | Toggle the file explorer |
+| `Super+Space` / `Ctrl+Alt+Space` | Toggle the palette (Simple default includes both) |
+| `Super+Return` / `Ctrl+Alt+Return` | Spawn a terminal |
+| `Super+E` / `Ctrl+Alt+E` | Toggle the file explorer |
 | `Super+C` | Toggle the streaming chat drawer |
 | `Super+A` | Toggle the audio overlay |
 | `Super+/` | Toggle the shortcut cheat sheet |

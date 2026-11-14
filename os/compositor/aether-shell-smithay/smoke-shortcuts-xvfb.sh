@@ -38,7 +38,7 @@ export DISPLAY=":${DISPLAY_NUM}"
 WINDOW_ID="$(xdotool search --name "Aether OS" | head -1)"
 xdotool windowfocus "${WINDOW_ID}"
 
-xdotool key super+slash
+xdotool key ctrl+alt+slash
 sleep 1
 import -window root "${OUT}/shortcuts.png"
 grep -q "shortcuts overlay opened" "${OUT}/shortcuts-app.log" || {

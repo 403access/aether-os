@@ -81,31 +81,36 @@ overlay focus (palette) → window focus → global shortcuts
 
 ## Keyboard map (defaults)
 
-| Chord | Action |
+Two profiles exist. **Simple** is the default and adds Ctrl+Alt aliases; the full
+Super map remains available. **Standard** exposes Super only.
+
+| Chord (Simple → Standard) | Action |
 | --- | --- |
-| `Super+Space` | Palette |
-| `Super+Return` | New terminal |
-| `Super+E` | Explorer |
-| `Super+C` | Chat |
-| `Super+A` | Audio overlay |
-| `Super+/` | Shortcut cheat sheet |
-| `Super+Tab` / `Super+Shift+Tab` | Focus next / previous (MRU) |
-| `Super+J` / `Super+K` | Focus next / previous |
-| `Super+Q` | Close window |
-| `Super+M` | Maximize / restore |
-| `Super+F` | Fullscreen / restore |
-| `Super+H` / `Super+L` | Narrow / widen master |
-| `Super+1..3` | Switch workspace |
-| `Super+Shift+1..3` | Move window to workspace |
+| `Ctrl+Alt+Space` → `Super+Space` | Palette |
+| `Ctrl+Alt+Return` → `Super+Return` | New terminal |
+| `Ctrl+Alt+E` → `Super+E` | Explorer |
+| `Ctrl+Alt+C` → `Super+C` | Chat |
+| `Ctrl+Alt+A` → `Super+A` | Audio overlay |
+| `Ctrl+Alt+/` → `Super+/` | Shortcut cheat sheet |
+| `Ctrl+Alt+Tab` → `Super+Tab` | Focus next (MRU) |
+| `Ctrl+Alt+Shift+Tab` → `Super+Shift+Tab` | Focus previous (MRU) |
+| `Ctrl+Alt+J/K` → `Super+J/K` | Focus next / previous |
+| `Ctrl+Alt+Q` → `Super+Q` | Close window |
+| `Ctrl+Alt+M` → `Super+M` | Maximize / restore |
+| `Ctrl+Alt+F` → `Super+F` | Fullscreen / restore |
+| `Ctrl+Alt+H/L` → `Super+H/L` | Narrow / widen master |
+| `Ctrl+Alt+1..3` → `Super+1..3` | Switch workspace |
+| `Ctrl+Alt+Shift+1..3` → `Super+Shift+1..3` | Move window to workspace |
 | `Super+Alt+1..3` | Switch the output's workspace |
 | `Alt+Left drag` | Move / float |
 | `Alt+Right drag` | Resize floating |
 | `Esc` | Close the open overlay |
 
 The map is compiled into the shell from `aether-shell-wayland/src/keymap.rs`; the
-same table drives the `Super+/` cheat sheet. Runtime remapping is **not
-implemented** yet: changing a chord currently requires a rebuild so the cheat
-sheet and dispatch cannot drift apart.
+same profile table drives the cheat sheet. Select with
+`AETHER_KEY_PROFILE=standard|simple` (default `simple`). Runtime remapping is
+**not implemented** yet: changing a profile currently requires a rebuild so the
+cheat sheet and dispatch cannot drift apart.
 
 ## Accessibility
 

@@ -130,11 +130,15 @@ or with a VNC client:
 vncviewer 127.0.0.1:5905
 ```
 
-### If VNC does not send Super
+### Keyboard profile and VNC
 
-macOS Screen Sharing can swallow Command shortcuts (for example `Cmd+Space` opens
-local Spotlight), and some clients do not map Command to the Linux Super key. The
-guest itself accepts the shortcut—QEMU can inject it directly:
+The compositor defaults to the **Simple** keyboard profile, which uses
+`Ctrl+Alt` shortcuts—`Ctrl+Alt+Space` opens the palette, `Ctrl+Alt+Return` the
+terminal and `Ctrl+Alt+E` the explorer. VNC clients deliver Ctrl and Alt reliably,
+so these work without remapping Command to Super. Super shortcuts remain available
+as a fallback.
+
+If the client still fails to deliver modifiers, QEMU can inject a key directly:
 
 ```bash
 ./scripts/vm-send-key.sh meta_l-spc     # Super+Space: palette

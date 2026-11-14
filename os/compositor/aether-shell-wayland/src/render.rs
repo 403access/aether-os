@@ -849,20 +849,20 @@ impl App {
                     rect.y + 18,
                 ));
                 labels.push((
-                    "Keyboard shortcuts".into(),
+                    format!("Keyboard shortcuts · {}", self.key_profile.name()),
                     rect.x + 50,
                     rect.y + 12,
                     2,
                     [233, 251, 255, 255],
                 ));
                 labels.push((
-                    "Super is Command · fast paths are global".into(),
+                    self.key_profile.description().into(),
                     rect.x + 50,
                     rect.y + 35,
                     0,
                     [107, 169, 182, 255],
                 ));
-                let key = "Super+/";
+                let key = self.key_profile.cheat_sheet_chord();
                 let key_w = self.text_width(key, 0) as i32 + 22;
                 if let Some(buffer) = self.chrome_round(key_w as u32, 22, 6, [3, 25, 34, 255]) {
                     panels.push((buffer, rect.x + width - key_w - 14, rect.y + 18));
@@ -875,7 +875,7 @@ impl App {
                     [107, 169, 182, 255],
                 ));
 
-                let entries = crate::keymap::SHORTCUTS;
+                let entries = self.key_profile.entries();
                 let half = entries.len().div_ceil(2);
                 for (column, slice) in [&entries[..half], &entries[half..]].iter().enumerate() {
                     let column_x = rect.x + 18 + column as i32 * 368;

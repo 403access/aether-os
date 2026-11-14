@@ -21,6 +21,57 @@ pub enum Shortcut {
     Fullscreen,
 }
 
+/// Keyboard layout profile. Super remains available in both profiles; `Simple`
+/// adds the Ctrl+Alt aliases that VNC clients deliver reliably.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum KeyProfile {
+    Standard,
+    Simple,
+}
+
+impl KeyProfile {
+    pub const DEFAULT: Self = Self::Simple;
+
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Standard => "Standard",
+            Self::Simple => "Simple (default)",
+        }
+    }
+
+    pub fn description(self) -> &'static str {
+        match self {
+            Self::Standard => "Super is Command",
+            Self::Simple => "Ctrl+Alt for VNC · Super also works",
+        }
+    }
+
+    pub fn from_env() -> Self {
+        match std::env::var("AETHER_KEY_PROFILE")
+            .unwrap_or_default()
+            .to_ascii_lowercase()
+            .as_str()
+        {
+            "standard" | "super" => Self::Standard,
+            _ => Self::DEFAULT,
+        }
+    }
+
+    pub fn cheat_sheet_chord(self) -> &'static str {
+        match self {
+            Self::Standard => "Super+/",
+            Self::Simple => "Ctrl+Alt+/",
+        }
+    }
+
+    pub fn entries(self) -> &'static [ShortcutEntry] {
+        match self {
+            Self::Standard => STANDARD_SHORTCUTS,
+            Self::Simple => SIMPLE_SHORTCUTS,
+        }
+    }
+}
+
 /// One row in the in-shell cheat sheet and the manual.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ShortcutEntry {
@@ -30,7 +81,7 @@ pub struct ShortcutEntry {
 }
 
 /// Canonical fast-path list. Keep this in sync with `lookup` and the manual.
-pub const SHORTCUTS: &[ShortcutEntry] = &[
+pub const STANDARD_SHORTCUTS: &[ShortcutEntry] = &[
     ShortcutEntry {
         chord: "Super+Space",
         action: "Command palette",
@@ -158,6 +209,109 @@ pub const SHORTCUTS: &[ShortcutEntry] = &[
     },
 ];
 
+pub const SIMPLE_SHORTCUTS: &[ShortcutEntry] = &[
+    ShortcutEntry { chord: "Ctrl+Alt+Space", action: "Command palette", group: "Surfaces" },
+    ShortcutEntry { chord: "Ctrl+Alt+Return", action: "New terminal", group: "Surfaces" },
+    ShortcutEntry { chord: "Ctrl+Alt+E", action: "Explorer", group: "Surfaces" },
+    ShortcutEntry { chord: "Ctrl+Alt+C", action: "Chat", group: "Surfaces" },
+    ShortcutEntry { chord: "Ctrl+Alt+A", action: "Audio routes", group: "Surfaces" },
+    ShortcutEntry { chord: "Ctrl+Alt+/", action: "Shortcut cheat sheet", group: "Surfaces" },
+    ShortcutEntry { chord: "Ctrl+Alt+Tab", action: "Focus next (MRU)", group: "Windows" },
+    ShortcutEntry { chord: "Ctrl+Alt+Shift+Tab", action: "Focus previous (MRU)", group: "Windows" },
+    ShortcutEntry { chord: "Ctrl+Alt+J", action: "Focus next", group: "Windows" },
+    ShortcutEntry { chord: "Ctrl+Alt+K", action: "Focus previous", group: "Windows" },
+    ShortcutEntry { chord: "Ctrl+Alt+M", action: "Maximize / restore", group: "Windows" },
+    ShortcutEntry { chord: "Ctrl+Alt+F", action: "Fullscreen / restore", group: "Windows" },
+    ShortcutEntry { chord: "Ctrl+Alt+Q", action: "Close window", group: "Windows" },
+    ShortcutEntry { chord: "Ctrl+Alt+H", action: "Narrow master", group: "Layout" },
+    ShortcutEntry { chord: "Ctrl+Alt+L", action: "Widen master", group: "Layout" },
+    ShortcutEntry { chord: "Alt+Left drag", action: "Move / float window", group: "Layout" },
+    ShortcutEntry { chord: "Alt+Right drag", action: "Resize floating window", group: "Layout" },
+    ShortcutEntry { chord: "Ctrl+Alt+1/2/3", action: "Switch workspace", group: "Workspaces" },
+    ShortcutEntry { chord: "Ctrl+Alt+Shift+1/2/3", action: "Move window to workspace", group: "Workspaces" },
+    ShortcutEntry { chord: "↑ / ↓", action: "Move selection", group: "Overlays" },
+    ShortcutEntry { chord: "Enter", action: "Activate selection", group: "Overlays" },
+    ShortcutEntry { chord: "PgUp / PgDn", action: "Page lists / chat", group: "Overlays" },
+    ShortcutEntry { chord: "P", action: "Cycle audio latency preset", group: "Overlays" },
+    ShortcutEntry { chord: "Esc", action: "Close overlay", group: "Overlays" },
+];
+
+/// Resolve a key against a profile. Simple checks Ctrl+Alt first, then falls
+/// through to the Super map so muscle memory keeps working everywhere.
+pub fn lookup_profile(
+    profile: KeyProfile,
+    logo: bool,
+    ctrl: bool,
+    shift: bool,
+    alt: bool,
+    keysym: Keysym,
+) -> Option<Shortcut> {
+    if profile == KeyProfile::Simple && ctrl && alt {
+        let space: Keysym = keysyms::KEY_space.into();
+        let enter: Keysym = keysyms::KEY_Return.into();
+        let slash: Keysym = keysyms::KEY_slash.into();
+        let tab: Keysym = keysyms::KEY_Tab.into();
+        let one: Keysym = keysyms::KEY_1.into();
+        let two: Keysym = keysyms::KEY_2.into();
+        let three: Keysym = keysyms::KEY_3.into();
+        let index = if keysym == one {
+            Some(0)
+        } else if keysym == two {
+            Some(1)
+        } else if keysym == three {
+            Some(2)
+        } else {
+            None
+        };
+        if let Some(index) = index {
+            return Some(if shift {
+                Shortcut::MoveWindowToWorkspace(index)
+            } else {
+                Shortcut::SwitchWorkspace(index)
+            });
+        }
+        let shortcut = if keysym == space {
+            Some(Shortcut::TogglePalette)
+        } else if keysym == enter {
+            Some(Shortcut::NewTerminal)
+        } else if keysym == slash {
+            Some(Shortcut::ToggleShortcuts)
+        } else if keysym == tab {
+            Some(if shift {
+                Shortcut::FocusPrevious
+            } else {
+                Shortcut::FocusNext
+            })
+        } else if keysym == keysyms::KEY_e.into() {
+            Some(Shortcut::ToggleExplorer)
+        } else if keysym == keysyms::KEY_c.into() {
+            Some(Shortcut::ToggleChat)
+        } else if keysym == keysyms::KEY_a.into() {
+            Some(Shortcut::ToggleAudio)
+        } else if keysym == keysyms::KEY_j.into() {
+            Some(Shortcut::FocusNext)
+        } else if keysym == keysyms::KEY_k.into() {
+            Some(Shortcut::FocusPrevious)
+        } else if keysym == keysyms::KEY_h.into() {
+            Some(Shortcut::AdjustMaster(-1))
+        } else if keysym == keysyms::KEY_l.into() {
+            Some(Shortcut::AdjustMaster(1))
+        } else if keysym == keysyms::KEY_m.into() {
+            Some(Shortcut::Maximize)
+        } else if keysym == keysyms::KEY_f.into() {
+            Some(Shortcut::Fullscreen)
+        } else if keysym == keysyms::KEY_q.into() {
+            Some(Shortcut::CloseWindow)
+        } else {
+            None
+        };
+        if shortcut.is_some() {
+            return shortcut;
+        }
+    }
+    lookup(logo, shift, alt, keysym)
+}
+
 /// Resolve a logo-modified key. Escape is handled by the overlay before this.
 pub fn lookup(logo: bool, shift: bool, alt: bool, keysym: Keysym) -> Option<Shortcut> {
     if !logo {
@@ -262,13 +416,13 @@ mod tests {
 
     #[test]
     fn shortcut_table_is_unique_and_complete() {
-        assert!(SHORTCUTS.len() >= 20);
-        let mut chords: Vec<&str> = SHORTCUTS.iter().map(|entry| entry.chord).collect();
+        assert!(STANDARD_SHORTCUTS.len() >= 20);
+        let mut chords: Vec<&str> = STANDARD_SHORTCUTS.iter().map(|entry| entry.chord).collect();
         chords.sort_unstable();
         chords.dedup();
-        assert_eq!(chords.len(), SHORTCUTS.len());
-        assert!(SHORTCUTS.iter().any(|entry| entry.chord == "Super+Return"));
-        assert!(SHORTCUTS.iter().any(|entry| entry.chord == "Super+/"));
+        assert_eq!(chords.len(), STANDARD_SHORTCUTS.len());
+        assert!(STANDARD_SHORTCUTS.iter().any(|entry| entry.chord == "Super+Return"));
+        assert!(STANDARD_SHORTCUTS.iter().any(|entry| entry.chord == "Super+/"));
     }
 
     #[test]
@@ -308,6 +462,67 @@ mod tests {
         assert_eq!(
             lookup(true, false, false, key(keysyms::KEY_q)),
             Some(Shortcut::CloseWindow)
+        );
+    }
+
+    #[test]
+    fn simple_profile_uses_ctrl_alt_aliases() {
+        let palette = lookup_profile(
+            KeyProfile::Simple,
+            false,
+            true,
+            false,
+            true,
+            key(keysyms::KEY_space),
+        );
+        assert_eq!(palette, Some(Shortcut::TogglePalette));
+        assert_eq!(
+            lookup_profile(
+                KeyProfile::Standard,
+                false,
+                true,
+                false,
+                true,
+                key(keysyms::KEY_space)
+            ),
+            None
+        );
+        assert_eq!(
+            lookup_profile(
+                KeyProfile::Simple,
+                false,
+                true,
+                false,
+                true,
+                key(keysyms::KEY_Return)
+            ),
+            Some(Shortcut::NewTerminal)
+        );
+        assert_eq!(
+            lookup_profile(
+                KeyProfile::Simple,
+                false,
+                true,
+                false,
+                true,
+                key(keysyms::KEY_e)
+            ),
+            Some(Shortcut::ToggleExplorer)
+        );
+    }
+
+    #[test]
+    fn simple_profile_keeps_super_as_fallback() {
+        assert_eq!(
+            lookup_profile(
+                KeyProfile::Simple,
+                true,
+                false,
+                false,
+                false,
+                key(keysyms::KEY_space)
+            ),
+            Some(Shortcut::TogglePalette)
         );
     }
 }

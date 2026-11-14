@@ -12,7 +12,7 @@ use crate::agents::{parse_launchers, AgentSessions};
 use crate::chat_demo::ChatDemo;
 use crate::damage::buffer_damage_to_logical;
 use crate::index_worker::{should_apply, IndexWorker};
-use crate::keymap::{lookup, Shortcut};
+use crate::keymap::{lookup_profile, KeyProfile, Shortcut};
 use crate::status::{StatusSnapshot, SAMPLE_INTERVAL};
 use crate::topbar::{self, TopAction};
 use aether_audio::{LatencyPreset, SystemAudio};
@@ -681,6 +681,7 @@ pub struct App {
     status_cpu: Option<crate::status::CpuTimes>,
     chat_demo: Option<ChatDemo>,
     pub(crate) shortcuts_open: bool,
+    pub(crate) key_profile: KeyProfile,
     audio_backend: SystemAudio,
     status_last: std::time::Instant,
     status_enabled: bool,
@@ -737,7 +738,14 @@ impl App {
             self.toggle_overlay();
             return true;
         }
-        let Some(shortcut) = lookup(modifiers.logo, modifiers.shift, modifiers.alt, keysym) else {
+        let Some(shortcut) = lookup_profile(
+            self.key_profile,
+            modifiers.logo,
+            modifiers.ctrl,
+            modifiers.shift,
+            modifiers.alt,
+            keysym,
+        ) else {
             return false;
         };
         match shortcut {
@@ -933,7 +941,7 @@ impl App {
             self.shortcuts_open = true;
             println!(
                 "aether-shell: shortcuts overlay opened ({} bindings)",
-                crate::keymap::SHORTCUTS.len()
+                self.key_profile.entries().len()
             );
             self.mark_full_damage();
         }
@@ -1542,6 +1550,7 @@ impl App {
             status_cpu: None,
             chat_demo: None,
             shortcuts_open: false,
+            key_profile: KeyProfile::from_env(),
             audio_backend: SystemAudio::new(),
             status_last: std::time::Instant::now(),
             status_enabled: std::env::var("AETHER_STATUS")

@@ -15,23 +15,44 @@ Press **`Super+/`** at any time to open the same shortcut sheet inside the syste
 
 ![Shortcut cheat sheet in the compositor](/img/smithay-shortcuts.png)
 
+## Keyboard profiles
+
+Two profiles ship:
+
+| Profile | Primary modifier | Notes |
+| --- | --- | --- |
+| **Simple (default)** | `Ctrl+Alt` | VNC/macOS-friendly aliases; `Super` shortcuts still work |
+| **Standard** | `Super` | The original Super-only map |
+
+Select at startup:
+
+```bash
+AETHER_KEY_PROFILE=standard aether-shell-drm
+AETHER_KEY_PROFILE=standard ./os/compositor/aether-shell-smithay/target/debug/aether-shell-smithay
+```
+
+The in-shell cheat sheet (`Super+/` or `Ctrl+Alt+/`) shows the active profile.
+
 ## The ten commands to learn first
 
-| Chord | Action |
-| --- | --- |
-| `Super+Space` | Command palette |
-| `Super+Return` | New terminal |
-| `Super+E` | Explorer |
-| `Super+C` | Chat |
-| `Super+A` | Audio routes |
-| `Super+/` | Shortcut cheat sheet |
-| `Super+Tab` | Focus next window (MRU) |
-| `Super+1/2/3` | Switch workspace |
-| `Super+Q` | Close focused window |
-| `Esc` | Close the current overlay |
+| Action | Simple (default) | Standard |
+| --- | --- | --- |
+| Command palette | `Ctrl+Alt+Space` | `Super+Space` |
+| New terminal | `Ctrl+Alt+Return` | `Super+Return` |
+| Explorer | `Ctrl+Alt+E` | `Super+E` |
+| Chat | `Ctrl+Alt+C` | `Super+C` |
+| Audio routes | `Ctrl+Alt+A` | `Super+A` |
+| Shortcut cheat sheet | `Ctrl+Alt+/` | `Super+/` |
+| Focus next window | `Ctrl+Alt+Tab` | `Super+Tab` |
+| Switch workspace | `Ctrl+Alt+1/2/3` | `Super+1/2/3` |
+| Close focused window | `Ctrl+Alt+Q` | `Super+Q` |
+| Close overlay | `Esc` | `Esc` |
 
-`Super+J` / `Super+K` also move focus next/previous, for a Vim-like hand position.
-`Super+Shift+Tab` walks the MRU stack backwards.
+`Ctrl+Alt+J` / `Ctrl+Alt+K` (Standard: `Super+J` / `Super+K`) move focus
+next/previous. `Ctrl+Alt+Shift+Tab` walks the MRU stack backwards.
+
+In Simple, the complete `Super` map remains available as a fallback, so existing
+muscle memory keeps working.
 
 ## The top shortcut dock
 
@@ -53,16 +74,19 @@ with the palette, explorer, chat or audio overlay.
 
 ## Global shortcuts
 
+The tables below list the **Simple** aliases first with the Standard chord in
+parentheses. Pointer actions are identical in both profiles.
+
 ### Surfaces
 
 | Chord | Action |
 | --- | --- |
-| `Super+Space` | Toggle the command palette |
-| `Super+Return` | Spawn `aether-terminal` |
-| `Super+E` | Toggle the full-output explorer |
-| `Super+C` | Toggle the streaming chat drawer |
-| `Super+A` | Toggle the audio overlay |
-| `Super+/` | Toggle the shortcut cheat sheet |
+| `Ctrl+Alt+Space` (`Super+Space`) | Toggle the command palette |
+| `Ctrl+Alt+Return` (`Super+Return`) | Spawn `aether-terminal` |
+| `Ctrl+Alt+E` (`Super+E`) | Toggle the full-output explorer |
+| `Ctrl+Alt+C` (`Super+C`) | Toggle the streaming chat drawer |
+| `Ctrl+Alt+A` (`Super+A`) | Toggle the audio overlay |
+| `Ctrl+Alt+/` (`Super+/`) | Toggle the shortcut cheat sheet |
 | `Esc` | Close the open overlay, one layer at a time |
 
 Opening one surface closes the others. The palette, explorer, chat and audio
@@ -72,11 +96,11 @@ layers are mutually exclusive; there is never a hidden modal stealing keys.
 
 | Chord | Action |
 | --- | --- |
-| `Super+Tab` / `Super+Shift+Tab` | Focus next / previous in MRU order |
-| `Super+J` / `Super+K` | Focus next / previous |
-| `Super+M` | Maximize / restore |
-| `Super+F` | Fullscreen / restore; hides shell chrome |
-| `Super+Q` | Ask the focused client to close |
+| `Ctrl+Alt+Tab` / `Ctrl+Alt+Shift+Tab` (`Super+Tab` / `Super+Shift+Tab`) | Focus next / previous in MRU order |
+| `Ctrl+Alt+J` / `Ctrl+Alt+K` (`Super+J` / `Super+K`) | Focus next / previous |
+| `Ctrl+Alt+M` (`Super+M`) | Maximize / restore |
+| `Ctrl+Alt+F` (`Super+F`) | Fullscreen / restore; hides shell chrome |
+| `Ctrl+Alt+Q` (`Super+Q`) | Ask the focused client to close |
 | `Alt+Left drag` | Move a window; promotes a tile to floating |
 | `Alt+Right drag` | Resize a floating window from the nearest corner |
 | Release at edge | Snap to left/right half; top edge maximizes |
@@ -87,8 +111,8 @@ layers are mutually exclusive; there is never a hidden modal stealing keys.
 
 | Chord | Action |
 | --- | --- |
-| `Super+1/2/3` | Switch workspace on the focused output |
-| `Super+Shift+1/2/3` | Move the focused window to a workspace |
+| `Ctrl+Alt+1/2/3` (`Super+1/2/3`) | Switch workspace on the focused output |
+| `Ctrl+Alt+Shift+1/2/3` (`Super+Shift+1/2/3`) | Move the focused window to a workspace |
 | `Super+Alt+1/2/3` | Switch the workspace on the output under the pointer |
 
 Each output has its own active workspace. The pills at the top-left show the
@@ -99,8 +123,8 @@ output under the pointer; the active pill is cyan. On a multi-output desktop,
 
 | Chord | Action |
 | --- | --- |
-| `Super+H` | Narrow the master pane by 5% |
-| `Super+L` | Widen the master pane by 5% |
+| `Ctrl+Alt+H` (`Super+H`) | Narrow the master pane by 5% |
+| `Ctrl+Alt+L` (`Super+L`) | Widen the master pane by 5% |
 | `Alt+Left drag` | Move/float |
 | `Alt+Right drag` | Resize |
 

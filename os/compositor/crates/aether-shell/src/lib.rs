@@ -49,6 +49,13 @@ pub const PALETTE_ROW_SPACING: u32 = 48;
 /// Y offset of the first result row inside the overlay rect.
 pub const PALETTE_CONTENT_TOP: i32 = 96;
 
+/// Minimum width when resizing a floating window.
+pub const MIN_FLOATING_WIDTH: u32 = 160;
+/// Minimum height when resizing a floating window.
+pub const MIN_FLOATING_HEIGHT: u32 = 120;
+/// Distance from an output edge where a moving window snaps flush.
+pub const FLOATING_SNAP_DISTANCE: i32 = 16;
+
 #[derive(Clone, Debug)]
 pub struct WindowSpec {
     pub title: String,
@@ -576,12 +583,82 @@ impl Shell {
             current.width,
             current.height,
         ));
+        let moved = self.snap_floating(moved);
         if let Some(window) = self.windows.get_mut(&id) {
             window.floating = true;
             window.floating_rect = Some(moved);
         }
         self.relayout();
         true
+    }
+
+    /// Start an interactive resize. Promotes a tiled window to floating while
+    /// keeping its current rect, and returns that rect.
+    pub fn begin_floating_resize(&mut self, id: WindowId) -> Option<Rect> {
+        let window = self.windows.get(&id)?;
+        if window.maximized {
+            return None;
+        }
+        let surface = window.surface;
+        let rect = self.scene.get(surface)?.rect;
+        let window = self.windows.get_mut(&id)?;
+        window.floating = true;
+        window.maximized = false;
+        window.restore = None;
+        window.floating_rect = Some(rect);
+        self.relayout();
+        Some(rect)
+    }
+
+    /// Resize a floating window, enforcing the minimum size and output bounds.
+    pub fn resize_floating(&mut self, id: WindowId, rect: Rect) -> bool {
+        let Some((surface, maximized)) = self
+            .windows
+            .get(&id)
+            .map(|window| (window.surface, window.maximized))
+        else {
+            return false;
+        };
+        if maximized {
+            return false;
+        }
+        let width = rect
+            .width
+            .max(MIN_FLOATING_WIDTH.min(self.viewport.width.max(1)))
+            .min(self.viewport.width.max(1));
+        let height = rect
+            .height
+            .max(MIN_FLOATING_HEIGHT.min(self.viewport.height.max(1)))
+            .min(self.viewport.height.max(1));
+        let resized = self.clamp_rect(Rect::new(rect.x, rect.y, width, height));
+        if let Some(window) = self.windows.get_mut(&id) {
+            window.floating = true;
+            window.floating_rect = Some(resized);
+        }
+        if self.scene.get(surface).is_some() {
+            self.relayout();
+        }
+        true
+    }
+
+    fn snap_floating(&self, rect: Rect) -> Rect {
+        let bounds = Rect::from_size(self.viewport);
+        let mut x = rect.x;
+        let mut y = rect.y;
+        if x - bounds.x <= FLOATING_SNAP_DISTANCE {
+            x = bounds.x;
+        } else if (bounds.right() - (x as i64 + rect.width as i64)) <= FLOATING_SNAP_DISTANCE as i64
+        {
+            x = (bounds.width as i32 - rect.width as i32).max(0);
+        }
+        if y - bounds.y <= FLOATING_SNAP_DISTANCE {
+            y = bounds.y;
+        } else if (bounds.bottom() - (y as i64 + rect.height as i64))
+            <= FLOATING_SNAP_DISTANCE as i64
+        {
+            y = (bounds.height as i32 - rect.height as i32).max(0);
+        }
+        Rect::new(x, y, rect.width, rect.height)
     }
 
     /// Open the overlay with a default centred rect and reset the query.
@@ -1190,6 +1267,69 @@ mod tests {
             .unwrap();
         assert!(info.floating);
         assert_eq!(info.rect, rect);
+    }
+
+    #[test]
+    fn floating_resize_enforces_minimum_and_bounds() {
+        let mut shell = shell();
+        let id = shell.add_window(WindowSpec {
+            title: "resizable".into(),
+            app_id: "test".into(),
+            preferred_size: Size::new(320, 200),
+            floating: true,
+        });
+        assert!(shell.resize_floating(id, Rect::new(100, 100, 500, 400)));
+        let info = shell.windows().into_iter().find(|w| w.id == id).unwrap();
+        assert_eq!(info.rect, Rect::new(100, 100, 500, 400));
+
+        assert!(shell.resize_floating(id, Rect::new(100, 100, 10, 10)));
+        let info = shell.windows().into_iter().find(|w| w.id == id).unwrap();
+        assert_eq!(info.rect.width, MIN_FLOATING_WIDTH);
+        assert_eq!(info.rect.height, MIN_FLOATING_HEIGHT);
+
+        assert!(shell.resize_floating(id, Rect::new(700, 500, 500, 400)));
+        let info = shell.windows().into_iter().find(|w| w.id == id).unwrap();
+        assert!(info.rect.right() <= shell.viewport().width as i64);
+        assert!(info.rect.bottom() <= shell.viewport().height as i64);
+    }
+
+    #[test]
+    fn beginning_a_floating_resize_promotes_a_tile() {
+        let mut shell = shell();
+        let id = window(&mut shell, "tile");
+        let before = shell
+            .windows()
+            .into_iter()
+            .find(|w| w.id == id)
+            .unwrap()
+            .rect;
+        let rect = shell.begin_floating_resize(id).expect("resize rect");
+        assert_eq!(rect, before);
+        let info = shell.windows().into_iter().find(|w| w.id == id).unwrap();
+        assert!(info.floating);
+        assert!(!info.maximized);
+    }
+
+    #[test]
+    fn floating_move_snaps_to_output_edges() {
+        let mut shell = shell();
+        let id = shell.add_window(WindowSpec {
+            title: "snap".into(),
+            app_id: "test".into(),
+            preferred_size: Size::new(320, 200),
+            floating: true,
+        });
+        assert!(shell.move_floating(id, Point::new(5, 7)));
+        let info = shell.windows().into_iter().find(|w| w.id == id).unwrap();
+        assert_eq!((info.rect.x, info.rect.y), (0, 0));
+
+        assert!(shell.move_floating(id, Point::new(950, 550)));
+        let info = shell.windows().into_iter().find(|w| w.id == id).unwrap();
+        assert_eq!((info.rect.x, info.rect.y), (480, 400));
+
+        assert!(shell.move_floating(id, Point::new(200, 150)));
+        let info = shell.windows().into_iter().find(|w| w.id == id).unwrap();
+        assert_eq!((info.rect.x, info.rect.y), (200, 150));
     }
 
     #[test]

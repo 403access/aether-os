@@ -15,8 +15,8 @@ use std::sync::Arc;
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect, Size as AetherSize};
 use aether_layout::LayoutConfig;
 use aether_shell::{
-    PaletteAction, Shell, WindowId, WindowSpec, PALETTE_VISIBLE_ROWS,
-    WORKSPACE_INDICATOR_BAR_HEIGHT,
+    PaletteAction, Shell, WindowId, WindowSpec, MIN_FLOATING_HEIGHT, MIN_FLOATING_WIDTH,
+    PALETTE_VISIBLE_ROWS, WORKSPACE_INDICATOR_BAR_HEIGHT,
 };
 use aether_text::{text_width, TextBitmap};
 use smithay::backend::allocator::Fourcc;
@@ -104,6 +104,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         pointer_pos: smithay::utils::Point::from((0.0, 0.0)),
         resize_drag: None,
         window_drag: None,
+        window_resize: None,
         pointer_captured: false,
         modifiers: ModifiersState::default(),
     };
@@ -196,7 +197,45 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                 )));
                 state.pointer_pos = position;
 
-                if let Some(drag) = state.window_drag {
+                if let Some(resize) = state.window_resize {
+                    let point =
+                        AetherPoint::new(position.x.round() as i32, position.y.round() as i32);
+                    let dx = point.x - resize.start_pointer.x;
+                    let dy = point.y - resize.start_pointer.y;
+                    let start = resize.start_rect;
+                    let min_width = MIN_FLOATING_WIDTH as i32;
+                    let min_height = MIN_FLOATING_HEIGHT as i32;
+                    let mut rect = start;
+                    match resize.corner {
+                        ResizeCorner::BottomRight => {
+                            rect.width = (start.width as i32 + dx).max(min_width) as u32;
+                            rect.height = (start.height as i32 + dy).max(min_height) as u32;
+                        }
+                        ResizeCorner::BottomLeft => {
+                            let width = (start.width as i32 - dx).max(min_width);
+                            rect.x = start.x + start.width as i32 - width;
+                            rect.width = width as u32;
+                            rect.height = (start.height as i32 + dy).max(min_height) as u32;
+                        }
+                        ResizeCorner::TopRight => {
+                            rect.width = (start.width as i32 + dx).max(min_width) as u32;
+                            let height = (start.height as i32 - dy).max(min_height);
+                            rect.y = start.y + start.height as i32 - height;
+                            rect.height = height as u32;
+                        }
+                        ResizeCorner::TopLeft => {
+                            let width = (start.width as i32 - dx).max(min_width);
+                            let height = (start.height as i32 - dy).max(min_height);
+                            rect.x = start.x + start.width as i32 - width;
+                            rect.y = start.y + start.height as i32 - height;
+                            rect.width = width as u32;
+                            rect.height = height as u32;
+                        }
+                    }
+                    if state.shell.resize_floating(resize.id, rect) {
+                        state.configure_all();
+                    }
+                } else if let Some(drag) = state.window_drag {
                     let x = (position.x - drag.offset_x).round() as i32;
                     let y = (position.y - drag.offset_y).round() as i32;
                     if state.shell.move_floating(drag.id, AetherPoint::new(x, y)) {
@@ -347,6 +386,27 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                                 );
                             }
                         }
+                    } else if state.modifiers.alt
+                        && event.button() == Some(MouseButton::Right)
+                    {
+                        if let Some(id) = state.shell.window_at(point) {
+                            state.shell.focus_window(id);
+                            state.sync_focus();
+                            if let Some(rect) = state.shell.begin_floating_resize(id) {
+                                let corner = resize_corner(rect, point);
+                                state.window_resize = Some(WindowResize {
+                                    id,
+                                    corner,
+                                    start_pointer: point,
+                                    start_rect: rect,
+                                });
+                                state.pointer_captured = true;
+                                state.configure_all();
+                                println!(
+                                    "aether-shell-smithay: window resize started id={id} rect={rect:?} corner={corner:?}"
+                                );
+                            }
+                        }
                     } else if let Some(id) = state.shell.window_at(point) {
                         state.shell.focus_window(id);
                         state.sync_focus();
@@ -355,6 +415,18 @@ pub fn run() -> Result<(), Box<dyn Error>> {
 
                 let forward = !state.pointer_captured;
                 if event.state() == ButtonState::Released {
+                    if let Some(resize) = state.window_resize.take() {
+                        let rect = state
+                            .shell
+                            .windows()
+                            .into_iter()
+                            .find(|window| window.id == resize.id)
+                            .map(|window| window.rect);
+                        println!(
+                            "aether-shell-smithay: window resized id={} rect={rect:?}",
+                            resize.id
+                        );
+                    }
                     if let Some(drag) = state.window_drag.take() {
                         let rect = state
                             .shell
@@ -865,6 +937,33 @@ struct ResizeDrag {
     last_ratio: f32,
 }
 
+#[derive(Clone, Copy, Debug)]
+enum ResizeCorner {
+    TopLeft,
+    TopRight,
+    BottomLeft,
+    BottomRight,
+}
+
+#[derive(Clone, Copy)]
+struct WindowResize {
+    id: WindowId,
+    corner: ResizeCorner,
+    start_pointer: AetherPoint,
+    start_rect: AetherRect,
+}
+
+fn resize_corner(rect: AetherRect, point: AetherPoint) -> ResizeCorner {
+    let left = (point.x - rect.x) < rect.width as i32 / 2;
+    let top = (point.y - rect.y) < rect.height as i32 / 2;
+    match (top, left) {
+        (true, true) => ResizeCorner::TopLeft,
+        (true, false) => ResizeCorner::TopRight,
+        (false, true) => ResizeCorner::BottomLeft,
+        (false, false) => ResizeCorner::BottomRight,
+    }
+}
+
 #[derive(Clone, Copy)]
 struct WindowDrag {
     id: WindowId,
@@ -889,6 +988,7 @@ struct App {
     pointer_pos: smithay::utils::Point<f64, smithay::utils::Logical>,
     resize_drag: Option<ResizeDrag>,
     window_drag: Option<WindowDrag>,
+    window_resize: Option<WindowResize>,
     pointer_captured: bool,
     modifiers: ModifiersState,
 }

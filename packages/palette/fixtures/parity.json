@@ -1,0 +1,16 @@
+{
+  "modes": [
+    { "input": "/etc", "mode": "file", "term": "etc" },
+    { "input": "  >run", "mode": "command", "term": "run" },
+    { "input": "@agent", "mode": "agent", "term": "agent" },
+    { "input": "~set", "mode": "setting", "term": "set" },
+    { "input": "plain", "mode": "all", "term": "plain" }
+  ],
+  "ranks": [
+    { "term": "web", "title": "web", "rank": 0 },
+    { "term": "web", "title": "web tools", "rank": 1 },
+    { "term": "web", "title": "the web", "rank": 2 },
+    { "term": "wb", "title": "web tools", "rank": 3 },
+    { "term": "zz", "title": "web tools", "rank": null }
+  ]
+}

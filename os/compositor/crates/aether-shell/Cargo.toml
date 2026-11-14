@@ -11,3 +11,7 @@ aether-damage.workspace = true
 aether-layout.workspace = true
 aether-pacing.workspace = true
 aether-scene.workspace = true
+
+[dev-dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

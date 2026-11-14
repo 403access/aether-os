@@ -28,6 +28,29 @@ use aether_scene::{Layer, Scene, SurfaceId};
 pub type WindowId = u64;
 pub type OutputId = u64;
 
+/// Palette provider mode selected by a leading prefix character.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PaletteMode {
+    All,
+    Command,
+    Agent,
+    File,
+    Setting,
+}
+
+/// Parse `>run`, `@agent`, `/file` or `~setting`; otherwise `All`.
+pub fn parse_palette_query(input: &str) -> (PaletteMode, String) {
+    let trimmed = input.trim_start();
+    let (mode, rest) = match trimmed.chars().next() {
+        Some('>') => (PaletteMode::Command, &trimmed[1..]),
+        Some('@') => (PaletteMode::Agent, &trimmed[1..]),
+        Some('/') => (PaletteMode::File, &trimmed[1..]),
+        Some('~') => (PaletteMode::Setting, &trimmed[1..]),
+        _ => (PaletteMode::All, trimmed),
+    };
+    (mode, rest.trim().to_string())
+}
+
 /// A logical output in the shell's extended desktop.
 #[derive(Clone, Debug, PartialEq)]
 pub struct OutputInfo {
@@ -1015,54 +1038,66 @@ impl Shell {
         &self.palette.query
     }
 
-    /// Filtered palette entries. Workspaces are always available; the close
-    /// command is last. Matching is case-insensitive on title, then detail.
+    /// Filtered palette entries. A leading prefix narrows providers:
+    /// `>` commands, `@` windows/agents, `/` files, `~` workspaces.
     pub fn palette_entries(&self) -> Vec<PaletteEntry> {
-        let query = self.palette.query.trim().to_lowercase();
+        let (mode, query) = parse_palette_query(&self.palette.query);
+        let query = query.to_lowercase();
         let mut scored: Vec<(u8, usize, PaletteEntry)> = Vec::new();
 
-        for (index, workspace) in self.workspaces.iter().enumerate() {
-            let detail = format!("workspace {}", index + 1);
-            if let Some(score) = palette_score(&query, &workspace.name) {
-                scored.push((
-                    score,
-                    index,
-                    PaletteEntry {
-                        title: workspace.name.clone(),
-                        detail,
-                        action: PaletteAction::SwitchWorkspace(index),
-                    },
-                ));
+        if matches!(
+            mode,
+            PaletteMode::All | PaletteMode::Command | PaletteMode::Setting
+        ) {
+            for (index, workspace) in self.workspaces.iter().enumerate() {
+                let detail = format!("workspace {}", index + 1);
+                if let Some(score) = palette_score(&query, &workspace.name) {
+                    scored.push((
+                        score,
+                        index,
+                        PaletteEntry {
+                            title: workspace.name.clone(),
+                            detail,
+                            action: PaletteAction::SwitchWorkspace(index),
+                        },
+                    ));
+                }
             }
         }
 
         let launcher_offset = self.workspaces.len();
-        for (index, launcher) in self.launchers.iter().enumerate() {
-            if let Some(score) = palette_score(&query, &launcher.name) {
-                scored.push((
-                    score,
-                    launcher_offset + index,
-                    PaletteEntry {
-                        title: launcher.name.clone(),
-                        detail: launcher.detail.clone(),
-                        action: PaletteAction::LaunchApp(index),
-                    },
-                ));
+        if matches!(mode, PaletteMode::All | PaletteMode::Command) {
+            for (index, launcher) in self.launchers.iter().enumerate() {
+                if let Some(score) = palette_score(&query, &launcher.name) {
+                    scored.push((
+                        score,
+                        launcher_offset + index,
+                        PaletteEntry {
+                            title: launcher.name.clone(),
+                            detail: launcher.detail.clone(),
+                            action: PaletteAction::LaunchApp(index),
+                        },
+                    ));
+                }
             }
         }
 
         let command_offset = launcher_offset + self.launchers.len();
-        let new_terminal = PaletteEntry {
-            title: "New terminal".to_string(),
-            detail: "launch".to_string(),
-            action: PaletteAction::SpawnTerminal,
-        };
-        if let Some(score) = palette_score(&query, &new_terminal.title) {
-            scored.push((score, command_offset, new_terminal));
+        if matches!(mode, PaletteMode::All | PaletteMode::Command) {
+            let new_terminal = PaletteEntry {
+                title: "New terminal".to_string(),
+                detail: "launch".to_string(),
+                action: PaletteAction::SpawnTerminal,
+            };
+            if let Some(score) = palette_score(&query, &new_terminal.title) {
+                scored.push((score, command_offset, new_terminal));
+            }
         }
 
         let file_offset = command_offset + 1;
-        if !query.is_empty() {
+        if matches!(mode, PaletteMode::All | PaletteMode::File)
+            && (!query.is_empty() || mode == PaletteMode::File)
+        {
             let mut hits: Vec<(u8, usize, PaletteEntry)> = if self.files_prefiltered {
                 self.files
                     .iter()
@@ -1105,32 +1140,41 @@ impl Shell {
         }
 
         let window_offset = file_offset + 8;
-        for (offset, window) in self.windows().into_iter().enumerate() {
-            let detail = format!("window {} - workspace {}", window.id, window.workspace + 1);
-            if let Some(score) = palette_score(&query, &window.title) {
-                scored.push((
-                    score,
-                    window_offset + offset,
-                    PaletteEntry {
-                        title: window.title,
-                        detail,
-                        action: PaletteAction::FocusWindow(window.id),
-                    },
-                ));
+        if matches!(mode, PaletteMode::All | PaletteMode::Agent) {
+            for (offset, window) in self.windows().into_iter().enumerate() {
+                let detail = format!("window {} - workspace {}", window.id, window.workspace + 1);
+                if let Some(score) = palette_score(&query, &window.title) {
+                    scored.push((
+                        score,
+                        window_offset + offset,
+                        PaletteEntry {
+                            title: window.title,
+                            detail,
+                            action: PaletteAction::FocusWindow(window.id),
+                        },
+                    ));
+                }
             }
         }
 
-        let close = PaletteEntry {
-            title: "Close palette".to_string(),
-            detail: "Esc".to_string(),
-            action: PaletteAction::Close,
-        };
-        if let Some(score) = palette_score(&query, &close.title) {
-            scored.push((score, window_offset + self.windows.len(), close));
+        if matches!(mode, PaletteMode::All | PaletteMode::Command) {
+            let close = PaletteEntry {
+                title: "Close palette".to_string(),
+                detail: "Esc".to_string(),
+                action: PaletteAction::Close,
+            };
+            if let Some(score) = palette_score(&query, &close.title) {
+                scored.push((score, window_offset + self.windows.len(), close));
+            }
         }
 
         scored.sort_by_key(|(score, order, _)| (*score, *order));
         scored.into_iter().map(|(_, _, entry)| entry).collect()
+    }
+
+    /// Mode selected by the current palette query.
+    pub fn palette_mode(&self) -> PaletteMode {
+        parse_palette_query(&self.palette.query).0
     }
 
     /// 0-based index into [`Shell::palette_entries`].
@@ -1699,9 +1743,20 @@ fn palette_score(query: &str, title: &str) -> Option<u8> {
         Some(1)
     } else if title.contains(query) {
         Some(2)
+    } else if is_subsequence(query, &title) {
+        Some(3)
     } else {
         None
     }
+}
+
+/// Case-insensitive subsequence match, matching the TypeScript palette's
+/// fuzzy acceptance (not its numeric score).
+pub fn is_subsequence(query: &str, haystack: &str) -> bool {
+    let mut chars = haystack.chars();
+    query
+        .chars()
+        .all(|needle| chars.any(|candidate| candidate == needle))
 }
 
 #[cfg(test)]
@@ -2449,7 +2504,8 @@ mod tests {
             .into_iter()
             .map(|entry| entry.title)
             .collect();
-        assert_eq!(titles, ["code"]);
+        // "co" is a prefix of neither, but is a subsequence of both titles.
+        assert_eq!(titles, ["code", "Close palette"]);
 
         assert!(shell.palette_push_char('d'));
         assert_eq!(shell.palette_entries().len(), 1);
@@ -2779,5 +2835,109 @@ mod tests {
         let point = Point::new(info.rect.x + 5, info.rect.y + 5);
         assert_eq!(shell.window_at(point), Some(a));
         assert_eq!(shell.window_at(Point::new(-10, -10)), None);
+    }
+}
+
+#[cfg(test)]
+mod parity_tests {
+    use super::*;
+
+    #[derive(serde::Deserialize)]
+    struct Fixture {
+        modes: Vec<ModeCase>,
+        ranks: Vec<RankCase>,
+    }
+
+    #[derive(serde::Deserialize)]
+    struct ModeCase {
+        input: String,
+        mode: String,
+        term: String,
+    }
+
+    #[derive(serde::Deserialize)]
+    struct RankCase {
+        term: String,
+        title: String,
+        rank: Option<u8>,
+    }
+
+    fn fixture() -> Fixture {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../../packages/palette/fixtures/parity.json");
+        serde_json::from_str(&std::fs::read_to_string(path).expect("parity fixture")).unwrap()
+    }
+
+    #[test]
+    fn prefix_modes_match_typescript() {
+        for case in fixture().modes {
+            let (mode, term) = parse_palette_query(&case.input);
+            let mode = match mode {
+                PaletteMode::All => "all",
+                PaletteMode::Command => "command",
+                PaletteMode::Agent => "agent",
+                PaletteMode::File => "file",
+                PaletteMode::Setting => "setting",
+            };
+            assert_eq!(mode, case.mode, "input {}", case.input);
+            assert_eq!(term, case.term, "input {}", case.input);
+        }
+    }
+
+    #[test]
+    fn rank_buckets_match_typescript() {
+        for case in fixture().ranks {
+            assert_eq!(
+                palette_score(&case.term.to_lowercase(), &case.title),
+                case.rank,
+                "{} / {}",
+                case.term,
+                case.title
+            );
+        }
+    }
+
+    fn test_shell() -> Shell {
+        Shell::new(Size::new(800, 600), LayoutConfig::default(), 120)
+    }
+
+    fn files(count: usize) -> Vec<PaletteFile> {
+        (0..count)
+            .map(|index| PaletteFile {
+                name: format!("file-{index:05}.txt"),
+                detail: "file".to_string(),
+                path: format!("/tmp/file-{index:05}.txt"),
+            })
+            .collect()
+    }
+
+    #[test]
+    fn palette_10k_results_stay_bounded() {
+        let mut shell = test_shell();
+        shell.set_files(files(10_000));
+        shell.palette.query = "/file".to_string();
+        let entries = shell.palette_entries();
+        assert!(!entries.is_empty());
+        assert!(entries.len() <= 8);
+        assert_eq!(shell.palette_mode(), PaletteMode::File);
+    }
+
+    #[test]
+    #[ignore = "perf: run with --release --ignored and record p95"]
+    fn palette_10k_p95_bench() {
+        let mut shell = test_shell();
+        shell.set_files(files(10_000));
+        shell.palette.query = "file".to_string();
+        let mut samples = Vec::new();
+        for _ in 0..80 {
+            let started = std::time::Instant::now();
+            let entries = shell.palette_entries();
+            samples.push(started.elapsed().as_secs_f64() * 1000.0);
+            assert!(!entries.is_empty());
+        }
+        samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let p95 = samples[(samples.len() - 1) * 95 / 100];
+        println!("palette_10k_p95_ms={p95:.3}");
+        assert!(p95 < 10.0, "p95 {p95}ms exceeds 10ms");
     }
 }

@@ -16,8 +16,8 @@ use aether_cursor::{CursorShape, CursorTheme};
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect, Size as AetherSize};
 use aether_layout::LayoutConfig;
 use aether_shell::{
-    OutputId, OutputInfo, PaletteAction, PaletteFile, PaletteLauncher, Shell, SnapZone, WindowId,
-    WindowSpec, MIN_FLOATING_HEIGHT, MIN_FLOATING_WIDTH,
+    parse_palette_query, OutputId, OutputInfo, PaletteAction, PaletteFile, PaletteLauncher,
+    PaletteMode, Shell, SnapZone, WindowId, WindowSpec, MIN_FLOATING_HEIGHT, MIN_FLOATING_WIDTH,
 };
 use smithay::backend::input::{AxisSource, ButtonState, KeyState, Keycode, MouseButton};
 use smithay::backend::renderer::element::memory::MemoryRenderBuffer;
@@ -845,12 +845,15 @@ impl App {
         if self.index_socket.is_none() || self.shell.overlay().is_none() {
             return;
         }
-        let query = self.shell.palette_query().to_string();
-        if query == self.index_query {
+        let (mode, term) = parse_palette_query(self.shell.palette_query());
+        if !matches!(mode, PaletteMode::All | PaletteMode::File) {
             return;
         }
-        self.index_query = query.clone();
-        if query.trim().is_empty() {
+        if term == self.index_query {
+            return;
+        }
+        self.index_query = term.clone();
+        if term.is_empty() {
             if let Some(worker) = self.index_worker.as_mut() {
                 worker.cancel();
             }
@@ -859,7 +862,7 @@ impl App {
             return;
         }
         if let Some(worker) = self.index_worker.as_mut() {
-            let generation = worker.request(query);
+            let generation = worker.request(term);
             println!("aether-shell: index query generation {generation}");
         }
     }

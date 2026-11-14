@@ -47,7 +47,7 @@ introduced by T2 only for scoring reuse; they can land independently.
 | --- | --- | --- |
 | Plan | ✅ | this document |
 | P3-T1 | ✅ | Rust daemon, inotify, socket, ring; `artifacts/p3/index-smoke.log` |
-| P3-T2 | ⏳ | |
+| P3-T2 | ✅ | prefix modes, subsequence scoring, TS/Rust fixture, 10k p95 1.11 ms |
 | P3-T3 | ⏳ | |
 | P3-T4 | ⏳ | |
 | P3-T5 | ⏳ | |

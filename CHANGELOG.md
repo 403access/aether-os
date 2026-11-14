@@ -1,3 +1,11 @@
+## v0.1.0-alpha.64
+
+- Add P3 palette modes (`>`, `@`, `/`, `~`), subsequence ranking, a shared
+  TS/Rust parity fixture and a 10k-file benchmark (release p95 1.11 ms).
+- Strip palette prefixes before sending index queries.
+- Add the Rust `aether-index` daemon with inotify, socket queries, a file-backed
+  event ring, Nix package and systemd services.
+
 ## v0.1.0-alpha.63
 
 - Deduplicate unchanged overlay damage on palette keystrokes; typing damage-area

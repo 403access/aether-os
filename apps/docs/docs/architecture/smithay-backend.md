@@ -230,9 +230,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
   The target runs that helper as a user service.
 - **Text input and IME plumbing.** `zwp_text_input_manager_v3` and
   `zwp_input_method_manager_v2` are advertised; text-input focus follows
-  keyboard focus and popup requests are accepted. The target and VM enable
-  fcitx5. Candidate popup surfaces are not rendered yet, so composed-text UI is
-  still incomplete.
+  keyboard focus. Input-method popup surfaces are stored and rendered above
+  clients at the parent window plus popup location. The target and VM enable
+  fcitx5, so candidate/preedit windows can be shown.
 - **Multi-output policy.** `aether-shell` tracks output rectangles, scale and a
   primary output; the viewport is their bounding box, `output_at` resolves a
   point to an output and `set_outputs` hotplug/reflows the tiled desktop. The

@@ -44,7 +44,7 @@ const PHASES: Array<{
     summary: "A Smithay shell that owns the scene graph, tiling and frame pacing.",
     bullets: [
       "Winit/EGL adapter has a palette with workspace/window/app/file/external providers, desktop actions, live Bun index search, clipboard + primary, outputs, text-input, window management, software cursors and partial damage.",
-      "Next: native aether-shell-drm backend, IME popup UI, SVG/theme icons + DBus, drag-and-drop, backend multi-output/hotplug and client cursor surfaces; cage DRM bring-up, native inotify, live agent IPC, clipboard persistence and target preflight are in place.",
+      "Next: native aether-shell-drm backend, SVG/theme icons + DBus, drag-and-drop and backend multi-output/hotplug; cage DRM bring-up, IME popups, client cursors, native inotify, live agent IPC, clipboard persistence and target preflight are in place.",
       "wgpu/Vulkan renderer, damage tracking, one draw pass for shell chrome.",
       "Frame scheduler from os/compositor wired to a real 120 Hz deadline.",
     ],

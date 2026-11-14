@@ -75,7 +75,7 @@ specific target remains `kestrel`.
 This runs `nix build .#vm-image` inside a `nixos/nix` Linux container, then copies
 the qcow2 image to `artifacts/vm/`. The first run downloads nixpkgs and the system
 closure (10–30 minutes); later builds reuse the `aether-vm-nix` Docker volume.
-The image is about 2.9 GiB. The image builder is a NixOS disk-image derivation; it
+The image uses an 8 GiB sparse disk (the graphical session's foot/audio/compositor closure no longer fits comfortably in 4 GiB). The image builder is a NixOS disk-image derivation; it
 asks for the `kvm` system feature even though it only needs `qemu-img`, so the
 script enables that feature explicitly. No `/dev/kvm` is required inside the
 container.

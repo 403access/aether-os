@@ -40,8 +40,9 @@
     type = "fcitx5";
   };
 
-  # Small, sparse disk. Grow with qemu-img if you need more.
-  virtualisation.diskSize = 4096;
+  # Sparse disk. The graphical session adds foot, audio and compositor
+  # dependencies; 4 GiB was too tight for the image builder's store copy.
+  virtualisation.diskSize = 8192;
   # The VM may run under TCG when nested KVM is unavailable. Override QEMU
   # memory/cores at launch (`QEMU_OPTS="-m 2048 -smp 2"`) if boot is slow.
 

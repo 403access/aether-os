@@ -55,4 +55,7 @@ import -window root "${OUT}/explorer-filtered.png"
 xdotool key Return
 sleep 1
 grep -q "alpha.md" "${OPEN_MARKER}" || { echo "error: explorer did not open the selected file" >&2; exit 1; }
+if command -v convert >/dev/null 2>&1; then
+  "${ROOT}/../../../scripts/check-explorer-screenshot.sh" "${OUT}/explorer.png"
+fi
 echo "wrote ${OUT}/explorer.png and explorer-filtered.png"

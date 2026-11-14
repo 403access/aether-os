@@ -1,3 +1,10 @@
+## v0.1.0-alpha.68
+
+- Add design-token constants, a TS/Rust parity check (`test:design`) and
+  screenshot pixel probes for the explorer. Align explorer rows with the 30 px
+  reference and update the P3 roadmap/ledger.
+- Status-bar audit: startup sampling populates CPU/memory immediately.
+
 ## v0.1.0-alpha.67
 
 - Centralise shortcuts in a tested keymap table and add a 32-entry MRU focus

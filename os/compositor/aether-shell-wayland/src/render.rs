@@ -35,7 +35,16 @@ use smithay::wayland::compositor::with_states;
 use crate::app::{App, CursorCacheEntry};
 
 /// Default Aether background colour.
-pub const BACKGROUND: Color32F = Color32F::new(0.01, 0.06, 0.08, 1.0);
+pub const BACKGROUND: Color32F = Color32F::new(0.011_764_7, 0.098_039_2, 0.133_333_3, 1.0);
+
+fn design_color(hex: u32, alpha: f32) -> [f32; 4] {
+    [
+        ((hex >> 16) & 0xff) as f32 / 255.0,
+        ((hex >> 8) & 0xff) as f32 / 255.0,
+        (hex & 0xff) as f32 / 255.0,
+        alpha,
+    ]
+}
 
 /// One composited element. `DrmCompositor` and the winit draw loop both need a
 /// single concrete element type, so surface, solid and memory elements are
@@ -499,10 +508,10 @@ impl App {
 
             if explorer_here {
                 let rect = self.shell.explorer_rect();
-                chrome.push((rect, [0.04, 0.12, 0.16, 0.97]));
+                chrome.push((rect, design_color(aether_shell::design::PANEL, 1.0)));
                 chrome.push((
                     AetherRect::new(rect.x, rect.y, rect.width, 36),
-                    [0.09, 0.42, 0.5, 1.0],
+                    design_color(aether_shell::design::HEADER, 1.0),
                 ));
                 labels.push((
                     "Aether Explorer".into(),
@@ -544,7 +553,7 @@ impl App {
                 let rows = self.shell.visible_explorer_rows();
                 let scroll = self.shell.explorer_scroll();
                 let selected = self.shell.explorer_selected();
-                let row_height = 28;
+                let row_height = aether_shell::design::EXPLORER_ROW_HEIGHT as i32;
                 for (row, file) in rows.iter().enumerate() {
                     let index = scroll + row;
                     let y = rect.y + 92 + row as i32 * row_height;
@@ -555,10 +564,10 @@ impl App {
                         row_height as u32,
                     );
                     if index == selected {
-                        chrome.push((row_rect, [0.09, 0.42, 0.5, 1.0]));
+                        chrome.push((row_rect, design_color(aether_shell::design::ACCENT, 0.22)));
                         chrome.push((
                             AetherRect::new(row_rect.x, row_rect.y, 3, row_rect.height),
-                            [0.22, 0.84, 1.0, 1.0],
+                            design_color(aether_shell::design::ACCENT, 1.0),
                         ));
                     }
                     labels.push((
@@ -582,7 +591,13 @@ impl App {
                         [122, 173, 189, 255],
                     ));
                 }
-                let track = AetherRect::new(rect.x + rect.width as i32 - 8, rect.y + 92, 4, 392);
+                let track = AetherRect::new(
+                    rect.x + rect.width as i32 - 8,
+                    rect.y + 92,
+                    4,
+                    (self.shell.explorer_visible_rows() as u32)
+                        * aether_shell::design::EXPLORER_ROW_HEIGHT,
+                );
                 chrome.push((track, [0.03, 0.12, 0.16, 1.0]));
                 let matches = self.shell.explorer_match_count().max(1);
                 let visible = self.shell.explorer_visible_rows().max(1);

@@ -20,11 +20,12 @@
     "test:unit": "bun test packages tests",
     "test:e2e": "playwright test",
     "test:all": "bun run test:unit && bun run test:e2e",
+    "test:design": "bun scripts/design-parity.ts",
     "typecheck": "tsc --noEmit",
     "bench": "bun run packages/bench/src/cli.ts",
     "bench:check": "bun run packages/bench/src/cli.ts --check",
     "os:test": "cargo test --manifest-path os/compositor/Cargo.toml",
-    "verify": "bun run typecheck && bun run test:unit && bun run build"
+    "verify": "bun run typecheck && bun run test:unit && bun run test:design && bun run build"
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "^21.0.4",

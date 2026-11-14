@@ -17,6 +17,8 @@
 
 #![forbid(unsafe_code)]
 
+pub mod design;
+
 use std::collections::HashMap;
 
 use aether_damage::Region;
@@ -246,7 +248,7 @@ impl Default for ExplorerState {
             query: String::new(),
             selected: 0,
             scroll: 0,
-            visible: 14,
+            visible: design::EXPLORER_VISIBLE_ROWS,
             matches: Vec::new(),
             dirty: true,
         }
@@ -3662,7 +3664,10 @@ mod explorer_tests {
     fn row_hit_testing_and_activation() {
         let mut shell = shell_with_files(100);
         let rect = shell.explorer_rect();
-        let point = Point::new(rect.x + 20, rect.y + 96 + 28 * 3 + 4);
+        let point = Point::new(
+            rect.x + 20,
+            rect.y + 96 + design::EXPLORER_ROW_HEIGHT as i32 * 3 + 4,
+        );
         assert_eq!(shell.explorer_select_at(point), Some(3));
         let file = shell.explorer_selected_file().unwrap();
         assert_eq!(file.name, "file-00003.txt");

@@ -100,6 +100,7 @@ export type CapabilityScope =
   | "exec"
   | "display"
   | "audio"
+  | "audio.capture"
   | "infer"
   | "agent.spawn"
   | "agent.collab";
@@ -111,10 +112,15 @@ export const CAPABILITY_SCOPES: readonly CapabilityScope[] = [
   "exec",
   "display",
   "audio",
+  "audio.capture",
   "infer",
   "agent.spawn",
   "agent.collab",
 ];
+
+/** Scope and resource used by the microphone gate. */
+export const AUDIO_CAPTURE_SCOPE = "audio.capture" as const;
+export const AUDIO_CAPTURE_RESOURCE = "audio:input" as const;
 
 export interface Capability {
   id: string;

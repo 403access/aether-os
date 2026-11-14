@@ -129,8 +129,11 @@ the trade-off; the policy ships conservative defaults.
 
 - Input devices are enumerated separately; the overlay shows level meters.
 - Noise suppression and echo cancellation are PipeWire filters, off by default.
-- An agent cannot open the microphone without the `audio` capability and an explicit
-  grant; the status bar shows a recording indicator that cannot be hidden.
+- An agent cannot open the microphone with the legacy `audio` scope. Capture needs
+  a short-lived `audio.capture` capability for `audio:input`, verified by
+  `MicrophoneGate` before the stream opens. The status bar shows a recording
+  indicator that cannot be hidden. The P5 supervisor wires the gate to the actual
+  process launch; the denial/grant path is tested in `packages/agents`.
 
 ## Failure modes
 
@@ -142,6 +145,19 @@ the trade-off; the policy ships conservative defaults.
 | xrun | Counter increments; the overlay shows a warning only after a threshold |
 | Agent requests mic | Denied unless granted; denial is audited |
 | Sample-rate mismatch | PipeWire resamples; the overlay reports the active rate |
+
+## Microphone capability
+
+```ts
+const gate = new MicrophoneGate(capabilities);
+const grant = gate.issue("agent-a", 60_000); // explicit, short-lived
+gate.authorize("agent-a", grant.id);         // → { ok: true }
+gate.authorize("agent-a");                   // → { ok: false, reason: "missing" }
+```
+
+`audio.capture` is separate from `audio`; a broad playback capability never
+silently becomes a microphone grant. Both outcomes append to the hash-chained
+audit log.
 
 ## Configuration
 

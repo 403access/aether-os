@@ -46,6 +46,7 @@ use smithay::reexports::wayland_server::protocol::wl_surface::{self, WlSurface};
 use smithay::reexports::wayland_server::{Client, Display, ListeningSocket};
 use smithay::reexports::winit::dpi::LogicalSize;
 use smithay::reexports::winit::platform::pump_events::PumpStatus;
+use smithay::reexports::winit::window::CursorIcon;
 use smithay::reexports::winit::window::WindowAttributes;
 use smithay::utils::{Physical, Rectangle, Serial, Size as SSize, Transform, SERIAL_COUNTER};
 use smithay::wayland::buffer::BufferHandler;
@@ -107,6 +108,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         window_resize: None,
         pointer_captured: false,
         modifiers: ModifiersState::default(),
+        cursor: CursorIcon::Default,
     };
 
     let listener = ListeningSocket::bind_auto("aether", 0..8)?;
@@ -147,6 +149,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     let mut spawned_client = false;
     let mut frames = 0u32;
     let mut applied_focus: Option<WlSurface> = None;
+    let mut applied_cursor = CursorIcon::Default;
 
     println!(
         "aether-shell-smithay: compositor on WAYLAND_DISPLAY={socket_name} (focus with pointer)"
@@ -188,6 +191,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     },
                 );
                 state.modifiers = keyboard.modifier_state();
+                state.cursor = cursor_for(&state);
             }
             WinitEvent::Input(InputEvent::PointerMotionAbsolute { event }) => {
                 let logical = state.shell.viewport();
@@ -196,6 +200,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     logical.height as i32,
                 )));
                 state.pointer_pos = position;
+                state.cursor = cursor_for(&state);
 
                 if let Some(resize) = state.window_resize {
                     let point =
@@ -487,6 +492,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     );
                     pointer.frame(&mut state);
                 }
+                state.cursor = cursor_for(&state);
             }
             WinitEvent::CloseRequested => {
                 state.close_requested = true;
@@ -496,6 +502,12 @@ pub fn run() -> Result<(), Box<dyn Error>> {
 
         if matches!(status, PumpStatus::Exit(_)) || state.close_requested {
             return Ok(());
+        }
+
+        if state.cursor != applied_cursor {
+            backend.window().set_cursor(state.cursor);
+            println!("aether-shell-smithay: cursor -> {:?}", state.cursor);
+            applied_cursor = state.cursor;
         }
 
         // Apply focus changes once per loop to keep the borrow simple.
@@ -977,6 +989,82 @@ struct WindowResize {
     start_rect: AetherRect,
 }
 
+fn cursor_for(state: &App) -> CursorIcon {
+    let position = state.pointer_pos;
+    let point = AetherPoint::new(position.x.round() as i32, position.y.round() as i32);
+
+    if let Some(resize) = state.window_resize {
+        return resize_cursor(resize.corner);
+    }
+    if state.window_drag.is_some() {
+        return CursorIcon::Grabbing;
+    }
+    if state.resize_drag.is_some() {
+        return CursorIcon::ColResize;
+    }
+    if let Some(overlay) = state.shell.overlay_rect() {
+        if overlay.contains(point) {
+            if state.shell.palette_row_at(point).is_some() {
+                return CursorIcon::Pointer;
+            }
+            let input_top = overlay.y + 52;
+            if point.y >= input_top && point.y < input_top + 28 {
+                return CursorIcon::Text;
+            }
+        }
+        return CursorIcon::Default;
+    }
+    if state.shell.workspace_at(point).is_some() {
+        return CursorIcon::Pointer;
+    }
+    if let Some(gap) = state.shell.master_gap_rect() {
+        let handle = AetherRect::new(gap.x - 5, gap.y, gap.width + 10, gap.height);
+        if handle.contains(point) {
+            return CursorIcon::ColResize;
+        }
+    }
+    if let Some(id) = state.shell.window_at(point) {
+        if let Some(info) = state
+            .shell
+            .windows()
+            .into_iter()
+            .find(|window| window.id == id)
+        {
+            if state.modifiers.alt {
+                if info.floating {
+                    if let Some(corner) = floating_corner(info.rect, point) {
+                        return resize_cursor(corner);
+                    }
+                }
+                return CursorIcon::Move;
+            }
+        }
+    }
+    CursorIcon::Default
+}
+
+fn resize_cursor(corner: ResizeCorner) -> CursorIcon {
+    match corner {
+        ResizeCorner::TopLeft | ResizeCorner::BottomRight => CursorIcon::NwseResize,
+        ResizeCorner::TopRight | ResizeCorner::BottomLeft => CursorIcon::NeswResize,
+    }
+}
+
+fn floating_corner(rect: AetherRect, point: AetherPoint) -> Option<ResizeCorner> {
+    const CORNER: i32 = 14;
+    let left = point.x - rect.x <= CORNER;
+    let right = rect.right() - point.x as i64 <= CORNER as i64;
+    let top = point.y - rect.y <= CORNER;
+    let bottom = rect.bottom() - point.y as i64 <= CORNER as i64;
+    match (top, bottom, left, right) {
+        (true, _, true, _) => Some(ResizeCorner::TopLeft),
+        (true, _, _, true) => Some(ResizeCorner::TopRight),
+        (_, true, true, _) => Some(ResizeCorner::BottomLeft),
+        (_, true, _, true) => Some(ResizeCorner::BottomRight),
+        _ => None,
+    }
+}
+
 fn resize_corner(rect: AetherRect, point: AetherPoint) -> ResizeCorner {
     let left = (point.x - rect.x) < rect.width as i32 / 2;
     let top = (point.y - rect.y) < rect.height as i32 / 2;
@@ -1015,6 +1103,7 @@ struct App {
     window_resize: Option<WindowResize>,
     pointer_captured: bool,
     modifiers: ModifiersState,
+    cursor: CursorIcon,
 }
 
 impl App {

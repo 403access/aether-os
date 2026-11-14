@@ -43,7 +43,9 @@ use smithay::reexports::wayland_protocols::xdg::shell::server::xdg_toplevel;
 use smithay::reexports::wayland_server::backend::{ClientData, ClientId, DisconnectReason};
 use smithay::reexports::wayland_server::protocol::wl_buffer;
 use smithay::reexports::wayland_server::protocol::wl_surface::{self, WlSurface};
-use smithay::reexports::wayland_server::{Client, Display, ListeningSocket};
+use smithay::reexports::wayland_server::{
+    Client, Display, DisplayHandle, ListeningSocket, Resource,
+};
 use smithay::reexports::winit::dpi::LogicalSize;
 use smithay::reexports::winit::platform::pump_events::PumpStatus;
 use smithay::reexports::winit::window::CursorIcon;
@@ -55,7 +57,8 @@ use smithay::wayland::compositor::{
     CompositorState, SurfaceAttributes, TraversalAction,
 };
 use smithay::wayland::selection::data_device::{
-    ClientDndGrabHandler, DataDeviceHandler, DataDeviceState, ServerDndGrabHandler,
+    set_data_device_focus, ClientDndGrabHandler, DataDeviceHandler, DataDeviceState,
+    ServerDndGrabHandler,
 };
 use smithay::wayland::selection::SelectionHandler;
 use smithay::wayland::shell::xdg::{
@@ -76,6 +79,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     let seat = seat_state.new_wl_seat(&dh, "aether");
 
     let mut state = App {
+        display_handle: dh.clone(),
         compositor_state,
         xdg_shell_state: XdgShellState::new::<App>(&dh),
         shm_state,
@@ -961,7 +965,12 @@ impl SeatHandler for App {
         &mut self.seat_state
     }
 
-    fn focus_changed(&mut self, _seat: &Seat<Self>, _focused: Option<&WlSurface>) {}
+    fn focus_changed(&mut self, seat: &Seat<Self>, focused: Option<&WlSurface>) {
+        // Offer/refresh the clipboard selection for the newly focused client so
+        // copy/paste works across clients.
+        let client = focused.and_then(|surface| surface.client());
+        set_data_device_focus(&self.display_handle, seat, client);
+    }
     fn cursor_image(
         &mut self,
         _seat: &Seat<Self>,
@@ -1159,6 +1168,7 @@ struct WindowDrag {
 }
 
 struct App {
+    display_handle: DisplayHandle,
     compositor_state: CompositorState,
     xdg_shell_state: XdgShellState,
     shm_state: ShmState,

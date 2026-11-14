@@ -49,6 +49,13 @@ On this CPU that would be a lie. Aether instead uses:
 The cost is a context switch instead of an instruction. The gain is that the
 isolation actually exists. See [agent isolation](/architecture/agent-isolation).
 
+## Session
+
+The installed system starts `cage` on `tty7` with the Aether winit adapter
+(`systemd.services.aether-session`). cage owns DRM/KMS and the seat; Aether owns
+the Wayland socket and desktop. The native DRM backend is still a separate work
+item, so this adapter is the bring-up path for the 7700K.
+
 ## Preflight
 
 Run `scripts/target-check.sh` on the machine (or with `--root /mnt` before

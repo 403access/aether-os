@@ -48,6 +48,7 @@ the next phase; first boot lands in a console, not the finished desktop.
 | Compositor core + shell state + preview | ✅ 90 core + 6 backend Rust tests | `os/compositor` |
 | Smithay winit backend (Linux-only) | ✅ clients, palette + index + live agents, desktop actions, clipboard, outputs, text-input, window mgmt, cursors, partial damage | `os/compositor/aether-shell-smithay` |
 | Target preflight | ✅ UEFI/KMS/input/memory checks with fixtures | `scripts/target-check.sh` |
+| DRM bring-up session | ✅ cage owns KMS/seat0 on tty7, launches the winit adapter | `os/nixos/services.nix` |
 | Compositor UI (`aether-shell`) | ⏳ roadmap P2 | — |
 | WebRTC remote display | ⏳ roadmap P7 | — |
 

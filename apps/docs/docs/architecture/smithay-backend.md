@@ -318,6 +318,15 @@ drag and both toggles with `xdotool` and asserts each transition.*
 
 The P2 gate remains: a real client window, 120 Hz pacing and input on the target.
 
+## DRM session (cage adapter)
+
+The 7700K target runs `cage` on `/dev/tty7` as a DRM/libinput/seat0 session and
+launches `aether-shell-smithay` fullscreen inside it. cage owns KMS and input; Aether
+owns its Wayland socket, tiling, palette and clients. This is a working DRM
+bring-up path, not a single-process native backend: `aether-shell-drm` is still
+future work. The service is `systemd.services.aether-session` in
+`os/nixos/services.nix`; `cage -m extend` supports multiple connected outputs.
+
 ## Build and run
 
 Requires Linux with Nix (the dev shell supplies EGL, X11, Xvfb and Mesa):

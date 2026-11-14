@@ -210,30 +210,126 @@ pub const STANDARD_SHORTCUTS: &[ShortcutEntry] = &[
 ];
 
 pub const SIMPLE_SHORTCUTS: &[ShortcutEntry] = &[
-    ShortcutEntry { chord: "Ctrl+Alt+Space", action: "Command palette", group: "Surfaces" },
-    ShortcutEntry { chord: "Ctrl+Alt+Return", action: "New terminal", group: "Surfaces" },
-    ShortcutEntry { chord: "Ctrl+Alt+E", action: "Explorer", group: "Surfaces" },
-    ShortcutEntry { chord: "Ctrl+Alt+C", action: "Chat", group: "Surfaces" },
-    ShortcutEntry { chord: "Ctrl+Alt+A", action: "Audio routes", group: "Surfaces" },
-    ShortcutEntry { chord: "Ctrl+Alt+/", action: "Shortcut cheat sheet", group: "Surfaces" },
-    ShortcutEntry { chord: "Ctrl+Alt+Tab", action: "Focus next (MRU)", group: "Windows" },
-    ShortcutEntry { chord: "Ctrl+Alt+Shift+Tab", action: "Focus previous (MRU)", group: "Windows" },
-    ShortcutEntry { chord: "Ctrl+Alt+J", action: "Focus next", group: "Windows" },
-    ShortcutEntry { chord: "Ctrl+Alt+K", action: "Focus previous", group: "Windows" },
-    ShortcutEntry { chord: "Ctrl+Alt+M", action: "Maximize / restore", group: "Windows" },
-    ShortcutEntry { chord: "Ctrl+Alt+F", action: "Fullscreen / restore", group: "Windows" },
-    ShortcutEntry { chord: "Ctrl+Alt+Q", action: "Close window", group: "Windows" },
-    ShortcutEntry { chord: "Ctrl+Alt+H", action: "Narrow master", group: "Layout" },
-    ShortcutEntry { chord: "Ctrl+Alt+L", action: "Widen master", group: "Layout" },
-    ShortcutEntry { chord: "Alt+Left drag", action: "Move / float window", group: "Layout" },
-    ShortcutEntry { chord: "Alt+Right drag", action: "Resize floating window", group: "Layout" },
-    ShortcutEntry { chord: "Ctrl+Alt+1/2/3", action: "Switch workspace", group: "Workspaces" },
-    ShortcutEntry { chord: "Ctrl+Alt+Shift+1/2/3", action: "Move window to workspace", group: "Workspaces" },
-    ShortcutEntry { chord: "↑ / ↓", action: "Move selection", group: "Overlays" },
-    ShortcutEntry { chord: "Enter", action: "Activate selection", group: "Overlays" },
-    ShortcutEntry { chord: "PgUp / PgDn", action: "Page lists / chat", group: "Overlays" },
-    ShortcutEntry { chord: "P", action: "Cycle audio latency preset", group: "Overlays" },
-    ShortcutEntry { chord: "Esc", action: "Close overlay", group: "Overlays" },
+    ShortcutEntry {
+        chord: "Ctrl+Alt+Space",
+        action: "Command palette",
+        group: "Surfaces",
+    },
+    ShortcutEntry {
+        chord: "Ctrl+Alt+Return",
+        action: "New terminal",
+        group: "Surfaces",
+    },
+    ShortcutEntry {
+        chord: "Ctrl+Alt+E",
+        action: "Explorer",
+        group: "Surfaces",
+    },
+    ShortcutEntry {
+        chord: "Ctrl+Alt+C",
+        action: "Chat",
+        group: "Surfaces",
+    },
+    ShortcutEntry {
+        chord: "Ctrl+Alt+A",
+        action: "Audio routes",
+        group: "Surfaces",
+    },
+    ShortcutEntry {
+        chord: "Ctrl+Alt+/",
+        action: "Shortcut cheat sheet",
+        group: "Surfaces",
+    },
+    ShortcutEntry {
+        chord: "Ctrl+Alt+Tab",
+        action: "Focus next (MRU)",
+        group: "Windows",
+    },
+    ShortcutEntry {
+        chord: "Ctrl+Alt+Shift+Tab",
+        action: "Focus previous (MRU)",
+        group: "Windows",
+    },
+    ShortcutEntry {
+        chord: "Ctrl+Alt+J",
+        action: "Focus next",
+        group: "Windows",
+    },
+    ShortcutEntry {
+        chord: "Ctrl+Alt+K",
+        action: "Focus previous",
+        group: "Windows",
+    },
+    ShortcutEntry {
+        chord: "Ctrl+Alt+M",
+        action: "Maximize / restore",
+        group: "Windows",
+    },
+    ShortcutEntry {
+        chord: "Ctrl+Alt+F",
+        action: "Fullscreen / restore",
+        group: "Windows",
+    },
+    ShortcutEntry {
+        chord: "Ctrl+Alt+Q",
+        action: "Close window",
+        group: "Windows",
+    },
+    ShortcutEntry {
+        chord: "Ctrl+Alt+H",
+        action: "Narrow master",
+        group: "Layout",
+    },
+    ShortcutEntry {
+        chord: "Ctrl+Alt+L",
+        action: "Widen master",
+        group: "Layout",
+    },
+    ShortcutEntry {
+        chord: "Alt+Left drag",
+        action: "Move / float window",
+        group: "Layout",
+    },
+    ShortcutEntry {
+        chord: "Alt+Right drag",
+        action: "Resize floating window",
+        group: "Layout",
+    },
+    ShortcutEntry {
+        chord: "Ctrl+Alt+1/2/3",
+        action: "Switch workspace",
+        group: "Workspaces",
+    },
+    ShortcutEntry {
+        chord: "Ctrl+Alt+Shift+1/2/3",
+        action: "Move window to workspace",
+        group: "Workspaces",
+    },
+    ShortcutEntry {
+        chord: "↑ / ↓",
+        action: "Move selection",
+        group: "Overlays",
+    },
+    ShortcutEntry {
+        chord: "Enter",
+        action: "Activate selection",
+        group: "Overlays",
+    },
+    ShortcutEntry {
+        chord: "PgUp / PgDn",
+        action: "Page lists / chat",
+        group: "Overlays",
+    },
+    ShortcutEntry {
+        chord: "P",
+        action: "Cycle audio latency preset",
+        group: "Overlays",
+    },
+    ShortcutEntry {
+        chord: "Esc",
+        action: "Close overlay",
+        group: "Overlays",
+    },
 ];
 
 /// Resolve a key against a profile. Simple checks Ctrl+Alt first, then falls
@@ -421,8 +517,12 @@ mod tests {
         chords.sort_unstable();
         chords.dedup();
         assert_eq!(chords.len(), STANDARD_SHORTCUTS.len());
-        assert!(STANDARD_SHORTCUTS.iter().any(|entry| entry.chord == "Super+Return"));
-        assert!(STANDARD_SHORTCUTS.iter().any(|entry| entry.chord == "Super+/"));
+        assert!(STANDARD_SHORTCUTS
+            .iter()
+            .any(|entry| entry.chord == "Super+Return"));
+        assert!(STANDARD_SHORTCUTS
+            .iter()
+            .any(|entry| entry.chord == "Super+/"));
     }
 
     #[test]

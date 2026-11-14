@@ -890,11 +890,10 @@ impl App {
     }
 
     fn top_shortcut_at(&self, point: AetherPoint) -> Option<TopAction> {
-        let output = self.shell.output_at(point).or_else(|| {
-            self.shell
-                .primary_output()
-                .map(|output| output.id)
-        })?;
+        let output = self
+            .shell
+            .output_at(point)
+            .or_else(|| self.shell.primary_output().map(|output| output.id))?;
         if !self.top_bar_visible(output) {
             return None;
         }

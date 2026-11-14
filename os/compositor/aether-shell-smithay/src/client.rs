@@ -118,6 +118,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         modifiers: ModifiersState::default(),
         cursor: CursorIcon::Default,
         socket_name: String::new(),
+        dirty: true,
     };
 
     let listener = ListeningSocket::bind_auto("aether", 0..8)?;
@@ -170,13 +171,16 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     let mut frames = 0u32;
     let mut applied_focus: Option<WlSurface> = None;
     let mut applied_cursor = CursorIcon::Default;
+    let mut rendered_frames = 0u32;
 
     println!(
         "aether-shell-smithay: compositor on WAYLAND_DISPLAY={socket_name} (focus with pointer)"
     );
 
     loop {
-        let status = winit.dispatch_new_events(|event| match event {
+        let status = winit.dispatch_new_events(|event| {
+            state.dirty = true;
+            match event {
             WinitEvent::Resized { size, scale_factor } => {
                 state.window_size = size;
                 state.scale = scale_factor;
@@ -518,6 +522,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                 state.close_requested = true;
             }
             _ => {}
+            }
         });
 
         if matches!(status, PumpStatus::Exit(_)) || state.close_requested {
@@ -537,275 +542,288 @@ pub fn run() -> Result<(), Box<dyn Error>> {
             applied_focus = focus;
         }
 
-        let size = backend.window_size();
-        let damage = Rectangle::from_size(size);
+        let mut frame_damage = None;
+        if state.dirty {
+            let size = backend.window_size();
+            let damage = Rectangle::from_size(size);
 
-        {
-            let (renderer, mut framebuffer) = backend.bind()?;
-            let rects: HashMap<WindowId, AetherRect> = state
-                .shell
-                .windows()
-                .into_iter()
-                .filter(|window| window.workspace == state.shell.active_workspace())
-                .map(|window| (window.id, window.rect))
-                .collect();
-            // Render in compositor z-order (topmost first) so raised, floating
-            // and maximized windows are not covered by HashMap iteration order.
-            let elements: Vec<WaylandSurfaceRenderElement<GlesRenderer>> = state
-                .shell
-                .window_stack()
-                .into_iter()
-                .filter_map(|id| {
-                    let rect = rects.get(&id)?;
-                    let toplevel = state.windows.get(&id)?;
-                    Some((*rect, toplevel))
-                })
-                .flat_map(|(rect, toplevel)| {
-                    render_elements_from_surface_tree(
-                        renderer,
-                        toplevel.wl_surface(),
-                        (rect.x, rect.y),
-                        1.0,
-                        1.0,
-                        Kind::Unspecified,
-                    )
-                })
-                .collect();
-
-            // Compositor-owned chrome above clients: palette structure,
-            // workspace indicators, labels and hints. Solid blocks carry the
-            // structure; aether-text supplies the glyphs.
-            let mut chrome: Vec<(AetherRect, [f32; 4])> = Vec::new();
-            let mut labels: Vec<(String, i32, i32, u32, [u8; 4])> = Vec::new();
-
-            if let Some(rect) = state.shell.overlay_rect() {
-                chrome.push((rect, [0.05, 0.24, 0.29, 0.96]));
-                chrome.push((
-                    AetherRect::new(rect.x, rect.y, rect.width, 36.min(rect.height)),
-                    [0.09, 0.42, 0.5, 1.0],
-                ));
-                labels.push((
-                    "Aether Palette".into(),
-                    rect.x + 14,
-                    rect.y + 10,
-                    2,
-                    [235, 252, 255, 255],
-                ));
-                let hint = "Super+Space";
-                labels.push((
-                    hint.into(),
-                    rect.x + rect.width as i32 - text_width(hint, 1) as i32 - 14,
-                    rect.y + 14,
-                    1,
-                    [179, 235, 250, 255],
-                ));
-
-                if rect.height > 96 {
-                    let input = AetherRect::new(
-                        rect.x + 16,
-                        rect.y + 52,
-                        rect.width.saturating_sub(32),
-                        28,
-                    );
-                    chrome.push((input, [0.03, 0.12, 0.16, 1.0]));
-                    let query = state.shell.palette_query();
-                    if query.is_empty() {
-                        labels.push((
-                            "Search workspaces...".into(),
-                            input.x + 10,
-                            input.y + 10,
-                            1,
-                            [122, 173, 189, 255],
-                        ));
-                    } else {
-                        labels.push((
-                            format!("> {query}_"),
-                            input.x + 10,
-                            input.y + 10,
-                            1,
-                            [235, 252, 255, 255],
-                        ));
-                    }
-
-                    let entries = state.shell.palette_entries();
-                    let selected = state.shell.palette_selected();
-                    if entries.is_empty() {
-                        labels.push((
-                            "No matching commands".into(),
-                            rect.x + 26,
-                            rect.y + 106,
-                            1,
-                            [128, 184, 199, 255],
-                        ));
-                    }
-                    let start = state.shell.palette_visible_start();
-                    for (row, entry) in entries
-                        .iter()
-                        .skip(start)
-                        .take(PALETTE_VISIBLE_ROWS)
-                        .enumerate()
-                    {
-                        let y = rect.y + 96 + row as i32 * 48;
-                        if y + 32 < rect.y + rect.height as i32 {
-                            let row_rect =
-                                AetherRect::new(rect.x + 16, y, rect.width.saturating_sub(32), 32);
-                            let active = start + row == selected;
-                            chrome.push((
-                                row_rect,
-                                if active {
-                                    [0.09, 0.42, 0.5, 1.0]
-                                } else {
-                                    [0.05, 0.31, 0.37, 1.0]
-                                },
-                            ));
-                            if active {
-                                chrome.push((
-                                    AetherRect::new(row_rect.x, row_rect.y, 3, row_rect.height),
-                                    [0.22, 0.84, 1.0, 1.0],
-                                ));
-                            }
-                            labels.push((
-                                entry.title.clone(),
-                                row_rect.x + 12,
-                                row_rect.y + 12,
-                                1,
-                                if active {
-                                    [235, 252, 255, 255]
-                                } else {
-                                    [217, 247, 255, 255]
-                                },
-                            ));
-                            labels.push((
-                                entry.detail.clone(),
-                                row_rect.x + row_rect.width as i32
-                                    - text_width(&entry.detail, 1) as i32
-                                    - 10,
-                                row_rect.y + 12,
-                                1,
-                                [128, 184, 199, 255],
-                            ));
-                        }
-                    }
-
-                    let footer = "Esc close   Enter run   Up/Down select";
-                    labels.push((
-                        footer.into(),
-                        rect.x + 16,
-                        rect.y + rect.height as i32 - 22,
-                        1,
-                        [128, 184, 199, 255],
-                    ));
-                }
-            }
-
-            let names = state.shell.workspace_names();
-            for workspace in 0..state.shell.workspace_count() {
-                let Some(chip) = state.shell.workspace_indicator_rect(workspace) else {
-                    continue;
-                };
-                let active = workspace == state.shell.active_workspace();
-                chrome.push((
-                    AetherRect::new(chip.x, chip.y, chip.width, WORKSPACE_INDICATOR_BAR_HEIGHT),
-                    if active {
-                        [0.22, 0.84, 1.0, 1.0]
-                    } else {
-                        [0.12, 0.3, 0.35, 0.9]
-                    },
-                ));
-                let name = names.get(workspace).map(String::as_str).unwrap_or("");
-                labels.push((
-                    format!("{} {name}", workspace + 1),
-                    chip.x + 4,
-                    chip.y + 12,
-                    1,
-                    if active {
-                        [56, 214, 255, 255]
-                    } else {
-                        [102, 158, 173, 255]
-                    },
-                ));
-            }
-
-            let text_elements: Vec<MemoryRenderBufferRenderElement<GlesRenderer>> = labels
-                .iter()
-                .filter_map(|(text, x, y, scale, color)| {
-                    let bitmap = TextBitmap::render(text, *scale, *color);
-                    if bitmap.is_empty() {
-                        return None;
-                    }
-                    let buffer = MemoryRenderBuffer::from_slice(
-                        bitmap.pixels(),
-                        Fourcc::Abgr8888,
-                        (bitmap.width() as i32, bitmap.height() as i32),
-                        1,
-                        Transform::Normal,
-                        None,
-                    );
-                    MemoryRenderBufferRenderElement::from_buffer(
-                        renderer,
-                        (*x as f64, *y as f64),
-                        &buffer,
-                        None,
-                        None,
-                        None,
-                        Kind::Unspecified,
-                    )
-                    .ok()
-                })
-                .collect();
-
-            let mut frame = renderer.render(&mut framebuffer, size, Transform::Flipped180)?;
-            frame.clear(Color32F::new(0.01, 0.06, 0.08, 1.0), &[damage])?;
-            // Client surfaces are painted over the shell background.
-            if !elements.is_empty() {
-                draw_render_elements(&mut frame, 1.0, &elements, &[damage])?;
-            }
-            if !chrome.is_empty() {
-                // `draw_render_elements` treats the slice as topmost-first and
-                // reverses it internally; our chrome is built bottom-up.
-                let chrome_top_down: Vec<(AetherRect, [f32; 4])> =
-                    chrome.iter().rev().copied().collect();
-                let buffers: Vec<SolidColorBuffer> = chrome_top_down
-                    .iter()
-                    .map(|(rect, color)| {
-                        SolidColorBuffer::new((rect.width as i32, rect.height as i32), *color)
-                    })
+            {
+                let (renderer, mut framebuffer) = backend.bind()?;
+                let rects: HashMap<WindowId, AetherRect> = state
+                    .shell
+                    .windows()
+                    .into_iter()
+                    .filter(|window| window.workspace == state.shell.active_workspace())
+                    .map(|window| (window.id, window.rect))
                     .collect();
-                let elements: Vec<SolidColorRenderElement> = buffers
-                    .iter()
-                    .zip(chrome_top_down.iter())
-                    .map(|(buffer, (rect, _))| {
-                        SolidColorRenderElement::from_buffer(
-                            buffer,
+                // Render in compositor z-order (topmost first) so raised, floating
+                // and maximized windows are not covered by HashMap iteration order.
+                let elements: Vec<WaylandSurfaceRenderElement<GlesRenderer>> = state
+                    .shell
+                    .window_stack()
+                    .into_iter()
+                    .filter_map(|id| {
+                        let rect = rects.get(&id)?;
+                        let toplevel = state.windows.get(&id)?;
+                        Some((*rect, toplevel))
+                    })
+                    .flat_map(|(rect, toplevel)| {
+                        render_elements_from_surface_tree(
+                            renderer,
+                            toplevel.wl_surface(),
                             (rect.x, rect.y),
-                            1.0f64,
+                            1.0,
                             1.0,
                             Kind::Unspecified,
                         )
                     })
                     .collect();
-                draw_render_elements::<GlesRenderer, f64, SolidColorRenderElement>(
-                    &mut frame,
-                    1.0,
-                    &elements,
-                    &[damage],
-                )?;
-            }
-            if !text_elements.is_empty() {
-                draw_render_elements::<
-                    GlesRenderer,
-                    f64,
-                    MemoryRenderBufferRenderElement<GlesRenderer>,
-                >(&mut frame, 1.0, &text_elements, &[damage])?;
-            }
-            let _ = frame.finish()?;
-        }
 
-        for surface in state.xdg_shell_state.toplevel_surfaces() {
-            send_frames_surface_tree(
-                surface.wl_surface(),
-                start_time.elapsed().as_millis() as u32,
-            );
+                // Compositor-owned chrome above clients: palette structure,
+                // workspace indicators, labels and hints. Solid blocks carry the
+                // structure; aether-text supplies the glyphs.
+                let mut chrome: Vec<(AetherRect, [f32; 4])> = Vec::new();
+                let mut labels: Vec<(String, i32, i32, u32, [u8; 4])> = Vec::new();
+
+                if let Some(rect) = state.shell.overlay_rect() {
+                    chrome.push((rect, [0.05, 0.24, 0.29, 0.96]));
+                    chrome.push((
+                        AetherRect::new(rect.x, rect.y, rect.width, 36.min(rect.height)),
+                        [0.09, 0.42, 0.5, 1.0],
+                    ));
+                    labels.push((
+                        "Aether Palette".into(),
+                        rect.x + 14,
+                        rect.y + 10,
+                        2,
+                        [235, 252, 255, 255],
+                    ));
+                    let hint = "Super+Space";
+                    labels.push((
+                        hint.into(),
+                        rect.x + rect.width as i32 - text_width(hint, 1) as i32 - 14,
+                        rect.y + 14,
+                        1,
+                        [179, 235, 250, 255],
+                    ));
+
+                    if rect.height > 96 {
+                        let input = AetherRect::new(
+                            rect.x + 16,
+                            rect.y + 52,
+                            rect.width.saturating_sub(32),
+                            28,
+                        );
+                        chrome.push((input, [0.03, 0.12, 0.16, 1.0]));
+                        let query = state.shell.palette_query();
+                        if query.is_empty() {
+                            labels.push((
+                                "Search workspaces...".into(),
+                                input.x + 10,
+                                input.y + 10,
+                                1,
+                                [122, 173, 189, 255],
+                            ));
+                        } else {
+                            labels.push((
+                                format!("> {query}_"),
+                                input.x + 10,
+                                input.y + 10,
+                                1,
+                                [235, 252, 255, 255],
+                            ));
+                        }
+
+                        let entries = state.shell.palette_entries();
+                        let selected = state.shell.palette_selected();
+                        if entries.is_empty() {
+                            labels.push((
+                                "No matching commands".into(),
+                                rect.x + 26,
+                                rect.y + 106,
+                                1,
+                                [128, 184, 199, 255],
+                            ));
+                        }
+                        let start = state.shell.palette_visible_start();
+                        for (row, entry) in entries
+                            .iter()
+                            .skip(start)
+                            .take(PALETTE_VISIBLE_ROWS)
+                            .enumerate()
+                        {
+                            let y = rect.y + 96 + row as i32 * 48;
+                            if y + 32 < rect.y + rect.height as i32 {
+                                let row_rect = AetherRect::new(
+                                    rect.x + 16,
+                                    y,
+                                    rect.width.saturating_sub(32),
+                                    32,
+                                );
+                                let active = start + row == selected;
+                                chrome.push((
+                                    row_rect,
+                                    if active {
+                                        [0.09, 0.42, 0.5, 1.0]
+                                    } else {
+                                        [0.05, 0.31, 0.37, 1.0]
+                                    },
+                                ));
+                                if active {
+                                    chrome.push((
+                                        AetherRect::new(row_rect.x, row_rect.y, 3, row_rect.height),
+                                        [0.22, 0.84, 1.0, 1.0],
+                                    ));
+                                }
+                                labels.push((
+                                    entry.title.clone(),
+                                    row_rect.x + 12,
+                                    row_rect.y + 12,
+                                    1,
+                                    if active {
+                                        [235, 252, 255, 255]
+                                    } else {
+                                        [217, 247, 255, 255]
+                                    },
+                                ));
+                                labels.push((
+                                    entry.detail.clone(),
+                                    row_rect.x + row_rect.width as i32
+                                        - text_width(&entry.detail, 1) as i32
+                                        - 10,
+                                    row_rect.y + 12,
+                                    1,
+                                    [128, 184, 199, 255],
+                                ));
+                            }
+                        }
+
+                        let footer = "Esc close   Enter run   Up/Down select";
+                        labels.push((
+                            footer.into(),
+                            rect.x + 16,
+                            rect.y + rect.height as i32 - 22,
+                            1,
+                            [128, 184, 199, 255],
+                        ));
+                    }
+                }
+
+                let names = state.shell.workspace_names();
+                for workspace in 0..state.shell.workspace_count() {
+                    let Some(chip) = state.shell.workspace_indicator_rect(workspace) else {
+                        continue;
+                    };
+                    let active = workspace == state.shell.active_workspace();
+                    chrome.push((
+                        AetherRect::new(chip.x, chip.y, chip.width, WORKSPACE_INDICATOR_BAR_HEIGHT),
+                        if active {
+                            [0.22, 0.84, 1.0, 1.0]
+                        } else {
+                            [0.12, 0.3, 0.35, 0.9]
+                        },
+                    ));
+                    let name = names.get(workspace).map(String::as_str).unwrap_or("");
+                    labels.push((
+                        format!("{} {name}", workspace + 1),
+                        chip.x + 4,
+                        chip.y + 12,
+                        1,
+                        if active {
+                            [56, 214, 255, 255]
+                        } else {
+                            [102, 158, 173, 255]
+                        },
+                    ));
+                }
+
+                let text_elements: Vec<MemoryRenderBufferRenderElement<GlesRenderer>> = labels
+                    .iter()
+                    .filter_map(|(text, x, y, scale, color)| {
+                        let bitmap = TextBitmap::render(text, *scale, *color);
+                        if bitmap.is_empty() {
+                            return None;
+                        }
+                        let buffer = MemoryRenderBuffer::from_slice(
+                            bitmap.pixels(),
+                            Fourcc::Abgr8888,
+                            (bitmap.width() as i32, bitmap.height() as i32),
+                            1,
+                            Transform::Normal,
+                            None,
+                        );
+                        MemoryRenderBufferRenderElement::from_buffer(
+                            renderer,
+                            (*x as f64, *y as f64),
+                            &buffer,
+                            None,
+                            None,
+                            None,
+                            Kind::Unspecified,
+                        )
+                        .ok()
+                    })
+                    .collect();
+
+                let mut frame = renderer.render(&mut framebuffer, size, Transform::Flipped180)?;
+                frame.clear(Color32F::new(0.01, 0.06, 0.08, 1.0), &[damage])?;
+                // Client surfaces are painted over the shell background.
+                if !elements.is_empty() {
+                    draw_render_elements(&mut frame, 1.0, &elements, &[damage])?;
+                }
+                if !chrome.is_empty() {
+                    // `draw_render_elements` treats the slice as topmost-first and
+                    // reverses it internally; our chrome is built bottom-up.
+                    let chrome_top_down: Vec<(AetherRect, [f32; 4])> =
+                        chrome.iter().rev().copied().collect();
+                    let buffers: Vec<SolidColorBuffer> = chrome_top_down
+                        .iter()
+                        .map(|(rect, color)| {
+                            SolidColorBuffer::new((rect.width as i32, rect.height as i32), *color)
+                        })
+                        .collect();
+                    let elements: Vec<SolidColorRenderElement> = buffers
+                        .iter()
+                        .zip(chrome_top_down.iter())
+                        .map(|(buffer, (rect, _))| {
+                            SolidColorRenderElement::from_buffer(
+                                buffer,
+                                (rect.x, rect.y),
+                                1.0f64,
+                                1.0,
+                                Kind::Unspecified,
+                            )
+                        })
+                        .collect();
+                    draw_render_elements::<GlesRenderer, f64, SolidColorRenderElement>(
+                        &mut frame,
+                        1.0,
+                        &elements,
+                        &[damage],
+                    )?;
+                }
+                if !text_elements.is_empty() {
+                    draw_render_elements::<
+                        GlesRenderer,
+                        f64,
+                        MemoryRenderBufferRenderElement<GlesRenderer>,
+                    >(&mut frame, 1.0, &text_elements, &[damage])?;
+                }
+                let _ = frame.finish()?;
+            }
+
+            for surface in state.xdg_shell_state.toplevel_surfaces() {
+                send_frames_surface_tree(
+                    surface.wl_surface(),
+                    start_time.elapsed().as_millis() as u32,
+                );
+            }
+            state.dirty = false;
+            frame_damage = Some(damage);
+            rendered_frames += 1;
+            if std::env::var_os("AETHER_FRAME_LOG").is_some() {
+                println!("aether-shell-smithay: frame {rendered_frames}");
+            }
         }
 
         if let Some(stream) = listener.accept()? {
@@ -818,7 +836,9 @@ pub fn run() -> Result<(), Box<dyn Error>> {
 
         display.dispatch_clients(&mut state)?;
         display.flush_clients()?;
-        backend.submit(Some(&[damage]))?;
+        if let Some(damage) = frame_damage {
+            backend.submit(Some(&[damage]))?;
+        }
 
         if !spawned_client {
             if let Ok(path) = std::env::var("AETHER_TEST_CLIENT") {
@@ -957,6 +977,7 @@ impl CompositorHandler for App {
 
     fn commit(&mut self, surface: &WlSurface) {
         on_commit_buffer_handler::<Self>(surface);
+        self.dirty = true;
     }
 }
 
@@ -1202,6 +1223,7 @@ struct App {
     modifiers: ModifiersState,
     cursor: CursorIcon,
     socket_name: String,
+    dirty: bool,
 }
 
 impl App {

@@ -144,9 +144,15 @@ I-beam over the palette input.*
 
 *With `AETHER_INDEX_SOCKET`, the palette asks the Bun `apps/indexer-service` for
 results on each query. The service returns BM25/prefix/fuzzy content matches;
-the shell displays them pre-filtered. The smoke indexes a fixture and opens a
-file matched by body content. Without the socket the bounded `aether-files`
-scan remains the fallback.*
+the shell displays them pre-filtered. The initial smoke indexes a fixture and
+opens a file matched by body content. Without the socket the bounded
+`aether-files` scan remains the fallback.*
+
+![A file indexed after the service started](/img/smithay-index-live.png)
+
+*The service watches its roots and upserts/removes files live. This smoke starts
+with an empty root, writes `live-note.txt` after both processes are running,
+waits for the watcher, then searches and opens it.*
 
 ![The same window maximized](/img/smithay-window-maximized.png)
 
@@ -181,8 +187,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
   A bounded filename index (`aether-files`) adds `OpenFile` results for non-empty
   queries. External launchers from `AETHER_PALETTE_JSON` can add agent-session
   or tool commands. With `AETHER_INDEX_SOCKET`, the Bun index service supplies
-  content-ranked file results per query; otherwise the bounded local scan is
-  used. All providers are rescanned when the palette opens. Typing filters them (case-insensitive prefix/substring),
+  content-ranked file results per query and watches roots for live updates;
+  otherwise the bounded local scan is used. All providers are rescanned when
+  the palette opens. Typing filters them (case-insensitive prefix/substring),
   `Up/Down` wraps, `Enter` or a row click activates, `Backspace` edits and `Esc`
   closes. The list slides to keep the selection visible, and pointer hover
   selects a row.
@@ -254,9 +261,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
 
 ## What is not implemented
 
-- **Live agent IPC and incremental indexing.** Agent sessions can be published
-  as external launchers, but there is no live agent-session socket yet. The
-  index service is a startup snapshot without inotify/live updates.
+- **Live agent IPC.** Agent sessions can be published as external launchers,
+  but there is no live agent-session socket yet. Index updates are live through
+  `fs.watch`; a native inotify daemon is future work.
 - **Desktop-entry SVG icons, theme inheritance, actions and D-Bus activation.**
   Entries rescans and hicolor/pixmap PNG icons work; SVG icons, full icon-theme
   lookup, desktop actions and D-Bus activation are not implemented.
@@ -322,6 +329,7 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-output-xvfb.sh     # wl_output/xdg-output globals
 ./os/compositor/aether-shell-smithay/smoke-text-input-xvfb.sh # zwp_text_input_manager_v3
 ./os/compositor/aether-shell-smithay/smoke-index-xvfb.sh      # Bun index service query
+./os/compositor/aether-shell-smithay/smoke-index-live-xvfb.sh # live index update
 ```
 
 The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. Most use

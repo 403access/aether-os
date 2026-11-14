@@ -179,6 +179,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         index_socket: std::env::var("AETHER_INDEX_SOCKET").ok(),
         index_query: String::new(),
         agent_sessions: AgentSessions::bind(None),
+        input_method_popups: Vec::new(),
     };
 
     state.agent_sessions =
@@ -1031,6 +1032,38 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     })
                     .unwrap_or_default();
 
+                let mut popup_elements: Vec<WaylandSurfaceRenderElement<GlesRenderer>> = Vec::new();
+                for popup in &state.input_method_popups {
+                    if !popup.alive() {
+                        continue;
+                    }
+                    let origin = popup
+                        .get_parent()
+                        .and_then(|parent| {
+                            state.windows.iter().find_map(|(id, toplevel)| {
+                                (toplevel.wl_surface() == &parent.surface).then_some(*id)
+                            })
+                        })
+                        .and_then(|id| {
+                            state
+                                .shell
+                                .windows()
+                                .into_iter()
+                                .find(|window| window.id == id)
+                        })
+                        .map(|window| (window.rect.x, window.rect.y))
+                        .unwrap_or((0, 0));
+                    let location = popup.location();
+                    popup_elements.extend(render_elements_from_surface_tree(
+                        renderer,
+                        popup.wl_surface(),
+                        (origin.0 + location.x, origin.1 + location.y),
+                        1.0,
+                        1.0,
+                        Kind::Unspecified,
+                    ));
+                }
+
                 let mut frame = renderer.render(&mut framebuffer, size, Transform::Flipped180)?;
                 frame.clear(Color32F::new(0.01, 0.06, 0.08, 1.0), &damage)?;
                 // Client surfaces are painted over the shell background.
@@ -1078,6 +1111,9 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                         f64,
                         MemoryRenderBufferRenderElement<GlesRenderer>,
                     >(&mut frame, 1.0, &text_elements, &damage)?;
+                }
+                if !popup_elements.is_empty() {
+                    draw_render_elements(&mut frame, 1.0, &popup_elements, &damage)?;
                 }
                 if let Some(cursor) = cursor_element {
                     draw_render_elements::<
@@ -1355,11 +1391,33 @@ impl ShmHandler for App {
 impl OutputHandler for App {}
 
 impl InputMethodHandler for App {
-    fn new_popup(&mut self, _surface: InputMethodPopupSurface) {}
-    fn dismiss_popup(&mut self, _surface: InputMethodPopupSurface) {}
+    fn new_popup(&mut self, surface: InputMethodPopupSurface) {
+        self.input_method_popups.push(surface);
+    }
+
+    fn dismiss_popup(&mut self, surface: InputMethodPopupSurface) {
+        self.input_method_popups.retain(|popup| popup != &surface);
+    }
+
     fn popup_repositioned(&mut self, _surface: InputMethodPopupSurface) {}
-    fn parent_geometry(&self, _parent: &WlSurface) -> Rectangle<i32, Logical> {
-        Rectangle::default()
+
+    fn parent_geometry(&self, parent: &WlSurface) -> Rectangle<i32, Logical> {
+        self.windows
+            .iter()
+            .find_map(|(id, toplevel)| (toplevel.wl_surface() == parent).then_some(*id))
+            .and_then(|id| {
+                self.shell
+                    .windows()
+                    .into_iter()
+                    .find(|window| window.id == id)
+            })
+            .map(|window| {
+                Rectangle::new(
+                    (window.rect.x, window.rect.y).into(),
+                    (window.rect.width as i32, window.rect.height as i32).into(),
+                )
+            })
+            .unwrap_or_default()
     }
 }
 
@@ -1700,6 +1758,7 @@ struct App {
     index_socket: Option<String>,
     index_query: String,
     agent_sessions: AgentSessions,
+    input_method_popups: Vec<InputMethodPopupSurface>,
 }
 
 struct CursorCacheEntry {

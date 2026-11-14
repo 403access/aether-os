@@ -115,7 +115,7 @@ needs the reference machine. Runbook and ledger:
 
 **Dependencies.** P1. **Risk:** GPU driver quirks, text rendering performance.
 
-## P3 — Shell surfaces
+## P3 — Shell surfaces · in progress
 
 **Goal.** Palette, chat and explorer become compositor layers.
 

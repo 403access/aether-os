@@ -1,0 +1,10 @@
+[package]
+name = "aether-cursor"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Software cursor bitmaps for Aether compositor backends"
+
+[lib]
+name = "aether_cursor"
+path = "src/lib.rs"

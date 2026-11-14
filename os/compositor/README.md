@@ -20,6 +20,7 @@ aether-shell         windows, workspaces, focus, FramePlan      (all core crates
 aether-text          8x8 bitmap text -> RGBA buffer              (font8x8)
 aether-desktop       XDG .desktop discovery + icons/Exec         (std)
 aether-files         bounded filename index for the palette      (std)
+aether-cursor        software cursor bitmaps                     (std)
 aether-preview       software renderer + PNG preview            (shell, text)
 aether-compositor    facade + prelude + demo binary             (core crates)
 
@@ -40,6 +41,7 @@ Dependency direction is one-way. There are no cycles and no optional GPU code.
 | `aether-text` | You need cropped bitmap text as RGBA pixels |
 | `aether-desktop` | You need to discover/parse launchable XDG apps and PNG icons |
 | `aether-files` | You need a small bounded filename index |
+| `aether-cursor` | You need backend-neutral cursor bitmaps |
 | `aether-preview` | You want to render a frame to PNG without a display |
 | `aether-compositor` | You want the facade/prelude, or run the demo |
 
@@ -108,7 +110,7 @@ backend.
 | Phase | Work |
 | --- | --- |
 | P0 (done) | Pure crates, shell state, preview, tests, demo, facade |
-| P2 (started) | `aether-shell-smithay`: clients tile/configure, palette with refreshing workspace/window/app/file/external providers, clipboard, wl_output/xdg-output, text-input, fullscreen/window management, cursors, idle skipping and surface/window damage; IME engine, live agent IPC, buffer damage/occlusion, multi-output/hotplug and udev/DRM next |
+| P2 (started) | `aether-shell-smithay`: clients tile/configure, palette with refreshing workspace/window/app/file/external providers, clipboard, wl_output/xdg-output, text-input, fullscreen/window management, software cursors, idle skipping and surface/window damage; IME engine, live agent IPC, xcursor themes, buffer damage/occlusion, multi-output/hotplug and udev/DRM next |
 | P2 | Text/atlas and scene-graph UI primitives |
 | P3 | Shell layers (palette/chat) consume the same crates |
 

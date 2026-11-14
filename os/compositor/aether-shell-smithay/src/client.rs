@@ -12,6 +12,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::sync::Arc;
 
+use aether_cursor::{render as render_cursor, CursorShape};
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect, Size as AetherSize};
 use aether_layout::LayoutConfig;
 use aether_shell::{
@@ -152,6 +153,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         full_damage: true,
         damage: Vec::new(),
         icons: HashMap::new(),
+        cursor_buffers: HashMap::new(),
     };
 
     let listener = ListeningSocket::bind_auto("aether", 0..8)?;
@@ -204,6 +206,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     let mut frames = 0u32;
     let mut applied_focus: Option<WlSurface> = None;
     let mut applied_cursor = CursorIcon::Default;
+    backend.window().set_cursor_visible(false);
     let mut rendered_frames = 0u32;
 
     println!(
@@ -865,6 +868,39 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     })
                     .collect();
 
+                let cursor_shape = cursor_shape(state.cursor);
+                let position = state.pointer_pos;
+                let entry = state.cursor_buffers.entry(cursor_shape).or_insert_with(|| {
+                    let bitmap = render_cursor(cursor_shape);
+                    let buffer = MemoryRenderBuffer::from_slice(
+                        &bitmap.pixels,
+                        Fourcc::Abgr8888,
+                        (bitmap.width as i32, bitmap.height as i32),
+                        1,
+                        Transform::Normal,
+                        None,
+                    );
+                    CursorCacheEntry {
+                        buffer,
+                        hotspot_x: bitmap.hotspot_x,
+                        hotspot_y: bitmap.hotspot_y,
+                    }
+                });
+                let cursor_element = {
+                    let x = position.x.round() as i32 - entry.hotspot_x;
+                    let y = position.y.round() as i32 - entry.hotspot_y;
+                    MemoryRenderBufferRenderElement::from_buffer(
+                        renderer,
+                        (x as f64, y as f64),
+                        &entry.buffer,
+                        None,
+                        None,
+                        None,
+                        Kind::Unspecified,
+                    )
+                    .ok()
+                };
+
                 let mut frame = renderer.render(&mut framebuffer, size, Transform::Flipped180)?;
                 frame.clear(Color32F::new(0.01, 0.06, 0.08, 1.0), &damage)?;
                 // Client surfaces are painted over the shell background.
@@ -912,6 +948,13 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                         f64,
                         MemoryRenderBufferRenderElement<GlesRenderer>,
                     >(&mut frame, 1.0, &text_elements, &damage)?;
+                }
+                if let Some(cursor) = cursor_element {
+                    draw_render_elements::<
+                        GlesRenderer,
+                        f64,
+                        MemoryRenderBufferRenderElement<GlesRenderer>,
+                    >(&mut frame, 1.0, &[cursor], &damage)?;
                 }
                 let _ = frame.finish()?;
             }
@@ -1403,6 +1446,19 @@ fn cursor_for(state: &App) -> CursorIcon {
     CursorIcon::Default
 }
 
+fn cursor_shape(icon: CursorIcon) -> CursorShape {
+    match icon {
+        CursorIcon::Pointer => CursorShape::Pointer,
+        CursorIcon::Text => CursorShape::Text,
+        CursorIcon::Move => CursorShape::Move,
+        CursorIcon::Grabbing => CursorShape::Grabbing,
+        CursorIcon::NwseResize => CursorShape::ResizeNwse,
+        CursorIcon::NeswResize => CursorShape::ResizeNesw,
+        CursorIcon::ColResize => CursorShape::ResizeHorizontal,
+        _ => CursorShape::Arrow,
+    }
+}
+
 fn resize_cursor(corner: ResizeCorner) -> CursorIcon {
     match corner {
         ResizeCorner::TopLeft | ResizeCorner::BottomRight => CursorIcon::NwseResize,
@@ -1471,6 +1527,13 @@ struct App {
     full_damage: bool,
     damage: Vec<Rectangle<i32, Physical>>,
     icons: HashMap<String, MemoryRenderBuffer>,
+    cursor_buffers: HashMap<CursorShape, CursorCacheEntry>,
+}
+
+struct CursorCacheEntry {
+    buffer: MemoryRenderBuffer,
+    hotspot_x: i32,
+    hotspot_y: i32,
 }
 
 impl App {

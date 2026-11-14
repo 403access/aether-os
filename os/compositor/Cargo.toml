@@ -10,6 +10,7 @@ members = [
   "crates/aether-text",
   "crates/aether-desktop",
   "crates/aether-files",
+  "crates/aether-cursor",
   "crates/aether-preview",
 ]
 resolver = "2"
@@ -30,6 +31,7 @@ aether-shell = { path = "crates/aether-shell" }
 aether-text = { path = "crates/aether-text" }
 aether-desktop = { path = "crates/aether-desktop" }
 aether-files = { path = "crates/aether-files" }
+aether-cursor = { path = "crates/aether-cursor" }
 
 [profile.release]
 lto = "thin"

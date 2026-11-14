@@ -20,6 +20,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "aether-cursor"
+version = "0.1.0"
+
+[[package]]
 name = "aether-damage"
 version = "0.1.0"
 dependencies = [

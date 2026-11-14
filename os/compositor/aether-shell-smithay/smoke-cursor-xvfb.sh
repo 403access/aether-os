@@ -83,7 +83,8 @@ xdotool mousemove 500 300
 assert_cursor Pointer
 xdotool mousemove 500 255
 assert_cursor Text
+import -window root "${OUT}/software-cursor.png"
 xdotool key Escape
 
 cat "${OUT}/cursor-app.log"
-echo "cursor feedback verified"
+echo "wrote ${OUT}/software-cursor.png"

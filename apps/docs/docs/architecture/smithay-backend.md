@@ -322,6 +322,14 @@ drag and both toggles with `xdotool` and asserts each transition.*
 
 The P2 gate remains: a real client window, 120 Hz pacing and input on the target.
 
+## Native DRM status
+
+`aether-shell-drm` now has a KMS probe that opens `/dev/dri/cardN`, enumerates
+CRTCs/connectors/modes and fails if no connected connector with modes exists.
+The rendering/input/client backend (libinput, GBM/EGL, `DrmCompositor`
+page-flip and shared Wayland handlers) is not finished; the target still uses
+the cage adapter below.
+
 ## DRM session (cage adapter)
 
 The 7700K target runs `cage` on `/dev/tty7` as a DRM/libinput/seat0 session and

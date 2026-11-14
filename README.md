@@ -45,8 +45,8 @@ the next phase; first boot lands in a console, not the finished desktop.
 | NixOS system + installer ISO | ✅ evaluates (`nix flake check`); not booted in CI | `os/nixos` |
 | aarch64 development VM target | ✅ built + booted headless in ~10–12 s (HVF) | `os/vm` |
 | disko disk layout + install script | ✅ written, evaluation-checked | `os/nixos/disko.nix`, `scripts/install.sh` |
-| Compositor core + shell state + preview | ✅ 89 core + 5 backend Rust tests | `os/compositor` |
-| Smithay winit backend (Linux-only) | ✅ clients, palette + Bun index search, desktop actions, clipboard, outputs, text-input, window mgmt, software cursors, partial damage | `os/compositor/aether-shell-smithay` |
+| Compositor core + shell state + preview | ✅ 89 core + 6 backend Rust tests | `os/compositor` |
+| Smithay winit backend (Linux-only) | ✅ clients, palette + index + live agents, desktop actions, clipboard, outputs, text-input, window mgmt, cursors, partial damage | `os/compositor/aether-shell-smithay` |
 | Target preflight | ✅ UEFI/KMS/input/memory checks with fixtures | `scripts/target-check.sh` |
 | Compositor UI (`aether-shell`) | ⏳ roadmap P2 | — |
 | WebRTC remote display | ⏳ roadmap P7 | — |

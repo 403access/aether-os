@@ -44,7 +44,7 @@ const PHASES: Array<{
     summary: "A Smithay shell that owns the scene graph, tiling and frame pacing.",
     bullets: [
       "Winit/EGL adapter has a palette with workspace/window/app/file/external providers, desktop actions, live Bun index search, clipboard + primary, outputs, text-input, window management, software cursors and partial damage.",
-      "Next: live agent IPC, native inotify indexing, SVG/theme icons + DBus, clipboard persistence/DnD, IME engine, multi-output/hotplug, client cursor surfaces, the udev/DRM backend; target preflight is in place.",
+      "Next: native inotify indexing, SVG/theme icons + DBus, clipboard persistence/DnD, IME engine, multi-output/hotplug, client cursor surfaces, the udev/DRM backend; live agent IPC and target preflight are in place.",
       "wgpu/Vulkan renderer, damage tracking, one draw pass for shell chrome.",
       "Frame scheduler from os/compositor wired to a real 120 Hz deadline.",
     ],

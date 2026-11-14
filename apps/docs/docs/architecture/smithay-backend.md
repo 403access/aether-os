@@ -160,6 +160,13 @@ waits for the watcher, then searches and opens it.*
 launchers (for example "Private Window"). The smoke launches the action and
 asserts the spawned command.*
 
+![A live agent session received over IPC](/img/smithay-agent-ipc.png)
+
+*With `AETHER_AGENT_SOCKET`, agent supervisors connect and send newline-delimited
+JSON snapshots of active sessions. Each snapshot replaces the previous agent
+launchers; disconnecting the last publisher clears them. The smoke publishes a
+session, searches it and launches its command.*
+
 ![The same window maximized](/img/smithay-window-maximized.png)
 
 *`Super+M` maximizes the focused window to the full output; pressing it again
@@ -192,7 +199,8 @@ drag and both toggles with `xdotool` and asserts each transition.*
   optional PNG icons and secondary actions.
   A bounded filename index (`aether-files`) adds `OpenFile` results for non-empty
   queries. External launchers from `AETHER_PALETTE_JSON` can add agent-session
-  or tool commands. With `AETHER_INDEX_SOCKET`, the Bun index service supplies
+  or tool commands. Live agent sessions arrive over `AETHER_AGENT_SOCKET` as
+  JSON snapshots. With `AETHER_INDEX_SOCKET`, the Bun index service supplies
   content-ranked file results per query and watches roots for live updates;
   otherwise the bounded local scan is used. The service is packaged as
   `.#index-service` and runs as a systemd user unit in the VM target. All
@@ -269,9 +277,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
 
 ## What is not implemented
 
-- **Live agent IPC.** Agent sessions can be published as external launchers,
-  but there is no live agent-session socket yet. Index updates are live through
-  `fs.watch`; a native inotify daemon is future work.
+- **Native inotify daemon.** Agent sessions are live over
+  `AETHER_AGENT_SOCKET`; index updates use `fs.watch`. A dedicated native
+  inotify daemon is future work.
 - **Desktop-entry SVG icons, theme inheritance and D-Bus activation.** Entries
   rescans, hicolor/pixmap PNG icons and `[Desktop Action]` groups work; SVG
   icons, full icon-theme lookup and D-Bus activation are not implemented.
@@ -338,6 +346,7 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-index-xvfb.sh      # Bun index service query
 ./os/compositor/aether-shell-smithay/smoke-index-live-xvfb.sh # live index update
 ./os/compositor/aether-shell-smithay/smoke-actions-xvfb.sh     # desktop action launcher
+./os/compositor/aether-shell-smithay/smoke-agent-ipc-xvfb.sh   # live agent session IPC
 ```
 
 The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. Most use
@@ -349,8 +358,9 @@ terminal launcher. Desktop apps come from `XDG_DATA_HOME`/`XDG_DATA_DIRS`
 (`~/.local/share` and `/usr/local/share:/usr/share` by default). The file index
 uses `AETHER_FILE_ROOTS` (default `$HOME`), `AETHER_FILE_LIMIT` (default 2000),
 `AETHER_FILE_DEPTH` (default 5), `AETHER_OPENER` (default `xdg-open`),
-`AETHER_PALETTE_JSON` (external launchers) and `AETHER_INDEX_SOCKET` (Bun index
-service; see `apps/indexer-service`).
+`AETHER_PALETTE_JSON` (external launchers), `AETHER_AGENT_SOCKET` (live agent
+session snapshots) and `AETHER_INDEX_SOCKET` (Bun index service; see
+`apps/indexer-service`).
 
 The environment sets:
 

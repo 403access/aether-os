@@ -31,7 +31,7 @@ and record the harness; they are not quoted as target results.
 | P4-T2 | Compositor audio overlay: outputs/inputs, active route, presets, input meters, `Super+A` | Overlay opens/closes, selection and activation switch the default route, preset chips cycle; fixture smoke captures frames | `artifacts/smithay/audio.png`, `audio-preset.png`, `artifacts/p4/audio-smoke.log` |
 | P4-T3 | Microphone capability gate: `audio.capture` scope, grant/deny policy, audit | No capability → denied; explicit capability → allowed; denial is audited; protocol rejects malformed scopes | `packages/agents` tests, `aether-audio` tests |
 | P4-T4 | NixOS policy: PipeWire quantum profiles, WirePlumber defaults, Bluetooth codecs, packaged daemon/CLI | Config evaluates; target enables Bluetooth and the Aether audio profile; docs describe the routes | `nix flake check --no-build` log, NixOS eval |
-| P4-T5 | Measurement harness: route-switch benchmark and 10-minute 64-frame xrun stress | Harness emits NDJSON; a dry run works without audio hardware; target run is documented as pending | `scripts/audio-stress.sh`, `artifacts/p4/audio-stress-*.ndjson` |
+| P4-T5 | Measurement harness plus per-app moves: route-switch benchmark, 10-minute 64-frame xrun stress, `apps`/`move-app` | Harness emits NDJSON; dry run works without audio hardware; pactl stream parsing and moves are tested | `scripts/audio-stress.sh`, `packages/agents`/`aether-audio` tests |
 | P4-T6 | Verification and reconciliation: tests, smokes, claims and docs | All checks pass; claims/evidence and roadmap carry the real labels; no budget is presented as measured | ledger + CI run |
 
 ## Sequencing
@@ -68,5 +68,5 @@ route model exists; T4 can land alongside T2; T5 exercises T1/T4; T6 is last.
 | P4-T2 | ✅ overlay, `Super+A`, fixture smoke, screenshots | `artifacts/smithay/audio.png`, `audio-preset.png` |
 | P4-T3 | ✅ `audio.capture` scope, `MicrophoneGate`, audit tests | `packages/agents/src/audio.test.ts` |
 | P4-T4 | ✅ PipeWire/Bluetooth policy, packaged `aether-audio` | `flake.nix`, `os/nixos/services.nix`, `nix build .#aether-audio` |
-| P4-T5 | ⏳ | |
+| P4-T5 | ✅ harness, dry-run record, per-app stream moves | `scripts/audio-stress.sh`, `artifacts/p4/audio-stress-*.ndjson` |
 | P4-T6 | ⏳ | |

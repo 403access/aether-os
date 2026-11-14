@@ -9,8 +9,8 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use crate::{
-    parse_pw_dump, parse_pw_top_xruns, parse_wpctl_id, AudioError, AudioRoute, AudioSnapshot,
-    LatencyPreset, RouteKind, SnapshotSource,
+    parse_pactl_streams, parse_pw_dump, parse_pw_top_xruns, parse_wpctl_id, AudioError, AudioRoute,
+    AudioSnapshot, AudioStream, LatencyPreset, RouteKind, SnapshotSource,
 };
 
 #[derive(Clone, Debug)]
@@ -78,6 +78,22 @@ impl SystemAudio {
             )?;
         }
         self.write_preset(preset)
+    }
+
+    pub fn streams(&self) -> Result<Vec<AudioStream>, AudioError> {
+        if self.fixture.is_some() {
+            return Ok(Vec::new());
+        }
+        command_stdout("pactl", &["--format=json", "list", "sink-inputs"])
+            .and_then(|output| parse_pactl_streams(&output))
+    }
+
+    /// Move a PulseAudio-compatible playback stream to another sink id/name.
+    pub fn move_stream(&self, index: u32, sink: &str) -> Result<(), AudioError> {
+        if self.fixture.is_some() {
+            return Ok(());
+        }
+        run_command("pactl", &["move-sink-input", &index.to_string(), sink])
     }
 
     pub fn xruns(&self) -> Result<u64, AudioError> {

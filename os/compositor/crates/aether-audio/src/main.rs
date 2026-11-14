@@ -21,7 +21,19 @@ fn run(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
     match args.first().map(String::as_str) {
         None | Some("list") => {
             let snapshot = audio.snapshot()?;
-            if args.iter().any(|arg| arg == "--json")
+            if args.iter().any(|arg| arg == "--ids") {
+                for route in &snapshot.routes {
+                    println!(
+                        "{} {} {}",
+                        match route.kind {
+                            RouteKind::Output => "output",
+                            RouteKind::Input => "input",
+                        },
+                        route.id,
+                        route.label()
+                    );
+                }
+            } else if args.iter().any(|arg| arg == "--json")
                 || args.get(1).is_some_and(|arg| arg == "json")
             {
                 println!("{}", serde_json::to_string_pretty(&snapshot)?);
@@ -65,6 +77,39 @@ fn run(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
                 preset.name(),
                 preset.quantum()
             );
+            Ok(())
+        }
+        Some("apps") => {
+            let streams = audio.streams()?;
+            if streams.is_empty() {
+                println!("(no active playback streams)");
+            }
+            for stream in streams {
+                println!(
+                    "{:>3}  {}  -> sink {}{}",
+                    stream.index,
+                    stream.app,
+                    stream.sink,
+                    stream
+                        .media
+                        .as_deref()
+                        .map(|media| format!(" · {media}"))
+                        .unwrap_or_default()
+                );
+            }
+            Ok(())
+        }
+        Some("move-app") => {
+            let index = args
+                .get(1)
+                .ok_or("usage: aether-audio move-app <stream-index> <sink-id|name>")?
+                .parse::<u32>()
+                .map_err(|_| "stream index must be an integer")?;
+            let sink = args
+                .get(2)
+                .ok_or("usage: aether-audio move-app <stream-index> <sink-id|name>")?;
+            audio.move_stream(index, sink)?;
+            println!("aether-audio: stream {index} -> sink {sink}");
             Ok(())
         }
         Some("xruns") => {
@@ -153,10 +198,12 @@ fn print_help() {
         "aether-audio — PipeWire route policy\n\
          \n\
          Usage:\n\
-           aether-audio list [--json]       routes and active defaults\n\
+           aether-audio list [--json|--ids] routes and active defaults\n\
            aether-audio status              JSON snapshot\n\
            aether-audio switch <id|name>    set default sink/source\n\
            aether-audio preset <name|next>  media | voice | monitor\n\
+           aether-audio apps                active playback streams
+           aether-audio move-app <n> <sink> move a stream to a sink
            aether-audio xruns               non-zero pw-top error rows\n\
          \n\
          Environment:\n\

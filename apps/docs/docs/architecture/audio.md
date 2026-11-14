@@ -47,6 +47,21 @@ aether-audio list
 aether-audio switch 44
 aether-audio preset voice
 aether-audio xruns
+aether-audio apps
+aether-audio move-app 7 43
+```
+
+Per-app routing uses PulseAudio compatibility: `apps` reads `pactl --format=json
+list sink-inputs`, and `move-app` calls `pactl move-sink-input`. The overlay shows
+devices; stream moves are scriptable now and become rows in the P5 audio surface.
+`scripts/audio-stress.sh` measures route-switch latency and a 64-frame xrun run:
+
+```bash
+# target, desktop session
+./scripts/audio-stress.sh
+# CI/dev dry run (no PipeWire)
+AETHER_AUDIO_FIXTURE=$PWD/os/compositor/aether-shell-smithay/audio-fixture.json \
+  ./scripts/audio-stress.sh
 ```
 
 `AETHER_AUDIO_FIXTURE` points the adapter at a JSON snapshot. The shell smokes use

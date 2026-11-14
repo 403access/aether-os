@@ -190,6 +190,51 @@ impl Default for LatencyPreset {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct AudioStream {
+    pub index: u32,
+    pub sink: u32,
+    pub app: String,
+    #[serde(default)]
+    pub media: Option<String>,
+}
+
+/// Parse `pactl --format=json list sink-inputs` into per-app streams.
+pub fn parse_pactl_streams(input: &str) -> Result<Vec<AudioStream>, AudioError> {
+    let root: serde_json::Value =
+        serde_json::from_str(input).map_err(|error| AudioError::Parse(error.to_string()))?;
+    let entries = root
+        .as_array()
+        .ok_or_else(|| AudioError::Parse("pactl root is not an array".into()))?;
+    let mut streams = Vec::new();
+    for entry in entries {
+        let Some(index) = entry.get("index").and_then(|value| value.as_u64()) else {
+            continue;
+        };
+        let Some(sink) = entry.get("sink").and_then(|value| value.as_u64()) else {
+            continue;
+        };
+        let properties = entry.get("properties");
+        let app = properties
+            .and_then(|value| value.get("application.name"))
+            .and_then(|value| value.as_str())
+            .or_else(|| entry.get("name").and_then(|value| value.as_str()))
+            .unwrap_or("unknown")
+            .to_string();
+        let media = properties
+            .and_then(|value| value.get("media.name"))
+            .and_then(|value| value.as_str())
+            .map(str::to_string);
+        streams.push(AudioStream {
+            index: index as u32,
+            sink: sink as u32,
+            app,
+            media,
+        });
+    }
+    Ok(streams)
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct AudioSnapshot {
     pub routes: Vec<AudioRoute>,
     pub preset: LatencyPreset,
@@ -487,6 +532,22 @@ mod tests {
     fn parses_wpctl_default_id() {
         let text = "id 44, type PipeWire:Interface:Node\n  * media.class = \"Audio/Sink\"\n";
         assert_eq!(parse_wpctl_id(text), Some(44));
+    }
+
+    #[test]
+    fn parses_pactl_streams() {
+        let text = r#"[
+          {"index": 7, "sink": 43, "properties": {"application.name": "Firefox", "media.name": "Video"}},
+          {"index": 8, "sink": 42, "properties": {"application.name": "Music"}},
+          {"index": 9}
+        ]"#;
+        let streams = parse_pactl_streams(text).unwrap();
+        assert_eq!(streams.len(), 2);
+        assert_eq!(streams[0].app, "Firefox");
+        assert_eq!(streams[0].sink, 43);
+        assert_eq!(streams[0].media.as_deref(), Some("Video"));
+        assert_eq!(streams[1].app, "Music");
+        assert_eq!(streams[1].media, None);
     }
 
     #[test]

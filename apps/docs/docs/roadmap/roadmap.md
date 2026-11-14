@@ -88,12 +88,12 @@ Deliverables:
   bounded filename index with `OpenFile`. Clipboard and primary-selection
   copy/paste work between clients via focus forwarding. Picker, divider, palette
   input/commands, desktop/file launch, clipboard, window management and cursor
-  mapping are verified by xdotool smokes. Idle frames are skipped (no present or
-  frame callbacks without dirty state).
+  mapping are verified by xdotool smokes. Idle frames are skipped and client
+  commits damage only their window rect.
 - ⏳ Agent-session provider, system content index integration, desktop-entry live
   refresh/icons/actions/DBus, clipboard persistence/DnD, IME support,
-  fullscreen, multi-output snapping, DRM cursor images/themes, per-client
-  partial damage, udev/DRM.
+  fullscreen, multi-output snapping, DRM cursor images/themes, surface-provided
+  damage/occlusion, udev/DRM.
 - ⏳ udev/DRM backend, libinput seat, wgpu renderer, output hotplug.
 - Scene graph with damage tracking; shell chrome in one draw pass.
 - Tiling layout, focus, keybindings; one workspace per output.

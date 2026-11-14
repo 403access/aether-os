@@ -106,6 +106,13 @@ selection offer. Primary selection uses the same focus forwarding via
 `set_primary_focus`. The smoke copies with `wl-copy`/`wl-copy --primary` in one
 terminal and pastes with `wl-paste`/`wl-paste --primary` in the other.*
 
+![Partial damage from a terminal output commit](/img/smithay-partial-damage.png)
+
+*A client commit damages only that window: the left tile redraws while the idle
+right tile is untouched. Input-driven frames use full damage for safety.
+`smoke-damage-xvfb.sh` schedules `sleep 1; echo ...` and asserts a partial frame
+with the 681x768 master rect.*
+
 ![The same window maximized](/img/smithay-window-maximized.png)
 
 *`Super+M` maximizes the focused window to the full output; pressing it again
@@ -152,10 +159,12 @@ drag and both toggles with `xdotool` and asserts each transition.*
   work between clients. The compositor forwards data-device and primary focus
   with keyboard focus so selection offers reach the right client. DnD and
   clipboard persistence after the source exits are not implemented.
-- **Idle frame skipping.** Input events and client commits mark the compositor
-  dirty; otherwise it stops presenting and stops sending frame callbacks. Dirty
-  frames still redraw the full window (partial per-client damage is future
-  work). `AETHER_FRAME_LOG=1` logs each presented frame.
+- **Idle frame skipping and partial damage.** Input events request a full
+  redraw; client commits damage only that window's rect. When nothing is dirty,
+  the compositor stops presenting and stops sending frame callbacks. Damage is
+  conservative at window granularity (surface-provided damage rects are not used
+  yet). `AETHER_FRAME_LOG=1` logs each frame with `damage=full` or
+  `damage=partial [...]`.
 - **Pointer cursor feedback.** The winit window's system cursor changes with
   the hover target: `ColResize` on the master/stack divider, `Pointer` on
   workspace chips and palette rows, `Text` on the palette input, `Move` over a
@@ -212,8 +221,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
 - **Fullscreen and multi-output edge snapping** are not implemented. Single
   output halves/maximize, floating resize and edge snapping work. Popups and
   drag-and-drop are ignored.
-- **Per-client damage.** Dirty frames redraw the full window; idle frames are
-  skipped, but partial damage tracking is not wired in yet.
+- **Surface-provided damage and occlusion.** Redraws are clipped to committed
+  window rects, but client damage rectangles, opaque-region occlusion and
+  per-subsurface tracking are not used yet.
 - **Popups, drag-and-drop and grabs** are accepted/ignored at the protocol level.
 - **udev/DRM backend.** The target path for the 7700K (no X server) is not written;
   winit is the development adapter.
@@ -256,6 +266,7 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-files-xvfb.sh    # search/open a fixture file
 ./os/compositor/aether-shell-smithay/smoke-clipboard-xvfb.sh # clipboard + primary between terminals
 ./os/compositor/aether-shell-smithay/smoke-idle-xvfb.sh      # idle frame skipping
+./os/compositor/aether-shell-smithay/smoke-damage-xvfb.sh    # partial window damage
 ```
 
 The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. The picker,

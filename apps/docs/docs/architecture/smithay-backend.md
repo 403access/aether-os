@@ -160,11 +160,11 @@ drag and both toggles with `xdotool` and asserts each transition.*
   with keyboard focus so selection offers reach the right client. DnD and
   clipboard persistence after the source exits are not implemented.
 - **Idle frame skipping and partial damage.** Input events request a full
-  redraw; client commits damage only that window's rect. When nothing is dirty,
-  the compositor stops presenting and stops sending frame callbacks. Damage is
-  conservative at window granularity (surface-provided damage rects are not used
-  yet). `AETHER_FRAME_LOG=1` logs each frame with `damage=full` or
-  `damage=partial [...]`.
+  redraw; client commits damage the surface rectangles they report, falling
+  back to the whole window when no usable damage arrives (buffer-coordinate
+  damage currently falls back). When nothing is dirty, the compositor stops
+  presenting and stops sending frame callbacks. `AETHER_FRAME_LOG=1` logs each
+  frame with `damage=full` or `damage=partial [...]`.
 - **Pointer cursor feedback.** The winit window's system cursor changes with
   the hover target: `ColResize` on the master/stack divider, `Pointer` on
   workspace chips and palette rows, `Text` on the palette input, `Move` over a
@@ -221,9 +221,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
 - **Fullscreen and multi-output edge snapping** are not implemented. Single
   output halves/maximize, floating resize and edge snapping work. Popups and
   drag-and-drop are ignored.
-- **Surface-provided damage and occlusion.** Redraws are clipped to committed
-  window rects, but client damage rectangles, opaque-region occlusion and
-  per-subsurface tracking are not used yet.
+- **Buffer-coordinate damage and occlusion.** Surface-coordinate damage is used;
+  buffer-coordinate damage falls back to the window, and opaque-region
+  occlusion/per-subsurface tracking are not wired in yet.
 - **Popups, drag-and-drop and grabs** are accepted/ignored at the protocol level.
 - **udev/DRM backend.** The target path for the 7700K (no X server) is not written;
   winit is the development adapter.

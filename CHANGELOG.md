@@ -32,12 +32,13 @@ semantic versioning with release codenames (0.1 = “Kestrel”).
   management: `Alt+left-drag` promotes a tile to its preferred floating size and
   moves it, floating positions persist across relayouts, and `Super+M` maximizes
   with restore. Adds `Alt+right-drag` corner resizing with a 160x120 minimum
-  and output-edge snapping while moving. Client rendering now follows shell
-  z-order instead of HashMap order, fixing raised/floating windows being
-  covered. App/file/agent providers, IME, fullscreen, half/tile snapping,
-  cursor theming, per-client damage and udev/DRM remain. Nix dev shell
-  `.#smithay`, demo/client/picker/resize/palette/window smoke scripts,
-  ADR-0012.
+  and output-edge snapping while moving. Adds release zones: left/right snap to
+  a half and the top edge maximizes; snapped halves remain floating/resizable.
+  Client rendering now follows shell z-order instead of HashMap order, fixing
+  raised/floating windows being covered. App/file/agent providers, IME,
+  fullscreen, multi-output snapping, cursor theming, per-client damage and
+  udev/DRM remain. Nix dev shell `.#smithay`, demo/client/picker/resize/palette/
+  window smoke scripts, ADR-0012.
 - **Backend-neutral shell state** — `aether-shell` owns windows, workspaces, focus,
   floating windows, the overlay and `FramePlan`, with no Wayland/GPU dependency.
   `aether-preview` renders frame plans to PNG (`aether-shell-preview`), providing

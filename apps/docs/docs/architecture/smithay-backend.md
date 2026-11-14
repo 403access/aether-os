@@ -68,6 +68,12 @@ uses compositor z-order so the moved window stays on top.*
 +160x120 minimum. Moving a window near an output edge snaps it flush. The smoke
 +test shrinks the window from 800x600 to 620x500 and asserts the rect.*
 
+![Dragging a window to the left edge snaps it to the left half](/img/smithay-window-snap.png)
+
+*Releasing a moved window at an output edge snaps it: left/right become halves
+and the top edge maximizes. Snapped halves stay floating, so they can be moved
+or resized again. The smoke test asserts the 640x800 left-half rect.*
+
 ![The same window maximized](/img/smithay-window-maximized.png)
 
 *`Super+M` maximizes the focused window to the full output; pressing it again
@@ -108,9 +114,10 @@ drag and both toggles with `xdotool` and asserts each transition.*
   updates the split ratio (clamped 0.2–0.8) and reconfigures clients live.
 - **Window move, resize and maximize.** `Alt+left-drag` promotes a tiled window
   to its preferred floating size and moves it; floating positions persist across
-  relayouts and snap to output edges. `Alt+right-drag` resizes from the nearest
-  corner with a minimum size. `Super+M` maximizes to the full output and
-  restores the previous state. Client surfaces render in shell z-order, so
+  relayouts and snap flush to output edges while moving. Releasing at the left
+  or right edge snaps a half; releasing at the top maximizes.
+  `Alt+right-drag` resizes from the nearest corner with a minimum size.
+  `Super+M` maximizes to the full output and restores the previous state. Client surfaces render in shell z-order, so
   raised/floating/maximized windows stay above others.
 - Compositor chrome renders real text through `aether-text`: workspace names,
   overlay header/search/results/footer and shortcut hints. Bitmaps are uploaded
@@ -138,6 +145,7 @@ drag and both toggles with `xdotool` and asserts each transition.*
 | `Super+M` | Toggle maximize for the focused window |
 | `Alt+left-drag` | Move a window (promotes tiles to floating) |
 | `Alt+right-drag` | Resize a floating window from the nearest corner |
+| *Release at edge* | Snap to left/right half, or maximize at the top |
 
 ## What is not implemented
 
@@ -148,8 +156,8 @@ drag and both toggles with `xdotool` and asserts each transition.*
 - **Text cache/atlas.** Every frame rebuilds small RGBA text buffers; a cached
   atlas is needed before text-heavy apps.
 - **Cursor theming** and hover cursor feedback.
-- **Fullscreen, half/tile snapping and multi-output edge snapping** are not
-  implemented. Floating resize and output-edge snapping work. Popups and
+- **Fullscreen and multi-output edge snapping** are not implemented. Single
+  output halves/maximize, floating resize and edge snapping work. Popups and
   drag-and-drop are ignored.
 - **Per-client damage.** Full-window redraw remains.
 - **Popups, drag-and-drop and grabs** are accepted/ignored at the protocol level.

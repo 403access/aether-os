@@ -130,6 +130,22 @@ or with a VNC client:
 vncviewer 127.0.0.1:5905
 ```
 
+### If VNC does not send Super
+
+macOS Screen Sharing can swallow Command shortcuts (for example `Cmd+Space` opens
+local Spotlight), and some clients do not map Command to the Linux Super key. The
+guest itself accepts the shortcut—QEMU can inject it directly:
+
+```bash
+./scripts/vm-send-key.sh meta_l-spc     # Super+Space: palette
+./scripts/vm-send-key.sh meta_l-ret     # Super+Return: terminal
+./scripts/vm-send-key.sh --text "new" ret
+```
+
+`meta_l` is QEMU's name for the left Super/Windows key. The helper discovers the
+running QEMU QMP socket, so it works alongside the VNC session. Use a real VNC
+client (TigerVNC/RealVNC) with Command → Super mapping for normal interactive use.
+
 The VNC password defaults to **`aether`** (the VM login password). Override it
 with `VM_VNC_PASSWORD`:
 
@@ -255,6 +271,7 @@ docker volume rm aether-vm-nix
 | `HVF` error | Nested virtualization/unsupported host | Remove `-accel hvf` (slow TCG) |
 | No login prompt | Console wrong | Use `-serial`/`-nographic`; kernel console is `ttyAMA0` |
 | VNC asks for a password | `--gui` enables VNC auth | Enter `aether`, or the value of `VM_VNC_PASSWORD` |
+| VNC keys do nothing | Client does not deliver modifiers, or focus is outside the canvas | Click the canvas; try TigerVNC; use `./scripts/vm-send-key.sh meta_l-spc` |
 | `Could not open ... Permission denied` | Old script booted the read-only image | Re-run; the current script uses a writable overlay |
 | SSH refused | VM still booting or host port busy | Wait for the marker; change `VM_SSH_PORT` |
 

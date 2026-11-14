@@ -54,6 +54,13 @@ marker skips the DRM check and starts `aether-vm-session` on tty8. Open
 `VM_VNC_PASSWORD`. Use `VM_GUI_DISPLAY=cocoa` for a native QEMU window.
 `VM_VNC_DISPLAY=6` selects `127.0.0.1:5906`. `Ctrl-A X` quits QEMU.
 
+If the VNC client does not deliver Super, inject it through QEMU from the host:
+
+```bash
+./scripts/vm-send-key.sh meta_l-spc
+./scripts/vm-send-key.sh --text "new" ret
+```
+
 QEMU is driven directly with HVF acceleration and the EDK2 aarch64 firmware.
 The image is `qemu-efi`, so no bootloader setup is needed on the host.
 

@@ -144,5 +144,6 @@ Every component uses design-system classes and tokens; none hardcodes a colour.
 
 - P2: renderer integration, text shaping, cursor themes.
 - P3: explorer as a first-class shell layer with 10k-row virtualisation.
-- P4: audio device switcher using the same overlay primitives.
+- P4: audio device switcher and latency presets are implemented; live peak
+  meters and per-app rows expand with P5.
 - P7: remote client reuses the component vocabulary in the browser.

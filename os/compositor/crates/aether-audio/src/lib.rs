@@ -120,10 +120,11 @@ impl AudioRoute {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum LatencyPreset {
     /// 1024 frames: media playback, power efficient.
+    #[default]
     Media,
     /// 256 frames: voice and calls, < 20 ms added latency.
     Voice,
@@ -180,12 +181,6 @@ impl LatencyPreset {
         } else {
             Self::Media
         }
-    }
-}
-
-impl Default for LatencyPreset {
-    fn default() -> Self {
-        Self::Media
     }
 }
 

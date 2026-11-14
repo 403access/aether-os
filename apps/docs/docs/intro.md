@@ -16,8 +16,8 @@ Determinism, latency and a small resident footprint are the goals.
   <strong>Status: v0.1 “Kestrel” — installable base.</strong> The product
   surfaces, the tested core libraries and the full OS configuration exist in this
   repository. The NixOS system and a live installer ISO evaluate, and the install
-  path for the reference machine is written end to end. The compositor UI and
-  daemons are still P2/P3 work. See the{" "}
+  path for the reference machine is written end to end. The compositor surfaces and
+  audio layer are implemented; P5 agent supervision and later application work remain. See the{" "}
   <a href="/roadmap">roadmap</a> and the <a href="/getting-started/install">install guide</a>.
 </div>
 

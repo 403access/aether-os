@@ -67,6 +67,16 @@ source. Everything else is a target or an aspiration.
 | Explorer 10k rows at 120 Hz | **Budget** | P3 gate; needs reference machine |
 | No dropped frames while streaming on target | **Budget** | P3 gate; dev-host smoke only |
 
+## Audio (P4)
+
+| Claim | Label | Evidence |
+| --- | --- | --- |
+| Microphone denied without `audio.capture` | **Measured (unit test)** | `packages/agents/src/audio.test.ts`; legacy `audio` scope also denied |
+| Audio overlay switches routes/presets | **Measured (fixture)** | `smoke-audio-xvfb.sh`; 5 fixture routes, switch + preset asserted |
+| Route switch < 100 ms | **Budget** | `scripts/audio-stress.sh`; target run pending |
+| Zero xruns, 10-minute 64-frame stress | **Budget** | `scripts/audio-stress.sh`; target run pending |
+| Input meter matches `pw-top` within 5% | **Not claimed** | Surface is fixture-driven; live peak sampling lands with P5 |
+
 ## Concurrency
 
 | Claim | Label | Evidence |

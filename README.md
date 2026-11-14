@@ -31,7 +31,8 @@ working monorepo: the product surfaces, design system, indexing engine, IPC
 protocol, capability model, bootable NixOS system, live installer ISO, disk layout
 and install guide all exist as real, tested code. The compositor shell, palette,
 explorer, chat drawer, status bar and index daemon are implemented; reference-
-hardware gate measurements and P4+ remain.
+hardware gate measurements and P5+ remain. The P4 audio layer is implemented and
+its two target gates are budgets until run on the 7700K.
 
 | Area | State | Where |
 | --- | --- | --- |
@@ -39,7 +40,7 @@ hardware gate measurements and P4+ remain.
 | Documentation site | ✅ built | `apps/docs` |
 | Search/index engine (BM25, fuzzy, prefix) | ✅ 59 tests | `packages/indexer` |
 | Shared-memory SPSC ring + capabilities | ✅ 28 tests (incl. cross-thread) | `packages/ipc` |
-| Agent isolation policy + scheduling | ✅ 39 tests | `packages/agents` |
+| Agent isolation policy + scheduling | ✅ 43 tests, including microphone capability | `packages/agents` |
 | Command palette state machine | ✅ 27 tests | `packages/palette` |
 | React UI kit | ✅ 17 DOM tests | `packages/ui` |
 | Benchmark harness + regression gate | ✅ baseline committed | `packages/bench` |
@@ -51,7 +52,8 @@ hardware gate measurements and P4+ remain.
 | Native DRM backend (Linux-only) | ✅ libseat + KMS page-flips, libinput, udev hotplug, per-output workspaces, cage fallback | `os/compositor/aether-shell-drm` |
 | Target preflight | ✅ UEFI/KMS/input/memory checks with fixtures | `scripts/target-check.sh` |
 | DRM session | ✅ native backend on tty7, cage + winit fallback | `os/nixos/services.nix` |
-| Shell surfaces | ✅ palette/explorer/chat/status, 10k palette p95 1.11 ms, explorer scroll p95 0.004 ms | `os/compositor` |
+| Shell surfaces | ✅ palette/explorer/chat/status/audio, 10k palette p95 1.11 ms, explorer scroll p95 0.004 ms | `os/compositor` |
+| Audio | ✅ PipeWire/WirePlumber + Bluetooth policy, overlay, presets, per-app moves, mic capability gate; target latency/xrun gates pending | `os/compositor/crates/aether-audio`, `os/nixos/services.nix` |
 | System index daemon | ✅ inotify, socket queries, event ring (6 tests) | `os/index/aether-index` |
 | WebRTC remote display | ⏳ roadmap P7 | — |
 
@@ -70,10 +72,10 @@ bun install
 bun run dev:web          # marketing site  → http://localhost:4321
 bun run dev:docs         # documentation   → http://localhost:4322/docs/
 
-bun run test:unit        # 206 package tests (bun test)
+bun run test:unit        # 221 package tests (bun test)
 bun run test:e2e         # 14 Playwright specs against the assembled build
 bun run typecheck        # strict TS across the monorepo
-bun run os:test          # 89 Rust compositor/shell tests
+bun run os:test          # Rust compositor/shell/audio workspace tests
 bun run bench            # benchmarks; `bun run bench:check` gates regressions
 bun run build            # assembles a single deployable tree in apps/web/dist
 ```

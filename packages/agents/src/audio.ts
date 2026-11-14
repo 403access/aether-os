@@ -22,7 +22,8 @@ export type MicrophoneFailure =
   | "expired"
   | "scope"
   | "resource"
-  | "subject";
+  | "subject"
+  | "generation";
 
 export type MicrophoneDecision =
   | { ok: true; capabilityId: string }

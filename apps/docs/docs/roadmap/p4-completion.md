@@ -43,17 +43,20 @@ route model exists; T4 can land alongside T2; T5 exercises T1/T4; T6 is last.
 
 | Check | Result |
 | --- | --- |
-| `aether-audio` unit tests | pending |
-| Shell audio-overlay tests | pending |
-| Audio fixture smoke | pending |
-| Agent mic capability tests | pending |
-| `bun run verify` | pending |
-| `nix flake check --no-build` | pending |
-| Route switch on target | budget, not measured |
-| 10-minute 64-frame xruns | budget, not measured |
+| `aether-audio` unit tests | 6 passed |
+| Shell audio-overlay tests | 3 passed (53 total in `aether-shell`) |
+| Audio fixture smoke | passed: 5 routes, switch to USB Headset, preset → voice |
+| Agent mic capability tests | 4 passed (221 TypeScript tests total) |
+| `bun run verify` | passed |
+| `nix build .#aether-audio` | passed |
+| Route switch < 100 ms on target | **budget**, harness committed, target run pending |
+| 10-minute 64-frame xruns on target | **budget**, harness committed, target run pending |
+| Live input peak meter | surface + fixture feed shipped; live peaks wire with the P5 supervisor |
 
 ## Non-goals
 
+- Live input peak sampling; the P4 overlay ships the meter surface with a
+  fixture feed, and P5 wires the supervisor's audio stream to it.
 - A custom audio server; PipeWire owns the graph.
 - A UI for building PipeWire graphs.
 - Bluetooth codec implementation; BlueZ/WirePlumber negotiate.
@@ -63,10 +66,10 @@ route model exists; T4 can land alongside T2; T5 exercises T1/T4; T6 is last.
 
 | Task | Status | Commit |
 | --- | --- | --- |
-| Plan | ✅ | this document |
-| P4-T1 | ✅ crate, adapter, CLI, fixture tests | `artifacts/p4/audio-list.json` |
-| P4-T2 | ✅ overlay, `Super+A`, fixture smoke, screenshots | `artifacts/smithay/audio.png`, `audio-preset.png` |
-| P4-T3 | ✅ `audio.capture` scope, `MicrophoneGate`, audit tests | `packages/agents/src/audio.test.ts` |
-| P4-T4 | ✅ PipeWire/Bluetooth policy, packaged `aether-audio` | `flake.nix`, `os/nixos/services.nix`, `nix build .#aether-audio` |
-| P4-T5 | ✅ harness, dry-run record, per-app stream moves | `scripts/audio-stress.sh`, `artifacts/p4/audio-stress-*.ndjson` |
-| P4-T6 | ⏳ | |
+| Plan | ✅ `4bd13bf` | this document |
+| P4-T1 | ✅ `081d59c` | crate, adapter, CLI, fixture tests; `artifacts/p4/audio-list.json` |
+| P4-T2 | ✅ `8deee90` | overlay, `Super+A`, fixture smoke, screenshots; `artifacts/smithay/audio.png` |
+| P4-T3 | ✅ `aa5dc4e` | `audio.capture` scope, `MicrophoneGate`, audit tests |
+| P4-T4 | ✅ `2739142` | PipeWire/Bluetooth policy, packaged `aether-audio` |
+| P4-T5 | ✅ `19ce96e` | stress harness, dry-run record, per-app stream moves |
+| P4-T6 | ✅ | verification, claims and docs reconciliation (this commit) |

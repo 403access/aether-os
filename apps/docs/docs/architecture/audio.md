@@ -196,7 +196,11 @@ presentation, which is where Aether's design actually differs.
 
 ## Verification (P4)
 
-1. Route switch < 100 ms across analog, USB and Bluetooth.
-2. 64-frame stress test for 10 minutes with zero xruns on the reference machine.
-3. Input/output meters match `pw-top` within 5%.
-4. Agent microphone access is denied without a capability, proven by test.
+1. **Route switch < 100 ms**: harness committed (`scripts/audio-stress.sh`);
+   target run pending, so this remains a budget.
+2. **64-frame stress for 10 minutes, zero xruns**: same harness, target pending.
+3. **Input meters**: the overlay ships the meter surface with a deterministic
+   fixture feed. Live peak sampling needs the P5 supervisor and is not claimed.
+4. **Agent microphone access**: denied without `audio.capture`; the legacy `audio`
+   scope does not grant capture. Four tests cover missing, unknown, wrong-subject,
+   expired, revoked and wrong-scope cases (`packages/agents/src/audio.test.ts`).

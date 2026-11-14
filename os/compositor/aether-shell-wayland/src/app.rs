@@ -808,6 +808,9 @@ impl App {
 
     pub fn toggle_overlay(&mut self) {
         if self.shell.overlay().is_none() {
+            self.shell.close_audio();
+            self.shell.close_explorer();
+            self.shell.close_chat();
             self.refresh_providers();
         }
         let output = self.output_under_pointer();
@@ -821,6 +824,7 @@ impl App {
         } else {
             self.shell.close_overlay();
             self.shell.close_explorer();
+            self.shell.close_audio();
             let _ = self.shell.open_chat();
         }
         self.mark_full_damage();
@@ -981,6 +985,7 @@ impl App {
         } else {
             self.shell.close_overlay();
             self.shell.close_chat();
+            self.shell.close_audio();
             let _ = self.shell.open_explorer();
             if let Some(worker) = self.index_worker.as_mut() {
                 let generation = worker.request_explorer();

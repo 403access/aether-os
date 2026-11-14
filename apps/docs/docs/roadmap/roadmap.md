@@ -15,7 +15,7 @@ P0 Foundations      ████████████  done
 P1 NixOS bring-up   ██████████░░  in progress
 P2 Compositor MVP   ███████████░  in progress
 P3 Shell surfaces   ██████████░░  gate pending
-P4 Audio            ██░░░░░░░░░░  in progress
+P4 Audio            ██████████░░  code-complete, gate pending
 P5 Agents & chat    ░░░░░░░░░░░░
 P6 Applications     ░░░░░░░░░░░░
 P7 Remote display   ░░░░░░░░░░░░
@@ -145,17 +145,20 @@ budgets until the reference run.
 
 Deliverables:
 
-- PipeWire + WirePlumber policy; analog, USB, Bluetooth.
-- Device overlay, per-app routing, input meters.
-- Latency presets and xrun instrumentation.
-- Capability check for microphone access.
+- ✅ PipeWire + WirePlumber policy; analog, USB, Bluetooth with LDAC/aptX/AAC preferences.
+- ✅ Device overlay, scriptable per-app routing (`aether-audio apps` / `move-app`),
+  input-meter surface with fixture feed (live peaks wire with P5).
+- ✅ Latency presets (1024/256/128) and a 64-frame xrun harness.
+- ✅ `audio.capture` capability gate for microphone access, audited.
 
 **Gate.** Route switch < 100 ms; zero xruns in a 10-minute 64-frame stress test;
 agent mic access denied without a capability.
 
 Execution plan and commit ledger: [P4 completion](/roadmap/p4-completion). The
-runtime/overlay work is code-complete in this phase; the route-latency and xrun
-gates remain target measurements and are labelled as budgets until run there.
+runtime/overlay work is code-complete; the route-latency and xrun gates remain
+target measurements and are labelled as budgets until run on the 7700K. The
+fixture smoke proves switching, presets and two-way overlay state; the capability
+suite proves microphone denial. Live input peaks are a P5 supervisor wiring item.
 
 **Dependencies.** P2 (overlay primitives). **Risk:** Bluetooth codec negotiation.
 

@@ -32,7 +32,7 @@ machine that lets an agent read your SSH keys is not a win.
 | Ring throughput | > 2 M msgs/s | `bench --check` |
 | Capability verify | > 2 M ops/s | `bench --check` |
 | Userspace boot | < 1.5 s cold | P1 boot test |
-| Audio route switch | < 100 ms | P4 harness |
+| Audio route switch | < 100 ms | `scripts/audio-stress.sh`, target budget |
 | Glass-to-glass remote | < 40 ms LAN | P7 harness |
 
 ## What is measured now

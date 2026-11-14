@@ -3,9 +3,14 @@
 # Boot the development VM image with QEMU/HVF on macOS.
 #
 #   ./scripts/vm-run.sh             interactive serial console
+#   ./scripts/vm-run.sh --gui       persistent virtio-gpu desktop + VNC/cocoa
 #   ./scripts/vm-run.sh --smoke     headless, wait for AETHER_VM_READY
 #   ./scripts/vm-run.sh --drm-smoke headless virtio-gpu, wait for the native
 #                                   DRM backend result
+#
+#   VM_GUI_DISPLAY=cocoa ./scripts/vm-run.sh --gui   # native QEMU window
+#   VM_GUI_DISPLAY=vnc   ./scripts/vm-run.sh --gui   # default, 127.0.0.1:5905
+#   VM_VNC_DISPLAY=6     ./scripts/vm-run.sh --gui   # 127.0.0.1:5906
 #
 # The VM target lives in os/vm; it is not the i7-7700K installation target.
 set -euo pipefail
@@ -13,6 +18,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ART="${ROOT}/artifacts/vm"
 MODE="${1:-run}"
+GUI=0
+[ "${MODE}" = "--gui" ] && GUI=1
 MEM="${VM_MEM:-4096}"
 CPUS="${VM_CPUS:-4}"
 SSH_PORT="${VM_SSH_PORT:-2222}"
@@ -64,14 +71,31 @@ else
   )
 fi
 
+GUI_ARGS=()
+if [ "${GUI}" = "1" ]; then
+  QEMU_ARGS+=(
+    -device virtio-gpu-pci
+    -device virtio-keyboard-pci
+    -device virtio-tablet-pci
+  )
+  if [ "${VM_GUI_DISPLAY:-vnc}" = "cocoa" ]; then
+    GUI_ARGS+=(-display cocoa,show-cursor=on)
+  else
+    VNC_DISPLAY="${VM_VNC_DISPLAY:-5}"
+    VNC_PORT=$((5900 + VNC_DISPLAY))
+    GUI_ARGS+=(-display "vnc=127.0.0.1:${VNC_DISPLAY}")
+  fi
+fi
+
 if [ "${MODE}" = "--drm-smoke" ]; then
-  VNC_PORT="${VM_VNC_PORT:-5905}"
+  VNC_DISPLAY="${VM_VNC_DISPLAY:-5}"
+  VNC_PORT=$((5900 + VNC_DISPLAY))
   LOG="${ART}/drm-serial.log"
   : >"${LOG}"
   say "booting headless with virtio-gpu; waiting up to ${TIMEOUT}s for AETHER_VM_DRM_STATUS"
   qemu-system-aarch64 "${QEMU_ARGS[@]}" \
     -device virtio-gpu-pci \
-    -vnc "127.0.0.1:${VNC_PORT}" \
+    -display "vnc=127.0.0.1:${VNC_DISPLAY}" \
     -monitor none -serial "file:${LOG}" &
   PID=$!
   trap 'kill "${PID}" 2>/dev/null || true; wait "${PID}" 2>/dev/null || true' EXIT
@@ -135,6 +159,25 @@ if [ "${MODE}" = "--smoke" ]; then
   done
 fi
 
+if [ "${GUI}" = "1" ]; then
+  say "booting ${IMAGE} with a persistent graphics session"
+  if [ "${VM_GUI_DISPLAY:-vnc}" = "cocoa" ]; then
+    say "a QEMU window will open; the compositor starts on tty8 after the DRM check"
+  else
+    say "VNC on 127.0.0.1:${VNC_PORT:-5905} (open vnc://127.0.0.1:${VNC_PORT:-5905})"
+    say "the compositor starts on tty8 after the DRM check; SSH: ssh -p ${SSH_PORT} aether@127.0.0.1"
+  fi
+  if [ "${VM_DRY_RUN:-0}" = "1" ]; then
+    printf 'qemu-system-aarch64'; printf ' %q' "${QEMU_ARGS[@]}" "${GUI_ARGS[@]}" -serial mon:stdio; printf '\n'
+    exit 0
+  fi
+  exec qemu-system-aarch64 "${QEMU_ARGS[@]}" "${GUI_ARGS[@]}" -serial mon:stdio
+fi
+
 say "booting ${IMAGE} (Ctrl-A X to quit QEMU)"
 say "login: aether / aether   ·   ssh -p ${SSH_PORT} aether@127.0.0.1"
+if [ "${VM_DRY_RUN:-0}" = "1" ]; then
+  printf 'qemu-system-aarch64'; printf ' %q' "${QEMU_ARGS[@]}" -nographic; printf '\n'
+  exit 0
+fi
 exec qemu-system-aarch64 "${QEMU_ARGS[@]}" -nographic

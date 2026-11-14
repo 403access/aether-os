@@ -130,6 +130,9 @@ or with a VNC client:
 vncviewer 127.0.0.1:5905
 ```
 
+The display number is configurable: `VM_VNC_DISPLAY=6 ./scripts/vm-run.sh --gui`
+listens on `127.0.0.1:5906`.
+
 To use QEMU's native macOS window instead of VNC:
 
 ```bash

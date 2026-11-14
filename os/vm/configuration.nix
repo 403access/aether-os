@@ -177,6 +177,38 @@
     '';
   };
 
+  # Persistent VM desktop for `scripts/vm-run.sh --gui`. It starts after the
+  # DRM bring-up check has finished, so the validation run keeps tty7 and this
+  # session gets tty8. It is skipped when QEMU has no virtio-gpu.
+  systemd.services.aether-vm-session = {
+    description = "Aether VM graphics session";
+    wantedBy = ["multi-user.target"];
+    after = ["aether-vm-drm.service" "systemd-user-sessions.service" "systemd-logind.service"];
+    unitConfig.ConditionPathExists = ["|/dev/dri/card0" "|/dev/dri/card1"];
+    serviceConfig = {
+      PAMName = "login";
+      TTYPath = "/dev/tty8";
+      StandardInput = "tty";
+      StandardOutput = "journal";
+      Restart = "on-failure";
+      RestartSec = 5;
+      TimeoutStartSec = 0;
+    };
+    script = ''
+      ${pkgs.kbd}/bin/chvt 8 || true
+      export XDG_RUNTIME_DIR=/run/user/$(id -u)
+      export AETHER_FONT="${pkgs.inter}/share/fonts/truetype/InterVariable.ttf"
+      export AETHER_TERMINAL="aether-terminal"
+      export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath [ pkgs.libGL pkgs.mesa pkgs.libgbm ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+      export LIBGL_DRIVERS_PATH="${pkgs.mesa}/lib/dri"
+      export GBM_BACKENDS_PATH="${pkgs.mesa}/lib/gbm"
+      export MESA_LOADER_DRIVER_OVERRIDE=llvmpipe
+      export LIBGL_ALWAYS_SOFTWARE=1
+      mkdir -p "$XDG_RUNTIME_DIR" 2>/dev/null || true
+      exec ${pkgs.aether-shell-drm}/bin/aether-shell-drm
+    '';
+  };
+
   # A deterministic marker for headless smoke tests. It only writes to the
   # serial console; it does not power off or modify the system.
   systemd.services.aether-vm-report = {

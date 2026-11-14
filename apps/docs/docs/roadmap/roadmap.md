@@ -101,7 +101,7 @@ Deliverables:
 - ✅ Target preflight (`scripts/target-check.sh`) checks UEFI, i915, DRM/KMS,
   connectors, input and memory with fixture coverage.
 - ⏳ Live agent-session IPC, native inotify indexing, desktop-entry SVG
-  icons/theme inheritance/actions/DBus, clipboard persistence/DnD, IME
+  icons/theme inheritance/DBus, clipboard persistence/DnD, IME
   engine/input-method service, multi-output/hotplug, xcursor themes/client
   cursors, buffer-damage/occlusion, udev/DRM.
 - ⏳ udev/DRM backend, libinput seat, wgpu renderer, output hotplug.

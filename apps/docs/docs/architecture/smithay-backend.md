@@ -154,6 +154,12 @@ opens a file matched by body content. Without the socket the bounded
 with an empty root, writes `live-note.txt` after both processes are running,
 waits for the watcher, then searches and opens it.*
 
+![A desktop action in the palette](/img/smithay-desktop-action.png)
+
+*`[Desktop Action ...]` groups declared by `Actions=` appear as secondary
+launchers (for example "Private Window"). The smoke launches the action and
+asserts the spawned command.*
+
 ![The same window maximized](/img/smithay-window-maximized.png)
 
 *`Super+M` maximizes the focused window to the full output; pressing it again
@@ -183,7 +189,7 @@ drag and both toggles with `xdotool` and asserts each transition.*
   command, `New terminal`, spawns `AETHER_TERMINAL` (default
   `weston-terminal`) into the compositor. Installed applications are discovered
   from XDG `.desktop` files at startup and appear as `LaunchApp` entries with
-  optional PNG icons.
+  optional PNG icons and secondary actions.
   A bounded filename index (`aether-files`) adds `OpenFile` results for non-empty
   queries. External launchers from `AETHER_PALETTE_JSON` can add agent-session
   or tool commands. With `AETHER_INDEX_SOCKET`, the Bun index service supplies
@@ -265,9 +271,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
 - **Live agent IPC.** Agent sessions can be published as external launchers,
   but there is no live agent-session socket yet. Index updates are live through
   `fs.watch`; a native inotify daemon is future work.
-- **Desktop-entry SVG icons, theme inheritance, actions and D-Bus activation.**
-  Entries rescans and hicolor/pixmap PNG icons work; SVG icons, full icon-theme
-  lookup, desktop actions and D-Bus activation are not implemented.
+- **Desktop-entry SVG icons, theme inheritance and D-Bus activation.** Entries
+  rescans, hicolor/pixmap PNG icons and `[Desktop Action]` groups work; SVG
+  icons, full icon-theme lookup and D-Bus activation are not implemented.
 - **Text input methods.** Printable keys are mapped from keysyms; there is no
   `text-input`/IME protocol support yet.
 - **Text cache/atlas.** Every frame rebuilds small RGBA text buffers; a cached
@@ -331,6 +337,7 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-text-input-xvfb.sh # zwp_text_input_manager_v3
 ./os/compositor/aether-shell-smithay/smoke-index-xvfb.sh      # Bun index service query
 ./os/compositor/aether-shell-smithay/smoke-index-live-xvfb.sh # live index update
+./os/compositor/aether-shell-smithay/smoke-actions-xvfb.sh     # desktop action launcher
 ```
 
 The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. Most use

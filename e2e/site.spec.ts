@@ -89,6 +89,24 @@ test.describe("marketing site", () => {
     await expect(home).toContainText("notes");
   });
 
+  test("shows the shell screenshots and opens one full size", async ({ page }) => {
+    await page.goto("/#screenshots");
+
+    const shots = page.locator(".shot__image");
+    await expect(shots).toHaveCount(5);
+    for (const shot of await shots.all()) {
+      await shot.scrollIntoViewIfNeeded();
+      expect(await shot.evaluate((img) => (img as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+    }
+
+    await page.getByRole("button", { name: "Open screenshot: Command palette" }).click();
+    const lightbox = page.locator(".lightbox");
+    await expect(lightbox).toBeVisible();
+    await expect(lightbox.getByAltText(/Aether command palette/)).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(lightbox).toHaveCount(0);
+  });
+
   test("roadmap CTA opens the docs roadmap", async ({ page }) => {
     await page.goto("/#roadmap");
     await page

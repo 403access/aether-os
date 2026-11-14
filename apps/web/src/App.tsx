@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { WaterSurface } from "@aether/design-system/water.js";
 import { LINKS } from "./data";
 import { Hero } from "./sections/Hero";
+import { Screenshots } from "./sections/Screenshots";
 import { PaletteDemo } from "./sections/PaletteDemo";
 import { Architecture, Isolation } from "./sections/Architecture";
 import { ExplorerDemo, Performance } from "./sections/Workspace";
@@ -73,6 +74,7 @@ export function App() {
 
         <div className="site-nav__links">
           <a href="#architecture">Architecture</a>
+          <a href="#screenshots">Screenshots</a>
           <a href={`${LINKS.docs}getting-started/install/`}>Install</a>
           <a href="#isolation">Isolation</a>
           <a href="#palette">Palette</a>
@@ -92,6 +94,7 @@ export function App() {
 
       <main className="site-main">
         <Hero />
+        <Screenshots />
         <PaletteDemo />
         <Architecture />
         <Isolation />
@@ -140,6 +143,7 @@ export function App() {
           <div>
             <h3>Product</h3>
             <a href="#architecture">Architecture</a>
+            <a href="#screenshots">Screenshots</a>
             <a href="#palette">Palette</a>
             <a href="#explorer">Explorer</a>
             <a href="#performance">Performance ledger</a>

@@ -112,6 +112,11 @@ drag and both toggles with `xdotool` and asserts each transition.*
   leak to a client underneath. The seat advertises `wl_pointer`.
 - **Interactive layout resize.** Dragging the gap between the master and stack
   updates the split ratio (clamped 0.2–0.8) and reconfigures clients live.
+- **Pointer cursor feedback.** The winit window's system cursor changes with
+  the hover target: `ColResize` on the master/stack divider, `Pointer` on
+  workspace chips and palette rows, `Text` on the palette input, `Move` over a
+  window while Alt is held, and diagonal resize cursors on floating corners.
+  The cursor icon is only reapplied when it changes.
 - **Window move, resize and maximize.** `Alt+left-drag` promotes a tiled window
   to its preferred floating size and moves it; floating positions persist across
   relayouts and snap flush to output edges while moving. Releasing at the left
@@ -155,7 +160,8 @@ drag and both toggles with `xdotool` and asserts each transition.*
   `text-input`/IME protocol support yet.
 - **Text cache/atlas.** Every frame rebuilds small RGBA text buffers; a cached
   atlas is needed before text-heavy apps.
-- **Cursor theming** and hover cursor feedback.
+- **Cursor themes on the DRM backend.** The winit adapter uses system cursor
+  icons; a DRM target needs client cursor images and an xcursor theme.
 - **Fullscreen and multi-output edge snapping** are not implemented. Single
   output halves/maximize, floating resize and edge snapping work. Popups and
   drag-and-drop are ignored.
@@ -196,11 +202,12 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-resize-xvfb.sh   # xdotool divider drag
 ./os/compositor/aether-shell-smithay/smoke-palette-xvfb.sh  # xdotool typed query
 ./os/compositor/aether-shell-smithay/smoke-window-xvfb.sh   # xdotool move + maximize
+./os/compositor/aether-shell-smithay/smoke-cursor-xvfb.sh   # hover cursor mapping
 ```
 
 The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. The picker,
-resize, palette and window smokes require `xdotool`, which the `.#smithay` dev
-shell provides.
+resize, palette, window and cursor smokes require `xdotool`, which the `.#smithay`
+dev shell provides.
 
 The environment sets:
 

@@ -47,6 +47,7 @@
             libxcb
             xvfb
             weston
+            wayland-utils
             wl-clipboard
             xdotool
             imagemagick

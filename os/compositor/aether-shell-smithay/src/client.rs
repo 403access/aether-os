@@ -39,6 +39,7 @@ use smithay::backend::winit::{self, WinitEvent};
 use smithay::input::keyboard::{keysyms, xkb, FilterResult, Keysym, ModifiersState};
 use smithay::input::pointer::{AxisFrame, ButtonEvent, MotionEvent};
 use smithay::input::{Seat, SeatHandler, SeatState};
+use smithay::output::{Mode as OutputMode, Output, PhysicalProperties, Scale, Subpixel};
 use smithay::reexports::wayland_protocols::xdg::shell::server::xdg_toplevel;
 use smithay::reexports::wayland_server::backend::{ClientData, ClientId, DisconnectReason};
 use smithay::reexports::wayland_server::protocol::wl_buffer;
@@ -58,6 +59,7 @@ use smithay::wayland::compositor::{
     with_states, with_surface_tree_downward, CompositorClientState, CompositorHandler,
     CompositorState, Damage, SurfaceAttributes, TraversalAction,
 };
+use smithay::wayland::output::{OutputHandler, OutputManagerState};
 use smithay::wayland::selection::data_device::{
     set_data_device_focus, ClientDndGrabHandler, DataDeviceHandler, DataDeviceState,
     ServerDndGrabHandler,
@@ -83,6 +85,30 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     let mut seat_state = SeatState::new();
     let seat = seat_state.new_wl_seat(&dh, "aether");
 
+    let _output_manager_state = OutputManagerState::new_with_xdg_output::<App>(&dh);
+    let output = Output::new(
+        "Aether-1".to_string(),
+        PhysicalProperties {
+            size: (340, 190).into(),
+            subpixel: Subpixel::Unknown,
+            make: "Aether".to_string(),
+            model: "Kestrel".to_string(),
+        },
+    );
+    let mode = OutputMode {
+        size: (1280, 800).into(),
+        refresh: 60_000,
+    };
+    output.set_preferred(mode);
+    output.change_current_state(
+        Some(mode),
+        Some(Transform::Normal),
+        Some(Scale::Integer(1)),
+        Some((0, 0).into()),
+    );
+    output.create_global::<App>(&dh);
+    println!("aether-shell-smithay: output Aether-1 1280x800@60");
+
     let mut state = App {
         display_handle: dh.clone(),
         compositor_state,
@@ -91,6 +117,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         seat_state,
         data_device_state: DataDeviceState::new::<App>(&dh),
         primary_selection_state: PrimarySelectionState::new::<App>(&dh),
+        output,
         seat,
         shell: {
             let mut shell = Shell::new(
@@ -970,6 +997,7 @@ impl XdgShellHandler for App {
     }
 
     fn new_toplevel(&mut self, surface: ToplevelSurface) {
+        self.output.enter(surface.wl_surface());
         let title = toplevel_title(&surface).unwrap_or_else(|| "Wayland client".to_string());
         let mut spec = WindowSpec::new(title, "wayland.client");
         spec.preferred_size = AetherSize::new(800, 600);
@@ -1008,6 +1036,7 @@ impl XdgShellHandler for App {
     }
 
     fn toplevel_destroyed(&mut self, surface: ToplevelSurface) {
+        self.output.leave(surface.wl_surface());
         let id = self.windows.iter().find_map(|(id, toplevel)| {
             (toplevel.wl_surface() == surface.wl_surface()).then_some(*id)
         });
@@ -1110,6 +1139,8 @@ impl ShmHandler for App {
         &self.shm_state
     }
 }
+
+impl OutputHandler for App {}
 
 impl SeatHandler for App {
     type KeyboardFocus = WlSurface;
@@ -1410,6 +1441,7 @@ struct App {
     seat_state: SeatState<Self>,
     data_device_state: DataDeviceState,
     primary_selection_state: PrimarySelectionState,
+    output: Output,
     seat: Seat<Self>,
     shell: Shell,
     windows: HashMap<WindowId, ToplevelSurface>,
@@ -1791,3 +1823,4 @@ smithay::delegate_shm!(App);
 smithay::delegate_seat!(App);
 smithay::delegate_data_device!(App);
 smithay::delegate_primary_selection!(App);
+smithay::delegate_output!(App);

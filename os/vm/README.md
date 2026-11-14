@@ -38,7 +38,8 @@ Equivalent on any x86_64/arm64 Linux host with Nix:
 nix build .#vm-image
 ```
 
-Artifacts are copied to `artifacts/vm/` (gitignored).
+Artifacts are copied to `artifacts/vm/` (gitignored). `./scripts/clean.sh`
+removes them, including the writable `run.qcow2` overlay.
 
 ## Boot
 

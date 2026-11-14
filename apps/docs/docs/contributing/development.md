@@ -45,6 +45,24 @@ The docs dev server uses `baseUrl: /docs/`, so open
 | `bun run test:e2e` | Playwright against built sites |
 | `bun run bench` | Benchmarks (`--check` gates) |
 | `bun run os:test` | `cargo test` for the compositor core |
+| `./scripts/clean.sh` | Remove build/test artifacts; `--all` also removes dependencies |
+
+## Cleaning generated state
+
+Generated state is never committed, but it grows quickly: the Rust targets,
+Docusaurus output, screenshots and VM images can exceed 10 GiB.
+
+```bash
+./scripts/clean.sh --dry-run   # show sizes and paths
+./scripts/clean.sh --yes       # remove builds, artifacts, Nix results
+./scripts/clean.sh --all --yes # also node_modules and local caches
+./scripts/clean.sh --docker --yes # also remove the aether-vm-nix volume
+```
+
+The default removes `artifacts/`, every Rust `target/`, `apps/web/dist`,
+`apps/docs/build`, `.docusaurus`, reports and Nix result symlinks. It never
+touches source, docs, committed screenshots or the git tree. `--docker` is
+explicit because it removes the shared Nix store volume used by VM builds.
 
 ## Repository layout
 

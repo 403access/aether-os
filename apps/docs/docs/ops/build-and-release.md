@@ -26,6 +26,7 @@ surfaces share the same repository and version number.
 | `nix build .#live-iso` | Full Aether desktop live ISO (x86_64) |
 | `./scripts/vm-build.sh` | Development VM image (aarch64, separate target) |
 | `./scripts/vm-run.sh` | Boot the VM with QEMU/HVF |
+| `./scripts/clean.sh` | Remove generated state; `--all` includes dependencies |
 
 ## Output layout
 
@@ -47,6 +48,22 @@ apps/web/dist/
 
 One artifact, one deployment. The marketing site owns `/`, the docs own `/docs/`,
 the gallery owns `/design-system/`.
+
+## Cleaning generated state
+
+Build outputs are disposable and never part of the release:
+
+```bash
+./scripts/clean.sh --dry-run        # list paths and sizes
+./scripts/clean.sh --yes            # builds, reports, artifacts, Nix results
+./scripts/clean.sh --all --yes      # also node_modules and local caches
+./scripts/clean.sh --docker --yes   # also the aether-vm-nix Docker volume
+```
+
+Default targets include `artifacts/` (screenshots, fixtures, VM images),
+`os/compositor/**/target`, `apps/web/dist`, `apps/docs/build`,
+`apps/docs/.docusaurus`, coverage/Playwright reports, `packages/bench-results`
+and `result*`. Source and committed documentation images are untouched.
 
 ## CI pipeline
 

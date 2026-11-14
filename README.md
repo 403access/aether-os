@@ -80,6 +80,7 @@ bun run typecheck        # strict TS across the monorepo
 bun run os:test          # Rust compositor/shell/audio/sandbox workspace tests
 bun run bench            # benchmarks; `bun run bench:check` gates regressions
 bun run build            # assembles a single deployable tree in apps/web/dist
+./scripts/clean.sh --dry-run  # show/remove generated state; --all includes deps
 ```
 
 Daily-use manual and global hotkeys:

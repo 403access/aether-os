@@ -102,9 +102,9 @@ overlay focus (palette) → window focus → global shortcuts
 | `Esc` | Close the open overlay |
 
 The map is compiled into the shell from `aether-shell-wayland/src/keymap.rs`; the
-same table drives the `Super+/` cheat sheet. Remapping is a config file read at
-startup; a bad map fails validation and falls back to defaults with a visible
-warning.
+same table drives the `Super+/` cheat sheet. Runtime remapping is **not
+implemented** yet: changing a chord currently requires a rebuild so the cheat
+sheet and dispatch cannot drift apart.
 
 ## Accessibility
 

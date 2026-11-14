@@ -132,9 +132,11 @@ status bar keeps the selected path and live system facts in view.
 
 | Input | Action |
 | --- | --- |
-| Type in the composer | Send a message (host binding) |
 | `PgUp` / `PgDn` | Scroll the transcript |
 | `Esc` | Close |
+
+The drawer displays streamed markdown today; the composer is present but outbound
+messages are P5 host wiring, so this manual does not claim they are sendable yet.
 
 Markdown is parsed incrementally. Headings, lists, bold, inline code and fenced
 code blocks are supported; only visible rows enter the render plan.

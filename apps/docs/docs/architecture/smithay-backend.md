@@ -133,6 +133,13 @@ state.*
 the manifest is reloaded with the desktop/file providers when the palette opens.
 The smoke writes an `Agent Session Alpha` entry and launches it.*
 
+![The software text cursor over the palette input](/img/smithay-software-cursor.png)
+
+*`aether-cursor` draws white/black cursor bitmaps in-frame at the pointer hotspot.
+The platform cursor is hidden, so the compositor owns cursor appearance and can
+use the same bitmaps on DRM. The smoke walks the hover states and captures this
+I-beam over the palette input.*
+
 ![The same window maximized](/img/smithay-window-maximized.png)
 
 *`Super+M` maximizes the focused window to the full output; pressing it again
@@ -194,11 +201,11 @@ drag and both toggles with `xdotool` and asserts each transition.*
   damage currently falls back). When nothing is dirty, the compositor stops
   presenting and stops sending frame callbacks. `AETHER_FRAME_LOG=1` logs each
   frame with `damage=full` or `damage=partial [...]`.
-- **Pointer cursor feedback.** The winit window's system cursor changes with
-  the hover target: `ColResize` on the master/stack divider, `Pointer` on
-  workspace chips and palette rows, `Text` on the palette input, `Move` over a
-  window while Alt is held, and diagonal resize cursors on floating corners.
-  The cursor icon is only reapplied when it changes.
+- **Software cursors.** Cursor shapes are rendered in-frame by `aether-cursor`
+  (white fill, black outline, explicit hotspot) above all other elements. The
+  winit system cursor is hidden. Shapes follow the hover target: arrow, pointer,
+  text, move, grabbing, horizontal and diagonal resize. This is backend-neutral
+  and ready for a DRM backend.
 - **Window move, resize and maximize.** `Alt+left-drag` promotes a tiled window
   to its preferred floating size and moves it; floating positions persist across
   relayouts and snap flush to output edges while moving. Releasing at the left
@@ -247,8 +254,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
   `text-input`/IME protocol support yet.
 - **Text cache/atlas.** Every frame rebuilds small RGBA text buffers; a cached
   atlas is needed before text-heavy apps.
-- **Cursor themes on the DRM backend.** The winit adapter uses system cursor
-  icons; a DRM target needs client cursor images and an xcursor theme.
+- **Xcursor themes and client cursor images.** Cursors are built-in bitmaps;
+  loading system themes, animated cursors and `wl_cursor` images from clients is
+  not implemented.
 - **Multi-output** is not implemented: there is one hard-coded output, no
   hotplug and no per-output workspaces. Fullscreen, maximize, halves, floating
   resize and single-output snapping work. Popups and drag-and-drop are ignored.
@@ -291,7 +299,7 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-resize-xvfb.sh   # xdotool divider drag
 ./os/compositor/aether-shell-smithay/smoke-palette-xvfb.sh  # xdotool typed query
 ./os/compositor/aether-shell-smithay/smoke-window-xvfb.sh   # xdotool move + maximize
-./os/compositor/aether-shell-smithay/smoke-cursor-xvfb.sh   # hover cursor mapping
+./os/compositor/aether-shell-smithay/smoke-cursor-xvfb.sh   # hover cursor + software cursor
 ./os/compositor/aether-shell-smithay/smoke-provider-xvfb.sh # spawn a client from the palette
 ./os/compositor/aether-shell-smithay/smoke-desktop-xvfb.sh  # launch a discovered .desktop app
 ./os/compositor/aether-shell-smithay/smoke-files-xvfb.sh    # search/open a fixture file

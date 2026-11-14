@@ -94,11 +94,12 @@ Deliverables:
   can be published through the external manifest. Fullscreen uses xdg
   fullscreen state and hides shell chrome. A single 1280x800@60 output is
   advertised with xdg-output geometry. `zwp_text_input_manager_v3` is advertised
-  with focus following the keyboard.
+  with focus following the keyboard. `aether-cursor` draws backend-neutral
+  software cursors in-frame.
 - ⏳ Live agent-session IPC, system content index integration, desktop-entry
   SVG icons/theme inheritance/actions/DBus, clipboard persistence/DnD, IME
-  engine/input-method service, multi-output/hotplug, DRM cursor images/themes,
-  buffer-damage/occlusion, udev/DRM.
+  engine/input-method service, multi-output/hotplug, xcursor themes/client
+  cursors, buffer-damage/occlusion, udev/DRM.
 - ⏳ udev/DRM backend, libinput seat, wgpu renderer, output hotplug.
 - Scene graph with damage tracking; shell chrome in one draw pass.
 - Tiling layout, focus, keybindings; one workspace per output.

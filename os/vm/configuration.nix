@@ -95,9 +95,10 @@
     description = "Aether system index service";
     wantedBy = ["default.target"];
     serviceConfig = {
-      ExecStart = "${pkgs.aether-index-service}/bin/aether-index-service";
+      ExecStart = "${pkgs.aether-index}/bin/aether-index";
       Environment = [
         "AETHER_INDEX_SOCKET=%t/aether-index.sock"
+        "AETHER_INDEX_RING=%t/aether-index.ring"
         "AETHER_INDEX_ROOTS=%h"
         "AETHER_INDEX_LIMIT=5000"
       ];

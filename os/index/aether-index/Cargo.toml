@@ -1,0 +1,17 @@
+[package]
+name = "aether-index"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Aether system index daemon: inotify ingestion, socket queries and an event ring"
+
+[workspace]
+
+[[bin]]
+name = "aether-index"
+path = "src/main.rs"
+
+[dependencies]
+serde_json = "1"
+inotify = "0.11"
+memmap2 = "0.9"

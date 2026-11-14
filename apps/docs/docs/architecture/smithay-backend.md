@@ -148,7 +148,7 @@ I-beam over the palette input.*
 
 ![Full-text file result from the system index service](/img/smithay-index-service.png)
 
-*With `AETHER_INDEX_SOCKET`, the palette asks the Bun `apps/indexer-service` for
+*With `AETHER_INDEX_SOCKET`, the palette asks the `aether-index` daemon for
 results on each query. The service returns BM25/prefix/fuzzy content matches;
 the shell displays them pre-filtered. The initial smoke indexes a fixture and
 opens a file matched by body content. Without the socket the bounded
@@ -212,7 +212,7 @@ drag and both toggles with `xdotool` and asserts each transition.*
   A bounded filename index (`aether-files`) adds `OpenFile` results for non-empty
   queries. External launchers from `AETHER_PALETTE_JSON` can add agent-session
   or tool commands. Live agent sessions arrive over `AETHER_AGENT_SOCKET` as
-  JSON snapshots. With `AETHER_INDEX_SOCKET`, the Bun index service supplies
+  JSON snapshots. With `AETHER_INDEX_SOCKET`, the `aether-index` daemon supplies
   content-ranked file results per query and watches roots for live updates;
   otherwise the bounded local scan is used. The service is packaged as
   `.#index-service` and runs as a systemd user unit in the VM target. All

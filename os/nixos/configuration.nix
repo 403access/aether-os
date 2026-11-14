@@ -83,6 +83,7 @@
       wireplumber
       wl-clip-persist
       cage
+      aether-index
       aether-shell-drm
       aether-shell-smithay
       aether-session

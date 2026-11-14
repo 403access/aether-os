@@ -210,6 +210,23 @@
           exec ${final.cage}/bin/cage -s -m extend -- ${final.aether-shell-smithay}/bin/aether-shell-smithay
         '';
 
+        aether-index = final.rustPlatform.buildRustPackage {
+          pname = "aether-index";
+          version = "0.1.0";
+          src = ./os/index/aether-index;
+          cargoLock.lockFile = ./os/index/aether-index/Cargo.lock;
+          doCheck = true;
+          installPhase = ''
+            mkdir -p $out/bin
+            cp target/aarch64-unknown-linux-gnu/release/aether-index $out/bin/aether-index
+          '';
+          meta = with final.lib; {
+            description = "Aether system index daemon (inotify, socket queries, event ring)";
+            license = licenses.mit;
+            platforms = ["x86_64-linux" "aarch64-linux"];
+          };
+        };
+
         aether-index-service = final.stdenvNoCC.mkDerivation {
           pname = "aether-index-service";
           version = "0.1.0";
@@ -262,6 +279,7 @@
         installer-iso = self.packages.${system}.iso;
         aether-scene = pkgs.aether-scene;
         index-service = pkgs.aether-index-service;
+        aether-index = pkgs.aether-index;
         aether-shell-smithay = pkgs.aether-shell-smithay;
         aether-shell-drm = pkgs.aether-shell-drm;
         aether-session = pkgs.aether-session;
@@ -293,6 +311,7 @@
         vm-image = vm.config.system.build.images.qemu-efi;
         vm = vm.config.system.build.vm;
         index-service = vmPkgs.aether-index-service;
+        aether-index = vmPkgs.aether-index;
         aether-shell-smithay = vmPkgs.aether-shell-smithay;
         aether-shell-drm = vmPkgs.aether-shell-drm;
         aether-session = vmPkgs.aether-session;

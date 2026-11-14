@@ -98,8 +98,9 @@ entries, has no D-Bus dependency, and is tested without a desktop session.
 `aether-files` provides a bounded, name-only file index for palette searches:
 configurable roots, depth and entry cap, hidden/build directories skipped.
 When `AETHER_INDEX_SOCKET` is set, the compositor instead queries the Bun
-`apps/indexer-service`, which wraps the shared TypeScript BM25/prefix/fuzzy
-indexer and returns content-ranked results over newline-delimited JSON. The
+the Rust `aether-index` daemon, which watches roots with inotify and returns
+ranked results over newline-delimited JSON. The Bun `apps/indexer-service`
+remains as the reference indexer. See [Index daemon](/architecture/index-daemon). The
 local scan remains the fallback.
 
 `aether-preview` renders frames with a small software rasteriser, so the shell

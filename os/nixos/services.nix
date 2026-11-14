@@ -83,6 +83,24 @@
     };
   };
 
+  # System index daemon: inotify ingestion, Unix-socket queries and a ring of
+  # change events. The shell queries the socket asynchronously.
+  systemd.user.services.aether-index = {
+    description = "Aether system index daemon";
+    wantedBy = ["default.target"];
+    serviceConfig = {
+      ExecStart = "${pkgs.aether-index}/bin/aether-index";
+      Environment = [
+        "AETHER_INDEX_SOCKET=%t/aether-index.sock"
+        "AETHER_INDEX_RING=%t/aether-index.ring"
+        "AETHER_INDEX_ROOTS=%h"
+        "AETHER_INDEX_LIMIT=20000"
+      ];
+      Restart = "on-failure";
+      RestartSec = 2;
+    };
+  };
+
   # Keep clipboard data after the source client exits. wlr-data-control is
   # advertised by the compositor; the helper re-owns the selection.
   systemd.user.services.aether-clip-persist = {

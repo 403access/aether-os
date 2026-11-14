@@ -1,0 +1,7 @@
+socket query alpha: {"results":[{"path":"/tmp/nix-shell.e82XqU/tmp.9FydLfHSs0/root/alpha.txt","subtitle":"/tmp/nix-shell.e82XqU/tmp.9FydLfHSs0/root  ·  txt","title":"alpha.txt"}]}
+socket query beta (after create): {"results":[]}
+ring events:
+Indexed /tmp/nix-shell.e82XqU/tmp.9FydLfHSs0/root/alpha.txt
+Indexed /tmp/nix-shell.e82XqU/tmp.9FydLfHSs0/root/notes.md
+Indexed /tmp/nix-shell.e82XqU/tmp.9FydLfHSs0/root/beta.txt
+Removed /tmp/nix-shell.e82XqU/tmp.9FydLfHSs0/root/beta.txt

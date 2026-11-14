@@ -46,7 +46,7 @@ introduced by T2 only for scoring reuse; they can land independently.
 | Task | Status | Commit |
 | --- | --- | --- |
 | Plan | ✅ | this document |
-| P3-T1 | ⏳ | |
+| P3-T1 | ✅ | Rust daemon, inotify, socket, ring; `artifacts/p3/index-smoke.log` |
 | P3-T2 | ⏳ | |
 | P3-T3 | ⏳ | |
 | P3-T4 | ⏳ | |

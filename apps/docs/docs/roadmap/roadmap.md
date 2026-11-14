@@ -12,8 +12,8 @@ deliverables. A phase is done when the gate passes, not when the code merges.
 
 ```text
 P0 Foundations      ████████████  done
-P1 NixOS bring-up   ██████░░░░░░  in progress
-P2 Compositor MVP   ███░░░░░░░░░  in progress
+P1 NixOS bring-up   ██████████░░  in progress
+P2 Compositor MVP   ███████████░  in progress
 P3 Shell surfaces   ░░░░░░░░░░░░
 P4 Audio            ░░░░░░░░░░░░
 P5 Agents & chat    ░░░░░░░░░░░░
@@ -55,7 +55,8 @@ Deliverables:
   and the installer on x86_64-linux.
 - ⏳ Boot the installed system on the reference machine and record the numbers.
 - ⏳ Trim the kernel with `localmodconfig` on that machine and commit the delta.
-- ✅ Console session on tty1 (autologin). The compositor starts a surface at P2.
+- ✅ Console autologin on tty1; `aether-session` on tty7 starts the native DRM
+  compositor with cage as the fallback ([ADR-0017](/adr/0017-native-drm-first)).
 - ✅ A separate aarch64 development VM boots the same base under HVF in ~10 s
   (test harness only; not the reference target).
 
@@ -99,12 +100,18 @@ Deliverables:
   client-to-client DnD, IME candidate popups, client cursor surfaces and
   per-output workspace indicators/palette.
 - ✅ Renderer is GLES/EGL (wgpu deferred, [ADR-0016](/adr/0016-gles-vs-wgpu)).
-- ⏳ Desktop-entry SVG icons/theme inheritance/D-Bus, fractional scaling,
-  screenshot/capture protocol, per-output status bars, measured 120 Hz gate
-  metrics on the reference machine (see [P2 completion](/roadmap/p2-completion)).
+- ⏳ Fractional scaling, screenshot/capture protocol, per-output status data
+  (one shared sample today), and the measured 120 Hz gate metrics on the
+  reference machine (see [P2 completion](/roadmap/p2-completion)).
 
 **Gate.** Sustained 120 Hz on a 1440p output with the palette open; no frames queued;
 input → damage commit < 2 ms.
+
+**Status.** Code-complete except the deferred tail; the gate is unmeasured (0 of 3).
+Off-target evidence exists for input → damage (dev host, roughly two orders of
+magnitude under the 2 ms budget) and queue depth (virtio-gpu VM); sustained 120 Hz
+needs the reference machine. Runbook and ledger:
+[P2 completion](/roadmap/p2-completion).
 
 **Dependencies.** P1. **Risk:** GPU driver quirks, text rendering performance.
 

@@ -4,6 +4,7 @@
 //!   aether-shell-smithay --demo     solid FramePlan preview (no clients)
 //!   aether-shell-smithay --frames N exit after N iterations
 
+mod agents;
 mod client;
 mod damage;
 mod demo;

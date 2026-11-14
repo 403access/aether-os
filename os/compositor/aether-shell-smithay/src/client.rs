@@ -15,6 +15,7 @@ use std::os::unix::net::UnixStream;
 use std::sync::Arc;
 use std::time::Duration;
 
+use crate::agents::{parse_launchers, AgentSessions};
 use crate::damage::buffer_damage_to_logical;
 use aether_cursor::{render as render_cursor, CursorShape, CursorTheme};
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect, Size as AetherSize};
@@ -164,7 +165,11 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         cursor_hidden: false,
         index_socket: std::env::var("AETHER_INDEX_SOCKET").ok(),
         index_query: String::new(),
+        agent_sessions: AgentSessions::bind(None),
     };
+
+    state.agent_sessions =
+        AgentSessions::bind(std::env::var_os("AETHER_AGENT_SOCKET").map(std::path::PathBuf::from));
 
     let listener = ListeningSocket::bind_auto("aether", 0..8)?;
     let socket_name = listener
@@ -175,10 +180,11 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     let mut clients = Vec::new();
     state.socket_name = socket_name.clone();
 
-    let launchers = all_launchers();
-    let launcher_count = launchers.len();
-    state.shell.set_launchers(launchers);
-    println!("aether-shell-smithay: loaded {launcher_count} desktop apps");
+    state.refresh_launchers();
+    println!(
+        "aether-shell-smithay: loaded {} palette launchers",
+        state.shell.launchers().len()
+    );
 
     if state.index_socket.is_some() {
         println!(
@@ -1007,6 +1013,13 @@ pub fn run() -> Result<(), Box<dyn Error>> {
 
         display.dispatch_clients(&mut state)?;
         display.flush_clients()?;
+        if state.agent_sessions.poll() {
+            state.refresh_launchers();
+            println!(
+                "aether-shell-smithay: agent sessions -> {} launchers",
+                state.shell.launchers().len()
+            );
+        }
         if let Some(damage) = frame_damage {
             backend.submit(Some(&damage))?;
         }
@@ -1321,12 +1334,6 @@ fn file_index() -> Vec<PaletteFile> {
         .collect()
 }
 
-fn all_launchers() -> Vec<PaletteLauncher> {
-    let mut launchers = desktop_launchers();
-    launchers.extend(external_launchers());
-    launchers
-}
-
 fn external_launchers() -> Vec<PaletteLauncher> {
     let Some(path) = std::env::var_os("AETHER_PALETTE_JSON") else {
         return Vec::new();
@@ -1337,44 +1344,7 @@ fn external_launchers() -> Vec<PaletteLauncher> {
     let Ok(value) = serde_json::from_str::<serde_json::Value>(&contents) else {
         return Vec::new();
     };
-    let entries = value
-        .as_array()
-        .or_else(|| value.get("launchers").and_then(|value| value.as_array()));
-    let Some(entries) = entries else {
-        return Vec::new();
-    };
-    entries
-        .iter()
-        .filter_map(|entry| {
-            let name = entry.get("name")?.as_str()?.to_string();
-            let program = entry.get("program")?.as_str()?.to_string();
-            let detail = entry
-                .get("detail")
-                .and_then(|value| value.as_str())
-                .unwrap_or("external")
-                .to_string();
-            let icon = entry
-                .get("icon")
-                .and_then(|value| value.as_str())
-                .map(str::to_string);
-            let args = entry
-                .get("args")
-                .and_then(|value| value.as_array())
-                .map(|args| {
-                    args.iter()
-                        .filter_map(|arg| arg.as_str().map(str::to_string))
-                        .collect()
-                })
-                .unwrap_or_default();
-            Some(PaletteLauncher {
-                name,
-                detail,
-                icon,
-                program,
-                args,
-            })
-        })
-        .collect()
+    parse_launchers(&value)
 }
 
 fn desktop_launchers() -> Vec<PaletteLauncher> {
@@ -1605,6 +1575,7 @@ struct App {
     cursor_hidden: bool,
     index_socket: Option<String>,
     index_query: String,
+    agent_sessions: AgentSessions,
 }
 
 struct CursorCacheEntry {
@@ -1741,8 +1712,20 @@ impl App {
         self.shell.toggle_overlay();
     }
 
+    fn combined_launchers(&self) -> Vec<PaletteLauncher> {
+        let mut launchers = desktop_launchers();
+        launchers.extend(external_launchers());
+        launchers.extend(self.agent_sessions.launchers().iter().cloned());
+        launchers
+    }
+
+    fn refresh_launchers(&mut self) {
+        let launchers = self.combined_launchers();
+        self.shell.set_launchers(launchers);
+    }
+
     fn refresh_providers(&mut self) {
-        let launchers = all_launchers();
+        let launchers = self.combined_launchers();
         let files = if self.index_socket.is_some() {
             self.index_query.clear();
             Vec::new()

@@ -69,6 +69,7 @@
     wl-clip-persist
     cage
     aether-index
+    aether-applications
     aether-audio
     aether-sandbox
     aether-shell-drm

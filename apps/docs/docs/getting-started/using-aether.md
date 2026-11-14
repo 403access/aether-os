@@ -148,8 +148,11 @@ master/stack ratio or divider drag.
 - `Esc` closes the palette.
 
 The palette is also the fastest way to reach a window: type part of its title,
-press `Enter`, and Aether focuses it and switches to its workspace. Files open
-through the configured opener; apps launch from XDG desktop entries.
+press `Enter`, and Aether focuses it and switches to its workspace. Installed
+applications come from XDG `.desktop` entries; Aether's own surfaces are indexed
+as applications too — **Files**, **Chat**, **Audio**, **Keyboard shortcuts** and
+**Task manager**. A **Aether Terminal** desktop entry is installed on the target
+and live images.
 
 ## Explorer
 

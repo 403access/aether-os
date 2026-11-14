@@ -260,6 +260,21 @@
           exec ${final.foot}/bin/foot -c ${./os/compositor/aether-shell-smithay/foot/foot.ini} -T "Wayland Terminal" "$@"
         '';
 
+        aether-applications = final.runCommand "aether-applications" {} ''
+          mkdir -p $out/share/applications
+          cat > $out/share/applications/aether-terminal.desktop <<EOF
+[Desktop Entry]
+Type=Application
+Name=Aether Terminal
+Comment=Water-themed terminal
+Exec=aether-terminal
+Icon=utilities-terminal
+Terminal=false
+Categories=System;TerminalEmulator;
+Keywords=shell;console;terminal;foot;
+EOF
+        '';
+
         aether-index = final.rustPlatform.buildRustPackage {
           pname = "aether-index";
           version = "0.1.0";
@@ -342,6 +357,7 @@
         aether-index = pkgs.aether-index;
         aether-audio = pkgs.aether-audio;
         aether-sandbox = pkgs.aether-sandbox;
+        aether-applications = pkgs.aether-applications;
         aether-shell-smithay = pkgs.aether-shell-smithay;
         aether-shell-drm = pkgs.aether-shell-drm;
         aether-session = pkgs.aether-session;
@@ -377,6 +393,7 @@
         aether-index = vmPkgs.aether-index;
         aether-audio = vmPkgs.aether-audio;
         aether-sandbox = vmPkgs.aether-sandbox;
+        aether-applications = vmPkgs.aether-applications;
         aether-shell-smithay = vmPkgs.aether-shell-smithay;
         aether-shell-drm = vmPkgs.aether-shell-drm;
         aether-terminal = vmPkgs.aether-terminal;

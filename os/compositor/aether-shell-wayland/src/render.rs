@@ -548,6 +548,10 @@ impl App {
                             PaletteAction::LaunchApp(_) => "terminal",
                             PaletteAction::SpawnTerminal => "terminal",
                             PaletteAction::OpenTaskManager => "chart",
+                            PaletteAction::OpenExplorer => "folder",
+                            PaletteAction::OpenChat => "chat",
+                            PaletteAction::OpenAudio => "audio",
+                            PaletteAction::OpenShortcuts => "keyboard",
                             PaletteAction::OpenFile(_) => "file",
                             PaletteAction::Close => "close",
                         };

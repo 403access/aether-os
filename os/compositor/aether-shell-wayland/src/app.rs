@@ -1485,6 +1485,22 @@ impl App {
                 self.shell.close_overlay();
                 self.open_task_manager();
             }
+            PaletteAction::OpenExplorer => {
+                self.shell.close_overlay();
+                self.toggle_explorer();
+            }
+            PaletteAction::OpenChat => {
+                self.shell.close_overlay();
+                self.toggle_chat();
+            }
+            PaletteAction::OpenAudio => {
+                self.shell.close_overlay();
+                self.toggle_audio();
+            }
+            PaletteAction::OpenShortcuts => {
+                self.shell.close_overlay();
+                self.toggle_shortcuts();
+            }
             PaletteAction::OpenFile(index) => {
                 self.shell.close_overlay();
                 if let Some(file) = self.shell.file(index) {

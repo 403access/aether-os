@@ -74,6 +74,7 @@
     usbutils
     curl
     git
+    aether-applications
     aether-audio
     aether-sandbox
     aether-shell-drm

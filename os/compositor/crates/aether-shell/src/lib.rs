@@ -150,6 +150,10 @@ pub enum PaletteAction {
     LaunchApp(usize),
     SpawnTerminal,
     OpenTaskManager,
+    OpenExplorer,
+    OpenChat,
+    OpenAudio,
+    OpenShortcuts,
     OpenFile(usize),
     Close,
 }
@@ -1630,6 +1634,29 @@ impl Shell {
             };
             if let Some(score) = palette_score(&query, &new_terminal.title) {
                 scored.push((score, command_offset, new_terminal));
+            }
+            let apps = [
+                ("Files", "Aether explorer", PaletteAction::OpenExplorer),
+                ("Chat", "Aether chat", PaletteAction::OpenChat),
+                ("Audio", "Aether audio routes", PaletteAction::OpenAudio),
+                (
+                    "Keyboard shortcuts",
+                    "Aether shortcut reference",
+                    PaletteAction::OpenShortcuts,
+                ),
+            ];
+            for (offset, (title, detail, action)) in apps.into_iter().enumerate() {
+                if let Some(score) = palette_score(&query, title) {
+                    scored.push((
+                        score,
+                        command_offset + 1 + offset,
+                        PaletteEntry {
+                            title: title.to_string(),
+                            detail: detail.to_string(),
+                            action,
+                        },
+                    ));
+                }
             }
         }
 
@@ -3258,6 +3285,10 @@ mod tests {
                 "code",
                 "web",
                 "New terminal",
+                "Files",
+                "Chat",
+                "Audio",
+                "Keyboard shortcuts",
                 "Task manager",
                 "Close palette"
             ]
@@ -3269,7 +3300,10 @@ mod tests {
             .into_iter()
             .map(|entry| entry.title)
             .collect();
-        assert_eq!(titles, ["code", "Close palette"]);
+        assert_eq!(
+            titles,
+            ["code", "Chat", "Close palette", "Keyboard shortcuts"]
+        );
 
         assert!(shell.palette_push_char('o'));
         let titles: Vec<String> = shell
@@ -3404,6 +3438,10 @@ mod tests {
                 "Example Editor",
                 "Browser",
                 "New terminal",
+                "Files",
+                "Chat",
+                "Audio",
+                "Keyboard shortcuts",
                 "Task manager",
                 "Close palette"
             ]
@@ -3464,7 +3502,7 @@ mod tests {
         }
         shell.open_overlay();
 
-        assert_eq!(shell.palette_entries().len(), 9);
+        assert_eq!(shell.palette_entries().len(), 13);
         assert_eq!(shell.palette_visible_start(), 0);
         let first = shell.palette_row_rect(0).expect("row 0");
         assert_eq!(first.x, 70);
@@ -3486,7 +3524,7 @@ mod tests {
         );
         assert!(shell.palette_select(7));
         assert_eq!(shell.palette_selected(), 7);
-        assert!(!shell.palette_select(9));
+        assert!(!shell.palette_select(13));
     }
 
     #[test]
@@ -3497,7 +3535,7 @@ mod tests {
 
         assert_eq!(shell.palette_selected(), 0);
         assert!(shell.palette_move_selection(-1));
-        assert_eq!(shell.palette_selected(), 4);
+        assert_eq!(shell.palette_selected(), 8);
         assert_eq!(shell.palette_activate(), Some(PaletteAction::Close));
 
         assert!(shell.palette_move_selection(1));

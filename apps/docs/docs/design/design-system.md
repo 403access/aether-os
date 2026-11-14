@@ -21,7 +21,9 @@ status, glass chrome and slow ambient motion.
 4. **Motion explains.** Interface motion 160–340 ms; ambient 14–58 s; both
    disableable.
 5. **Colour never alone.** Every status pill is colour + label + dot.
-6. **No web fonts.** System stack, monospace for technical data.
+6. **Bundled type, no web fetch.** The system stack covers the web surfaces; the
+   native compositor ships Inter for deterministic chrome metrics and falls back
+   to its 8×8 bitmap font when no font file is available.
 
 ## Tokens
 
@@ -81,6 +83,44 @@ The React layer lives in `packages/ui`. Components use only tokens and `ds-` cla
 Primitives from `components.css` (buttons, cards, inputs, segmented controls, panes,
 command bar) are available to docs and the marketing site without React.
 
+## Native compositor chrome
+
+The OS shell is not a web view. `aether-shell-wayland` reproduces the Water
+vocabulary with real pixels: Inter (via `fontdue`), rounded glass panels,
+premultiplied alpha, soft shadows, SVG icons and a deep-sea gradient.
+
+| Water primitive | Compositor implementation |
+| --- | --- |
+| `--ds-bg-grad` | `chrome::background` radial linear gradient |
+| `.ds-card--glass` | `chrome::panel` — 14 px radius, 1 px accent border, stacked shadow |
+| Panel header bands | `chrome::rounded_top` |
+| `.ds-badge`, selection fill | `chrome::rounded` |
+| Icon set | `chrome::icon_svg` + `resvg` (search, folder, file, terminal, chat, cpu, memory, audio, agents, palette, close, arrow) |
+| Type scale | `aether-text::font` — 11 / 13 / 16 / 20 px, semibold via double-blit |
+| Explorer | 62 px app bar, 56 px pane header, 30 px columns and rows, 30 px footer, 36 px status bar |
+| Palette | 680 × 420, 58 px search header, six 40 px rows at 46 px pitch, keycap footer |
+| Chat | 400 px drawer, header pill, assistant card with code strips, 38 px composer |
+
+![Water explorer in the compositor](/img/smithay-explorer.png)
+
+*Explorer layer at 1280×800: app bar, Files/Palette/Chat tabs, search affordance,
+pane card, aligned columns and a status bar with icon badges.*
+
+![Water command palette](/img/smithay-palette.png)
+
+*Palette: search header with inline `esc` keycap, six result rows with icon tiles,
+rounded active row and a keycap footer.*
+
+![Water chat drawer](/img/smithay-chat.png)
+
+*Chat: live pill, assistant message card, code-block strips, scrollbar and the
+composer with send affordance. Bold spans are rendered with a second coverage
+pass, not a different font.*
+
+Font discovery order: `AETHER_FONT`, standard Inter paths, `/nix/store` scan,
+then the bitmap fallback. NixOS sets `AETHER_FONT` in the session service and
+installs Inter via `fonts.packages`; the Smithay dev shell exports it too.
+
 ## Usage
 
 ```ts
@@ -132,6 +172,9 @@ Known gaps: AT-SPI/screen-reader support is not implemented; see
 | `packages/ui/src/ui.css` | Aether-specific components |
 | `apps/web/src/site.css` | Marketing layout |
 | `apps/docs/src/css/custom.css` | Docs theme mapping |
+| `os/compositor/aether-shell-wayland/src/chrome.rs` | Rounded panels, shadows, gradient, SVG icons |
+| `os/compositor/crates/aether-text/src/font.rs` | Inter/fontdue rasterizer |
+| `os/compositor/crates/aether-shell/src/design.rs` | Compositor token mirror (`scripts/design-parity.ts`) |
 
 ## Contribution rules
 

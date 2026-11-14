@@ -57,10 +57,12 @@
             wl-clip-persist
             xdotool
             imagemagick
+            inter
           ];
           shellHook = ''
             export LIBRARY_PATH="${shellPkgs.mesa}/lib:$LIBRARY_PATH"
             export NIX_LDFLAGS="-L${shellPkgs.mesa}/lib -L${shellPkgs.libgbm}/lib -L${shellPkgs.libinput}/lib -L${shellPkgs.libxkbcommon}/lib -L${shellPkgs.seatd}/lib -L${shellPkgs.udev}/lib $NIX_LDFLAGS"
+            export AETHER_FONT="${shellPkgs.inter}/share/fonts/truetype/InterVariable.ttf"
             export LD_LIBRARY_PATH="${shellPkgs.lib.makeLibraryPath [
               shellPkgs.wayland
               shellPkgs.libxkbcommon
@@ -197,6 +199,7 @@
 
         aether-session = final.writeShellScriptBin "aether-session" ''
           export XDG_RUNTIME_DIR="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+          export AETHER_FONT="''${AETHER_FONT:-${final.inter}/share/fonts/truetype/InterVariable.ttf}"
           export LD_LIBRARY_PATH="${final.lib.makeLibraryPath [ final.libGL final.mesa final.libgbm ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
           export LIBGL_DRIVERS_PATH="${final.mesa}/lib/dri"
           export GBM_BACKENDS_PATH="${final.mesa}/lib/gbm"
@@ -334,12 +337,14 @@
           rustfmt
           nixpkgs-fmt
           disko
+          inter
         ];
           shellHook = ''
             echo "Aether dev shell"
             echo "  bun install && bun run verify"
             echo "  nix build .#iso"
             echo "  cargo test --manifest-path os/compositor/Cargo.toml"
+            export AETHER_FONT="${pkgs.inter}/share/fonts/truetype/InterVariable.ttf"
           '';
         };
       };

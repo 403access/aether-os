@@ -27,10 +27,11 @@ aether-shell (policy) ──> FramePlan ──> aether-shell-smithay (Linux)
 
 ![The shell overlay above a client](/img/smithay-overlay.png)
 
-*`Super+Space` toggles the modal command palette above clients. Header, search
-row, workspace/window results and hints are real bitmap text rasterized by
-`aether-text`; the labelled bars at top-left are workspace indicators (active is
-bright). Titles come from the xdg-shell clients.*
+*`Super+Space` toggles the modal command palette above clients. The search
+header, six result rows and keycap footer are rendered with Inter by
+`aether-text`, on rounded glass panels from `chrome.rs`; the labelled pills at
+top-left are workspace indicators (active is bright). Titles come from the
+xdg-shell clients.*
 
 ![Filtering the palette by typing](/img/smithay-palette.png)
 
@@ -42,7 +43,7 @@ types `web`, captures this frame and clicks the row to switch workspace.*
 
 *The same palette lists client windows with their workspace. Activating the
 result focuses the window and switches to its workspace; the smoke test types
-`term`, presses `Enter` and asserts the return to workspace 1.*
+`wayland`, presses `Enter` and asserts the return to workspace 0.*
 
 ![Clicking the second workspace indicator](/img/smithay-workspace-picker.png)
 
@@ -52,13 +53,14 @@ capture is produced by `smoke-picker-xvfb.sh`, which drives the click with
 
 ![Streaming chat drawer](/img/smithay-chat.png)
 
-*`Super+C` opens the chat drawer; tokens stream in as markdown and only the
-visible rows are composed.*
+*`Super+C` opens the chat drawer; tokens stream into a rounded assistant card
+with code strips, a live pill, scrollbar and composer. Only visible rows are
+composed.*
 
 ![Virtualised file explorer](/img/smithay-explorer.png)
 
-*`Super+E` opens the explorer; typing filters, arrows/PgUp/PgDn move, Enter opens
-the selected file. Only the visible rows are composed.*
+*`Super+E` opens the full-output explorer; typing filters, arrows/PgUp/PgDn
+move, Enter opens the selected file. Only the visible rows are composed.*
 
 ![Status bar and two tiled terminal clients](/img/smithay-status.png)
 

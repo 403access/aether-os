@@ -7,6 +7,7 @@
 mod agents;
 mod app;
 mod chat_demo;
+mod chrome;
 mod damage;
 mod index_worker;
 mod keymap;

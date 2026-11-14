@@ -69,6 +69,7 @@
       # Smithay dlopens libEGL/libgbm; give it the store paths directly so it
       # does not depend on the login shell's graphics environment.
       Environment = [
+        "AETHER_FONT=${pkgs.inter}/share/fonts/truetype/InterVariable.ttf"
         "LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.libGL pkgs.mesa pkgs.libgbm ]}"
         "LIBGL_DRIVERS_PATH=${pkgs.mesa}/lib/dri"
         "GBM_BACKENDS_PATH=${pkgs.mesa}/lib/gbm"

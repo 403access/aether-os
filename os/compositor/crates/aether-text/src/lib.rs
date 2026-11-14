@@ -12,6 +12,9 @@
 
 use font8x8::{UnicodeFonts, BASIC_FONTS};
 
+pub mod font;
+pub use font::FontRenderer;
+
 /// Width of one glyph cell in pixels before scaling.
 pub const GLYPH_WIDTH: u32 = 8;
 /// Height of one glyph cell in pixels before scaling.
@@ -84,6 +87,22 @@ impl TextBitmap {
         }
         let index = ((y * self.width + x) * 4) as usize;
         self.pixels[index..index + 4].copy_from_slice(&color);
+    }
+
+    pub(crate) fn from_rgba(width: u32, height: u32, pixels: Vec<u8>) -> Self {
+        Self {
+            width,
+            height,
+            pixels,
+        }
+    }
+
+    pub(crate) fn empty() -> Self {
+        Self {
+            width: 0,
+            height: 0,
+            pixels: Vec::new(),
+        }
     }
 
     /// Width of the bitmap in physical pixels.

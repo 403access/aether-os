@@ -101,6 +101,10 @@
     '';
   };
 
+  # Inter is the Water UI typeface. The compositor discovers it through
+  # AETHER_FONT (set by aether-session) and falls back to its bitmap font.
+  fonts.packages = with pkgs; [inter dejavu_fonts];
+
   # Locally built packages are already tuned; keep the store from rebuilding
   # everything with generic flags.
   nixpkgs.config.allowUnfree = true;

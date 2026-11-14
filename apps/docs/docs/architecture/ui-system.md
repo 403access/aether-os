@@ -59,8 +59,9 @@ scene-graph styles. See [design system](/design/design-system).
 - Markdown subset in chat: fenced code, inline code, bold, italic, links.
 - Streaming appends invalidate only the last line's damage.
 - Code blocks use a monospace atlas with ligatures disabled for alignment.
-- No web fonts. System font stack; the shell bundles a fallback for the compositor
-  renderer so first paint does not wait on font discovery.
+- No downloaded web fonts. Web surfaces use the system stack; the compositor
+  loads bundled Inter through `AETHER_FONT` and keeps the 8×8 bitmap font as a
+  first-paint fallback, so chrome never waits on font discovery.
 
 ## Focus and modality
 

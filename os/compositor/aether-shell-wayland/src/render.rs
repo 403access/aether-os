@@ -6,13 +6,15 @@
 //! same list to `DrmCompositor` for scan-out.
 
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use aether_cursor::render as render_cursor;
 use aether_geometry::Rect as AetherRect;
 use aether_shell::{
-    OutputId, PaletteAction, WindowId, PALETTE_VISIBLE_ROWS, WORKSPACE_INDICATOR_BAR_HEIGHT,
+    OutputId, PaletteAction, WindowId, PALETTE_CONTENT_TOP, PALETTE_ROW_HEIGHT,
+    PALETTE_ROW_SPACING, PALETTE_VISIBLE_ROWS, WORKSPACE_INDICATOR_BAR_HEIGHT,
 };
-use aether_text::{text_width, TextBitmap};
+use aether_text::TextBitmap;
 use smithay::backend::allocator::Fourcc;
 use smithay::backend::renderer::element::memory::{
     MemoryRenderBuffer, MemoryRenderBufferRenderElement,
@@ -219,6 +221,93 @@ pub struct ComposedFrame {
 }
 
 impl App {
+    fn chrome_icon(
+        &mut self,
+        name: &str,
+        size: u32,
+        color: [u8; 4],
+    ) -> Option<Arc<MemoryRenderBuffer>> {
+        let key = (name.to_string(), size, color);
+        if let Some(buffer) = self.chrome_icons.get(&key) {
+            return Some(buffer.clone());
+        }
+        let hex = format!("#{:02x}{:02x}{:02x}", color[0], color[1], color[2]);
+        let markup = crate::chrome::icon_svg(name, &hex)?;
+        let buffer = Arc::new(crate::chrome::svg(&markup, size)?);
+        self.chrome_icons.insert(key, buffer.clone());
+        Some(buffer)
+    }
+
+    fn chrome_panel(
+        &mut self,
+        width: u32,
+        height: u32,
+        radius: u32,
+        fill: [u8; 4],
+        border: Option<[u8; 4]>,
+    ) -> Option<Arc<MemoryRenderBuffer>> {
+        let key = (width, height, radius, fill, border);
+        if let Some(buffer) = self.chrome_panels.get(&key) {
+            return Some(buffer.clone());
+        }
+        let buffer = Arc::new(crate::chrome::panel(
+            width,
+            height,
+            radius as f32,
+            fill,
+            border,
+        )?);
+        self.chrome_panels.insert(key, buffer.clone());
+        Some(buffer)
+    }
+
+    fn chrome_round_top(
+        &mut self,
+        width: u32,
+        height: u32,
+        radius: u32,
+        fill: [u8; 4],
+    ) -> Option<Arc<MemoryRenderBuffer>> {
+        let key = (width, height, radius, fill);
+        if let Some(buffer) = self.chrome_tops.get(&key) {
+            return Some(buffer.clone());
+        }
+        let buffer = Arc::new(crate::chrome::rounded_top(
+            width,
+            height,
+            radius as f32,
+            fill,
+        )?);
+        self.chrome_tops.insert(key, buffer.clone());
+        Some(buffer)
+    }
+
+    fn chrome_round(
+        &mut self,
+        width: u32,
+        height: u32,
+        radius: u32,
+        fill: [u8; 4],
+    ) -> Option<Arc<MemoryRenderBuffer>> {
+        let key = (width, height, radius, fill);
+        if let Some(buffer) = self.chrome_rounds.get(&key) {
+            return Some(buffer.clone());
+        }
+        let buffer = Arc::new(crate::chrome::rounded(width, height, radius as f32, fill)?);
+        self.chrome_rounds.insert(key, buffer.clone());
+        Some(buffer)
+    }
+
+    fn chrome_background(&mut self, width: u32, height: u32) -> Option<Arc<MemoryRenderBuffer>> {
+        if let Some(buffer) = self.chrome_background.get(&(width, height)) {
+            return Some(buffer.clone());
+        }
+        let buffer = Arc::new(crate::chrome::background(width, height)?);
+        self.chrome_background
+            .insert((width, height), buffer.clone());
+        Some(buffer)
+    }
+
     /// Compose one output (or the single logical output when `None`).
     pub fn compose(
         &mut self,
@@ -236,6 +325,29 @@ impl App {
                 (rect.x, rect.y)
             })
             .unwrap_or((0, 0));
+
+        let (width, height) = output
+            .map(|id| {
+                let bounds = self.shell.output_bounds(id);
+                (bounds.width.max(1), bounds.height.max(1))
+            })
+            .unwrap_or_else(|| {
+                let viewport = self.shell.viewport();
+                (viewport.width.max(1), viewport.height.max(1))
+            });
+        if let Some(background) = self.chrome_background(width, height) {
+            if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
+                renderer,
+                (0.0, 0.0),
+                &background,
+                None,
+                None,
+                None,
+                Kind::Unspecified,
+            ) {
+                elements.push(AetherRenderElement::from(element));
+            }
+        }
 
         let visible: Vec<WindowId> = match output {
             Some(output) => self.shell.visible_windows_on(output),
@@ -301,339 +413,744 @@ impl App {
         let mut chrome: Vec<(AetherRect, [f32; 4])> = Vec::new();
         let mut labels: Vec<(String, i32, i32, u32, [u8; 4])> = Vec::new();
         let mut icons: Vec<(String, i32, i32)> = Vec::new();
+        let mut panels: Vec<(Arc<MemoryRenderBuffer>, i32, i32)> = Vec::new();
+        let mut display_icons: Vec<(String, u32, [u8; 4], i32, i32)> = Vec::new();
 
         {
             if palette_here {
                 if let Some(rect) = self.shell.overlay_rect() {
-                    chrome.push((rect, [0.05, 0.24, 0.29, 0.96]));
-                    chrome.push((
-                        AetherRect::new(rect.x, rect.y, rect.width, 36.min(rect.height)),
-                        [0.09, 0.42, 0.5, 1.0],
+                    let width = rect.width as i32;
+                    let height = rect.height as i32;
+                    if let Some(buffer) = self.chrome_panel(
+                        rect.width,
+                        rect.height,
+                        14,
+                        [7, 39, 51, 250],
+                        Some([127, 230, 255, 34]),
+                    ) {
+                        panels.push((buffer, rect.x - 18, rect.y - 18));
+                    }
+                    // Search header.
+                    if let Some(buffer) = self.chrome_round_top(
+                        rect.width.saturating_sub(2),
+                        58.min(rect.height),
+                        13,
+                        [9, 49, 63, 255],
+                    ) {
+                        panels.push((buffer, rect.x + 1, rect.y + 1));
+                    }
+                    display_icons.push((
+                        "search".into(),
+                        18,
+                        [56, 214, 255, 255],
+                        rect.x + 18,
+                        rect.y + 20,
                     ));
-                    labels.push((
-                        "Aether Palette".into(),
-                        rect.x + 14,
-                        rect.y + 10,
-                        2,
-                        [235, 252, 255, 255],
-                    ));
-                    let hint = "Super+Space";
-                    labels.push((
-                        hint.into(),
-                        rect.x + rect.width as i32 - text_width(hint, 1) as i32 - 14,
-                        rect.y + 14,
-                        1,
-                        [179, 235, 250, 255],
-                    ));
-
-                    if rect.height > 96 {
-                        let input = AetherRect::new(
-                            rect.x + 16,
-                            rect.y + 52,
-                            rect.width.saturating_sub(32),
-                            28,
-                        );
-                        chrome.push((input, [0.03, 0.12, 0.16, 1.0]));
-                        let query = self.shell.palette_query();
-                        if query.is_empty() {
-                            labels.push((
-                                "Search workspaces...".into(),
-                                input.x + 10,
-                                input.y + 10,
-                                1,
-                                [122, 173, 189, 255],
-                            ));
-                        } else {
-                            labels.push((
-                                format!("> {query}_"),
-                                input.x + 10,
-                                input.y + 10,
-                                1,
-                                [235, 252, 255, 255],
-                            ));
-                        }
-
-                        let entries = self.shell.palette_entries();
-                        let selected = self.shell.palette_selected();
-                        if entries.is_empty() {
-                            labels.push((
-                                "No matching commands".into(),
-                                rect.x + 26,
-                                rect.y + 106,
-                                1,
-                                [128, 184, 199, 255],
-                            ));
-                        }
-                        let start = self.shell.palette_visible_start();
-                        for (row, entry) in entries
-                            .iter()
-                            .skip(start)
-                            .take(PALETTE_VISIBLE_ROWS)
-                            .enumerate()
-                        {
-                            let y = rect.y + 96 + row as i32 * 48;
-                            if y + 32 < rect.y + rect.height as i32 {
-                                let row_rect = AetherRect::new(
-                                    rect.x + 16,
-                                    y,
-                                    rect.width.saturating_sub(32),
-                                    32,
-                                );
-                                let active = start + row == selected;
-                                chrome.push((
-                                    row_rect,
-                                    if active {
-                                        [0.09, 0.42, 0.5, 1.0]
-                                    } else {
-                                        [0.05, 0.31, 0.37, 1.0]
-                                    },
-                                ));
-                                if active {
-                                    chrome.push((
-                                        AetherRect::new(row_rect.x, row_rect.y, 3, row_rect.height),
-                                        [0.22, 0.84, 1.0, 1.0],
-                                    ));
-                                }
-                                let icon = match entry.action {
-                                    PaletteAction::LaunchApp(index) => self
-                                        .shell
-                                        .launcher(index)
-                                        .and_then(|launcher| launcher.icon),
-                                    _ => None,
-                                };
-                                let title_x = if let Some(icon) = icon {
-                                    icons.push((icon, row_rect.x + 10, row_rect.y + 8));
-                                    row_rect.x + 34
-                                } else {
-                                    row_rect.x + 12
-                                };
-                                labels.push((
-                                    entry.title.clone(),
-                                    title_x,
-                                    row_rect.y + 12,
-                                    1,
-                                    if active {
-                                        [235, 252, 255, 255]
-                                    } else {
-                                        [217, 247, 255, 255]
-                                    },
-                                ));
-                                labels.push((
-                                    entry.detail.clone(),
-                                    row_rect.x + row_rect.width as i32
-                                        - text_width(&entry.detail, 1) as i32
-                                        - 10,
-                                    row_rect.y + 12,
-                                    1,
-                                    [128, 184, 199, 255],
-                                ));
-                            }
-                        }
-
-                        let footer = "Esc close   Enter run   Up/Down select";
+                    let query = self.shell.palette_query();
+                    if query.is_empty() {
                         labels.push((
-                            footer.into(),
-                            rect.x + 16,
-                            rect.y + rect.height as i32 - 22,
+                            "Search workspaces, windows, files…".into(),
+                            rect.x + 46,
+                            rect.y + 18,
                             1,
-                            [128, 184, 199, 255],
+                            [107, 169, 182, 255],
+                        ));
+                    } else {
+                        labels.push((
+                            format!("{query}_"),
+                            rect.x + 46,
+                            rect.y + 18,
+                            1,
+                            [233, 251, 255, 255],
                         ));
                     }
+                    let esc = AetherRect::new(rect.x + width - 54, rect.y + 17, 36, 22);
+                    if let Some(buffer) = self.chrome_round(36, 22, 6, [3, 25, 34, 255]) {
+                        panels.push((buffer, esc.x, esc.y));
+                    }
+                    labels.push(("esc".into(), esc.x + 10, esc.y + 5, 0, [107, 169, 182, 255]));
+                    chrome.push((
+                        AetherRect::new(rect.x + 1, rect.y + 58, rect.width.saturating_sub(2), 1),
+                        [127, 230, 255, 22].map(|value| value as f32 / 255.0),
+                    ));
+
+                    let entries = self.shell.palette_entries();
+                    let selected = self.shell.palette_selected();
+                    if entries.is_empty() {
+                        labels.push((
+                            "No matching commands".into(),
+                            rect.x + width / 2 - 66,
+                            rect.y + 96,
+                            1,
+                            [165, 219, 229, 255],
+                        ));
+                        labels.push((
+                            "Try a different query, or a prefix such as > or /".into(),
+                            rect.x + width / 2 - 148,
+                            rect.y + 118,
+                            0,
+                            [107, 169, 182, 255],
+                        ));
+                    }
+                    let start = self.shell.palette_visible_start();
+                    for (row, entry) in entries
+                        .iter()
+                        .skip(start)
+                        .take(PALETTE_VISIBLE_ROWS)
+                        .enumerate()
+                    {
+                        let index = start + row;
+                        let row_y =
+                            rect.y + PALETTE_CONTENT_TOP + row as i32 * PALETTE_ROW_SPACING as i32;
+                        let row_rect = AetherRect::new(
+                            rect.x + 10,
+                            row_y,
+                            rect.width.saturating_sub(20),
+                            PALETTE_ROW_HEIGHT,
+                        );
+                        let active = index == selected;
+                        if active {
+                            if let Some(buffer) = self.chrome_round(
+                                row_rect.width,
+                                row_rect.height,
+                                8,
+                                [56, 214, 255, 46],
+                            ) {
+                                panels.push((buffer, row_rect.x, row_rect.y));
+                            }
+                            if let Some(buffer) = self.chrome_round(
+                                3,
+                                row_rect.height.saturating_sub(16),
+                                2,
+                                [56, 214, 255, 255],
+                            ) {
+                                panels.push((buffer, row_rect.x, row_rect.y + 8));
+                            }
+                        }
+                        // Icon tile.
+                        let tile = AetherRect::new(row_rect.x + 10, row_rect.y + 7, 26, 26);
+                        if let Some(buffer) = self.chrome_round(26, 26, 7, [3, 25, 34, 210]) {
+                            panels.push((buffer, tile.x, tile.y));
+                        }
+                        let icon = match entry.action {
+                            PaletteAction::LaunchApp(index) => self
+                                .shell
+                                .launcher(index)
+                                .and_then(|launcher| launcher.icon.clone()),
+                            _ => None,
+                        };
+                        let tag = match entry.action {
+                            PaletteAction::SwitchWorkspace(_) => "grid",
+                            PaletteAction::FocusWindow(_) => "explorer",
+                            PaletteAction::LaunchApp(_) => "terminal",
+                            PaletteAction::SpawnTerminal => "terminal",
+                            PaletteAction::OpenFile(_) => "file",
+                            PaletteAction::Close => "close",
+                        };
+                        if let Some(path) = icon {
+                            icons.push((path, tile.x + 5, tile.y + 5));
+                        } else {
+                            display_icons.push((
+                                tag.into(),
+                                16,
+                                if active {
+                                    [56, 214, 255, 255]
+                                } else {
+                                    [165, 219, 229, 255]
+                                },
+                                tile.x + 5,
+                                tile.y + 5,
+                            ));
+                        }
+                        labels.push((
+                            entry.title.clone(),
+                            row_rect.x + 48,
+                            row_rect.y + 11,
+                            1,
+                            if active {
+                                [233, 251, 255, 255]
+                            } else {
+                                [217, 247, 255, 255]
+                            },
+                        ));
+                        labels.push((
+                            entry.detail.clone(),
+                            row_rect.x + row_rect.width as i32
+                                - self.text_width(&entry.detail, 0) as i32
+                                - 12,
+                            row_rect.y + 12,
+                            0,
+                            [107, 169, 182, 255],
+                        ));
+                    }
+
+                    // Footer with keycaps.
+                    let footer_y = rect.y + height - 34;
+                    let mut caps: Vec<(AetherRect, String, bool)> = Vec::new();
+                    let mut cx = rect.x + 14;
+                    for (text, label) in [("↑↓", "navigate"), ("↵", "run"), ("esc", "close")]
+                    {
+                        let key_width = (text.chars().count() as u32 * 7 + 14).max(22);
+                        caps.push((
+                            AetherRect::new(cx, footer_y + 6, key_width, 20),
+                            text.to_string(),
+                            true,
+                        ));
+                        let label_x = cx + key_width as i32 + 5;
+                        labels.push((label.into(), label_x, footer_y + 8, 0, [107, 169, 182, 255]));
+                        cx = label_x + self.text_width(label, 0) as i32 + 16;
+                    }
+                    for (key_rect, text, is_key) in caps {
+                        if is_key {
+                            if let Some(buffer) = self.chrome_round(
+                                key_rect.width,
+                                key_rect.height,
+                                5,
+                                [3, 25, 34, 255],
+                            ) {
+                                panels.push((buffer, key_rect.x, key_rect.y));
+                            }
+                            labels.push((
+                                text.clone(),
+                                key_rect.x
+                                    + (key_rect.width as i32 - self.text_width(&text, 0) as i32)
+                                        / 2,
+                                key_rect.y + 5,
+                                0,
+                                [165, 219, 229, 255],
+                            ));
+                        }
+                    }
+                    labels.push((
+                        "> commands   @ agents   / files".into(),
+                        rect.x + width - 210,
+                        footer_y + 8,
+                        0,
+                        [107, 169, 182, 255],
+                    ));
                 }
             }
 
             if chat_here {
                 let rect = self.shell.chat_rect();
-                chrome.push((rect, [0.04, 0.12, 0.16, 0.97]));
-                chrome.push((
-                    AetherRect::new(rect.x, rect.y, rect.width, 34),
-                    [0.09, 0.42, 0.5, 1.0],
+                let width = rect.width as i32;
+                let height = rect.height as i32;
+                if let Some(buffer) = self.chrome_panel(
+                    rect.width,
+                    rect.height,
+                    14,
+                    [7, 39, 51, 244],
+                    Some([127, 230, 255, 30]),
+                ) {
+                    panels.push((buffer, rect.x - 18, rect.y - 18));
+                }
+                // Header band.
+                if let Some(buffer) =
+                    self.chrome_round_top(rect.width.saturating_sub(2), 58, 13, [9, 49, 63, 255])
+                {
+                    panels.push((buffer, rect.x + 1, rect.y + 1));
+                }
+                if let Some(buffer) = self.chrome_round(28, 28, 8, [56, 214, 255, 42]) {
+                    panels.push((buffer, rect.x + 14, rect.y + 15));
+                }
+                display_icons.push((
+                    "chat".into(),
+                    17,
+                    [56, 214, 255, 255],
+                    rect.x + 20,
+                    rect.y + 21,
                 ));
                 labels.push((
-                    "Aether Chat".into(),
-                    rect.x + 12,
-                    rect.y + 9,
+                    "Aether".into(),
+                    rect.x + 52,
+                    rect.y + 13,
                     2,
-                    [235, 252, 255, 255],
+                    [233, 251, 255, 255],
                 ));
-                let mut y = rect.y + 46;
-                let bottom = rect.y + rect.height as i32 - 34;
-                for line in self.shell.visible_chat_lines() {
-                    let row_height = if line.scale > 1 { 22 } else { 15 };
+                labels.push((
+                    "Streaming markdown".into(),
+                    rect.x + 52,
+                    rect.y + 35,
+                    0,
+                    [107, 169, 182, 255],
+                ));
+                // Live status pill.
+                let pill_w = 86;
+                let pill =
+                    AetherRect::new(rect.x + width - pill_w - 14, rect.y + 18, pill_w as u32, 22);
+                if let Some(buffer) = self.chrome_round(pill_w as u32, 22, 11, [67, 214, 138, 28]) {
+                    panels.push((buffer, pill.x, pill.y));
+                }
+                if let Some(buffer) = self.chrome_round(6, 6, 3, [67, 214, 138, 255]) {
+                    panels.push((buffer, pill.x + 10, pill.y + 8));
+                }
+                labels.push((
+                    "live".into(),
+                    pill.x + 22,
+                    pill.y + 5,
+                    0,
+                    [126, 235, 178, 255],
+                ));
+                display_icons.push((
+                    "close".into(),
+                    14,
+                    [107, 169, 182, 255],
+                    rect.x + width - 30,
+                    rect.y + 22,
+                ));
+
+                // Assistant message card.
+                let bubble = AetherRect::new(
+                    rect.x + 14,
+                    rect.y + 70,
+                    rect.width.saturating_sub(28),
+                    rect.height.saturating_sub(70 + 76),
+                );
+                if let Some(buffer) =
+                    self.chrome_round(bubble.width, bubble.height, 10, [5, 37, 48, 255])
+                {
+                    panels.push((buffer, bubble.x, bubble.y));
+                }
+                if let Some(buffer) = self.chrome_round(3, 18, 2, [56, 214, 255, 160]) {
+                    panels.push((buffer, bubble.x + 1, bubble.y + 16));
+                }
+                let mut y = bubble.y as i32 + 14;
+                let bottom = bubble.y + bubble.height as i32 - 12;
+                let text_left = bubble.x as i32 + 18;
+                let max_width = bubble.width as i32 - 36;
+                let chat_lines: Vec<aether_shell::ChatLine> =
+                    self.shell.visible_chat_lines().to_vec();
+                for line in &chat_lines {
+                    let row_height = if line.scale >= 2 {
+                        26
+                    } else if line.scale == 0 {
+                        14
+                    } else {
+                        18
+                    };
                     if y + row_height > bottom {
                         break;
                     }
-                    let mut x = rect.x + 12 + line.indent;
+                    if line.code {
+                        if let Some(buffer) = self.chrome_round(
+                            bubble.width.saturating_sub(20),
+                            row_height as u32,
+                            5,
+                            [3, 25, 34, 210],
+                        ) {
+                            panels.push((buffer, bubble.x + 10, y - 2));
+                        }
+                    }
+                    let mut x = text_left + line.indent;
                     for span in &line.spans {
                         let color = match span.kind {
                             aether_shell::ChatSpanKind::Text => [220, 240, 245, 255],
                             aether_shell::ChatSpanKind::Bold => [255, 255, 255, 255],
                             aether_shell::ChatSpanKind::Code => [120, 230, 180, 255],
                         };
-                        labels.push((span.text.clone(), x, y, line.scale, color));
-                        x += text_width(&span.text, line.scale) as i32;
+                        let mut scale = if line.code { 1 } else { line.scale };
+                        if span.kind == aether_shell::ChatSpanKind::Bold {
+                            scale |= 0x100;
+                        }
+                        let span_width = self.text_width(&span.text, scale & 0xff) as i32;
+                        if x + span_width > text_left + max_width {
+                            break;
+                        }
+                        labels.push((span.text.clone(), x, y, scale, color));
+                        x += span_width;
                     }
                     y += row_height;
                 }
                 let track = AetherRect::new(
-                    rect.x + rect.width as i32 - 8,
-                    rect.y + 46,
+                    rect.x + width - 10,
+                    bubble.y as i32 + 10,
                     4,
-                    rect.height.saturating_sub(84),
+                    bubble.height.saturating_sub(20),
                 );
-                chrome.push((track, [0.03, 0.12, 0.16, 1.0]));
+                if let Some(buffer) = self.chrome_round(4, track.height, 2, [3, 25, 34, 255]) {
+                    panels.push((buffer, track.x, track.y));
+                }
                 let lines = self.shell.chat_line_count().max(1);
                 let visible = self.shell.chat_visible_rows().max(1);
                 let thumb = ((visible as f32 / lines as f32) * track.height as f32)
                     .clamp(12.0, track.height as f32) as u32;
                 let offset =
                     ((self.shell.chat_scroll() as f32 / lines as f32) * track.height as f32) as i32;
-                chrome.push((
-                    AetherRect::new(
+                if let Some(buffer) = self.chrome_round(4, thumb, 2, [56, 214, 255, 190]) {
+                    panels.push((
+                        buffer,
                         track.x,
-                        track.y + offset.min(track.height as i32 - thumb as i32),
-                        track.width,
-                        thumb,
-                    ),
-                    [0.22, 0.84, 1.0, 1.0],
+                        track.y + offset.min(track.height as i32 - thumb as i32).max(0),
+                    ));
+                }
+
+                // Composer footer.
+                let composer_y = rect.y + height - 58;
+                let composer =
+                    AetherRect::new(rect.x + 14, composer_y, rect.width.saturating_sub(28), 38);
+                if let Some(buffer) = self.chrome_round(composer.width, 38, 10, [3, 25, 34, 255]) {
+                    panels.push((buffer, composer.x, composer.y));
+                }
+                labels.push((
+                    "Message Aether…".into(),
+                    composer.x + 14,
+                    composer.y + 10,
+                    1,
+                    [107, 169, 182, 255],
+                ));
+                if let Some(buffer) = self.chrome_round(26, 26, 8, [56, 214, 255, 44]) {
+                    panels.push((
+                        buffer,
+                        composer.x + composer.width as i32 - 34,
+                        composer.y + 6,
+                    ));
+                }
+                display_icons.push((
+                    "arrow".into(),
+                    14,
+                    [56, 214, 255, 255],
+                    composer.x + composer.width as i32 - 28,
+                    composer.y + 12,
                 ));
                 labels.push((
-                    "Esc close   PgUp/PgDn scroll".into(),
-                    rect.x + 12,
-                    rect.y + rect.height as i32 - 24,
-                    1,
-                    [128, 184, 199, 255],
+                    "esc close   PgUp/PgDn scroll".into(),
+                    rect.x + width - 176,
+                    composer_y - 16,
+                    0,
+                    [107, 169, 182, 255],
                 ));
             }
 
             if explorer_here {
-                let rect = self.shell.explorer_rect();
-                chrome.push((rect, design_color(aether_shell::design::PANEL, 1.0)));
-                chrome.push((
-                    AetherRect::new(rect.x, rect.y, rect.width, 36),
-                    design_color(aether_shell::design::HEADER, 1.0),
+                let bounds = self.shell.explorer_rect();
+                let pane = self.shell.explorer_pane_rect();
+                let width = bounds.width as i32;
+                let height = bounds.height as i32;
+                // App bar and status bar.
+                if let Some(buffer) =
+                    self.chrome_round(bounds.width.max(1), 62, 0, [5, 37, 48, 236])
+                {
+                    panels.push((buffer, bounds.x, bounds.y));
+                }
+                if let Some(buffer) =
+                    self.chrome_round(bounds.width.max(1), 36, 0, [5, 37, 48, 242])
+                {
+                    panels.push((buffer, bounds.x, bounds.y + height - 36));
+                }
+                // Pane card.
+                if let Some(buffer) = self.chrome_panel(
+                    pane.width,
+                    pane.height,
+                    12,
+                    [7, 39, 51, 246],
+                    Some([127, 230, 255, 30]),
+                ) {
+                    panels.push((buffer, pane.x - 18, pane.y - 18));
+                }
+                // App bar brand.
+                display_icons.push((
+                    "explorer".into(),
+                    28,
+                    [56, 214, 255, 255],
+                    bounds.x + 18,
+                    bounds.y + 17,
                 ));
                 labels.push((
-                    "Aether Explorer".into(),
-                    rect.x + 14,
-                    rect.y + 10,
+                    "Aether".into(),
+                    bounds.x + 56,
+                    bounds.y + 12,
                     2,
-                    [235, 252, 255, 255],
+                    [233, 251, 255, 255],
+                ));
+                labels.push((
+                    "Files · indexed system".into(),
+                    bounds.x + 56,
+                    bounds.y + 35,
+                    0,
+                    [107, 169, 182, 255],
+                ));
+                // Center tabs.
+                let tab_x = bounds.x + width / 2 - 150;
+                let tab_active = AetherRect::new(tab_x, bounds.y + 15, 92, 32);
+                if let Some(buffer) = self.chrome_round(92, 32, 8, [56, 214, 255, 38]) {
+                    panels.push((buffer, tab_active.x, tab_active.y));
+                }
+                labels.push((
+                    "Files".into(),
+                    tab_x + 26,
+                    bounds.y + 22,
+                    1,
+                    [233, 251, 255, 255],
+                ));
+                labels.push((
+                    "Palette".into(),
+                    tab_x + 120,
+                    bounds.y + 22,
+                    1,
+                    [165, 219, 229, 255],
+                ));
+                labels.push((
+                    "Chat".into(),
+                    tab_x + 215,
+                    bounds.y + 22,
+                    1,
+                    [165, 219, 229, 255],
+                ));
+                // Search affordance.
+                let search = AetherRect::new(bounds.x + width - 250, bounds.y + 15, 232, 32);
+                if let Some(buffer) = self.chrome_round(232, 32, 8, [3, 25, 34, 255]) {
+                    panels.push((buffer, search.x, search.y));
+                }
+                display_icons.push((
+                    "search".into(),
+                    16,
+                    [107, 169, 182, 255],
+                    search.x + 10,
+                    search.y + 8,
+                ));
+                labels.push((
+                    "Search files".into(),
+                    search.x + 32,
+                    search.y + 9,
+                    0,
+                    [107, 169, 182, 255],
+                ));
+                labels.push((
+                    "Super+K".into(),
+                    search.x + 176,
+                    search.y + 9,
+                    0,
+                    [107, 169, 182, 255],
+                ));
+                // Pane header.
+                let pane_icon = pane.x + 16;
+                let pane_y = pane.y + 14;
+                display_icons.push(("folder".into(), 22, [56, 214, 255, 255], pane_icon, pane_y));
+                labels.push((
+                    "Files".into(),
+                    pane.x + 48,
+                    pane.y + 14,
+                    3,
+                    [233, 251, 255, 255],
+                ));
+                labels.push((
+                    "All indexed roots".into(),
+                    pane.x + 48,
+                    pane.y + 34,
+                    0,
+                    [107, 169, 182, 255],
                 ));
                 let count = format!("{} files", self.shell.explorer_match_count());
                 labels.push((
                     count.clone(),
-                    rect.x + rect.width as i32 - text_width(&count, 1) as i32 - 14,
-                    rect.y + 14,
-                    1,
-                    [179, 235, 250, 255],
+                    pane.x + pane.width as i32 - self.text_width(&count, 0) as i32 - 50,
+                    pane.y + 20,
+                    0,
+                    [165, 219, 229, 255],
                 ));
-                let input =
-                    AetherRect::new(rect.x + 16, rect.y + 48, rect.width.saturating_sub(32), 28);
-                chrome.push((input, [0.03, 0.12, 0.16, 1.0]));
-                let query = self.shell.explorer_query();
-                if query.is_empty() {
-                    labels.push((
-                        "Search files...".into(),
-                        input.x + 10,
-                        input.y + 10,
-                        1,
-                        [122, 173, 189, 255],
-                    ));
-                } else {
-                    labels.push((
-                        format!("> {query}_"),
-                        input.x + 10,
-                        input.y + 10,
-                        1,
-                        [235, 252, 255, 255],
-                    ));
-                }
-
-                let rows = self.shell.visible_explorer_rows();
+                display_icons.push((
+                    "close".into(),
+                    16,
+                    [107, 169, 182, 255],
+                    pane.x + pane.width as i32 - 32,
+                    pane.y + 20,
+                ));
+                // Column header.
+                let columns_y = pane.y + 56;
+                chrome.push((
+                    AetherRect::new(pane.x + 1, columns_y, pane.width.saturating_sub(2), 30),
+                    design_color(0x052530, 190.0 / 255.0),
+                ));
+                let type_x = pane.x + (pane.width as f32 * 0.62) as i32;
+                labels.push((
+                    "NAME".into(),
+                    pane.x + 16,
+                    columns_y + 9,
+                    0,
+                    [107, 169, 182, 255],
+                ));
+                labels.push((
+                    "TYPE".into(),
+                    type_x,
+                    columns_y + 9,
+                    0,
+                    [107, 169, 182, 255],
+                ));
+                labels.push((
+                    "LOCATION".into(),
+                    pane.x + pane.width as i32 - self.text_width("LOCATION", 0) as i32 - 16,
+                    columns_y + 9,
+                    0,
+                    [107, 169, 182, 255],
+                ));
+                // Rows.
+                let rows: Vec<aether_shell::PaletteFile> = self
+                    .shell
+                    .visible_explorer_rows()
+                    .into_iter()
+                    .cloned()
+                    .collect();
                 let scroll = self.shell.explorer_scroll();
                 let selected = self.shell.explorer_selected();
                 let row_height = aether_shell::design::EXPLORER_ROW_HEIGHT as i32;
+                let row_top = self.shell.explorer_rows_top();
                 for (row, file) in rows.iter().enumerate() {
                     let index = scroll + row;
-                    let y = rect.y + 92 + row as i32 * row_height;
+                    let y = row_top + row as i32 * row_height;
                     let row_rect = AetherRect::new(
-                        rect.x + 12,
+                        pane.x + 8,
                         y,
-                        rect.width.saturating_sub(32),
-                        row_height as u32,
+                        pane.width.saturating_sub(16),
+                        (row_height - 2) as u32,
                     );
                     if index == selected {
-                        chrome.push((row_rect, design_color(aether_shell::design::ACCENT, 0.22)));
+                        if let Some(buffer) = self.chrome_round(
+                            row_rect.width,
+                            row_rect.height,
+                            7,
+                            [56, 214, 255, 56],
+                        ) {
+                            panels.push((buffer, row_rect.x, row_rect.y));
+                        }
                         chrome.push((
-                            AetherRect::new(row_rect.x, row_rect.y, 3, row_rect.height),
+                            AetherRect::new(
+                                row_rect.x,
+                                row_rect.y + 4,
+                                3,
+                                row_rect.height.saturating_sub(8),
+                            ),
                             design_color(aether_shell::design::ACCENT, 1.0),
                         ));
                     }
+                    let extension = file
+                        .name
+                        .rsplit_once('.')
+                        .map(|(_, extension)| extension.to_uppercase())
+                        .unwrap_or_else(|| "FILE".to_string());
+                    let kind = file_kind(&extension);
+                    display_icons.push((kind.0.into(), 16, kind.1, row_rect.x + 8, row_rect.y + 7));
                     labels.push((
                         file.name.clone(),
-                        row_rect.x + 10,
-                        row_rect.y + 9,
+                        row_rect.x + 30,
+                        row_rect.y + 8,
                         1,
                         if index == selected {
-                            [235, 252, 255, 255]
+                            [233, 251, 255, 255]
                         } else {
-                            [217, 247, 255, 255]
+                            [233, 251, 255, 255]
                         },
                     ));
+                    labels.push((extension, type_x, row_rect.y + 9, 0, [165, 219, 229, 255]));
+                    let location = truncate(&file.detail, 34);
                     labels.push((
-                        file.detail.clone(),
-                        row_rect.x + row_rect.width as i32
-                            - text_width(&file.detail, 1) as i32
-                            - 10,
+                        location,
+                        pane.x + pane.width as i32
+                            - self.text_width(&truncate(&file.detail, 34), 0) as i32
+                            - 16,
                         row_rect.y + 9,
-                        1,
-                        [122, 173, 189, 255],
+                        0,
+                        [107, 169, 182, 255],
                     ));
                 }
-                let track = AetherRect::new(
-                    rect.x + rect.width as i32 - 8,
-                    rect.y + 92,
-                    4,
-                    (self.shell.explorer_visible_rows() as u32)
-                        * aether_shell::design::EXPLORER_ROW_HEIGHT,
-                );
-                chrome.push((track, [0.03, 0.12, 0.16, 1.0]));
-                let matches = self.shell.explorer_match_count().max(1);
-                let visible = self.shell.explorer_visible_rows().max(1);
-                let thumb = ((visible as f32 / matches as f32) * track.height as f32)
-                    .clamp(12.0, track.height as f32) as u32;
-                let offset = ((scroll as f32 / matches as f32) * track.height as f32) as i32;
+                // Pane footer.
+                let footer_y = pane.y + pane.height as i32 - 30;
                 chrome.push((
-                    AetherRect::new(
-                        track.x,
-                        track.y + offset.min(track.height as i32 - thumb as i32),
-                        track.width,
-                        thumb,
-                    ),
-                    [0.22, 0.84, 1.0, 1.0],
+                    AetherRect::new(pane.x + 1, footer_y, pane.width.saturating_sub(2), 29),
+                    design_color(0x052530, 190.0 / 255.0),
                 ));
-                let footer = "Up/Down move   PgUp/PgDn page   Enter open   Esc close";
                 labels.push((
-                    footer.into(),
-                    rect.x + 16,
-                    rect.y + rect.height as i32 - 24,
-                    1,
-                    [128, 184, 199, 255],
+                    format!(
+                        "{} of {} files",
+                        rows.len(),
+                        self.shell.explorer_match_count()
+                    ),
+                    pane.x + 16,
+                    footer_y + 9,
+                    0,
+                    [107, 169, 182, 255],
                 ));
+                let hint = "Enter open   Esc close   PgUp/PgDn page";
+                labels.push((
+                    hint.into(),
+                    pane.x + pane.width as i32 - self.text_width(hint, 0) as i32 - 16,
+                    footer_y + 9,
+                    0,
+                    [107, 169, 182, 255],
+                ));
+                // Status bar.
+                let status_y = bounds.y + height - 36;
+                let selected_file = self.shell.explorer_selected_file();
+                if let Some(file) = selected_file {
+                    labels.push((
+                        file.name.clone(),
+                        bounds.x + 16,
+                        status_y + 12,
+                        1,
+                        [233, 251, 255, 255],
+                    ));
+                    labels.push((
+                        truncate(&file.path, 60),
+                        bounds.x + 16 + self.text_width(&file.name, 1) as i32 + 10,
+                        status_y + 13,
+                        0,
+                        [107, 169, 182, 255],
+                    ));
+                } else {
+                    labels.push((
+                        "No selection".into(),
+                        bounds.x + 16,
+                        status_y + 12,
+                        1,
+                        [107, 169, 182, 255],
+                    ));
+                }
+                let status = self.status().clone();
+                let mut sx = bounds.x + width - 16;
+                let badges = [
+                    ("agents", format!("{} agents", status.agents)),
+                    ("cpu", format!("{}%", status.cpu_percent)),
+                    (
+                        "memory",
+                        format!("{}/{} MB", status.mem_used_mb, status.mem_total_mb),
+                    ),
+                    ("audio", status.audio.clone()),
+                    ("chart", format!("{:.1} ms", status.frame_ms)),
+                ];
+                for (icon, text) in badges.iter().rev() {
+                    let tw = self.text_width(text, 0) as i32;
+                    sx -= tw + 22;
+                    display_icons.push((
+                        (*icon).into(),
+                        14,
+                        [107, 169, 182, 255],
+                        sx,
+                        status_y + 11,
+                    ));
+                    labels.push((
+                        text.clone(),
+                        sx + 18,
+                        status_y + 12,
+                        0,
+                        [165, 219, 229, 255],
+                    ));
+                    sx -= 14;
+                }
             }
 
-            if self.shell.fullscreen_window_on(chrome_output).is_none() {
-                if self.status_visible() {
+            if !explorer_here && self.shell.fullscreen_window_on(chrome_output).is_none() {
+                if self.status_visible() && !chat_here {
                     let bounds = self.shell.output_bounds(chrome_output);
                     let text = self.status().label();
-                    let width = text_width(&text, 1) as i32 + 16;
-                    let x = bounds.x + bounds.width as i32 - width - 10;
-                    chrome.push((
-                        AetherRect::new(x, bounds.y + 10, width as u32, 22),
-                        [0.03, 0.12, 0.16, 0.9],
-                    ));
-                    labels.push((text, x + 8, bounds.y + 17, 1, [179, 235, 250, 255]));
+                    let width = self.text_width(&text, 0) as i32 + 42;
+                    let x = bounds.x + bounds.width as i32 - width - 12;
+                    if let Some(buffer) = self.chrome_round(width as u32, 26, 13, [5, 37, 48, 226])
+                    {
+                        panels.push((buffer, x, bounds.y + 10));
+                    }
+                    if let Some(buffer) = self.chrome_round(6, 6, 3, [67, 214, 138, 255]) {
+                        panels.push((buffer, x + 12, bounds.y + 20));
+                    }
+                    labels.push((text, x + 24, bounds.y + 15, 0, [179, 235, 250, 255]));
                 }
                 let names = self.shell.workspace_names();
                 for workspace in 0..self.shell.workspace_count() {
@@ -644,20 +1161,24 @@ impl App {
                         continue;
                     };
                     let active = workspace == self.shell.output_workspace(chrome_output);
-                    chrome.push((
-                        AetherRect::new(chip.x, chip.y, chip.width, WORKSPACE_INDICATOR_BAR_HEIGHT),
+                    if let Some(buffer) = self.chrome_round(
+                        chip.width,
+                        WORKSPACE_INDICATOR_BAR_HEIGHT,
+                        3,
                         if active {
-                            [0.22, 0.84, 1.0, 1.0]
+                            [56, 214, 255, 255]
                         } else {
-                            [0.12, 0.3, 0.35, 0.9]
+                            [56, 214, 255, 46]
                         },
-                    ));
+                    ) {
+                        panels.push((buffer, chip.x, chip.y));
+                    }
                     let name = names.get(workspace).map(String::as_str).unwrap_or("");
                     labels.push((
                         format!("{} {name}", workspace + 1),
-                        chip.x + 4,
+                        chip.x + 2,
                         chip.y + 12,
-                        1,
+                        0,
                         if active {
                             [56, 214, 255, 255]
                         } else {
@@ -665,6 +1186,20 @@ impl App {
                         },
                     ));
                 }
+            }
+        }
+
+        for (buffer, x, y) in &panels {
+            if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
+                renderer,
+                (*x as f64, *y as f64),
+                buffer,
+                None,
+                None,
+                None,
+                Kind::Unspecified,
+            ) {
+                elements.push(AetherRenderElement::from(element));
             }
         }
 
@@ -720,14 +1255,38 @@ impl App {
             }
         }
 
+        // Vector icons from the design system.
+        for (name, size, color, x, y) in &display_icons {
+            if let Some(buffer) = self.chrome_icon(name, *size, *color) {
+                if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
+                    renderer,
+                    ((*x - offset.0) as f64, (*y - offset.1) as f64),
+                    &buffer,
+                    None,
+                    None,
+                    None,
+                    Kind::Unspecified,
+                ) {
+                    elements.push(AetherRenderElement::from(element));
+                }
+            }
+        }
+
         // Text labels. Cache by content/scale/colour so static chrome does not
         // rasterize and upload the same bitmap every frame.
         let mut rasterized = false;
         for (text, x, y, scale, color) in &labels {
-            let key = (text.clone(), *scale, *color);
+            let base_scale = *scale & 0xff;
+            let bold = *scale >= 2 || (*scale & 0x100) != 0;
+            let key = (text.clone(), *scale, *color, bold);
             let buffer = self.text_cache.entry(key).or_insert_with(|| {
                 rasterized = true;
-                let bitmap = TextBitmap::render(text, *scale, *color);
+                let bitmap = match self.font.as_ref() {
+                    Some(font) => {
+                        font.render(text, crate::app::App::text_px(base_scale), *color, bold)
+                    }
+                    None => TextBitmap::render(text, base_scale.max(1), *color),
+                };
                 MemoryRenderBuffer::from_slice(
                     bitmap.pixels(),
                     Fourcc::Abgr8888,
@@ -942,6 +1501,29 @@ fn load_icon(path: &str) -> Option<(u32, u32, Vec<u8>)> {
         _ => return None,
     };
     Some((info.width, info.height, pixels))
+}
+
+fn truncate(text: &str, limit: usize) -> String {
+    if text.chars().count() <= limit {
+        return text.to_string();
+    }
+    let mut result: String = text.chars().take(limit.saturating_sub(1)).collect();
+    result.push('…');
+    result
+}
+
+fn file_kind(extension: &str) -> (&'static str, [u8; 4]) {
+    match extension {
+        "PNG" | "JPG" | "JPEG" | "GIF" | "WEBP" | "SVG" => ("file", [209, 88, 79, 255]),
+        "MP4" | "MKV" | "MOV" | "WEBM" => ("file", [154, 99, 214, 255]),
+        "MP3" | "FLAC" | "WAV" | "OGG" => ("file", [209, 132, 58, 255]),
+        "ZIP" | "TAR" | "GZ" | "XZ" | "7Z" => ("file", [162, 118, 47, 255]),
+        "RS" | "TS" | "TSX" | "JS" | "PY" | "GO" | "C" | "H" | "NIX" => {
+            ("file", [111, 213, 255, 255])
+        }
+        "MD" | "TXT" | "PDF" => ("file", [165, 219, 229, 255]),
+        _ => ("file", [165, 219, 229, 255]),
+    }
 }
 
 #[cfg(test)]

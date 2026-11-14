@@ -57,21 +57,34 @@ Badges always carry a label and a dot. A greyscale screenshot remains readable.
 
 ## Layout
 
+The compositor explorer is a **full-output workspace**, not a floating dialog:
+
 ```text
-┌─────────────────────────────┬─────────────────────────────┐
-│ Home            /home/...   │ Archive         /mnt/...   │
-│ ⌕ search                    │ ⌕ search                    │
-│ Name   Status  Size Modified│ Name   Status  Size Modified│
-│ ● projects  Local    —  Nov │ ● 2026-11-12 Partial  —  Nov│
-│ ...                         │ ...                         │
-│ 7 items · 3 roots           │ 7 items · 4 status classes  │
-└─────────────────────────────┴─────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│ ◉ Aether          Files  Palette  Chat        ⌕ Search  ⌘K  │ 62 px app bar
+│   Files · indexed system                                     │
+├──────────────────────────────────────────────────────────────┤
+│  ▣ Files                                    2 files      ×  │ 56 px pane header
+│    All indexed roots                                         │
+│  NAME                         TYPE              LOCATION     │ 30 px column header
+│  ▌ alpha.md                   MD                   notes     │ 30 px rows
+│    beta.txt                   TXT                   file      │
+│                                                              │
+│  2 of 2 files                  Enter open  Esc close  PgUp…  │ 30 px footer
+├──────────────────────────────────────────────────────────────┤
+│ alpha.md  /srv/…    0 agents  12%  1.7/12 GB  audio  0.0 ms  │ 36 px status bar
+└──────────────────────────────────────────────────────────────┘
 ```
 
-- 30 px rows, sticky column header, 26 px search row.
-- Path is a read-only chip; editing paths is a palette command, not a text field.
-- Footer shows item count and pane-specific facts (watched roots, signed manifest).
-- The shell status bar spans both panes.
+![Explorer full-output layout](/img/smithay-explorer.png)
+
+![Explorer filtered to one file](/img/smithay-explorer-filtered.png)
+
+- 30 px rows, sticky column header, 56 px pane header, 16 px pane inset.
+- App bar tabs switch Files / Palette / Chat without losing the explorer query.
+- Path is read-only in the pane; editing paths is a palette command, not a text field.
+- Footer shows the visible count and pane shortcuts; the shell status bar spans the output.
+- Type scale is Inter 11/13/16/20 px; icons are the Water SVG set, not emoji.
 
 ## Interactions
 
@@ -112,7 +125,9 @@ executable by default.
 
 | Concern | Code |
 | --- | --- |
-| Pane component | `packages/ui/src/Explorer.tsx` |
+| Web pane component | `packages/ui/src/Explorer.tsx` |
+| Compositor explorer layer | `os/compositor/aether-shell-wayland/src/render.rs` |
+| Compositor geometry | `os/compositor/crates/aether-shell/src/lib.rs` (`explorer_*`) |
 | Fixture data (demo) | `apps/web/src/data.ts` |
 | Selection/open/search tests | `packages/ui/src/ui.test.tsx` |
 | Real filesystem semantics | `apps/docs/docs/architecture/files-and-storage.md` |

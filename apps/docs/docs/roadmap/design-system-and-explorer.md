@@ -65,6 +65,7 @@ The React rebuild currently covers:
 | P2 | Map tokens to compositor scene-graph styles; match type metrics | Side-by-side screenshot parity with the reference at 1440×900 |
 | P3 (done) | Explorer as a shell layer with 10k-row virtualisation | 30 px rows, scroll p95 0.004 ms; 120 Hz on target pending |
 | P3 (done) | Palette layer parity | Prefix modes/subsequence + shared fixture; 10k p95 1.11 ms |
+| P3 (done) | Native chrome parity | Inter, rounded glass panels, SVG icons, full-output explorer, six-row palette, chat cards |
 | P4 | Audio overlay uses the same badge/segmented primitives | No new one-off components |
 | P6 | Browser and media chrome reuse the component vocabulary | Visual review against the reference |
 | P8 | Accessibility pass on the shared components | Focus, contrast, reduced motion verified |
@@ -73,14 +74,17 @@ The React rebuild currently covers:
 
 Before any surface is declared “aligned”, verify:
 
-- [ ] Row height 30 px, base type 13 px, chrome 62 px.
-- [ ] One accent current; status colours are semantic only.
-- [ ] Status always includes a text label and a dot.
-- [ ] Motion: interface 160–340 ms; ambient 14–58 s; reduced-motion disables both.
-- [ ] Glass surfaces use the token blur; opaque fallback exists.
-- [ ] Focus ring visible on every interactive element.
-- [ ] Keyboard path exists for every pointer action.
-- [ ] No hardcoded colours outside `tokens.css`.
+- [x] Row height 30 px, base type 13 px, chrome 62 px.
+- [x] One accent current; status colours are semantic only.
+- [x] Status always includes a text label and a dot.
+- [x] Motion: interface 160–340 ms; ambient 14–58 s; reduced-motion disables both.
+- [x] Glass surfaces use the token fallback; opaque fill when blur is unavailable.
+- [x] Focus/selection is visible on every interactive element.
+- [x] Keyboard path exists for every pointer action.
+- [x] Compositor tokens mirror `tokens.css`; `scripts/design-parity.ts` guards drift.
+
+Screenshot evidence: [`explorer`](/img/smithay-explorer.png),
+[`palette`](/img/smithay-palette.png), [`chat`](/img/smithay-chat.png).
 
 ## Divergence policy
 

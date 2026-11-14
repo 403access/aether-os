@@ -85,10 +85,12 @@ workspaces, focus, floating windows and the overlay, and emits a `FramePlan`
 (viewport, damage, draw items, focus) for a backend to present. It has no
 Wayland, GPU or input dependency.
 
-`aether-text` rasterizes 8x8 bitmap glyphs into tightly cropped RGBA buffers.
-It has no fontconfig, FreeType or glyph-atlas dependency, so labels and overlay
-copy render identically in the preview and in native backends. It is the shared
-text layer for the shell and for apps that draw simple chrome.
+`aether-text` has two paths: an Inter rasterizer built on `fontdue` for
+antialiased chrome at 11/13/16/20 px, and the original 8x8 bitmap fallback when
+no font file is available. Both produce tightly cropped RGBA buffers with no
+fontconfig, FreeType or glyph-atlas dependency, so the preview and native
+backends share one text layer. `aether-shell-wayland` additionally rasterizes
+Water SVG icons and rounded panels with `resvg`/`tiny-skia`.
 
 `aether-desktop` discovers applications from XDG `.desktop` files and turns
 `Exec` into a program/argument list for the palette launcher. It resolves

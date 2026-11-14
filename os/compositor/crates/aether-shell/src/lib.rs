@@ -79,13 +79,13 @@ pub const WORKSPACE_INDICATOR_SPACING: i32 = 76;
 pub const WORKSPACE_INDICATOR_HIT_HEIGHT: u32 = 26;
 
 /// Visible rows in the palette list.
-pub const PALETTE_VISIBLE_ROWS: usize = 4;
+pub const PALETTE_VISIBLE_ROWS: usize = 6;
 /// Height of one result row.
-pub const PALETTE_ROW_HEIGHT: u32 = 32;
+pub const PALETTE_ROW_HEIGHT: u32 = 40;
 /// Vertical distance between result rows.
-pub const PALETTE_ROW_SPACING: u32 = 48;
+pub const PALETTE_ROW_SPACING: u32 = 46;
 /// Y offset of the first result row inside the overlay rect.
-pub const PALETTE_CONTENT_TOP: i32 = 96;
+pub const PALETTE_CONTENT_TOP: i32 = 66;
 
 /// Minimum width when resizing a floating window.
 pub const MIN_FLOATING_WIDTH: u32 = 160;
@@ -1260,18 +1260,24 @@ impl Shell {
 
     /// Explorer panel rect, centred in the primary output.
     pub fn explorer_rect(&self) -> Rect {
-        let bounds = self
-            .primary_output()
+        self.primary_output()
             .map(|output| output.rect)
-            .unwrap_or_else(|| Rect::from_size(self.viewport));
-        let width = 900.min(bounds.width.saturating_sub(64)).max(1);
-        let height = 600.min(bounds.height.saturating_sub(64)).max(1);
+            .unwrap_or_else(|| Rect::from_size(self.viewport))
+    }
+
+    /// Card below the explorer app bar and above its status bar.
+    pub fn explorer_pane_rect(&self) -> Rect {
+        let bounds = self.explorer_rect();
         Rect::new(
-            bounds.x + (bounds.width.saturating_sub(width) / 2) as i32,
-            bounds.y + (bounds.height.saturating_sub(height) / 2) as i32,
-            width,
-            height,
+            bounds.x + 16,
+            bounds.y + 74,
+            bounds.width.saturating_sub(32),
+            bounds.height.saturating_sub(74 + 52),
         )
+    }
+
+    pub fn explorer_rows_top(&self) -> i32 {
+        self.explorer_pane_rect().y + 56 + 30
     }
 
     pub fn open_explorer(&mut self) -> Option<()> {
@@ -1311,10 +1317,11 @@ impl Shell {
     }
 
     pub fn explorer_visible_rows(&self) -> usize {
-        self.explorer
-            .as_ref()
-            .map(|explorer| explorer.visible)
-            .unwrap_or(0)
+        if self.explorer.is_none() {
+            return 0;
+        }
+        let pane = self.explorer_pane_rect();
+        ((pane.height.saturating_sub(56 + 30 + 30)) / design::EXPLORER_ROW_HEIGHT).max(1) as usize
     }
 
     pub fn explorer_match_count(&self) -> usize {
@@ -1351,7 +1358,8 @@ impl Shell {
         if explorer.selected >= explorer.matches.len() {
             explorer.selected = explorer.matches.len().saturating_sub(1);
         }
-        let max_scroll = explorer.matches.len().saturating_sub(explorer.visible);
+        let visible = self.explorer_visible_rows();
+        let max_scroll = explorer.matches.len().saturating_sub(visible);
         explorer.scroll = explorer.scroll.min(max_scroll);
     }
 
@@ -1362,11 +1370,12 @@ impl Shell {
         };
         let mut state = explorer.clone();
         self.refresh_explorer(&mut state);
+        let visible = self.explorer_visible_rows();
         state
             .matches
             .iter()
             .skip(state.scroll)
-            .take(state.visible)
+            .take(visible)
             .filter_map(|index| self.files.get(*index))
             .collect()
     }
@@ -1382,9 +1391,9 @@ impl Shell {
 
     /// Select the visible row under `point`; returns the absolute index.
     pub fn explorer_select_at(&mut self, point: Point) -> Option<usize> {
-        let rect = self.explorer_rect();
-        let content_top = rect.y + 96;
-        if point.x < rect.x || point.x >= rect.right() as i32 {
+        let pane = self.explorer_pane_rect();
+        let content_top = self.explorer_rows_top();
+        if point.x < pane.x + 8 || point.x >= pane.right() as i32 - 8 {
             return None;
         }
         if point.y < content_top
@@ -1434,7 +1443,8 @@ impl Shell {
     }
 
     fn clamp_explorer(&self, explorer: &mut ExplorerState) {
-        let max_scroll = explorer.matches.len().saturating_sub(explorer.visible);
+        let visible = self.explorer_visible_rows();
+        let max_scroll = explorer.matches.len().saturating_sub(visible);
         explorer.scroll = explorer.scroll.min(max_scroll);
         if explorer.selected < explorer.scroll {
             explorer.scroll = explorer.selected;
@@ -1459,10 +1469,10 @@ impl Shell {
     }
 
     pub fn explorer_page(&mut self, direction: isize) -> bool {
-        let Some(explorer) = self.explorer.as_ref() else {
+        if self.explorer.is_none() {
             return false;
-        };
-        let page = explorer.visible as isize;
+        }
+        let page = self.explorer_visible_rows() as isize;
         self.explorer_move(direction * page)
     }
 
@@ -1474,10 +1484,11 @@ impl Shell {
         if state.matches.is_empty() {
             return false;
         }
-        let max_scroll = state.matches.len().saturating_sub(state.visible) as isize;
+        let visible = self.explorer_visible_rows();
+        let max_scroll = state.matches.len().saturating_sub(visible) as isize;
         state.scroll = (state.scroll as isize + delta).clamp(0, max_scroll) as usize;
         state.selected = state.selected.max(state.scroll).min(
-            (state.scroll + state.visible)
+            (state.scroll + visible)
                 .min(state.matches.len())
                 .saturating_sub(1),
         );
@@ -1663,9 +1674,9 @@ impl Shell {
         }
         let overlay = self.overlay_rect()?;
         Some(Rect::new(
-            overlay.x + 16,
+            overlay.x + 10,
             overlay.y + PALETTE_CONTENT_TOP + row as i32 * PALETTE_ROW_SPACING as i32,
-            overlay.width.saturating_sub(32),
+            overlay.width.saturating_sub(20),
             PALETTE_ROW_HEIGHT,
         ))
     }
@@ -1673,8 +1684,8 @@ impl Shell {
     /// Entry index under a screen point, accounting for the sliding window.
     pub fn palette_row_at(&self, point: Point) -> Option<usize> {
         let overlay = self.overlay_rect()?;
-        let content_left = overlay.x + 16;
-        let content_right = overlay.x + overlay.width as i32 - 16;
+        let content_left = overlay.x + 10;
+        let content_right = overlay.x + overlay.width as i32 - 10;
         if point.x < content_left || point.x >= content_right {
             return None;
         }
@@ -2334,7 +2345,7 @@ fn chat_inline(text: &str) -> Vec<ChatSpan> {
     let mut spans = Vec::new();
     let mut current = String::new();
     let mut chars = text.chars().peekable();
-    let mut push = |spans: &mut Vec<ChatSpan>, current: &mut String, kind: ChatSpanKind| {
+    let push = |spans: &mut Vec<ChatSpan>, current: &mut String, kind: ChatSpanKind| {
         if !current.is_empty() {
             spans.push(ChatSpan {
                 text: std::mem::take(current),
@@ -3344,18 +3355,18 @@ mod tests {
         assert_eq!(shell.palette_entries().len(), 8);
         assert_eq!(shell.palette_visible_start(), 0);
         let first = shell.palette_row_rect(0).expect("row 0");
-        assert_eq!(first.x, 76);
-        assert_eq!(first.y, 90 + 96);
+        assert_eq!(first.x, 70);
+        assert_eq!(first.y, 90 + PALETTE_CONTENT_TOP);
         assert_eq!(
             shell.palette_row_at(Point::new(first.x + 2, first.y + 2)),
             Some(0)
         );
         assert_eq!(shell.palette_row_at(Point::new(20, first.y + 2)), None);
 
-        for _ in 0..4 {
+        for _ in 0..6 {
             shell.palette_move_selection(1);
         }
-        assert_eq!(shell.palette_selected(), 4);
+        assert_eq!(shell.palette_selected(), 6);
         assert_eq!(shell.palette_visible_start(), 1);
         assert_eq!(
             shell.palette_row_at(Point::new(first.x + 2, first.y + 2)),
@@ -3615,8 +3626,9 @@ mod explorer_tests {
     #[test]
     fn virtualises_ten_thousand_rows() {
         let mut shell = shell_with_files(10_000);
-        assert_eq!(shell.explorer_visible_rows(), 14);
-        assert_eq!(shell.visible_explorer_rows().len(), 14);
+        let visible = shell.explorer_visible_rows();
+        assert!(visible >= 14);
+        assert_eq!(shell.visible_explorer_rows().len(), visible);
         assert_eq!(shell.explorer_match_count(), 10_000);
         assert!(shell.explorer_move(13));
         assert_eq!(shell.explorer_selected(), 13);
@@ -3627,7 +3639,7 @@ mod explorer_tests {
         assert!(shell.explorer_page(-1));
         assert!(shell.explorer_move(-1000));
         assert!(shell.explorer_selected() < 10_000);
-        assert_eq!(shell.visible_explorer_rows().len(), 14);
+        assert_eq!(shell.visible_explorer_rows().len(), visible);
     }
 
     #[test]
@@ -3637,7 +3649,7 @@ mod explorer_tests {
             assert!(shell.explorer_push_char(character));
         }
         assert!(shell.explorer_match_count() >= 10);
-        assert!(shell.visible_explorer_rows().len() <= 14);
+        assert!(shell.visible_explorer_rows().len() <= shell.explorer_visible_rows());
         assert!(shell.explorer_selected_file().is_some());
         let before = shell.explorer_match_count();
         assert!(shell.explorer_backspace());
@@ -3663,10 +3675,10 @@ mod explorer_tests {
     #[test]
     fn row_hit_testing_and_activation() {
         let mut shell = shell_with_files(100);
-        let rect = shell.explorer_rect();
+        let rect = shell.explorer_pane_rect();
         let point = Point::new(
             rect.x + 20,
-            rect.y + 96 + design::EXPLORER_ROW_HEIGHT as i32 * 3 + 4,
+            shell.explorer_rows_top() + design::EXPLORER_ROW_HEIGHT as i32 * 3 + 4,
         );
         assert_eq!(shell.explorer_select_at(point), Some(3));
         let file = shell.explorer_selected_file().unwrap();

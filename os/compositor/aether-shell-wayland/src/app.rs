@@ -21,6 +21,7 @@ use aether_shell::{
     parse_palette_query, OutputId, OutputInfo, PaletteAction, PaletteFile, PaletteLauncher,
     PaletteMode, Shell, SnapZone, WindowId, WindowSpec, MIN_FLOATING_HEIGHT, MIN_FLOATING_WIDTH,
 };
+use aether_text::{text_width, FontRenderer};
 use smithay::backend::input::{AxisSource, ButtonState, KeyState, Keycode, MouseButton};
 use smithay::backend::renderer::element::memory::MemoryRenderBuffer;
 use smithay::backend::renderer::utils::on_commit_buffer_handler;
@@ -485,8 +486,8 @@ fn cursor_for(state: &App) -> CursorShape {
             if state.shell.palette_row_at(point).is_some() {
                 return CursorShape::Pointer;
             }
-            let input_top = overlay.y + 52;
-            if point.y >= input_top && point.y < input_top + 28 {
+            let input_top = overlay.y + 12;
+            if point.y >= input_top && point.y < input_top + 36 {
                 return CursorShape::Text;
             }
         }
@@ -629,8 +630,15 @@ pub struct App {
     full_damage: bool,
     damage: Vec<Rectangle<i32, Physical>>,
     pub(crate) icons: HashMap<String, MemoryRenderBuffer>,
-    pub(crate) text_cache: HashMap<(String, u32, [u8; 4]), MemoryRenderBuffer>,
+    pub(crate) text_cache: HashMap<(String, u32, [u8; 4], bool), MemoryRenderBuffer>,
     pub(crate) text_rasterizations: u64,
+    pub(crate) font: Option<FontRenderer>,
+    pub(crate) chrome_icons: HashMap<(String, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
+    pub(crate) chrome_panels:
+        HashMap<(u32, u32, u32, [u8; 4], Option<[u8; 4]>), Arc<MemoryRenderBuffer>>,
+    pub(crate) chrome_rounds: HashMap<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
+    pub(crate) chrome_tops: HashMap<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
+    pub(crate) chrome_background: HashMap<(u32, u32), Arc<MemoryRenderBuffer>>,
     pub(crate) cursor_buffers: HashMap<CursorShape, CursorCacheEntry>,
     pub(crate) cursor_theme: Option<CursorTheme>,
     pub(crate) client_cursor: Option<CursorShape>,
@@ -1247,6 +1255,12 @@ impl App {
             icons: HashMap::new(),
             text_cache: HashMap::new(),
             text_rasterizations: 0,
+            font: FontRenderer::discover(),
+            chrome_icons: HashMap::new(),
+            chrome_panels: HashMap::new(),
+            chrome_rounds: HashMap::new(),
+            chrome_tops: HashMap::new(),
+            chrome_background: HashMap::new(),
             cursor_buffers: HashMap::new(),
             cursor_theme: Some(CursorTheme::discover()),
             client_cursor: None,
@@ -2086,6 +2100,27 @@ impl App {
 
     pub fn text_rasterizations(&self) -> u64 {
         self.text_rasterizations
+    }
+
+    /// Pixel size for a chrome text style. 0=small, 1=body, 2=title.
+    pub fn text_px(scale: u32) -> f32 {
+        match scale {
+            0 => aether_text::font::SMALL_PX,
+            1 => aether_text::font::BODY_PX,
+            2 => aether_text::font::TITLE_PX,
+            _ => aether_text::font::HEADING_PX,
+        }
+    }
+
+    pub fn text_width(&self, text: &str, scale: u32) -> u32 {
+        match self.font.as_ref() {
+            Some(font) => font.measure(text, Self::text_px(scale), scale >= 2).0,
+            None => text_width(text, scale.max(1)),
+        }
+    }
+
+    pub fn font_is_loaded(&self) -> bool {
+        self.font.is_some()
     }
 
     pub fn set_frame_time_ms(&mut self, frame_ms: f32) {

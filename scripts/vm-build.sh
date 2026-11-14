@@ -6,26 +6,39 @@
 #   BUILDER=docker ./scripts/vm-build.sh
 #   SKIP_DOCKER=1 ./scripts/vm-build.sh   # run nix build on a Linux host
 #
+# The build writes to artifacts/vm.new and replaces artifacts/vm only after a
+# successful image build, so a failed rebuild never destroys the last good VM.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ART="${ROOT}/artifacts/vm"
+NEW="${ROOT}/artifacts/vm.new"
 STORE_VOLUME="${STORE_VOLUME:-aether-vm-nix}"
 
 say() { printf '\n\033[1;36m==>\033[0m %s\n' "$*"; }
 
-# Previous images are read-only (Nix store copy); make sure a rebuild can
-# replace them.
-mkdir -p "${ART}"
-chmod -R u+w "${ART}" 2>/dev/null || true
-rm -rf "${ART}"
-mkdir -p "${ART}"
+mkdir -p "${ROOT}/artifacts"
+rm -rf "${NEW}"
+mkdir -p "${NEW}"
+
+install_image() {
+  chmod -R u+w "${ART}" 2>/dev/null || true
+  rm -rf "${ART}"
+  mv "${NEW}" "${ART}"
+  # A new base image invalidates the old writable overlay.
+  rm -f "${ART}/run.qcow2"
+}
 
 if [ "${SKIP_DOCKER:-0}" = "1" ]; then
   say "building with the local Nix (must be aarch64-linux)"
   out="$(nix build "${ROOT}#vm-image" --no-link --print-out-paths)"
-  cp -Lr "${out}/." "${ART}/"
-  echo "${out}" >"${ART}/store-path.txt"
+  if [ -d "${out}" ]; then
+    cp -Lr "${out}/." "${NEW}/"
+  else
+    cp -L "${out}" "${NEW}/"
+  fi
+  echo "${out}" >"${NEW}/store-path.txt"
+  install_image
   say "artifacts in ${ART}"
   exit 0
 fi
@@ -57,17 +70,17 @@ docker run --rm --privileged \
       --option sandbox false \
       --option system-features "kvm nixos-test benchmark big-parallel" > /tmp/out
     out="$(cat /tmp/out)"
-    chmod -R u+w /src/artifacts/vm 2>/dev/null || true
-    rm -rf /src/artifacts/vm
-    mkdir -p /src/artifacts/vm
+    rm -rf /src/artifacts/vm.new
+    mkdir -p /src/artifacts/vm.new
     if [ -d "$out" ]; then
-      cp -Lr "$out"/. /src/artifacts/vm/
+      cp -Lr "$out"/. /src/artifacts/vm.new/
     else
-      cp -L "$out" /src/artifacts/vm/
+      cp -L "$out" /src/artifacts/vm.new/
     fi
-    printf "%s\n" "$out" > /src/artifacts/vm/store-path.txt
+    printf "%s\n" "$out" > /src/artifacts/vm.new/store-path.txt
     echo "built: $out"
   '
 
+install_image
 say "artifacts in ${ART}"
 ls -lh "${ART}"

@@ -21,8 +21,9 @@ Environment:
 Protocol: newline-delimited JSON. Request `{"query":"...","limit":8}`, response
 `{"results":[{"title","subtitle","path"}]}`. Empty queries return no results.
 
-The service watches the roots with `fs.watch` and upserts/removes files as they
-change (set `AETHER_INDEX_WATCH=0` to disable). The compositor falls back to
+The service watches the roots through `packages/indexer/src/watch.ts`, which uses
+the platform watcher (`inotify` on Linux) with per-path debouncing and upserts or
+removes files as they change (set `AETHER_INDEX_WATCH=0` to disable). The compositor falls back to
 `aether-files` when `AETHER_INDEX_SOCKET` is unset.
 
 ## NixOS

@@ -1,11 +1,11 @@
-import { watch } from "node:fs";
 import { unlink } from "node:fs/promises";
-import { delimiter, join, relative } from "node:path";
+import { delimiter, relative } from "node:path";
 import {
   DEFAULT_IGNORES,
   readFileDocument,
   scanDirectory,
 } from "../../../packages/indexer/src/fs";
+import { watchTree } from "../../../packages/indexer/src/watch";
 import { buildIndex, handleRequest } from "./service";
 
 const roots = (
@@ -67,8 +67,7 @@ console.log(
   `aether-index: ready at ${socketPath} (${documents.length} documents, ${index.size} indexed)`,
 );
 
-const pending = new Map<string, ReturnType<typeof setTimeout>>();
-const watchers: ReturnType<typeof watch>[] = [];
+const watchers: Array<() => void> = [];
 
 function ignored(path: string, root: string): boolean {
   const parts = relative(root, path).split("/");
@@ -90,37 +89,25 @@ async function updatePath(path: string, root: string): Promise<void> {
   console.log(`aether-index: indexed ${path}`);
 }
 
-function scheduleUpdate(path: string, root: string): void {
-  const previous = pending.get(path);
-  if (previous !== undefined) clearTimeout(previous);
-  pending.set(
-    path,
-    setTimeout(() => {
-      pending.delete(path);
-      void updatePath(path, root).catch((error) => {
-        console.error("aether-index: update failed", error);
-      });
-    }, 120),
-  );
-}
-
 if (process.env.AETHER_INDEX_WATCH !== "0") {
   for (const root of roots) {
-    try {
-      const watcher = watch(root, { recursive: true }, (_event, filename) => {
-        if (filename === null) return;
-        scheduleUpdate(join(root, filename.toString()), root);
-      });
-      watchers.push(watcher);
-    } catch (error) {
-      console.error(`aether-index: cannot watch ${root}`, error);
-    }
+    watchers.push(
+      watchTree(root, {
+        onPath(path) {
+          void updatePath(path, root).catch((error) => {
+            console.error("aether-index: update failed", error);
+          });
+        },
+        onError(error) {
+          console.error(`aether-index: cannot watch ${root}`, error);
+        },
+      }),
+    );
   }
 }
 
 const shutdown = (): void => {
-  for (const watcher of watchers) watcher.close();
-  for (const timer of pending.values()) clearTimeout(timer);
+  for (const stop of watchers) stop();
   server.stop();
   void unlink(socketPath).catch(() => undefined);
   process.exit(0);

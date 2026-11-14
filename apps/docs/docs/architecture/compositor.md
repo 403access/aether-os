@@ -91,9 +91,9 @@ copy render identically in the preview and in native backends. It is the shared
 text layer for the shell and for apps that draw simple chrome.
 
 `aether-desktop` discovers applications from XDG `.desktop` files and turns
-`Exec` into a program/argument list for the palette launcher. It skips hidden,
-non-application and terminal-only entries, has no D-Bus or icon dependency, and
-is tested without a desktop session.
+`Exec` into a program/argument list for the palette launcher. It resolves
+`Icon=` to hicolor/pixmap PNGs, skips hidden, non-application and terminal-only
+entries, has no D-Bus dependency, and is tested without a desktop session.
 
 `aether-files` provides a bounded, name-only file index for palette searches:
 configurable roots, depth and entry cap, hidden/build directories skipped.

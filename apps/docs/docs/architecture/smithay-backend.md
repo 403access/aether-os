@@ -116,7 +116,8 @@ with the 681x768 master rect.*
 ![A desktop app installed after startup appearing in the palette](/img/smithay-provider-refresh.png)
 
 *Opening the palette rescans desktop entries and the file roots, so apps or files
-installed while the compositor is running appear without a restart. The smoke
+installed while the compositor is running appear without a restart. `Icon=` is
+resolved to a hicolor/pixmap PNG and rendered at 16×16 in the row. The smoke
 asserts the reload count and launches the new entry.*
 
 ![The same window maximized](/img/smithay-window-maximized.png)
@@ -147,7 +148,8 @@ drag and both toggles with `xdotool` and asserts each transition.*
   windows (titles stay in sync via xdg `title_changed`) and commands. The first
   command, `New terminal`, spawns `AETHER_TERMINAL` (default
   `weston-terminal`) into the compositor. Installed applications are discovered
-  from XDG `.desktop` files at startup and appear as `LaunchApp` entries.
+  from XDG `.desktop` files at startup and appear as `LaunchApp` entries with
+  optional PNG icons.
   A bounded filename index (`aether-files`) adds `OpenFile` results for non-empty
   queries. Both providers are rescanned when the palette opens. Typing filters them (case-insensitive prefix/substring),
   `Up/Down` wraps, `Enter` or a row click activates, `Backspace` edits and `Esc`
@@ -216,9 +218,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
 - **Agent-session provider and full-text files.** Desktop apps, the terminal
   command and a bounded filename index work; the system content indexer and an
   agent-session provider are not wired in yet.
-- **Desktop-entry icons, actions and D-Bus activation.** Entries are rescanned on
-  palette open, but only `Exec` is used; icons, desktop actions and D-Bus
-  activation are not implemented.
+- **Desktop-entry SVG icons, theme inheritance, actions and D-Bus activation.**
+  Entries rescans and hicolor/pixmap PNG icons work; SVG icons, full icon-theme
+  lookup, desktop actions and D-Bus activation are not implemented.
 - **Text input methods.** Printable keys are mapped from keysyms; there is no
   `text-input`/IME protocol support yet.
 - **Text cache/atlas.** Every frame rebuilds small RGBA text buffers; a cached

@@ -38,8 +38,10 @@ To try the compositor without installing:
 
 - use the aarch64 development VM with `--gui`
   ([instructions](/getting-started/virtual-machine));
-- or boot the official NixOS ISO, clone this repo, and run the compositor from the
-  live environment with `nix run .#aether-shell-smithay`.
+- or, on a Linux console with DRM/seat access, clone this repo and run
+  `nix run .#aether-shell-drm`. That is a development path, not a supported live
+  image; the Smithay adapter needs an existing X11/Wayland session and is not a
+  bare-metal live desktop.
 
 A full x86_64 Aether live ISO (`.#live-iso`) is possible but would need an
 explicit tmpfs overlay, a live-session unit and a tested hardware path. It is not

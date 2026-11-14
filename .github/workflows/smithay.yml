@@ -71,7 +71,8 @@ jobs:
               smoke-clipboard-persist-xvfb.sh \
               smoke-actions-xvfb.sh \
               smoke-audio-xvfb.sh \
-              smoke-shortcuts-xvfb.sh; do
+              smoke-shortcuts-xvfb.sh \
+              smoke-topbar-xvfb.sh; do
                 echo "=== ${smoke}"
                 BIN="${BIN}" "./os/compositor/aether-shell-smithay/${smoke}"
             done

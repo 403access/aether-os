@@ -14,6 +14,7 @@ mod keymap;
 mod render;
 mod stats;
 mod status;
+mod topbar;
 
 pub use app::App;
 pub use index_worker::{should_apply, IndexWorker};

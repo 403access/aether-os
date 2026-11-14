@@ -1502,6 +1502,51 @@ impl App {
             }
 
             if !explorer_here && self.shell.fullscreen_window_on(chrome_output).is_none() {
+                if !chat_here && !audio_here && !shortcuts_here && self.shell.overlay().is_none() {
+                    let bar = crate::topbar::layout(self.shell.output_bounds(chrome_output));
+                    if let Some(buffer) = self.chrome_round(
+                        bar.rect.width,
+                        bar.rect.height,
+                        10,
+                        [5, 37, 48, 225],
+                    ) {
+                        panels.push((buffer, bar.rect.x, bar.rect.y));
+                    }
+                    for (action, item) in &bar.items {
+                        if let Some(buffer) = self.chrome_round(
+                            item.width,
+                            item.height,
+                            6,
+                            [3, 25, 34, 220],
+                        ) {
+                            panels.push((buffer, item.x, item.y));
+                        }
+                        if bar.compact {
+                            display_icons.push((
+                                action.icon().into(),
+                                16,
+                                [165, 219, 229, 255],
+                                item.x + (item.width as i32 - 16) / 2,
+                                item.y + 6,
+                            ));
+                        } else {
+                            display_icons.push((
+                                action.icon().into(),
+                                15,
+                                [56, 214, 255, 255],
+                                item.x + 9,
+                                item.y + 7,
+                            ));
+                            labels.push((
+                                action.label().into(),
+                                item.x + 29,
+                                item.y + 8,
+                                0,
+                                [217, 247, 255, 255],
+                            ));
+                        }
+                    }
+                }
                 if self.status_visible() && !chat_here {
                     let bounds = self.shell.output_bounds(chrome_output);
                     let text = self.status().label();

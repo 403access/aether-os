@@ -102,6 +102,7 @@ premultiplied alpha, soft shadows, SVG icons and a deep-sea gradient.
 | Chat | 400 px drawer, header pill, assistant card with code strips, 38 px composer |
 | Terminal | `aether-terminal` (foot) with Water ANSI palette, 11 px mono, 28 px top pad, 1 px CSD border |
 | Audio overlay | 660 × 560 glass panel, section labels, route rows, preset chips, input meter |
+| Top shortcut dock | Centred 606 × 34 glass pill, six labelled icon buttons, icon-only under 900 px |
 
 ![Water explorer in the compositor](/img/smithay-explorer.png)
 

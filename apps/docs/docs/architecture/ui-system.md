@@ -14,6 +14,7 @@ not a widget toolkit with a plugin ecosystem.
 
 | Surface | Renderer | Input model | Lifetime |
 | --- | --- | --- | --- |
+| Top shortcut dock | shell scene graph | pointer | session |
 | Status bar | shell scene graph | pointer + shortcuts | session |
 | Command palette | shell scene graph | modal keyboard | on demand |
 | Chat drawer | shell scene graph | text + shortcuts | session or on demand |

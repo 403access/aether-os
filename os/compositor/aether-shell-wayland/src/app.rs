@@ -14,6 +14,7 @@ use crate::damage::buffer_damage_to_logical;
 use crate::index_worker::{should_apply, IndexWorker};
 use crate::keymap::{lookup, Shortcut};
 use crate::status::{StatusSnapshot, SAMPLE_INTERVAL};
+use crate::topbar::{self, TopAction};
 use aether_audio::{LatencyPreset, SystemAudio};
 use aether_cursor::{CursorShape, CursorTheme};
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect, Size as AetherSize};
@@ -480,6 +481,16 @@ fn cursor_for(state: &App) -> CursorShape {
     if state.window_drag.is_some() {
         return CursorShape::Grabbing;
     }
+    if state.shortcuts_open {
+        return CursorShape::Arrow;
+    }
+    if let Some(output) = state.shell.output_at(point) {
+        if state.top_bar_visible(output)
+            && topbar::hit(&state.top_bar(output), point.x, point.y).is_some()
+        {
+            return CursorShape::Pointer;
+        }
+    }
     if state.resize_drag.is_some() {
         return CursorShape::ResizeHorizontal;
     }
@@ -855,6 +866,60 @@ impl App {
             let _ = self.shell.open_chat();
         }
         self.mark_full_damage();
+    }
+
+    fn top_bar(&self, output: OutputId) -> topbar::TopBar {
+        topbar::layout(self.shell.output_bounds(output))
+    }
+
+    fn top_bar_visible(&self, output: OutputId) -> bool {
+        self.shell.fullscreen_window_on(output).is_none()
+            && !self.shell.explorer_open()
+            && !self.shell.chat_open()
+            && !self.shell.audio_open()
+            && !self.shortcuts_open
+            && self.shell.overlay().is_none()
+    }
+
+    fn top_shortcut_at(&self, point: AetherPoint) -> Option<TopAction> {
+        let output = self.shell.output_at(point).or_else(|| {
+            self.shell
+                .primary_output()
+                .map(|output| output.id)
+        })?;
+        if !self.top_bar_visible(output) {
+            return None;
+        }
+        topbar::hit(&self.top_bar(output), point.x, point.y)
+    }
+
+    fn activate_top_shortcut(&mut self, action: TopAction) {
+        match action {
+            TopAction::Palette => {
+                println!("aether-shell: top shortcut palette");
+                self.toggle_overlay();
+            }
+            TopAction::Terminal => {
+                self.spawn_terminal();
+                println!("aether-shell: top shortcut terminal");
+            }
+            TopAction::Files => {
+                println!("aether-shell: top shortcut files");
+                self.toggle_explorer();
+            }
+            TopAction::Chat => {
+                println!("aether-shell: top shortcut chat");
+                self.toggle_chat();
+            }
+            TopAction::Audio => {
+                println!("aether-shell: top shortcut audio");
+                self.toggle_audio();
+            }
+            TopAction::Shortcuts => {
+                println!("aether-shell: top shortcut keys");
+                self.toggle_shortcuts();
+            }
+        }
     }
 
     fn toggle_shortcuts(&mut self) {
@@ -2031,6 +2096,14 @@ impl App {
                 || self.shell.chat_open()
                 || self.shell.audio_open()
                 || self.shortcuts_open;
+            if let Some(action) = self.top_shortcut_at(point) {
+                self.pointer_captured = true;
+                self.activate_top_shortcut(action);
+                self.cursor = cursor_for(self);
+                self.mark_cursor_damage(self.pointer_pos);
+                self.end_input(started);
+                return;
+            }
             if self.shortcuts_open {
                 if !self.shortcuts_rect().contains(point) {
                     self.close_shortcuts();

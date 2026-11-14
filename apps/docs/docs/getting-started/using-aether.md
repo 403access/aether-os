@@ -33,6 +33,24 @@ Press **`Super+/`** at any time to open the same shortcut sheet inside the syste
 `Super+J` / `Super+K` also move focus next/previous, for a Vim-like hand position.
 `Super+Shift+Tab` walks the MRU stack backwards.
 
+## The top shortcut dock
+
+The top-centre dock is the mouse-friendly mirror of the global shortcuts:
+
+![Top shortcut dock](/img/smithay-topbar.png)
+
+| Button | Opens |
+| --- | --- |
+| Palette | `Super+Space` |
+| Terminal | `Super+Return` |
+| Files | `Super+E` |
+| Chat | `Super+C` |
+| Audio | `Super+A` |
+| Shortcuts | `Super+/` |
+
+Click any button. The dock hides while a surface is open so it never competes
+with the palette, explorer, chat or audio overlay.
+
 ## Global shortcuts
 
 ### Surfaces

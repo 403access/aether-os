@@ -10,7 +10,6 @@ pub enum Shortcut {
     ToggleAudio,
     ToggleShortcuts,
     NewTerminal,
-    AdjustMaster(i8),
     FocusNext,
     FocusPrevious,
     SwitchWorkspace(usize),
@@ -148,16 +147,6 @@ pub const STANDARD_SHORTCUTS: &[ShortcutEntry] = &[
         group: "Windows",
     },
     ShortcutEntry {
-        chord: "Super+H",
-        action: "Narrow master",
-        group: "Layout",
-    },
-    ShortcutEntry {
-        chord: "Super+L",
-        action: "Widen master",
-        group: "Layout",
-    },
-    ShortcutEntry {
         chord: "Alt+Left drag",
         action: "Move / float window",
         group: "Layout",
@@ -276,16 +265,6 @@ pub const SIMPLE_SHORTCUTS: &[ShortcutEntry] = &[
         group: "Windows",
     },
     ShortcutEntry {
-        chord: "Ctrl+Alt+H",
-        action: "Narrow master",
-        group: "Layout",
-    },
-    ShortcutEntry {
-        chord: "Ctrl+Alt+L",
-        action: "Widen master",
-        group: "Layout",
-    },
-    ShortcutEntry {
         chord: "Alt+Left drag",
         action: "Move / float window",
         group: "Layout",
@@ -388,10 +367,6 @@ pub fn lookup_profile(
             Some(Shortcut::FocusNext)
         } else if keysym == keysyms::KEY_k.into() {
             Some(Shortcut::FocusPrevious)
-        } else if keysym == keysyms::KEY_h.into() {
-            Some(Shortcut::AdjustMaster(-1))
-        } else if keysym == keysyms::KEY_l.into() {
-            Some(Shortcut::AdjustMaster(1))
         } else if keysym == keysyms::KEY_m.into() {
             Some(Shortcut::Maximize)
         } else if keysym == keysyms::KEY_f.into() {
@@ -448,8 +423,6 @@ pub fn lookup(logo: bool, shift: bool, alt: bool, keysym: Keysym) -> Option<Shor
     let explorer: Keysym = keysyms::KEY_e.into();
     let next_window: Keysym = keysyms::KEY_j.into();
     let previous_window: Keysym = keysyms::KEY_k.into();
-    let narrow_master: Keysym = keysyms::KEY_h.into();
-    let wide_master: Keysym = keysyms::KEY_l.into();
     let chat: Keysym = keysyms::KEY_c.into();
     let audio: Keysym = keysyms::KEY_a.into();
     let close: Keysym = keysyms::KEY_q.into();
@@ -462,8 +435,6 @@ pub fn lookup(logo: bool, shift: bool, alt: bool, keysym: Keysym) -> Option<Shor
         _ if keysym == explorer => Shortcut::ToggleExplorer,
         _ if keysym == next_window => Shortcut::FocusNext,
         _ if keysym == previous_window => Shortcut::FocusPrevious,
-        _ if keysym == narrow_master => Shortcut::AdjustMaster(-1),
-        _ if keysym == wide_master => Shortcut::AdjustMaster(1),
         _ if keysym == chat => Shortcut::ToggleChat,
         _ if keysym == audio => Shortcut::ToggleAudio,
         _ if keysym == close => Shortcut::CloseWindow,
@@ -554,10 +525,6 @@ mod tests {
         assert_eq!(
             lookup(true, false, false, key(keysyms::KEY_j)),
             Some(Shortcut::FocusNext)
-        );
-        assert_eq!(
-            lookup(true, false, false, key(keysyms::KEY_h)),
-            Some(Shortcut::AdjustMaster(-1))
         );
         assert_eq!(
             lookup(true, false, false, key(keysyms::KEY_q)),

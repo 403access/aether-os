@@ -98,7 +98,6 @@ Super map remains available. **Standard** exposes Super only.
 | `Ctrl+Alt+Q` → `Super+Q` | Close window |
 | `Ctrl+Alt+M` → `Super+M` | Maximize / restore |
 | `Ctrl+Alt+F` → `Super+F` | Fullscreen / restore |
-| `Ctrl+Alt+H/L` → `Super+H/L` | Narrow / widen master |
 | `Ctrl+Alt+1..3` → `Super+1..3` | Switch workspace |
 | `Ctrl+Alt+Shift+1..3` → `Super+Shift+1..3` | Move window to workspace |
 | `Super+Alt+1..3` | Switch the output's workspace |

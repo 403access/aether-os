@@ -16,7 +16,7 @@ geometry, damage, layout or pacing without a GPU or Wayland:
 ```text
 aether-geometry   points, sizes, rectangles
 aether-damage     damage regions, merging, clipping
-aether-layout     master/stack tiling
+aether-layout     equal-column tiling
 aether-pacing     frame deadlines
 aether-scene      surfaces, z-order, hit testing
 aether-compositor facade + prelude + demo binary
@@ -186,19 +186,24 @@ At 120 Hz the interval is 8.33 ms; the default safety margin is 1.2 ms. The pace
 
 ## Tiling layout
 
-The default layout is a three-column master stack:
+Every window gets one equal-width column:
 
 ```text
-┌───────────────┬───────────────┬───────────────┐
-│               │               │               │
-│    master     │     stack     │    stack      │
-│               │               │               │
-└───────────────┴───────────────┴───────────────┘
+1 window:   ┌───────────────────────────────────────┐
+            │                  app                  │
+            └───────────────────────────────────────┘
+2 windows:  ┌───────────────┬───────────────┐
+            │      app      │      app      │
+            └───────────────┴───────────────┘
+3 windows:  ┌────────┬────────┬────────┐
+            │  app   │  app   │  app   │
+            └────────┴────────┴────────┘
 ```
 
-- Master width is a ratio (default 0.5), adjustable with `⌘H/L`.
+- Opening another application adds a column; closing one redistributes the space.
+- There is no master/stack split and no divider to drag.
 - Windows are assigned to workspaces; workspaces map to outputs.
-- Floating is per-surface and used only for overlays and dialogs.
+- Floating is per-surface and used only for overlays, dialogs and Alt-drag.
 - Gaps are 8 px outer, 6 px inner, drawn by the compositor, not by clients.
 
 The layout engine (`aether-layout`) is pure:

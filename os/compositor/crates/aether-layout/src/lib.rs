@@ -1,8 +1,7 @@
-//! Tiling layout.
+//! Equal-column tiling.
 //!
-//! Master on the left, remaining windows in up to two stack columns. The
-//! function is pure: it takes a viewport and a count and returns rectangles in
-//! window order. Gaps are drawn by the compositor, not by clients.
+//! One window fills the work area. Every additional window gets its own
+//! equal-width column. Gaps are drawn by the compositor, not by clients.
 
 #![forbid(unsafe_code)]
 
@@ -10,8 +9,6 @@ use aether_geometry::Rect;
 
 #[derive(Clone, Copy, Debug)]
 pub struct LayoutConfig {
-    /// Fraction of the inner width given to the master window, clamped 0.2–0.8.
-    pub master_ratio: f32,
     /// Gap between windows.
     pub gap: u32,
     /// Gap between the work area and the output edge.
@@ -21,13 +18,13 @@ pub struct LayoutConfig {
 impl Default for LayoutConfig {
     fn default() -> Self {
         Self {
-            master_ratio: 0.5,
             gap: 6,
             outer_gap: 8,
         }
     }
 }
 
+/// Tile `count` windows into equal-width columns across `viewport`.
 pub fn tile(viewport: Rect, count: usize, config: LayoutConfig) -> Vec<Rect> {
     if count == 0 {
         return Vec::new();
@@ -42,60 +39,20 @@ pub fn tile(viewport: Rect, count: usize, config: LayoutConfig) -> Vec<Rect> {
     }
 
     let gap = config.gap as i32;
-    let ratio = f64::from(config.master_ratio).clamp(0.2, 0.8);
-    let usable = (inner.width as i32 - gap).max(0);
-    let master_width = (f64::from(usable) * ratio).round() as i32;
-    let rest_x = inner.x + master_width + gap;
-    let rest_width = (inner.width as i32 - master_width - gap).max(0);
-
-    let master = Rect::new(inner.x, inner.y, master_width.max(0) as u32, inner.height);
-
-    if count == 2 {
-        return vec![
-            master,
-            Rect::new(rest_x, inner.y, rest_width.max(0) as u32, inner.height),
-        ];
-    }
-
-    let remaining = count - 1;
-    let column_width = ((rest_width - gap).max(0)) / 2;
-    let second_x = rest_x;
-    let third_x = rest_x + column_width + gap;
-    let second_count = remaining - remaining / 2;
-    let third_count = remaining / 2;
-
-    let mut rects = Vec::with_capacity(count);
-    rects.push(master);
-    rects.extend(stack(second_x, inner, column_width, second_count, gap));
-    rects.extend(stack(third_x, inner, column_width, third_count, gap));
-    rects
-}
-
-fn stack(x: i32, inner: Rect, width: i32, count: usize, gap: i32) -> Vec<Rect> {
-    if count == 0 {
-        return Vec::new();
-    }
-
     let total_gap = gap * (count as i32 - 1);
-    let available = (inner.height as i32 - total_gap).max(0);
+    let available = (inner.width as i32 - total_gap).max(0);
     let base = available / count as i32;
     let mut rects = Vec::with_capacity(count);
-    let mut cursor = inner.y;
-    let bottom = inner.y + inner.height as i32;
+    let mut x = inner.x;
 
     for index in 0..count {
-        let height = if index + 1 == count {
-            (bottom - cursor).max(0)
+        let width = if index + 1 == count {
+            (inner.x + inner.width as i32 - x).max(0)
         } else {
-            base
+            base.max(0)
         };
-        rects.push(Rect::new(
-            x,
-            cursor,
-            width.max(0) as u32,
-            height.max(0) as u32,
-        ));
-        cursor += height + gap;
+        rects.push(Rect::new(x, inner.y, width as u32, inner.height));
+        x += width + gap;
     }
     rects
 }
@@ -114,6 +71,17 @@ mod tests {
         }
     }
 
+    fn assert_equal_columns(rects: &[Rect]) {
+        assert_no_overlap(rects);
+        for window in rects.windows(2) {
+            assert!(
+                (window[0].width as i32 - window[1].width as i32).abs() <= 2,
+                "columns differ: {window:?}"
+            );
+            assert_eq!(window[0].height, window[1].height);
+        }
+    }
+
     #[test]
     fn zero_and_one_window() {
         let config = LayoutConfig::default();
@@ -125,81 +93,38 @@ mod tests {
     }
 
     #[test]
-    fn two_windows_split_master_and_stack() {
+    fn two_windows_split_into_equal_columns() {
         let rects = tile(VIEWPORT, 2, LayoutConfig::default());
         assert_eq!(rects.len(), 2);
-        assert_no_overlap(&rects);
+        assert_equal_columns(&rects);
         let inner = VIEWPORT.inset(8);
         for rect in &rects {
             assert!(inner.intersect(*rect) == Some(*rect), "outside inner area");
         }
-        // Default ratio is 0.5, so the two columns are equal within rounding.
-        assert!((rects[0].width as i32 - rects[1].width as i32).abs() <= 1);
-        assert_eq!(rects[0].height, rects[1].height);
     }
 
     #[test]
-    fn four_windows_use_three_columns() {
-        let rects = tile(VIEWPORT, 4, LayoutConfig::default());
-        assert_eq!(rects.len(), 4);
-        assert_no_overlap(&rects);
-
-        let mut xs: Vec<i32> = rects.iter().map(|rect| rect.x).collect();
-        xs.sort_unstable();
-        xs.dedup();
-        assert_eq!(xs.len(), 3, "master plus two stack columns");
-    }
-
-    #[test]
-    fn stack_rows_fill_the_column() {
-        let rects = tile(VIEWPORT, 7, LayoutConfig::default());
-        assert_eq!(rects.len(), 7);
-        assert_no_overlap(&rects);
-
-        let inner = VIEWPORT.inset(8);
-        let third_column: Vec<&Rect> = rects
-            .iter()
-            .filter(|rect| rect.x > inner.x + inner.width as i32 / 2)
-            .collect();
-        assert!(third_column.len() >= 3);
-        let top = third_column.iter().map(|r| r.y as i64).min().unwrap();
-        let bottom = third_column.iter().map(|r| r.bottom()).max().unwrap();
-        assert_eq!(top, inner.y as i64);
-        assert_eq!(bottom, inner.bottom());
+    fn each_window_gets_its_own_column() {
+        for count in 2..=7 {
+            let rects = tile(VIEWPORT, count, LayoutConfig::default());
+            assert_eq!(rects.len(), count);
+            assert_equal_columns(&rects);
+            let mut xs: Vec<i32> = rects.iter().map(|rect| rect.x).collect();
+            xs.sort_unstable();
+            xs.dedup();
+            assert_eq!(xs.len(), count, "one column per window");
+        }
     }
 
     #[test]
     fn gap_is_respected() {
         let config = LayoutConfig {
-            master_ratio: 0.5,
             gap: 12,
             outer_gap: 0,
         };
-        let rects = tile(VIEWPORT, 2, config);
-        let gap = rects[1].x - (rects[0].x + rects[0].width as i32);
-        assert_eq!(gap, 12);
-    }
-
-    #[test]
-    fn ratio_is_clamped() {
-        let wide = tile(
-            VIEWPORT,
-            2,
-            LayoutConfig {
-                master_ratio: 5.0,
-                ..LayoutConfig::default()
-            },
-        );
-        let narrow = tile(
-            VIEWPORT,
-            2,
-            LayoutConfig {
-                master_ratio: -1.0,
-                ..LayoutConfig::default()
-            },
-        );
-        assert!(wide[0].width > VIEWPORT.width / 2);
-        assert!(narrow[0].width < VIEWPORT.width / 2);
+        let rects = tile(VIEWPORT, 3, config);
+        assert_eq!(rects[1].x - (rects[0].x + rects[0].width as i32), 12);
+        assert_eq!(rects[2].x - (rects[1].x + rects[1].width as i32), 12);
     }
 
     #[test]

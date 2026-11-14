@@ -85,12 +85,12 @@ Deliverables:
 - ✅ Workspace shortcuts (`Super+1/2/3`, `Super+Alt+1/2/3` per output),
   window moves, close, labelled indicators, a clickable workspace picker, an
   interactive command palette (typed query, filtering, workspace/window
-  providers, row clicks, actions), a draggable master/stack split, Alt+drag
-  move, Alt+right-drag corner resize, edge snapping, half-snap on release,
+  providers, row clicks, actions), equal-column tiling, Alt+drag move,
+  Alt+right-drag corner resize, edge snapping, half-snap on release,
   `Super+M` maximize with restore, hover cursor feedback, a `New terminal`
   command, XDG `.desktop` app discovery and a bounded filename index with
   `OpenFile`. Clipboard and primary-selection copy/paste work between clients
-  via focus forwarding. Picker, divider, palette input/commands, desktop/file
+  via focus forwarding. Picker, palette input/commands, desktop/file
   launch, clipboard, window management, DnD and cursor mapping are verified by
   xdotool smokes. Idle frames are skipped; client commits use surface/buffer
   damage when available.

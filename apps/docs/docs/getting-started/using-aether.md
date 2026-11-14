@@ -104,7 +104,6 @@ layers are mutually exclusive; there is never a hidden modal stealing keys.
 | `Alt+Left drag` | Move a window; promotes a tile to floating |
 | `Alt+Right drag` | Resize a floating window from the nearest corner |
 | Release at edge | Snap to left/right half; top edge maximizes |
-| Drag the gap | Resize the master/stack split |
 | Click a workspace pill | Switch that output's workspace |
 
 ### Workspaces and outputs
@@ -123,12 +122,12 @@ output under the pointer; the active pill is cyan. On a multi-output desktop,
 
 | Chord | Action |
 | --- | --- |
-| `Ctrl+Alt+H` (`Super+H`) | Narrow the master pane by 5% |
-| `Ctrl+Alt+L` (`Super+L`) | Widen the master pane by 5% |
 | `Alt+Left drag` | Move/float |
 | `Alt+Right drag` | Resize |
 
-The split is clamped to 20–80% so a pane can never disappear.
+Tiling is equal-width by design: one window fills the work area, each new window
+adds a column, and closing a window gives the space back to the rest. There is no
+master/stack ratio or divider drag.
 
 ## Command palette
 

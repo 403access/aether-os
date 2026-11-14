@@ -450,11 +450,6 @@ fn toplevel_title(surface: &ToplevelSurface) -> Option<String> {
     })
 }
 
-#[derive(Clone, Copy)]
-struct ResizeDrag {
-    last_ratio: f32,
-}
-
 #[derive(Clone, Copy, Debug)]
 enum ResizeCorner {
     TopLeft,
@@ -490,9 +485,6 @@ fn cursor_for(state: &App) -> CursorShape {
         {
             return CursorShape::Pointer;
         }
-    }
-    if state.resize_drag.is_some() {
-        return CursorShape::ResizeHorizontal;
     }
     if let Some(overlay) = state.shell.overlay_rect() {
         if overlay.contains(point) {
@@ -531,17 +523,6 @@ fn cursor_for(state: &App) -> CursorShape {
     }
     if state.shell.workspace_at_global(point).is_some() {
         return CursorShape::Pointer;
-    }
-    let output = state
-        .shell
-        .output_at(point)
-        .or_else(|| state.shell.primary_output().map(|output| output.id))
-        .unwrap_or(1);
-    if let Some(gap) = state.shell.master_gap_rect_on(output) {
-        let handle = AetherRect::new(gap.x - 5, gap.y, gap.width + 10, gap.height);
-        if handle.contains(point) {
-            return CursorShape::ResizeHorizontal;
-        }
     }
     if let Some(id) = state.shell.window_at(point) {
         if let Some(info) = state
@@ -646,7 +627,6 @@ pub struct App {
     close_requested: bool,
     pub(crate) scale: f64,
     pub(crate) pointer_pos: smithay::utils::Point<f64, smithay::utils::Logical>,
-    resize_drag: Option<ResizeDrag>,
     window_drag: Option<WindowDrag>,
     window_resize: Option<WindowResize>,
     pointer_captured: bool,
@@ -757,18 +737,6 @@ impl App {
             Shortcut::NewTerminal => {
                 self.spawn_terminal();
                 println!("aether-shell: shortcut new terminal");
-            }
-            Shortcut::AdjustMaster(direction) => {
-                let ratio = self.shell.master_ratio() + direction as f32 * 0.05;
-                if self.shell.set_master_ratio(ratio) {
-                    self.sync_focus();
-                    self.configure_all();
-                    self.mark_full_damage();
-                    println!(
-                        "aether-shell: master ratio -> {:.2}",
-                        self.shell.master_ratio()
-                    );
-                }
             }
             Shortcut::FocusNext | Shortcut::FocusPrevious => {
                 let delta = if shortcut == Shortcut::FocusNext {
@@ -1498,8 +1466,7 @@ impl App {
                 let mut shell = Shell::new(
                     AetherSize::new(1280, 800),
                     LayoutConfig {
-                        master_ratio: 0.55,
-                        gap: 10,
+                                                gap: 10,
                         outer_gap: 16,
                     },
                     120,
@@ -1514,7 +1481,6 @@ impl App {
             close_requested: false,
             scale: 1.0,
             pointer_pos: smithay::utils::Point::from((0.0, 0.0)),
-            resize_drag: None,
             window_drag: None,
             window_resize: None,
             pointer_captured: false,
@@ -1961,30 +1927,6 @@ impl App {
                 }
                 self.configure_all();
             }
-        } else if let Some(mut drag) = self.resize_drag {
-            let layout = self.shell.layout();
-            let output = self
-                .shell
-                .output_at(AetherPoint::new(
-                    position.x.round() as i32,
-                    position.y.round() as i32,
-                ))
-                .or_else(|| self.shell.primary_output().map(|output| output.id))
-                .unwrap_or(1);
-            let inner = self
-                .shell
-                .output_bounds(output)
-                .inset(layout.outer_gap as i32);
-            let usable = (inner.width as i32 - layout.gap as i32).max(1) as f64;
-            let ratio = ((position.x - inner.x as f64) / usable) as f32;
-            if (ratio - drag.last_ratio).abs() > 0.002 {
-                drag.last_ratio = ratio;
-                self.resize_drag = Some(drag);
-                if self.shell.set_master_ratio(ratio) {
-                    self.mark_full_damage();
-                    self.configure_all();
-                }
-            }
         } else {
             let point = AetherPoint::new(position.x.round() as i32, position.y.round() as i32);
             if self.shell.overlay().is_some() {
@@ -2086,10 +2028,6 @@ impl App {
         let point = AetherPoint::new(position.x.round() as i32, position.y.round() as i32);
         let modal = self.shell.overlay().is_some();
         let over_picker = self.shell.workspace_at_global(point).is_some();
-        let output = self.output_under_pointer();
-        let over_divider = self.shell.master_gap_rect_on(output).is_some_and(|gap| {
-            AetherRect::new(gap.x - 5, gap.y, gap.width + 10, gap.height).contains(point)
-        });
         let mouse_button = match button {
             0x110 => Some(MouseButton::Left),
             0x111 => Some(MouseButton::Right),
@@ -2165,13 +2103,7 @@ impl App {
                 self.end_input(started);
                 return;
             }
-            if over_divider && mouse_button == Some(MouseButton::Left) {
-                self.resize_drag = Some(ResizeDrag {
-                    last_ratio: self.shell.master_ratio(),
-                });
-                self.pointer_captured = true;
-                println!("aether-shell: resize drag started");
-            } else if let Some(workspace) = self.shell.workspace_at_global(point) {
+            if let Some(workspace) = self.shell.workspace_at_global(point) {
                 let output = self.output_under_pointer();
                 self.switch_workspace_on(output, workspace);
             } else if modal {
@@ -2285,12 +2217,6 @@ impl App {
                     .find(|window| window.id == drag.id)
                     .map(|window| window.rect);
                 println!("aether-shell: window moved id={} rect={rect:?}", drag.id);
-            }
-            if self.resize_drag.take().is_some() {
-                println!(
-                    "aether-shell: master ratio -> {:.2}",
-                    self.shell.master_ratio()
-                );
             }
             self.pointer_captured = false;
         }

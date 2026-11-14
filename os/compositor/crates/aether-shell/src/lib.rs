@@ -375,64 +375,6 @@ impl Shell {
         self.layout
     }
 
-    /// Current master/stack split ratio.
-    pub fn master_ratio(&self) -> f32 {
-        self.layout.master_ratio
-    }
-
-    /// Update the master/stack split. Returns `false` when unchanged.
-    pub fn set_master_ratio(&mut self, ratio: f32) -> bool {
-        if !ratio.is_finite() {
-            return false;
-        }
-        let ratio = ratio.clamp(0.2, 0.8);
-        if (self.layout.master_ratio - ratio).abs() < 0.0001 {
-            return false;
-        }
-        self.layout.master_ratio = ratio;
-        self.relayout();
-        true
-    }
-
-    /// Draggable divider between the master window and the first stack column
-    /// on an output. `None` unless that output's visible workspace has at least
-    /// two tiled windows.
-    pub fn master_gap_rect_on(&self, output: OutputId) -> Option<Rect> {
-        let output = self
-            .outputs
-            .iter()
-            .find(|candidate| candidate.id == output)?
-            .clone();
-        let ids = &self.workspaces[self.output_workspace(output.id)].windows;
-        let tiled = ids
-            .iter()
-            .filter(|id| {
-                self.windows
-                    .get(id)
-                    .is_some_and(|window| !window.floating && window.output == output.id)
-            })
-            .count();
-        if tiled < 2 {
-            return None;
-        }
-        let rects = tile(output.rect, tiled, self.layout);
-        let master = rects[0];
-        let stack = rects[1];
-        let gap_start = master.x + master.width as i32;
-        Some(Rect::new(
-            gap_start,
-            master.y,
-            (stack.x - gap_start).max(0) as u32,
-            master.height,
-        ))
-    }
-
-    /// Primary-output divider, kept for compatibility with single-output
-    /// callers.
-    pub fn master_gap_rect(&self) -> Option<Rect> {
-        self.master_gap_rect_on(self.primary_output().map(|output| output.id)?)
-    }
-
     pub fn window_count(&self) -> usize {
         self.windows.len()
     }
@@ -2594,6 +2536,15 @@ mod tests {
                 Some(a.rect)
             );
         }
+        let widths: Vec<i32> = windows
+            .iter()
+            .map(|window| window.rect.width as i32)
+            .collect();
+        assert!(widths.iter().max().unwrap() - widths.iter().min().unwrap() <= 2);
+        let mut xs: Vec<i32> = windows.iter().map(|window| window.rect.x).collect();
+        xs.sort_unstable();
+        xs.dedup();
+        assert_eq!(xs.len(), 4, "one equal column per window");
     }
 
     #[test]
@@ -3038,7 +2989,7 @@ mod tests {
     }
 
     #[test]
-    fn secondary_output_has_its_own_master_gap() {
+    fn secondary_output_tiles_equal_columns() {
         let mut shell = shell();
         assert!(shell.set_outputs(vec![
             OutputInfo {
@@ -3064,11 +3015,17 @@ mod tests {
         let b = shell.add_window_on_output(WindowSpec::new("b", "app"), 2);
         assert!(shell.windows().iter().any(|window| window.id == a));
         assert!(shell.windows().iter().any(|window| window.id == b));
-        let gap = shell.master_gap_rect_on(2).expect("second output gap");
-        assert!(gap.x >= 800);
-        assert!(gap.right() <= 1824);
-        let primary_gap = shell.master_gap_rect();
-        assert!(primary_gap.is_none());
+        let rects: Vec<_> = shell
+            .windows()
+            .into_iter()
+            .filter(|window| window.output == 2)
+            .map(|window| window.rect)
+            .collect();
+        assert_eq!(rects.len(), 2);
+        assert_eq!(rects[0].height, rects[1].height);
+        assert!((rects[0].width as i32 - rects[1].width as i32).abs() <= 1);
+        assert!(rects.iter().all(|rect| rect.x >= 800));
+        assert!(rects.iter().all(|rect| rect.right() <= 1824));
     }
 
     #[test]
@@ -3552,47 +3509,6 @@ mod tests {
         assert!(shell.toggle_overlay());
         assert_eq!(shell.palette_query(), "");
         assert_eq!(shell.overlay_rect(), Some(Rect::new(60, 90, 680, 420)));
-    }
-
-    #[test]
-    fn master_ratio_updates_the_divider() {
-        let mut shell = shell();
-        window(&mut shell, "one");
-        window(&mut shell, "two");
-
-        assert!((shell.master_ratio() - 0.5).abs() < f32::EPSILON);
-        let before = shell.master_gap_rect().expect("two tiled windows");
-        assert!(before.width > 0);
-
-        assert!(shell.set_master_ratio(0.7));
-        assert!((shell.master_ratio() - 0.7).abs() < f32::EPSILON);
-        let after = shell.master_gap_rect().expect("two tiled windows");
-        assert!(after.x > before.x, "divider moved right");
-
-        assert!(shell.set_master_ratio(5.0));
-        assert!((shell.master_ratio() - 0.8).abs() < f32::EPSILON);
-        assert!(shell.set_master_ratio(-1.0));
-        assert!((shell.master_ratio() - 0.2).abs() < f32::EPSILON);
-        assert!(!shell.set_master_ratio(0.2));
-        assert!(!shell.set_master_ratio(f32::NAN));
-    }
-
-    #[test]
-    fn master_divider_requires_two_tiled_windows() {
-        let mut shell = shell();
-        assert_eq!(shell.master_gap_rect(), None);
-
-        window(&mut shell, "one");
-        assert_eq!(shell.master_gap_rect(), None);
-
-        let floating = window(&mut shell, "two");
-        shell.set_floating(floating, true);
-        assert_eq!(shell.master_gap_rect(), None);
-
-        window(&mut shell, "three");
-        let gap = shell.master_gap_rect().expect("two tiled windows");
-        assert!(gap.width > 0);
-        assert!(gap.height > 0);
     }
 
     #[test]

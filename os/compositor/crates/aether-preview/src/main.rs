@@ -15,7 +15,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut shell = Shell::new(
         Size::new(1920, 1200),
         LayoutConfig {
-            master_ratio: 0.55,
             gap: 10,
             outer_gap: 16,
         },

@@ -69,12 +69,6 @@ move, Enter opens the selected file. Only the visible rows are composed.*
 active output. Sampling stops when `AETHER_STATUS=0` or a fullscreen client is
 visible.*
 
-![Dragging the master/stack divider](/img/smithay-resize.png)
-
-*Dragging the gap between the master and stack changes the tiling ratio;
-`smoke-resize-xvfb.sh` drives the drag with `xdotool` and asserts the applied
-ratio.*
-
 ![Alt-dragging a tiled client into a floating window](/img/smithay-window-move.png)
 
 *`Alt+left-drag` promotes a tiled client to a floating window at its preferred
@@ -130,7 +124,7 @@ terminal and pastes with `wl-paste`/`wl-paste --primary` in the other.*
 *A client commit damages only that window: the left tile redraws while the idle
 right tile is untouched. Input-driven frames use full damage for safety.
 `smoke-damage-xvfb.sh` schedules `sleep 1; echo ...` and asserts a partial frame
-with the 681x768 master rect.*
+with the 619x768 column rect.*
 
 ![A desktop app installed after startup appearing in the palette](/img/smithay-provider-refresh.png)
 
@@ -239,8 +233,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
 - **Clickable workspace picker.** Clicking an indicator chip (bar or label)
   switches workspace. Chrome consumes pointer motion/buttons, so clicks never
   leak to a client underneath. The seat advertises `wl_pointer`.
-- **Interactive layout resize.** Dragging the gap between the master and stack
-  updates the split ratio (clamped 0.2–0.8) and reconfigures clients live.
+- **Equal-column tiling.** Each visible window gets one equal-width column;
+  opening another window redistributes the work area. There is no master/stack
+  divider.
 - **Drag and drop.** Client-to-client `wl_data_device` DnD works: the pointer
   grab receives global coordinates, target enter/action/drop are forwarded and
   the source data transfer completes. The smoke drags a Weston flower between
@@ -266,8 +261,7 @@ drag and both toggles with `xdotool` and asserts each transition.*
 - **Per-output chrome.** Workspace indicators are hit-tested and drawn at each
   output's own origin, showing that output's active workspace. The palette opens
   centred in the output under the pointer and only renders there; workspace
-  activation, `Super+Alt+1/2/3` and the master/stack divider all operate on the
-  output under the pointer.
+  activation and `Super+Alt+1/2/3` operate on the output under the pointer.
 - **Output globals.** Each backend output is advertised as a `wl_output` with
   `zxdg_output_manager_v1` geometry, mode, scale and physical dimensions.
   Toplevels receive `wl_output.enter` on map and leave on destroy. The winit
@@ -313,7 +307,6 @@ drag and both toggles with `xdotool` and asserts each transition.*
 | `Super+/` | Toggle the shortcut cheat sheet |
 | `Super+Tab` / `Super+Shift+Tab` | Cycle MRU focus (forward/back) |
 | `Super+J` / `Super+K` | Focus next / previous |
-| `Super+H` / `Super+L` | Narrow / widen the master pane |
 | `Esc` | Close the overlay |
 | *Typing* | Filter palette entries while the overlay is open |
 | `Up/Down` | Move the palette/explorer/audio selection |
@@ -447,7 +440,6 @@ WAYLAND_DISPLAY=aether-0 ./os/compositor/aether-shell-smithay/aether-terminal.sh
 ./os/compositor/aether-shell-smithay/smoke-xvfb.sh          # --demo
 ./os/compositor/aether-shell-smithay/smoke-client-xvfb.sh   # weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-picker-xvfb.sh   # xdotool workspace click
-./os/compositor/aether-shell-smithay/smoke-resize-xvfb.sh   # xdotool divider drag
 ./os/compositor/aether-shell-smithay/smoke-palette-xvfb.sh  # xdotool typed query
 ./os/compositor/aether-shell-smithay/smoke-window-xvfb.sh   # xdotool move + maximize
 ./os/compositor/aether-shell-smithay/smoke-cursor-xvfb.sh   # hover cursor + software cursor

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Cursor feedback: move the pointer over chrome and assert the winit cursor
-# icon changes (resize divider, workspace chip, window, Alt-move, palette).
+# icon changes (workspace chip, window, Alt-move, palette).
 #
 #   nix develop .#smithay -c ./os/compositor/aether-shell-smithay/smoke-cursor-xvfb.sh
 #
@@ -59,10 +59,6 @@ assert_cursor() {
     exit 1
   fi
 }
-
-# Master/stack divider.
-xdotool mousemove 702 400
-assert_cursor ResizeHorizontal
 
 # Workspace chip.
 xdotool mousemove 100 20

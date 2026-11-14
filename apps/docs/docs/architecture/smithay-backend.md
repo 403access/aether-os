@@ -22,8 +22,9 @@ aether-shell (policy) ──> FramePlan ──> aether-shell-smithay (Linux)
 
 ![Two Wayland terminal clients tiled by the shell](/img/smithay-client.png)
 
-*Two real `weston-terminal` xdg-shell clients with shared-memory buffers, tiled by
-`aether-shell` and rendered by `aether-shell-smithay` under Xvfb.*
+*Two real `aether-terminal` (foot) xdg-shell clients with shared-memory buffers,
+tiled by `aether-shell` and rendered by `aether-shell-smithay` under Xvfb. Both
+use the Water ANSI palette and mono type.*
 
 ![The shell overlay above a client](/img/smithay-overlay.png)
 
@@ -95,7 +96,7 @@ or resized again. The smoke test asserts the 640x800 left-half rect.*
 ![Running the New terminal palette command](/img/smithay-new-terminal.png)
 
 *The palette also exposes commands. "New terminal" launches
-`$AETHER_TERMINAL` (default `weston-terminal`); the spawned client connects,
+`$AETHER_TERMINAL` (default `aether-terminal`); the spawned client connects,
 tiles and appears in the window provider.*
 
 ![Two clients after running New terminal](/img/smithay-new-terminal-open.png)
@@ -218,7 +219,7 @@ drag and both toggles with `xdotool` and asserts each transition.*
 - **Interactive palette with providers.** Results come from workspaces, client
   windows (titles stay in sync via xdg `title_changed`) and commands. The first
   command, `New terminal`, spawns `AETHER_TERMINAL` (default
-  `weston-terminal`) into the compositor. Installed applications are discovered
+  `aether-terminal`, a Water-themed foot wrapper) into the compositor. Installed applications are discovered
   from XDG `.desktop` files at startup and appear as `LaunchApp` entries with
   optional PNG icons and secondary actions.
   A bounded filename index (`aether-files`) adds `OpenFile` results for non-empty
@@ -426,7 +427,7 @@ cargo build --manifest-path os/compositor/aether-shell-drm/Cargo.toml
 ./os/compositor/aether-shell-smithay/target/debug/aether-shell-smithay
 
 # launch a client against it in another shell:
-WAYLAND_DISPLAY=aether-0 weston-terminal
+WAYLAND_DISPLAY=aether-0 ./os/compositor/aether-shell-smithay/aether-terminal.sh
 
 # shell FramePlan demo (solid surfaces, no clients):
 ./os/compositor/aether-shell-smithay/target/debug/aether-shell-smithay --demo
@@ -485,7 +486,8 @@ The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. Most use
 shell (`wl-copy`/`wl-paste` for the clipboard smoke and
 the idle-frame smoke for `AETHER_FRAME_LOG`).
 Set `AETHER_TERMINAL` to change the built-in
-terminal launcher. Desktop apps come from `XDG_DATA_HOME`/`XDG_DATA_DIRS`
+terminal launcher; the default wrapper loads
+`os/compositor/aether-shell-smithay/foot/foot.ini` and matches the shell palette. Desktop apps come from `XDG_DATA_HOME`/`XDG_DATA_DIRS`
 (`~/.local/share` and `/usr/local/share:/usr/share` by default). The file index
 uses `AETHER_FILE_ROOTS` (default `$HOME`), `AETHER_FILE_LIMIT` (default 2000),
 `AETHER_FILE_DEPTH` (default 5), `AETHER_OPENER` (default `xdg-open`),

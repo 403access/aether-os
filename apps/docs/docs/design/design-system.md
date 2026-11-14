@@ -100,6 +100,7 @@ premultiplied alpha, soft shadows, SVG icons and a deep-sea gradient.
 | Explorer | 62 px app bar, 56 px pane header, 30 px columns and rows, 30 px footer, 36 px status bar |
 | Palette | 680 × 420, 58 px search header, six 40 px rows at 46 px pitch, keycap footer |
 | Chat | 400 px drawer, header pill, assistant card with code strips, 38 px composer |
+| Terminal | `aether-terminal` (foot) with Water ANSI palette, 11 px mono, 28 px top pad, 1 px CSD border |
 
 ![Water explorer in the compositor](/img/smithay-explorer.png)
 
@@ -117,9 +118,22 @@ rounded active row and a keycap footer.*
 composer with send affordance. Bold spans are rendered with a second coverage
 pass, not a different font.*
 
+![Water-themed terminal](/img/smithay-terminal.png)
+
+*`aether-terminal` runs foot with the Water ANSI palette, DejaVu Sans Mono at
+11 px and a 1 px border. It has no client-side titlebar under the compositor, so the
+shell workspace pills stay legible above the padded terminal surface.*
+
 Font discovery order: `AETHER_FONT`, standard Inter paths, `/nix/store` scan,
 then the bitmap fallback. NixOS sets `AETHER_FONT` in the session service and
 installs Inter via `fonts.packages`; the Smithay dev shell exports it too.
+
+The default terminal is `aether-terminal`, a wrapper around **foot** with
+`os/compositor/aether-shell-smithay/foot/foot.ini`: Water background and ANSI
+palette, `DejaVu Sans Mono` at 11 px, a cyan beam cursor and a 1 px CSD border.
+The 28 px top pad keeps the shell's workspace pills from colliding with terminal
+output, since foot has no titlebar under the compositor. Set `AETHER_TERMINAL`
+to override; `aether-session` exports the packaged wrapper.
 
 ## Usage
 
@@ -174,6 +188,8 @@ Known gaps: AT-SPI/screen-reader support is not implemented; see
 | `apps/docs/src/css/custom.css` | Docs theme mapping |
 | `os/compositor/aether-shell-wayland/src/chrome.rs` | Rounded panels, shadows, gradient, SVG icons |
 | `os/compositor/crates/aether-text/src/font.rs` | Inter/fontdue rasterizer |
+| `os/compositor/aether-shell-smithay/foot/foot.ini` | Water terminal palette and CSD |
+| `os/compositor/aether-shell-smithay/aether-terminal.sh` | Dev terminal wrapper |
 | `os/compositor/crates/aether-shell/src/design.rs` | Compositor token mirror (`scripts/design-parity.ts`) |
 
 ## Contribution rules

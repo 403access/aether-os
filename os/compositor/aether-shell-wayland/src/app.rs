@@ -1058,7 +1058,7 @@ impl App {
 
     fn spawn_terminal(&mut self) {
         let program =
-            std::env::var("AETHER_TERMINAL").unwrap_or_else(|_| "weston-terminal".to_string());
+            std::env::var("AETHER_TERMINAL").unwrap_or_else(|_| "aether-terminal".to_string());
         self.spawn_program(&program, &[], "terminal");
     }
 

@@ -74,6 +74,7 @@
     curl
     git
     aether-shell-drm
+    aether-terminal
     cage
   ];
 

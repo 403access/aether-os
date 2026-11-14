@@ -65,7 +65,7 @@ The React rebuild currently covers:
 | P2 | Map tokens to compositor scene-graph styles; match type metrics | Side-by-side screenshot parity with the reference at 1440×900 |
 | P3 (done) | Explorer as a shell layer with 10k-row virtualisation | 30 px rows, scroll p95 0.004 ms; 120 Hz on target pending |
 | P3 (done) | Palette layer parity | Prefix modes/subsequence + shared fixture; 10k p95 1.11 ms |
-| P3 (done) | Native chrome parity | Inter, rounded glass panels, SVG icons, full-output explorer, six-row palette, chat cards |
+| P3 (done) | Native chrome parity | Inter, rounded glass panels, SVG icons, full-output explorer, six-row palette, chat cards, Water-themed terminal |
 | P4 | Audio overlay uses the same badge/segmented primitives | No new one-off components |
 | P6 | Browser and media chrome reuse the component vocabulary | Visual review against the reference |
 | P8 | Accessibility pass on the shared components | Focus, contrast, reduced motion verified |
@@ -84,7 +84,8 @@ Before any surface is declared “aligned”, verify:
 - [x] Compositor tokens mirror `tokens.css`; `scripts/design-parity.ts` guards drift.
 
 Screenshot evidence: [`explorer`](/img/smithay-explorer.png),
-[`palette`](/img/smithay-palette.png), [`chat`](/img/smithay-chat.png).
+[`palette`](/img/smithay-palette.png), [`chat`](/img/smithay-chat.png),
+[`terminal`](/img/smithay-terminal.png).
 
 ## Divergence policy
 

@@ -52,6 +52,7 @@
             libxcb
             xvfb
             weston
+            foot
             wayland-utils
             wl-clipboard
             wl-clip-persist
@@ -200,6 +201,7 @@
         aether-session = final.writeShellScriptBin "aether-session" ''
           export XDG_RUNTIME_DIR="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
           export AETHER_FONT="''${AETHER_FONT:-${final.inter}/share/fonts/truetype/InterVariable.ttf}"
+          export AETHER_TERMINAL="''${AETHER_TERMINAL:-aether-terminal}"
           export LD_LIBRARY_PATH="${final.lib.makeLibraryPath [ final.libGL final.mesa final.libgbm ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
           export LIBGL_DRIVERS_PATH="${final.mesa}/lib/dri"
           export GBM_BACKENDS_PATH="${final.mesa}/lib/gbm"
@@ -211,6 +213,11 @@
           fi
           echo "aether-session: native DRM backend exited $status; using cage adapter" >&2
           exec ${final.cage}/bin/cage -s -m extend -- ${final.aether-shell-smithay}/bin/aether-shell-smithay
+        '';
+
+        aether-terminal = final.writeShellScriptBin "aether-terminal" ''
+          export LANG="''${LANG:-C.UTF-8}"
+          exec ${final.foot}/bin/foot -c ${./os/compositor/aether-shell-smithay/foot/foot.ini} -T "Wayland Terminal" "$@"
         '';
 
         aether-index = final.rustPlatform.buildRustPackage {
@@ -286,6 +293,7 @@
         aether-shell-smithay = pkgs.aether-shell-smithay;
         aether-shell-drm = pkgs.aether-shell-drm;
         aether-session = pkgs.aether-session;
+        aether-terminal = pkgs.aether-terminal;
       };
 
       # ---------------------------------------------------------------------
@@ -317,6 +325,7 @@
         aether-index = vmPkgs.aether-index;
         aether-shell-smithay = vmPkgs.aether-shell-smithay;
         aether-shell-drm = vmPkgs.aether-shell-drm;
+        aether-terminal = vmPkgs.aether-terminal;
         aether-session = vmPkgs.aether-session;
         default = vm.config.system.build.images.qemu-efi;
       };

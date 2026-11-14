@@ -27,7 +27,7 @@ command -v xdotool >/dev/null || {
 mkdir -p "${OUT}"
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-$(mktemp -d)}"
 chmod 700 "${XDG_RUNTIME_DIR}"
-export AETHER_TEST_CLIENT="${AETHER_TEST_CLIENT:-weston-terminal}"
+export AETHER_TEST_CLIENT="${AETHER_TEST_CLIENT:-${ROOT}/aether-terminal.sh}"
 export AETHER_TEST_CLIENT_COUNT="${AETHER_TEST_CLIENT_COUNT:-1}"
 
 Xvfb ":${DISPLAY_NUM}" -screen 0 "${WIDTH}x${HEIGHT}x24" -ac >"${OUT}/xvfb-palette.log" 2>&1 &

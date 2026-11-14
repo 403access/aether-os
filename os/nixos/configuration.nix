@@ -87,6 +87,7 @@
       aether-shell-drm
       aether-shell-smithay
       aether-session
+      aether-terminal
       intel-gpu-tools
       vulkan-tools
       libva-utils

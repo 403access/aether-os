@@ -97,8 +97,10 @@ entries, has no D-Bus dependency, and is tested without a desktop session.
 
 `aether-files` provides a bounded, name-only file index for palette searches:
 configurable roots, depth and entry cap, hidden/build directories skipped.
-It is a stopgap for filesystem reachability, not a replacement for the system
-content indexer.
+When `AETHER_INDEX_SOCKET` is set, the compositor instead queries the Bun
+`apps/indexer-service`, which wraps the shared TypeScript BM25/prefix/fuzzy
+indexer and returns content-ranked results over newline-delimited JSON. The
+local scan remains the fallback.
 
 `aether-preview` renders frames with a small software rasteriser, so the shell
 can be inspected without a display server:

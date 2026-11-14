@@ -95,8 +95,9 @@ Deliverables:
   fullscreen state and hides shell chrome. A single 1280x800@60 output is
   advertised with xdg-output geometry. `zwp_text_input_manager_v3` is advertised
   with focus following the keyboard. `aether-cursor` draws backend-neutral
-  software cursors in-frame.
-- ⏳ Live agent-session IPC, system content index integration, desktop-entry
+  software cursors in-frame. A Bun index service supplies content-ranked file
+  results over a Unix socket, with the bounded scan as fallback.
+- ⏳ Live agent-session IPC, incremental/inotify indexing, desktop-entry
   SVG icons/theme inheritance/actions/DBus, clipboard persistence/DnD, IME
   engine/input-method service, multi-output/hotplug, xcursor themes/client
   cursors, buffer-damage/occlusion, udev/DRM.

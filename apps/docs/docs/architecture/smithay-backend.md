@@ -140,6 +140,14 @@ The platform cursor is hidden, so the compositor owns cursor appearance and can
 use the same bitmaps on DRM. The smoke walks the hover states and captures this
 I-beam over the palette input.*
 
+![Full-text file result from the system index service](/img/smithay-index-service.png)
+
+*With `AETHER_INDEX_SOCKET`, the palette asks the Bun `apps/indexer-service` for
+results on each query. The service returns BM25/prefix/fuzzy content matches;
+the shell displays them pre-filtered. The smoke indexes a fixture and opens a
+file matched by body content. Without the socket the bounded `aether-files`
+scan remains the fallback.*
+
 ![The same window maximized](/img/smithay-window-maximized.png)
 
 *`Super+M` maximizes the focused window to the full output; pressing it again
@@ -172,7 +180,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
   optional PNG icons.
   A bounded filename index (`aether-files`) adds `OpenFile` results for non-empty
   queries. External launchers from `AETHER_PALETTE_JSON` can add agent-session
-  or tool commands. All providers are rescanned when the palette opens. Typing filters them (case-insensitive prefix/substring),
+  or tool commands. With `AETHER_INDEX_SOCKET`, the Bun index service supplies
+  content-ranked file results per query; otherwise the bounded local scan is
+  used. All providers are rescanned when the palette opens. Typing filters them (case-insensitive prefix/substring),
   `Up/Down` wraps, `Enter` or a row click activates, `Backspace` edits and `Esc`
   closes. The list slides to keep the selection visible, and pointer hover
   selects a row.
@@ -244,9 +254,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
 
 ## What is not implemented
 
-- **Live agent IPC and full-text files.** Agent sessions can be published as
-  external launchers, but there is no live agent-session socket yet; file search
-  is name-only, not the system content indexer.
+- **Live agent IPC and incremental indexing.** Agent sessions can be published
+  as external launchers, but there is no live agent-session socket yet. The
+  index service is a startup snapshot without inotify/live updates.
 - **Desktop-entry SVG icons, theme inheritance, actions and D-Bus activation.**
   Entries rescans and hicolor/pixmap PNG icons work; SVG icons, full icon-theme
   lookup, desktop actions and D-Bus activation are not implemented.
@@ -311,6 +321,7 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-agents-xvfb.sh     # external agent launcher
 ./os/compositor/aether-shell-smithay/smoke-output-xvfb.sh     # wl_output/xdg-output globals
 ./os/compositor/aether-shell-smithay/smoke-text-input-xvfb.sh # zwp_text_input_manager_v3
+./os/compositor/aether-shell-smithay/smoke-index-xvfb.sh      # Bun index service query
 ```
 
 The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. Most use
@@ -321,8 +332,9 @@ Set `AETHER_TERMINAL` to change the built-in
 terminal launcher. Desktop apps come from `XDG_DATA_HOME`/`XDG_DATA_DIRS`
 (`~/.local/share` and `/usr/local/share:/usr/share` by default). The file index
 uses `AETHER_FILE_ROOTS` (default `$HOME`), `AETHER_FILE_LIMIT` (default 2000),
-`AETHER_FILE_DEPTH` (default 5), `AETHER_OPENER` (default `xdg-open`) and
-`AETHER_PALETTE_JSON` (external launchers).
+`AETHER_FILE_DEPTH` (default 5), `AETHER_OPENER` (default `xdg-open`),
+`AETHER_PALETTE_JSON` (external launchers) and `AETHER_INDEX_SOCKET` (Bun index
+service; see `apps/indexer-service`).
 
 The environment sets:
 

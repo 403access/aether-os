@@ -98,6 +98,7 @@ const sidebars: SidebarsConfig = {
         "adr/0012-smithay-standalone-backend",
         "adr/0013-bitmap-text",
         "adr/0014-desktop-app-discovery",
+        "adr/0015-index-service-socket",
       ],
     },
     {

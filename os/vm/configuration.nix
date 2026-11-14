@@ -35,6 +35,11 @@
   networking.hostName = "aether-vm";
   time.timeZone = "UTC";
 
+  i18n.inputMethod = {
+    enable = true;
+    type = "fcitx5";
+  };
+
   # Small, sparse disk. Grow with qemu-img if you need more.
   virtualisation.diskSize = 4096;
 

@@ -58,6 +58,11 @@
   };
 
   time.timeZone = "Europe/Berlin";
+
+  i18n.inputMethod = {
+    enable = true;
+    type = "fcitx5";
+  };
   console.font = "Lat2-Terminus16";
 
   environment = {

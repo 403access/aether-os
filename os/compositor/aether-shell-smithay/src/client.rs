@@ -59,12 +59,15 @@ use smithay::reexports::winit::dpi::LogicalSize;
 use smithay::reexports::winit::platform::pump_events::PumpStatus;
 use smithay::reexports::winit::window::WindowAttributes;
 use smithay::utils::{
-    Physical, Point as SPoint, Rectangle, Serial, Size as SSize, Transform, SERIAL_COUNTER,
+    Logical, Physical, Point as SPoint, Rectangle, Serial, Size as SSize, Transform, SERIAL_COUNTER,
 };
 use smithay::wayland::buffer::BufferHandler;
 use smithay::wayland::compositor::{
     with_states, with_surface_tree_downward, CompositorClientState, CompositorHandler,
     CompositorState, Damage, SurfaceAttributes, TraversalAction,
+};
+use smithay::wayland::input_method::{
+    InputMethodHandler, InputMethodManagerState, PopupSurface as InputMethodPopupSurface,
 };
 use smithay::wayland::output::{OutputHandler, OutputManagerState};
 use smithay::wayland::selection::data_device::{
@@ -95,6 +98,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
 
     let _output_manager_state = OutputManagerState::new_with_xdg_output::<App>(&dh);
     let _text_input_manager_state = TextInputManagerState::new::<App>(&dh);
+    let _input_method_manager_state = InputMethodManagerState::new::<App, _>(&dh, |_| true);
     let output = Output::new(
         "Aether-1".to_string(),
         PhysicalProperties {
@@ -1244,6 +1248,15 @@ impl ShmHandler for App {
 
 impl OutputHandler for App {}
 
+impl InputMethodHandler for App {
+    fn new_popup(&mut self, _surface: InputMethodPopupSurface) {}
+    fn dismiss_popup(&mut self, _surface: InputMethodPopupSurface) {}
+    fn popup_repositioned(&mut self, _surface: InputMethodPopupSurface) {}
+    fn parent_geometry(&self, _parent: &WlSurface) -> Rectangle<i32, Logical> {
+        Rectangle::default()
+    }
+}
+
 impl SeatHandler for App {
     type KeyboardFocus = WlSurface;
     type PointerFocus = WlSurface;
@@ -2022,3 +2035,4 @@ smithay::delegate_data_device!(App);
 smithay::delegate_primary_selection!(App);
 smithay::delegate_output!(App);
 smithay::delegate_text_input_manager!(App);
+smithay::delegate_input_method_manager!(App);

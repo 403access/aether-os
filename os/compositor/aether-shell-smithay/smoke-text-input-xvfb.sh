@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Text input: verify the compositor advertises zwp_text_input_manager_v3.
+# Text input/IME: verify the compositor advertises text-input and input-method.
 #
 #   nix develop .#smithay -c ./os/compositor/aether-shell-smithay/smoke-text-input-xvfb.sh
 #
@@ -52,11 +52,13 @@ if [ -z "${SOCKET}" ]; then
 fi
 WAYLAND_DISPLAY="${SOCKET}" wayland-info >"${OUT}/text-input-info.txt" 2>&1 || true
 
-if ! grep -q "interface: 'zwp_text_input_manager_v3'" "${OUT}/text-input-info.txt"; then
-  echo "error: text-input manager global is missing" >&2
-  cat "${OUT}/text-input-info.txt" >&2
-  exit 1
-fi
+for global in zwp_text_input_manager_v3 zwp_input_method_manager_v2; do
+  if ! grep -q "interface: '${global}'" "${OUT}/text-input-info.txt"; then
+    echo "error: ${global} global is missing" >&2
+    cat "${OUT}/text-input-info.txt" >&2
+    exit 1
+  fi
+done
 
 cat "${OUT}/text-input-app.log"
-grep "zwp_text_input_manager_v3" "${OUT}/text-input-info.txt"
+grep -E "zwp_text_input_manager_v3|zwp_input_method_manager_v2" "${OUT}/text-input-info.txt"

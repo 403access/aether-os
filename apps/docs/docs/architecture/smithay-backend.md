@@ -91,6 +91,13 @@ the spawned process and a second Wayland client connection.*
 registers them as palette launchers. The smoke points the data dirs at a fixture,
 types `test`, and asserts the app launches and connects.*
 
+![Searching the bounded file index in the palette](/img/smithay-file-provider.png)
+
+*`aether-files` indexes filenames below `AETHER_FILE_ROOTS` (or `$HOME`),
+skipping hidden entries and heavy build directories. The palette only shows file
+results for non-empty queries; running one invokes `AETHER_OPENER` (default
+`xdg-open`). The smoke uses a fixture tree and a deterministic opener script.*
+
 ![The same window maximized](/img/smithay-window-maximized.png)
 
 *`Super+M` maximizes the focused window to the full output; pressing it again
@@ -119,7 +126,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
   windows (titles stay in sync via xdg `title_changed`) and commands. The first
   command, `New terminal`, spawns `AETHER_TERMINAL` (default
   `weston-terminal`) into the compositor. Installed applications are discovered
-  from XDG `.desktop` files at startup and appear as `LaunchApp` entries. Typing filters them (case-insensitive prefix/substring),
+  from XDG `.desktop` files at startup and appear as `LaunchApp` entries.
+  A bounded filename index (`aether-files`) adds `OpenFile` results for non-empty
+  queries. Typing filters them (case-insensitive prefix/substring),
   `Up/Down` wraps, `Enter` or a row click activates, `Backspace` edits and `Esc`
   closes. The list slides to keep the selection visible, and pointer hover
   selects a row.
@@ -173,8 +182,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
 
 ## What is not implemented
 
-- **File and agent-session providers.** Desktop apps and the terminal command
-  work; there is no file index or agent-session provider yet.
+- **Agent-session provider and full-text files.** Desktop apps, the terminal
+  command and a bounded filename index work; the system content indexer and an
+  agent-session provider are not wired in yet.
 - **Desktop-entry refresh, icons, actions and D-Bus activation.** The app list is
   scanned once at startup and only `Exec` is used.
 - **Text input methods.** Printable keys are mapped from keysyms; there is no
@@ -226,13 +236,16 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-cursor-xvfb.sh   # hover cursor mapping
 ./os/compositor/aether-shell-smithay/smoke-provider-xvfb.sh # spawn a client from the palette
 ./os/compositor/aether-shell-smithay/smoke-desktop-xvfb.sh  # launch a discovered .desktop app
+./os/compositor/aether-shell-smithay/smoke-files-xvfb.sh    # search/open a fixture file
 ```
 
 The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. The picker,
 resize, palette, window, cursor and provider smokes require `xdotool`, which the
 `.#smithay` dev shell provides. Set `AETHER_TERMINAL` to change the built-in
 terminal launcher. Desktop apps come from `XDG_DATA_HOME`/`XDG_DATA_DIRS`
-(`~/.local/share` and `/usr/local/share:/usr/share` by default).
+(`~/.local/share` and `/usr/local/share:/usr/share` by default). The file index
+uses `AETHER_FILE_ROOTS` (default `$HOME`), `AETHER_FILE_LIMIT` (default 2000),
+`AETHER_FILE_DEPTH` (default 5) and `AETHER_OPENER` (default `xdg-open`).
 
 The environment sets:
 

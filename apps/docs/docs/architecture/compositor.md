@@ -95,6 +95,11 @@ text layer for the shell and for apps that draw simple chrome.
 non-application and terminal-only entries, has no D-Bus or icon dependency, and
 is tested without a desktop session.
 
+`aether-files` provides a bounded, name-only file index for palette searches:
+configurable roots, depth and entry cap, hidden/build directories skipped.
+It is a stopgap for filesystem reachability, not a replacement for the system
+content indexer.
+
 `aether-preview` renders frames with a small software rasteriser, so the shell
 can be inspected without a display server:
 

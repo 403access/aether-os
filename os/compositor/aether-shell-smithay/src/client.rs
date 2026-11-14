@@ -10,7 +10,10 @@
 
 use std::collections::HashMap;
 use std::error::Error;
+use std::io::{BufRead, BufReader, Write};
+use std::os::unix::net::UnixStream;
 use std::sync::Arc;
+use std::time::Duration;
 
 use aether_cursor::{render as render_cursor, CursorShape};
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect, Size as AetherSize};
@@ -154,6 +157,8 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         damage: Vec::new(),
         icons: HashMap::new(),
         cursor_buffers: HashMap::new(),
+        index_socket: std::env::var("AETHER_INDEX_SOCKET").ok(),
+        index_query: String::new(),
     };
 
     let listener = ListeningSocket::bind_auto("aether", 0..8)?;
@@ -170,10 +175,17 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     state.shell.set_launchers(launchers);
     println!("aether-shell-smithay: loaded {launcher_count} desktop apps");
 
-    let files = file_index();
-    let file_count = files.len();
-    state.shell.set_files(files);
-    println!("aether-shell-smithay: indexed {file_count} files");
+    if state.index_socket.is_some() {
+        println!(
+            "aether-shell-smithay: using index service {:?}",
+            state.index_socket
+        );
+    } else {
+        let files = file_index();
+        let file_count = files.len();
+        state.shell.set_files(files);
+        println!("aether-shell-smithay: indexed {file_count} files");
+    }
 
     let (mut backend, mut winit) = winit::init_from_attributes::<GlesRenderer>(
         WindowAttributes::default()
@@ -243,6 +255,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                             // Releases are consumed without repeating the key.
                             if pressed {
                                 state.handle_palette_key(sym);
+                                state.refresh_index_results();
                             }
                             FilterResult::Intercept(())
                         } else {
@@ -1528,6 +1541,8 @@ struct App {
     damage: Vec<Rectangle<i32, Physical>>,
     icons: HashMap<String, MemoryRenderBuffer>,
     cursor_buffers: HashMap<CursorShape, CursorCacheEntry>,
+    index_socket: Option<String>,
+    index_query: String,
 }
 
 struct CursorCacheEntry {
@@ -1666,7 +1681,12 @@ impl App {
 
     fn refresh_providers(&mut self) {
         let launchers = all_launchers();
-        let files = file_index();
+        let files = if self.index_socket.is_some() {
+            self.index_query.clear();
+            Vec::new()
+        } else {
+            file_index()
+        };
         println!(
             "aether-shell-smithay: reloaded {} desktop apps, {} files",
             launchers.len(),
@@ -1674,6 +1694,65 @@ impl App {
         );
         self.shell.set_launchers(launchers);
         self.shell.set_files(files);
+    }
+
+    fn refresh_index_results(&mut self) {
+        let Some(socket) = self.index_socket.clone() else {
+            return;
+        };
+        if self.shell.overlay().is_none() {
+            return;
+        }
+        let query = self.shell.palette_query().to_string();
+        if query == self.index_query {
+            return;
+        }
+        self.index_query = query.clone();
+        if query.trim().is_empty() {
+            self.shell.set_indexed_files(Vec::new());
+            return;
+        }
+
+        let Ok(mut stream) = UnixStream::connect(&socket) else {
+            println!("aether-shell-smithay: index connect failed {socket:?}");
+            return;
+        };
+        let _ = stream.set_read_timeout(Some(Duration::from_millis(250)));
+        let _ = stream.set_write_timeout(Some(Duration::from_millis(250)));
+        let request = serde_json::json!({ "query": query, "limit": 8 });
+        if writeln!(stream, "{request}").is_err() {
+            return;
+        }
+        let mut reader = BufReader::new(stream);
+        let mut line = String::new();
+        if reader.read_line(&mut line).is_err() {
+            println!("aether-shell-smithay: index read failed");
+            return;
+        }
+        let Ok(value) = serde_json::from_str::<serde_json::Value>(&line) else {
+            return;
+        };
+        let files: Vec<PaletteFile> = value
+            .get("results")
+            .and_then(|results| results.as_array())
+            .map(|results| {
+                results
+                    .iter()
+                    .filter_map(|result| {
+                        Some(PaletteFile {
+                            name: result.get("title")?.as_str()?.to_string(),
+                            detail: result
+                                .get("subtitle")
+                                .and_then(|value| value.as_str())
+                                .unwrap_or("indexed file")
+                                .to_string(),
+                            path: result.get("path")?.as_str()?.to_string(),
+                        })
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+        self.shell.set_indexed_files(files);
     }
 
     fn activate_palette(&mut self) {

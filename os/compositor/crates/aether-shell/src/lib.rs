@@ -203,6 +203,7 @@ pub struct Shell {
     palette: PaletteState,
     launchers: Vec<PaletteLauncher>,
     files: Vec<PaletteFile>,
+    files_prefiltered: bool,
     viewport: Size,
     next_id: WindowId,
 }
@@ -224,6 +225,7 @@ impl Shell {
             palette: PaletteState::default(),
             launchers: Vec::new(),
             files: Vec::new(),
+            files_prefiltered: false,
             viewport,
             next_id: 1,
         }
@@ -834,6 +836,16 @@ impl Shell {
     /// Replace the filename index shown for non-empty queries.
     pub fn set_files(&mut self, files: Vec<PaletteFile>) {
         self.files = files;
+        self.files_prefiltered = false;
+        self.palette.selected = 0;
+    }
+
+    /// Replace the file list with results already matched by an external
+    /// indexer. They are shown as-is for non-empty queries instead of being
+    /// re-filtered by filename.
+    pub fn set_indexed_files(&mut self, files: Vec<PaletteFile>) {
+        self.files = files;
+        self.files_prefiltered = true;
         self.palette.selected = 0;
     }
 
@@ -898,14 +910,13 @@ impl Shell {
 
         let file_offset = command_offset + 1;
         if !query.is_empty() {
-            let mut hits: Vec<(u8, usize, PaletteEntry)> = self
-                .files
-                .iter()
-                .enumerate()
-                .filter_map(|(index, file)| {
-                    palette_score(&query, &file.name).map(|score| {
+            let mut hits: Vec<(u8, usize, PaletteEntry)> = if self.files_prefiltered {
+                self.files
+                    .iter()
+                    .enumerate()
+                    .map(|(index, file)| {
                         (
-                            score,
+                            0,
                             index,
                             PaletteEntry {
                                 title: file.name.clone(),
@@ -914,8 +925,26 @@ impl Shell {
                             },
                         )
                     })
-                })
-                .collect();
+                    .collect()
+            } else {
+                self.files
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(index, file)| {
+                        palette_score(&query, &file.name).map(|score| {
+                            (
+                                score,
+                                index,
+                                PaletteEntry {
+                                    title: file.name.clone(),
+                                    detail: file.detail.clone(),
+                                    action: PaletteAction::OpenFile(index),
+                                },
+                            )
+                        })
+                    })
+                    .collect()
+            };
             hits.sort_by_key(|(score, index, _)| (*score, *index));
             for (rank, (score, _, entry)) in hits.into_iter().take(8).enumerate() {
                 scored.push((score, file_offset + rank, entry));
@@ -1804,6 +1833,23 @@ mod tests {
             .iter()
             .any(|entry| entry.title == "Terminal"));
         assert!(!shell.set_window_title(999, "missing"));
+    }
+
+    #[test]
+    fn prefiltered_index_results_skip_name_matching() {
+        let mut shell = shell();
+        shell.set_indexed_files(vec![PaletteFile {
+            name: "notes-alpha.txt".into(),
+            detail: "indexed".into(),
+            path: "/home/user/notes-alpha.txt".into(),
+        }]);
+        for character in "magic".chars() {
+            assert!(shell.palette_push_char(character));
+        }
+        let entries = shell.palette_entries();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].title, "notes-alpha.txt");
+        assert_eq!(entries[0].action, PaletteAction::OpenFile(0));
     }
 
     #[test]

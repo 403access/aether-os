@@ -28,6 +28,7 @@
       in
         shellPkgs.mkShell {
           packages = with shellPkgs; [
+            bun
             cargo
             rustc
             clippy

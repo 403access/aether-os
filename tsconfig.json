@@ -33,6 +33,7 @@
     "packages/*/src/**/*.tsx",
     "apps/web/src/**/*.ts",
     "apps/web/src/**/*.tsx",
+    "apps/indexer-service/src/**/*.ts",
     "e2e/**/*.ts",
     "tests/**/*.ts",
     "scripts/**/*.ts",

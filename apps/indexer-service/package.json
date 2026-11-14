@@ -1,0 +1,10 @@
+{
+  "name": "@aether/indexer-service",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "type": "module",
+  "description": "Unix-socket query service for the Aether system index",
+  "scripts": {
+    "start": "bun run src/main.ts"
+  }
+}

@@ -495,6 +495,9 @@ fn cursor_for(state: &App) -> CursorShape {
         }
         return CursorShape::Arrow;
     }
+    if state.shortcuts_open {
+        return CursorShape::Arrow;
+    }
     if state.shell.audio_open() {
         if state.shell.audio_rect().contains(point) {
             if state.shell.audio_route_at(point).is_some()
@@ -666,6 +669,7 @@ pub struct App {
     status: StatusSnapshot,
     status_cpu: Option<crate::status::CpuTimes>,
     chat_demo: Option<ChatDemo>,
+    pub(crate) shortcuts_open: bool,
     audio_backend: SystemAudio,
     status_last: std::time::Instant,
     status_enabled: bool,
@@ -714,6 +718,10 @@ impl App {
 
     fn handle_shortcut(&mut self, modifiers: &ModifiersState, keysym: Keysym) -> bool {
         let escape: Keysym = keysyms::KEY_Escape.into();
+        if self.shortcuts_open && keysym == escape {
+            self.close_shortcuts();
+            return true;
+        }
         if self.shell.overlay().is_some() && keysym == escape {
             self.toggle_overlay();
             return true;
@@ -726,6 +734,20 @@ impl App {
             Shortcut::ToggleExplorer => self.toggle_explorer(),
             Shortcut::ToggleChat => self.toggle_chat(),
             Shortcut::ToggleAudio => self.toggle_audio(),
+            Shortcut::ToggleShortcuts => self.toggle_shortcuts(),
+            Shortcut::NewTerminal => {
+                self.spawn_terminal();
+                println!("aether-shell: shortcut new terminal");
+            }
+            Shortcut::AdjustMaster(direction) => {
+                let ratio = self.shell.master_ratio() + direction as f32 * 0.05;
+                if self.shell.set_master_ratio(ratio) {
+                    self.sync_focus();
+                    self.configure_all();
+                    self.mark_full_damage();
+                    println!("aether-shell: master ratio -> {:.2}", self.shell.master_ratio());
+                }
+            }
             Shortcut::FocusNext | Shortcut::FocusPrevious => {
                 let delta = if shortcut == Shortcut::FocusNext {
                     1
@@ -808,6 +830,7 @@ impl App {
 
     pub fn toggle_overlay(&mut self) {
         if self.shell.overlay().is_none() {
+            self.shortcuts_open = false;
             self.shell.close_audio();
             self.shell.close_explorer();
             self.shell.close_chat();
@@ -822,6 +845,7 @@ impl App {
         if self.shell.chat_open() {
             self.shell.close_chat();
         } else {
+            self.shortcuts_open = false;
             self.shell.close_overlay();
             self.shell.close_explorer();
             self.shell.close_audio();
@@ -830,12 +854,60 @@ impl App {
         self.mark_full_damage();
     }
 
+    fn toggle_shortcuts(&mut self) {
+        if self.shortcuts_open {
+            self.close_shortcuts();
+        } else {
+            self.shell.close_overlay();
+            self.shell.close_explorer();
+            self.shell.close_chat();
+            self.shell.close_audio();
+            self.shortcuts_open = true;
+            println!(
+                "aether-shell: shortcuts overlay opened ({} bindings)",
+                crate::keymap::SHORTCUTS.len()
+            );
+            self.mark_full_damage();
+        }
+    }
+
+    fn close_shortcuts(&mut self) {
+        if self.shortcuts_open {
+            self.shortcuts_open = false;
+            self.mark_full_damage();
+        }
+    }
+
+    pub(crate) fn shortcuts_rect(&self) -> AetherRect {
+        let bounds = self
+            .shell
+            .primary_output()
+            .map(|output| output.rect)
+            .unwrap_or_else(|| AetherRect::new(0, 0, 1280, 800));
+        let width = 760.min(bounds.width.saturating_sub(32)).max(1);
+        let height = 560.min(bounds.height.saturating_sub(32)).max(1);
+        AetherRect::new(
+            bounds.x + (bounds.width.saturating_sub(width) / 2) as i32,
+            bounds.y + (bounds.height.saturating_sub(height) / 2) as i32,
+            width,
+            height,
+        )
+    }
+
+    fn mark_shortcuts_damage(&mut self) {
+        if self.shortcuts_open {
+            let rect = self.shortcuts_rect();
+            self.mark_damage_rect(rect);
+        }
+    }
+
     fn toggle_audio(&mut self) {
         if self.shell.audio_open() {
             self.shell.close_audio();
             self.mark_full_damage();
             return;
         }
+        self.shortcuts_open = false;
         self.shell.close_overlay();
         self.shell.close_explorer();
         self.shell.close_chat();
@@ -983,6 +1055,7 @@ impl App {
         if self.shell.explorer_open() {
             self.shell.close_explorer();
         } else {
+            self.shortcuts_open = false;
             self.shell.close_overlay();
             self.shell.close_chat();
             self.shell.close_audio();
@@ -1400,6 +1473,7 @@ impl App {
             status: StatusSnapshot::default(),
             status_cpu: None,
             chat_demo: None,
+            shortcuts_open: false,
             audio_backend: SystemAudio::new(),
             status_last: std::time::Instant::now(),
             status_enabled: std::env::var("AETHER_STATUS")
@@ -1660,6 +1734,8 @@ impl App {
                 if pressed && state.handle_shortcut(modifiers, sym) {
                     shortcut = true;
                     FilterResult::Intercept(())
+                } else if state.shortcuts_open {
+                    FilterResult::Intercept(())
                 } else if state.shell.overlay().is_some() {
                     if pressed {
                         state.handle_palette_key(sym);
@@ -1705,6 +1781,8 @@ impl App {
             self.mark_chat_damage();
         } else if audio_key {
             self.mark_audio_damage();
+        } else if self.shortcuts_open {
+            self.mark_shortcuts_damage();
         } else if palette_key {
             let new_overlay = self.shell.overlay_rect();
             if let Some(rect) = old_overlay {
@@ -1948,7 +2026,18 @@ impl App {
                 || over_picker
                 || self.shell.explorer_open()
                 || self.shell.chat_open()
-                || self.shell.audio_open();
+                || self.shell.audio_open()
+                || self.shortcuts_open;
+            if self.shortcuts_open {
+                if !self.shortcuts_rect().contains(point) {
+                    self.close_shortcuts();
+                }
+                self.mark_shortcuts_damage();
+                self.cursor = cursor_for(self);
+                self.mark_cursor_damage(self.pointer_pos);
+                self.end_input(started);
+                return;
+            }
             if self.shell.audio_open() {
                 if let Some(index) = self.shell.audio_route_at(point) {
                     self.shell.audio_select(index);

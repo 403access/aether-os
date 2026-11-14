@@ -410,6 +410,7 @@ impl App {
             self.shell.explorer_open() && (output.is_none() || output == Some(primary));
         let chat_here = self.shell.chat_open() && (output.is_none() || output == Some(primary));
         let audio_here = self.shell.audio_open() && (output.is_none() || output == Some(primary));
+        let shortcuts_here = self.shortcuts_open && (output.is_none() || output == Some(primary));
 
         let mut chrome: Vec<(AetherRect, [f32; 4])> = Vec::new();
         let mut labels: Vec<(String, i32, i32, u32, [u8; 4])> = Vec::new();
@@ -817,6 +818,105 @@ impl App {
                     "esc close   PgUp/PgDn scroll".into(),
                     rect.x + width - 176,
                     composer_y - 16,
+                    0,
+                    [107, 169, 182, 255],
+                ));
+            }
+
+            if shortcuts_here {
+                let rect = self.shortcuts_rect();
+                let width = rect.width as i32;
+                let height = rect.height as i32;
+                if let Some(buffer) = self.chrome_panel(
+                    rect.width,
+                    rect.height,
+                    14,
+                    [7, 39, 51, 250],
+                    Some([127, 230, 255, 34]),
+                ) {
+                    panels.push((buffer, rect.x - 18, rect.y - 18));
+                }
+                if let Some(buffer) = self.chrome_round_top(
+                    rect.width.saturating_sub(2),
+                    58,
+                    13,
+                    [9, 49, 63, 255],
+                ) {
+                    panels.push((buffer, rect.x + 1, rect.y + 1));
+                }
+                display_icons.push((
+                    "command".into(),
+                    20,
+                    [56, 214, 255, 255],
+                    rect.x + 18,
+                    rect.y + 18,
+                ));
+                labels.push((
+                    "Keyboard shortcuts".into(),
+                    rect.x + 50,
+                    rect.y + 12,
+                    2,
+                    [233, 251, 255, 255],
+                ));
+                labels.push((
+                    "Super is Command · fast paths are global".into(),
+                    rect.x + 50,
+                    rect.y + 35,
+                    0,
+                    [107, 169, 182, 255],
+                ));
+                let key = "Super+/";
+                let key_w = self.text_width(key, 0) as i32 + 22;
+                if let Some(buffer) = self.chrome_round(key_w as u32, 22, 6, [3, 25, 34, 255]) {
+                    panels.push((buffer, rect.x + width - key_w - 14, rect.y + 18));
+                }
+                labels.push((
+                    key.into(),
+                    rect.x + width - key_w - 3,
+                    rect.y + 23,
+                    0,
+                    [107, 169, 182, 255],
+                ));
+
+                let entries = crate::keymap::SHORTCUTS;
+                let half = entries.len().div_ceil(2);
+                for (column, slice) in [&entries[..half], &entries[half..]].iter().enumerate() {
+                    let column_x = rect.x + 18 + column as i32 * 368;
+                    let mut y = rect.y + 76;
+                    let mut group = "";
+                    for entry in *slice {
+                        if entry.group != group {
+                            group = entry.group;
+                            labels.push((
+                                group.to_uppercase(),
+                                column_x,
+                                y,
+                                0,
+                                [56, 214, 255, 200],
+                            ));
+                            y += 20;
+                        }
+                        labels.push((
+                            entry.chord.into(),
+                            column_x,
+                            y + 5,
+                            0,
+                            [165, 219, 229, 255],
+                        ));
+                        labels.push((
+                            entry.action.into(),
+                            column_x + 140,
+                            y + 3,
+                            0,
+                            [217, 247, 255, 255],
+                        ));
+                        y += 28;
+                    }
+                }
+                labels.push((
+                    "Esc close   ↑↓ navigate overlays   Enter activate".into(),
+                    rect.x + 18,
+                    rect.y + height - 22,
                     0,
                     [107, 169, 182, 255],
                 ));

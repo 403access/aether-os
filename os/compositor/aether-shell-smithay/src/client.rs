@@ -1338,18 +1338,32 @@ fn external_launchers() -> Vec<PaletteLauncher> {
 fn desktop_launchers() -> Vec<PaletteLauncher> {
     aether_desktop::discover(&desktop_data_dirs())
         .into_iter()
-        .map(|entry| PaletteLauncher {
-            detail: if entry.comment.is_empty() {
+        .flat_map(|entry| {
+            let detail = if entry.comment.is_empty() {
                 "application".to_string()
             } else {
-                entry.comment
-            },
-            icon: entry
+                entry.comment.clone()
+            };
+            let icon = entry
                 .icon_path
-                .map(|path| path.to_string_lossy().to_string()),
-            name: entry.name,
-            program: entry.program,
-            args: entry.args,
+                .map(|path| path.to_string_lossy().to_string());
+            let mut launchers = vec![PaletteLauncher {
+                name: entry.name.clone(),
+                detail,
+                icon: icon.clone(),
+                program: entry.program.clone(),
+                args: entry.args.clone(),
+            }];
+            for action in entry.actions {
+                launchers.push(PaletteLauncher {
+                    name: format!("{} - {}", entry.name, action.name),
+                    detail: "action".to_string(),
+                    icon: icon.clone(),
+                    program: action.program,
+                    args: action.args,
+                });
+            }
+            launchers
         })
         .collect()
 }

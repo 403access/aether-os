@@ -12,6 +12,14 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+/// A secondary action declared by a desktop entry.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DesktopAction {
+    pub name: String,
+    pub program: String,
+    pub args: Vec<String>,
+}
+
 /// An application discovered from a desktop entry.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DesktopEntry {
@@ -23,6 +31,7 @@ pub struct DesktopEntry {
     pub icon_path: Option<PathBuf>,
     pub program: String,
     pub args: Vec<String>,
+    pub actions: Vec<DesktopAction>,
     /// The entry asked for a terminal (`Terminal=true`). Callers may skip it.
     pub terminal: bool,
 }
@@ -35,6 +44,7 @@ pub fn parse(id: &str, contents: &str) -> Option<DesktopEntry> {
     let mut comment = String::new();
     let mut exec = None;
     let mut icon = None;
+    let mut actions: Vec<String> = Vec::new();
     let mut is_application = false;
     let mut no_display = false;
     let mut hidden = false;
@@ -61,6 +71,14 @@ pub fn parse(id: &str, contents: &str) -> Option<DesktopEntry> {
             "Comment" => comment = value.to_string(),
             "Exec" => exec = Some(value.to_string()),
             "Icon" => icon = Some(value.to_string()),
+            "Actions" => {
+                actions = value
+                    .split(';')
+                    .map(str::trim)
+                    .filter(|action| !action.is_empty())
+                    .map(str::to_string)
+                    .collect()
+            }
             "Type" => is_application = value == "Application",
             "NoDisplay" => no_display = value.eq_ignore_ascii_case("true"),
             "Hidden" => hidden = value.eq_ignore_ascii_case("true"),
@@ -85,6 +103,7 @@ pub fn parse(id: &str, contents: &str) -> Option<DesktopEntry> {
         icon_path: None,
         program,
         args: argv,
+        actions: parse_actions(&actions, contents),
         terminal,
     })
 }
@@ -164,6 +183,54 @@ pub fn discover(data_dirs: &[PathBuf]) -> Vec<DesktopEntry> {
     found
 }
 
+fn parse_actions(ids: &[String], contents: &str) -> Vec<DesktopAction> {
+    if ids.is_empty() {
+        return Vec::new();
+    }
+    let mut actions = Vec::new();
+    for id in ids {
+        let header = format!("[Desktop Action {id}]");
+        let mut in_group = false;
+        let mut name = None;
+        let mut exec = None;
+        for line in contents.lines() {
+            let line = line.trim();
+            if line.is_empty() || line.starts_with('#') {
+                continue;
+            }
+            if line.starts_with('[') {
+                in_group = line == header;
+                continue;
+            }
+            if !in_group {
+                continue;
+            }
+            let Some((key, value)) = line.split_once('=') else {
+                continue;
+            };
+            match key.trim() {
+                "Name" => name = Some(value.trim().to_string()),
+                "Exec" => exec = Some(value.trim().to_string()),
+                _ => {}
+            }
+        }
+        let (Some(name), Some(exec)) = (name, exec) else {
+            continue;
+        };
+        let mut argv = split_exec(&exec);
+        let Some(program) = argv.first().cloned() else {
+            continue;
+        };
+        argv.remove(0);
+        actions.push(DesktopAction {
+            name,
+            program,
+            args: argv,
+        });
+    }
+    actions
+}
+
 fn find_icon(name: &str, data_dirs: &[PathBuf]) -> Option<PathBuf> {
     let direct = Path::new(name);
     if direct.is_absolute() && direct.is_file() {
@@ -237,6 +304,7 @@ Terminal=false
         assert_eq!(entry.program, "example-editor");
         assert_eq!(entry.args, ["--new"]);
         assert_eq!(entry.icon, None);
+        assert!(entry.actions.is_empty());
         assert!(!entry.terminal);
     }
 
@@ -258,6 +326,35 @@ Terminal=false
             "[Desktop Entry]\nType=Application\nName=X\nExec=x\nHidden=true\n"
         )
         .is_none());
+    }
+
+    #[test]
+    fn parses_secondary_actions() {
+        let contents = "\
+[Desktop Entry]
+Type=Application
+Name=Editor
+Exec=editor
+Actions=NewWindow;Private;
+
+[Desktop Action NewWindow]
+Name=New Window
+Exec=editor --new %U
+
+[Desktop Action Private]
+Name=Private Window
+Exec=editor --private
+
+[Desktop Action Missing]
+Name=Missing
+";
+        let entry = parse("editor.desktop", contents).expect("entry");
+        assert_eq!(entry.actions.len(), 2);
+        assert_eq!(entry.actions[0].name, "New Window");
+        assert_eq!(entry.actions[0].program, "editor");
+        assert_eq!(entry.actions[0].args, ["--new"]);
+        assert_eq!(entry.actions[1].name, "Private Window");
+        assert_eq!(entry.actions[1].args, ["--private"]);
     }
 
     #[test]

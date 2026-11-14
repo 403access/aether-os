@@ -251,8 +251,8 @@ drag and both toggles with `xdotool` and asserts each transition.*
   by `aether-cursor` above all elements; the platform cursor is hidden. Built-in
   white/black bitmaps are the fallback. `AETHER_CURSOR_THEME`/`XCURSOR_THEME`
   and `XCURSOR_PATH` (plus standard icon dirs) select Xcursor images, parsed
-  directly with scale-aware hotspots. Named client cursors are mapped to the
-  same shapes; client-provided cursor surfaces currently fall back.
+  directly with scale-aware hotspots. Named client cursors map to shapes;
+  `wl_cursor` surface images are rendered at the pointer with their hotspot.
 - **Window move, resize and maximize.** `Alt+left-drag` promotes a tiled window
   to its preferred floating size and moves it; floating positions persist across
   relayouts and snap flush to output edges while moving. Releasing at the left
@@ -301,8 +301,8 @@ drag and both toggles with `xdotool` and asserts each transition.*
   `text-input`/IME protocol support yet.
 - **Text cache/atlas.** Every frame rebuilds small RGBA text buffers; a cached
   atlas is needed before text-heavy apps.
-- **Client cursor surfaces and animation.** Named cursors and Xcursor theme
-  images work; `wl_cursor` surface images and animated cursors are not rendered.
+- **Animated cursor frames.** Xcursor/theme and client cursor surfaces work; the
+  first/current image is used, without timed animation frames.
 - **Backend multi-output hotplug and per-output workspaces.** The shell's
   output model supports several rectangles and hotplug updates, but the winit
   adapter exposes one output and workspaces are shared. Fullscreen, maximize,

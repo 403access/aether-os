@@ -1,0 +1,26 @@
+[package]
+name = "aether-shell-drm"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Native KMS/DRM + libinput backend for the Aether shell"
+
+[workspace]
+
+[[bin]]
+name = "aether-shell-drm"
+path = "src/main.rs"
+
+[dependencies]
+smithay = { version = "0.7", default-features = false, features = [
+  "backend_drm",
+  "backend_gbm",
+  "backend_egl",
+  "backend_libinput",
+  "backend_session_libseat",
+  "backend_udev",
+  "renderer_gl",
+  "wayland_frontend",
+] }
+calloop = "0.14"
+libseat = "0.2"

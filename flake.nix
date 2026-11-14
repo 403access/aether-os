@@ -36,9 +36,13 @@
             pkg-config
             wayland
             libxkbcommon
+            udev
+            seatd
+            libinput
             libglvnd
             libGL
             mesa
+            libgbm
             libx11
             libxcursor
             libxi
@@ -55,12 +59,18 @@
             imagemagick
           ];
           shellHook = ''
+            export LIBRARY_PATH="${shellPkgs.mesa}/lib:$LIBRARY_PATH"
+            export NIX_LDFLAGS="-L${shellPkgs.mesa}/lib -L${shellPkgs.libgbm}/lib -L${shellPkgs.libinput}/lib -L${shellPkgs.libxkbcommon}/lib -L${shellPkgs.seatd}/lib -L${shellPkgs.udev}/lib $NIX_LDFLAGS"
             export LD_LIBRARY_PATH="${shellPkgs.lib.makeLibraryPath [
               shellPkgs.wayland
               shellPkgs.libxkbcommon
+              shellPkgs.udev
+              shellPkgs.seatd
+              shellPkgs.libinput
               shellPkgs.libglvnd
               shellPkgs.libGL
               shellPkgs.mesa
+              shellPkgs.libgbm
               shellPkgs.libx11
               shellPkgs.libxcursor
               shellPkgs.libxi
@@ -133,6 +143,7 @@
             libxkbcommon
             libGL
             mesa
+            libgbm
             libx11
             libxcursor
             libxi

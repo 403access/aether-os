@@ -1139,6 +1139,7 @@ impl App {
             let files = file_index();
             let file_count = files.len();
             state.shell.set_files(files);
+            println!("aether-shell: indexed {file_count} files");
             file_count
         };
         println!(

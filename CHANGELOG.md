@@ -13,7 +13,12 @@
 - Add `aether-session`: native DRM first, cage + winit adapter fallback, used by
   the target systemd unit. Package `aether-shell-drm` and `aether-session` in
   Nix; add 3 DRM unit tests, a DRM bring-up smoke script and a VM virtio-gpu
-  boot check (`scripts/vm-run.sh --drm-smoke`).
+  boot check (`scripts/vm-run.sh --drm-smoke`, `scripts/vm-drm-tcg.sh`).
+- Validated the native backend in the aarch64 VM on virtio-gpu: libseat device
+  open, `Virtual-1` connector with 26 modes, GLES renderer, 1280x800 CRTC
+  mode-set, DrmCompositor output and a presented frame, exiting
+  `AETHER_VM_DRM_STATUS=0`. Input initialization is covered by libinput setup
+  in the same run; hotplug is covered by shell unit tests.
 
 # Changelog
 

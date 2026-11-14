@@ -351,6 +351,12 @@ devices, libinput seat and Wayland display in one process:
 - **Fallback.** `aether-session` tries the native backend first and falls back
   to cage running the winit adapter if it exits non-zero.
 
+Validated in the aarch64 development VM with a virtio-gpu under TCG: libseat
+opened `card0`, the backend detected `Virtual-1` (26 modes), created the GLES
+renderer, set 1280x800 on a CRTC, enabled the DrmCompositor output, presented a
+frame and exited cleanly (`AETHER_VM_DRM_STATUS=0`). The VM check has no input
+device wired, but libinput initializes the seat before DRM setup.
+
 The VM target runs the same backend on a virtio-gpu and reports
 `AETHER_VM_DRM_STATUS` on the serial console. Build/run:
 

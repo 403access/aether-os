@@ -23,8 +23,7 @@ command -v qemu-system-aarch64 >/dev/null || say "QEMU comes from the VM runner 
 
 mkdir -p "${OUT}"
 say "building the VM runner"
-RUNNER="$(nix build "${ROOT}#vm" --no-link --print-out-paths \
-  --option sandbox false --option system-features "kvm nixos-test benchmark big-parallel")"
+RUNNER="$(nix build "${ROOT}#vm" --no-link --print-out-paths --option sandbox false)"
 RUN="$(find "${RUNNER}/bin" -maxdepth 1 -name 'run-*-vm' | head -1)"
 [ -x "${RUN}" ] || die "no VM runner in ${RUNNER}"
 

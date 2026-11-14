@@ -118,7 +118,7 @@
       TTYPath = "/dev/tty7";
       StandardInput = "tty";
       StandardOutput = "journal";
-      TimeoutStartSec = 300;
+      TimeoutStartSec = 900;
     };
     script = ''
       {
@@ -137,7 +137,7 @@
       export MESA_LOADER_DRIVER_OVERRIDE=llvmpipe
       export LIBGL_ALWAYS_SOFTWARE=1
       mkdir -p "$XDG_RUNTIME_DIR" 2>/dev/null || true
-      timeout -k 10 480 ${pkgs.aether-shell-drm}/bin/aether-shell-drm --frames 1 >>/dev/ttyAMA0 2>&1
+      timeout -k 10 800 ${pkgs.aether-shell-drm}/bin/aether-shell-drm --frames 1 >>/dev/ttyAMA0 2>&1
       echo "AETHER_VM_DRM_STATUS=$?" >>/dev/ttyAMA0
     '';
   };

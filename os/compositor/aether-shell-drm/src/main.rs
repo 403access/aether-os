@@ -283,6 +283,18 @@ impl DrmState {
         let fd = DrmDeviceFd::new(DeviceFd::from(file));
         let (drm, notifier) = DrmDevice::new(fd.clone(), true)?;
         println!("aether-shell-drm: DRM device ready");
+        if let Ok(resources) = drm.resource_handles() {
+            for handle in resources.connectors() {
+                if let Ok(info) = drm.get_connector(*handle, false) {
+                    println!(
+                        "aether-shell-drm: probe connector {} state {:?} modes {}",
+                        info,
+                        info.state(),
+                        info.modes().len()
+                    );
+                }
+            }
+        }
 
         let gbm = GbmDevice::new(fd.clone())?;
         println!("aether-shell-drm: GBM device ready");

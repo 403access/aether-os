@@ -19,12 +19,31 @@ before confirming.
 ## What you get
 
 After this guide the machine boots **Aether OS on bare metal**: the custom kernel,
-XFS/ext4/tmpfs layout, PipeWire, the operator account and a console session.
+XFS/ext4/tmpfs layout, PipeWire, the operator account, the native DRM compositor
+on tty7 with the cage fallback, the shell surfaces and the system index daemon.
 
-What it does **not** include yet: the `aether-shell` compositor and the daemons.
-Those are P2/P3 deliverables. First boot lands in a TTY (see
-[first boot](/getting-started/first-boot)). This is deliberate: a verified base is
-the prerequisite for the UI, not a substitute for it.
+The full application set (browser, media player, agent supervisor) is not part of
+this release. See [first boot](/getting-started/first-boot) for the verification
+checklist and [Using Aether](/getting-started/using-aether) for the desktop manual.
+
+### Live vs. installed
+
+The Aether ISO is a **live installer**, not a live desktop. It boots a minimal
+NixOS environment with `git`, `disko`, `helix` and hardware probes so it can write
+Aether to a disk. Booting that ISO does **not** start the Aether compositor.
+
+The full system is installed by design: XFS `/`, `/nix`, `/home`, ext4 scratch and
+tmpfs `/var/index` are disk-backed. There is no tmpfs-root live image output yet.
+To try the compositor without installing:
+
+- use the aarch64 development VM with `--gui`
+  ([instructions](/getting-started/virtual-machine));
+- or boot the official NixOS ISO, clone this repo, and run the compositor from the
+  live environment with `nix run .#aether-shell-smithay`.
+
+A full x86_64 Aether live ISO (`.#live-iso`) is possible but would need an
+explicit tmpfs overlay, a live-session unit and a tested hardware path. It is not
+shipped today.
 
 ## Requirements
 
@@ -319,7 +338,8 @@ formatting, the disk is empty but reusable: rerun disko.
 
 ## What this install does not do
 
-- No compositor/UI (P2), no `aetherd`/`aether-index` services (P3).
+- No agent supervisor (`aetherd`), browser or media player yet.
+- The shell is installed and starts on tty7; it is not a full application suite.
 - No disk encryption by default. LUKS is possible but not wired into
   `disko.nix`; treat it as a fork until P1 adds a tested encrypted layout.
 - No dual-boot support. Aether assumes the whole disk.

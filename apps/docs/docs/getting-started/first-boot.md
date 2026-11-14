@@ -7,8 +7,11 @@ description: "Verify the installed Aether base: kernel, Landlock, filesystems, G
 
 # First boot checklist
 
-The machine boots to a console TTY. This page verifies the base before you trust it
-with work.
+The machine boots two sessions: the console on **tty1** and the Aether compositor
+on **tty7**. Switch with `Ctrl+Alt+F1` and `Ctrl+Alt+F7`. If the native DRM
+backend fails, `aether-session` falls back to cage + the Smithay adapter.
+
+This page verifies the base before you trust it with work.
 
 ## Sign in and secure the account
 
@@ -70,23 +73,25 @@ lsblk -o NAME,SIZE,FSTYPE,LABEL,MOUNTPOINTS
 Kaby Lake has **no PKU**. That is expected; the isolation planner blocks PKU-based
 plans and uses Landlock processes instead.
 
-## Run the compositor core
+## Use the compositor
 
-The pure scene core is installed as a demo:
+Switch to tty7 (`Ctrl+Alt+F7`). The session starts the native DRM backend and
+draws the workspace pills, status bar and shell surfaces directly on the output.
 
-```bash
-aether-scene
+Try the fast paths:
+
+```text
+Super+Space     command palette
+Super+Return    terminal
+Super+E         explorer
+Super+C         chat drawer
+Super+A         audio routes
+Super+/         shortcut cheat sheet
 ```
 
-It prints a 2560×1440 tiling layout, a damage report, a hit test and a 120 Hz
-pacing calculation. The shell preview renders a real frame plan to a PNG:
-
-```bash
-aether-shell-preview
-# writes ./artifacts/shell/frame.png and damage.png
-```
-
-This is the tested shell/core layer; the Smithay backend is P2.
+The full key list and workflows are in [Using Aether](/getting-started/using-aether).
+`aether-scene` remains available as a headless layout/damage sanity check; the
+`aether-shell-preview` binary renders a frame plan to PNG.
 
 ## What is running
 
@@ -97,7 +102,9 @@ This is the tested shell/core layer; the Smithay backend is P2.
 | PipeWire + WirePlumber | enabled |
 | dbus | enabled |
 | systemd-journald | enabled, 500 MB cap |
-| aetherd / aether-index / aether-shell | **not installed yet** (P2/P3) |
+| aether-session (native DRM, cage fallback) | enabled on tty7 |
+| aether-index | enabled as a user service |
+| aetherd (agent supervisor) | not installed |
 
 Check:
 
@@ -116,8 +123,8 @@ speaker-test -c 2 -t sine -l 1     # analog output
 wpctl status                        # routes and default sink
 ```
 
-Switch outputs later with `wpctl set-default <id>`; the Aether device overlay
-arrives in P4.
+Switch outputs interactively with `Super+A`, or with
+`wpctl set-default <id>`.
 
 ## Rebuild and rollback
 
@@ -157,8 +164,9 @@ source of truth: this repository.
 
 ## Known gaps at this milestone
 
-- The compositor (`aether-shell`) and daemons are not packaged; the session is a
-  TTY. This is the P1 gate, not the finished desktop.
+- The compositor and index daemon are packaged; the agent supervisor, browser and
+  media apps are not.
+- Live peak input meters and TCP/Bluetooth matrix testing remain P5/target work.
 - No screen-reader stack.
 - No LUKS layout.
 - No NVIDIA/discrete GPU configuration.

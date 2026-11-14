@@ -51,6 +51,8 @@ Deliverables:
 - ✅ XFS root, ext4 scratch, tmpfs index; mount options from the spec.
 - ✅ disko GPT layout, live installer ISO, `scripts/install.sh` and an end-to-end
   [install guide](/getting-started/install).
+- ✅ Full Aether live ISO output (`.#live-iso`, x86_64): compositor, shell and audio
+  from USB with no persistence; the minimal installer remains `.#iso`.
 - ✅ Flake evaluation (`nix flake check --no-build`) passes for the installed system
   and the installer on x86_64-linux.
 - ⏳ Boot the installed system on the reference machine and record the numbers.

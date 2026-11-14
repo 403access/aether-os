@@ -28,24 +28,46 @@ checklist and [Using Aether](/getting-started/using-aether) for the desktop manu
 
 ### Live vs. installed
 
-The Aether ISO is a **live installer**, not a live desktop. It boots a minimal
-NixOS environment with `git`, `disko`, `helix` and hardware probes so it can write
-Aether to a disk. Booting that ISO does **not** start the Aether compositor.
+There are two different ISO outputs:
 
-The full system is installed by design: XFS `/`, `/nix`, `/home`, ext4 scratch and
-tmpfs `/var/index` are disk-backed. There is no tmpfs-root live image output yet.
-To try the compositor without installing:
+| Target | Purpose | Starts Aether? |
+| --- | --- | --- |
+| `.#iso` | Minimal live **installer**: git, disko, helix, hardware probes | No |
+| `.#live-iso` | Full Aether desktop from a disposable ISO | Yes, on tty7 |
 
-- use the aarch64 development VM with `--gui`
-  ([instructions](/getting-started/virtual-machine));
-- or, on a Linux console with DRM/seat access, clone this repo and run
-  `nix run .#aether-shell-drm`. That is a development path, not a supported live
-  image; the Smithay adapter needs an existing X11/Wayland session and is not a
-  bare-metal live desktop.
+`nix build .#live-iso` produces an x86_64 ISO containing the same shell,
+compositor, audio, index and terminal as the installed target. It needs an
+**x86_64 Linux builder with Nix**; an Apple Silicon host cannot build the x86_64
+system closure without a remote builder.
 
-A full x86_64 Aether live ISO (`.#live-iso`) is possible but would need an
-explicit tmpfs overlay, a live-session unit and a tested hardware path. It is not
-shipped today.
+Write it like any NixOS ISO:
+
+```bash
+nix build .#live-iso
+ls result/iso/
+sudo dd if=result/iso/*.iso of=/dev/rdiskN bs=4m status=progress
+```
+
+Boot the USB and sign in on the console (tty1) or switch to the compositor
+(tty7). Live credentials are:
+
+| Field | Value |
+| --- | --- |
+| User | `oliver` |
+| Password | `aether` |
+| Compositor | `Ctrl+Alt+F7` |
+| Console | `Ctrl+Alt+F1` |
+
+The live image has **no persistence**. `/` is the ISO's writable live root and is
+discarded on reboot. Copy files to another disk/USB, or install with `.#iso`, if
+you need state. The native DRM session starts automatically; if it fails,
+`aether-session` falls back to cage.
+
+To try the compositor without writing a USB, use the aarch64 development VM with
+`--gui` ([instructions](/getting-started/virtual-machine)). On a Linux console
+with DRM/seat access, `nix run .#aether-shell-drm` is also available as a
+development path; the Smithay adapter itself needs an existing X11/Wayland
+session and is not a bare-metal live desktop.
 
 ## Requirements
 

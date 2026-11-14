@@ -302,6 +302,15 @@
         modules = [./os/nixos/installer.nix];
       };
 
+      # A full Aether desktop that boots from an ISO. Disposable, x86_64 only.
+      nixosConfigurations.live = nixpkgs.lib.nixosSystem {
+        inherit system;
+        modules = [
+          { nixpkgs.overlays = [ self.overlays.default ]; }
+          ./os/live/configuration.nix
+        ];
+      };
+
       # Disk layout consumed by: disko --flake .#kestrel
       diskoConfigurations.kestrel = import ./os/nixos/disko.nix (import ./os/nixos/disk.nix);
 
@@ -309,6 +318,7 @@
         default = self.packages.${system}.iso;
         iso = self.nixosConfigurations.installer.config.system.build.isoImage;
         installer-iso = self.packages.${system}.iso;
+        live-iso = self.nixosConfigurations.live.config.system.build.isoImage;
         aether-scene = pkgs.aether-scene;
         index-service = pkgs.aether-index-service;
         aether-index = pkgs.aether-index;

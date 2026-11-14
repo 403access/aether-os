@@ -302,7 +302,10 @@ drag and both toggles with `xdotool` and asserts each transition.*
 
 | Shortcut | Action |
 | --- | --- |
-| `Super+Space` | Toggle the shell overlay above clients |
+| `Super+Space` | Toggle the palette |
+| `Super+E` | Toggle the file explorer |
+| `Super+C` | Toggle the streaming chat drawer |
+| `Super+Tab` / `Super+Shift+Tab` | Cycle MRU focus (forward/back) |
 | `Esc` | Close the overlay |
 | *Typing* | Filter palette entries while the overlay is open |
 | `Up/Down` | Move the palette selection (wraps) |

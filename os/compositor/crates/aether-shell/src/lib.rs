@@ -308,6 +308,8 @@ pub struct Shell {
     windows: HashMap<WindowId, Window>,
     active: usize,
     focus: Option<WindowId>,
+    focus_history: Vec<WindowId>,
+    focus_cycle: Option<usize>,
     overlay: Option<SurfaceId>,
     outputs: Vec<OutputInfo>,
     output_workspaces: HashMap<OutputId, usize>,
@@ -335,6 +337,8 @@ impl Shell {
             windows: HashMap::new(),
             active: 0,
             focus: None,
+            focus_history: Vec::new(),
+            focus_cycle: None,
             overlay: None,
             outputs: vec![OutputInfo {
                 id: 1,
@@ -576,8 +580,10 @@ impl Shell {
         if let Some(workspace) = self.workspaces.get_mut(window.workspace) {
             workspace.windows.retain(|candidate| *candidate != id);
         }
+        self.focus_history.retain(|candidate| *candidate != id);
         if self.focus == Some(id) {
             self.focus = self.workspaces[self.active].windows.last().copied();
+            self.focus_cycle = None;
         }
         self.relayout();
         true
@@ -592,9 +598,43 @@ impl Shell {
             return false;
         }
         self.focus = Some(id);
+        self.focus_cycle = None;
+        self.focus_history.retain(|candidate| *candidate != id);
+        self.focus_history.insert(0, id);
+        self.focus_history.truncate(32);
         let surface = window.surface;
         self.scene.raise(surface);
         true
+    }
+
+    /// MRU cycle used by Super+Tab. The history is not reordered during a
+    /// cycle; any direct focus change resets it.
+    pub fn focus_mru(&mut self, delta: isize) -> Option<WindowId> {
+        self.focus_history
+            .retain(|id| self.windows.contains_key(id));
+        let visible: Vec<WindowId> = self
+            .focus_history
+            .iter()
+            .copied()
+            .filter(|id| {
+                self.windows
+                    .get(id)
+                    .is_some_and(|window| window.workspace == self.output_workspace(window.output))
+            })
+            .collect();
+        if visible.is_empty() {
+            return None;
+        }
+        let len = visible.len() as isize;
+        let index = match self.focus_cycle {
+            Some(index) => (index as isize + delta).rem_euclid(len),
+            None if delta > 0 => 1 % len,
+            None => (len - 1).rem_euclid(len),
+        } as usize;
+        self.focus_cycle = Some(index);
+        self.focus = Some(visible[index]);
+        self.scene.raise(self.windows.get(&visible[index])?.surface);
+        Some(visible[index])
     }
 
     pub fn focus_next(&mut self) -> Option<WindowId> {
@@ -3693,5 +3733,47 @@ mod chat_tests {
             .map(|span| span.text.chars().count())
             .sum::<usize>()
             <= 48));
+    }
+}
+
+#[cfg(test)]
+mod focus_stack_tests {
+    use super::*;
+
+    fn shell() -> Shell {
+        Shell::new(Size::new(800, 600), LayoutConfig::default(), 120)
+    }
+
+    fn window(shell: &mut Shell, title: &str) -> WindowId {
+        shell.add_window(WindowSpec::new(title, "test.app"))
+    }
+
+    #[test]
+    fn mru_cycles_history_without_reordering_during_the_cycle() {
+        let mut shell = shell();
+        let a = window(&mut shell, "a");
+        let b = window(&mut shell, "b");
+        let c = window(&mut shell, "c");
+        assert!(shell.focus_window(a));
+        assert!(shell.focus_window(b));
+        assert!(shell.focus_window(c));
+        assert_eq!(shell.focus_mru(1), Some(b));
+        assert_eq!(shell.focus_mru(1), Some(a));
+        assert_eq!(shell.focus_mru(1), Some(c));
+        assert_eq!(shell.focus_mru(-1), Some(a));
+        // A direct focus resets the cycle anchor.
+        assert!(shell.focus_window(b));
+        assert_eq!(shell.focus_mru(1), Some(c));
+    }
+
+    #[test]
+    fn closing_a_window_removes_it_from_the_stack() {
+        let mut shell = shell();
+        let a = window(&mut shell, "a");
+        let b = window(&mut shell, "b");
+        assert!(shell.focus_window(a));
+        assert!(shell.focus_window(b));
+        shell.close_window(b);
+        assert_eq!(shell.focus_mru(1), Some(a));
     }
 }

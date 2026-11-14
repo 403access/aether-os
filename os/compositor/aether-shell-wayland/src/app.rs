@@ -12,6 +12,7 @@ use crate::agents::{parse_launchers, AgentSessions};
 use crate::chat_demo::ChatDemo;
 use crate::damage::buffer_damage_to_logical;
 use crate::index_worker::{should_apply, IndexWorker};
+use crate::keymap::{lookup, Shortcut};
 use crate::status::{StatusSnapshot, SAMPLE_INTERVAL};
 use aether_cursor::{CursorShape, CursorTheme};
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect, Size as AetherSize};
@@ -96,7 +97,8 @@ impl XdgShellHandler for App {
             .unwrap_or(1);
         let id = self.shell.add_window_on_output(spec, output);
         self.windows.insert(id, surface.clone());
-        self.focus = Some(surface.wl_surface().clone());
+        self.shell.focus_window(id);
+        self.sync_focus();
         self.configure_window(id);
     }
 
@@ -692,31 +694,28 @@ impl App {
             self.toggle_overlay();
             return true;
         }
-        if !modifiers.logo {
+        let Some(shortcut) = lookup(modifiers.logo, modifiers.shift, modifiers.alt, keysym) else {
             return false;
-        }
-
-        let one: Keysym = keysyms::KEY_1.into();
-        let two: Keysym = keysyms::KEY_2.into();
-        let three: Keysym = keysyms::KEY_3.into();
-        let space: Keysym = keysyms::KEY_space.into();
-        let close: Keysym = keysyms::KEY_q.into();
-        let maximize: Keysym = keysyms::KEY_m.into();
-        let fullscreen_key: Keysym = keysyms::KEY_f.into();
-        let explorer_key: Keysym = keysyms::KEY_e.into();
-        let chat_key: Keysym = keysyms::KEY_c.into();
-
-        if modifiers.shift {
-            let target = if keysym == one {
-                Some(0)
-            } else if keysym == two {
-                Some(1)
-            } else if keysym == three {
-                Some(2)
-            } else {
-                None
-            };
-            if let Some(workspace) = target {
+        };
+        match shortcut {
+            Shortcut::TogglePalette => self.toggle_overlay(),
+            Shortcut::ToggleExplorer => self.toggle_explorer(),
+            Shortcut::ToggleChat => self.toggle_chat(),
+            Shortcut::FocusNext | Shortcut::FocusPrevious => {
+                let delta = if shortcut == Shortcut::FocusNext {
+                    1
+                } else {
+                    -1
+                };
+                if let Some(id) = self.shell.focus_mru(delta) {
+                    self.sync_focus();
+                    self.configure_all();
+                    self.mark_full_damage();
+                    println!("aether-shell: mru focus {id}");
+                }
+            }
+            Shortcut::SwitchWorkspace(workspace) => self.switch_workspace(workspace),
+            Shortcut::MoveWindowToWorkspace(workspace) => {
                 if let Some(id) = self.shell.focused_window() {
                     if self.shell.move_window_to_workspace(id, workspace) {
                         println!(
@@ -724,92 +723,50 @@ impl App {
                         );
                         self.sync_focus();
                         self.configure_all();
-                        return true;
+                        self.mark_full_damage();
                     }
                 }
             }
-            return false;
-        }
-
-        let workspace_target = if keysym == one {
-            Some(0)
-        } else if keysym == two {
-            Some(1)
-        } else if keysym == three {
-            Some(2)
-        } else {
-            None
-        };
-        // Super+Alt+1/2/3 switches the workspace shown on the output under
-        // the pointer, leaving the primary output untouched.
-        if modifiers.alt {
-            if let Some(workspace) = workspace_target {
-                let point = AetherPoint::new(
-                    self.pointer_pos.x.round() as i32,
-                    self.pointer_pos.y.round() as i32,
-                );
-                let output = self
-                    .shell
-                    .output_at(point)
-                    .or_else(|| self.shell.primary_output().map(|output| output.id))
-                    .unwrap_or(1);
+            Shortcut::SwitchOutputWorkspace(workspace) => {
+                let output = self.output_under_pointer();
                 if self.shell.set_output_workspace(output, workspace) {
                     self.sync_focus();
                     self.configure_all();
                     self.mark_full_damage();
                     println!("aether-shell: output {output} workspace -> {workspace}");
                 }
-                return true;
             }
-            return false;
-        }
-        if let Some(workspace) = workspace_target {
-            self.switch_workspace(workspace);
-            return true;
-        }
-        if keysym == space {
-            self.toggle_overlay();
-            return true;
-        }
-        if keysym == close {
-            if let Some(id) = self.shell.focused_window() {
-                if let Some(toplevel) = self.windows.get(&id) {
-                    toplevel.send_close();
+            Shortcut::CloseWindow => {
+                if let Some(id) = self.shell.focused_window() {
+                    if let Some(toplevel) = self.windows.get(&id) {
+                        toplevel.send_close();
+                    }
                 }
             }
-            return true;
-        }
-        if keysym == maximize {
-            if let Some(id) = self.shell.focused_window() {
-                let maximized = !self.shell.is_maximized(id);
-                if self.shell.toggle_maximized(id) {
-                    println!("aether-shell-smithay: maximized -> {maximized}");
-                    self.sync_focus();
-                    self.configure_all();
+            Shortcut::Maximize => {
+                if let Some(id) = self.shell.focused_window() {
+                    let maximized = !self.shell.is_maximized(id);
+                    if self.shell.toggle_maximized(id) {
+                        println!("aether-shell-smithay: maximized -> {maximized}");
+                        self.sync_focus();
+                        self.configure_all();
+                        self.mark_full_damage();
+                    }
                 }
             }
-            return true;
-        }
-        if keysym == explorer_key {
-            self.toggle_explorer();
-            return true;
-        }
-        if keysym == chat_key {
-            self.toggle_chat();
-            return true;
-        }
-        if keysym == fullscreen_key {
-            if let Some(id) = self.shell.focused_window() {
-                let fullscreen = !self.shell.is_fullscreen(id);
-                if self.shell.toggle_fullscreen(id) {
-                    println!("aether-shell-smithay: fullscreen -> {fullscreen}");
-                    self.sync_focus();
-                    self.configure_all();
+            Shortcut::Fullscreen => {
+                if let Some(id) = self.shell.focused_window() {
+                    let fullscreen = !self.shell.is_fullscreen(id);
+                    if self.shell.toggle_fullscreen(id) {
+                        println!("aether-shell-smithay: fullscreen -> {fullscreen}");
+                        self.sync_focus();
+                        self.configure_all();
+                        self.mark_full_damage();
+                    }
                 }
             }
-            return true;
         }
-        false
+        true
     }
 
     /// Output currently under the pointer, falling back to the primary.

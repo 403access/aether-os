@@ -1,3 +1,9 @@
+## v0.1.0-alpha.67
+
+- Centralise shortcuts in a tested keymap table and add a 32-entry MRU focus
+  stack with `Super+Tab`/`Super+Shift+Tab`. Focus history updates on client map,
+  direct focus and close.
+
 ## v0.1.0-alpha.66
 
 - Add the `Super+C` chat drawer: streaming markdown headings, lists, bold and

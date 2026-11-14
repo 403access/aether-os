@@ -9,6 +9,7 @@ mod app;
 mod chat_demo;
 mod damage;
 mod index_worker;
+mod keymap;
 mod render;
 mod stats;
 mod status;

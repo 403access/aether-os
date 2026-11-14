@@ -250,7 +250,9 @@ pub fn icon_svg(name: &str, color: &str) -> Option<String> {
         "memory" => {
             r#"<rect x="3" y="6" width="14" height="8" rx="2"/><path d="M6 14v2M10 14v2M14 14v2"/>"#
         }
-        "mic" => r#"<rect x="6" y="2.8" width="8" height="10.4" rx="4"/><path d="M3.5 9.2a6.5 6.5 0 0 0 13 0M10 15.7v2.5M7.2 18.2h5.6"/>"#,
+        "mic" => {
+            r#"<rect x="6" y="2.8" width="8" height="10.4" rx="4"/><path d="M3.5 9.2a6.5 6.5 0 0 0 13 0M10 15.7v2.5M7.2 18.2h5.6"/>"#
+        }
         "audio" => {
             r#"<path d="M4 8h3l4-3v10l-4-3H4z"/><path d="M13.5 7.5a3.5 3.5 0 0 1 0 5M15.5 5.5a6.4 6.4 0 0 1 0 9"/>"#
         }

@@ -745,7 +745,10 @@ impl App {
                     self.sync_focus();
                     self.configure_all();
                     self.mark_full_damage();
-                    println!("aether-shell: master ratio -> {:.2}", self.shell.master_ratio());
+                    println!(
+                        "aether-shell: master ratio -> {:.2}",
+                        self.shell.master_ratio()
+                    );
                 }
             }
             Shortcut::FocusNext | Shortcut::FocusPrevious => {
@@ -2043,7 +2046,9 @@ impl App {
                     self.shell.audio_select(index);
                     self.activate_audio();
                 } else if let Some(preset) = self.shell.audio_preset_at(point) {
-                    if let Some(AudioAction::SetPreset(preset)) = self.shell.audio_set_preset(preset) {
+                    if let Some(AudioAction::SetPreset(preset)) =
+                        self.shell.audio_set_preset(preset)
+                    {
                         self.apply_audio_preset(preset);
                     }
                 } else if !self.shell.audio_rect().contains(point) {

@@ -31,31 +31,131 @@ pub struct ShortcutEntry {
 
 /// Canonical fast-path list. Keep this in sync with `lookup` and the manual.
 pub const SHORTCUTS: &[ShortcutEntry] = &[
-    ShortcutEntry { chord: "Super+Space", action: "Command palette", group: "Surfaces" },
-    ShortcutEntry { chord: "Super+Return", action: "New terminal", group: "Surfaces" },
-    ShortcutEntry { chord: "Super+E", action: "Explorer", group: "Surfaces" },
-    ShortcutEntry { chord: "Super+C", action: "Chat", group: "Surfaces" },
-    ShortcutEntry { chord: "Super+A", action: "Audio routes", group: "Surfaces" },
-    ShortcutEntry { chord: "Super+/", action: "Shortcut cheat sheet", group: "Surfaces" },
-    ShortcutEntry { chord: "Super+Tab", action: "Focus next (MRU)", group: "Windows" },
-    ShortcutEntry { chord: "Super+Shift+Tab", action: "Focus previous (MRU)", group: "Windows" },
-    ShortcutEntry { chord: "Super+J", action: "Focus next", group: "Windows" },
-    ShortcutEntry { chord: "Super+K", action: "Focus previous", group: "Windows" },
-    ShortcutEntry { chord: "Super+M", action: "Maximize / restore", group: "Windows" },
-    ShortcutEntry { chord: "Super+F", action: "Fullscreen / restore", group: "Windows" },
-    ShortcutEntry { chord: "Super+Q", action: "Close window", group: "Windows" },
-    ShortcutEntry { chord: "Super+H", action: "Narrow master", group: "Layout" },
-    ShortcutEntry { chord: "Super+L", action: "Widen master", group: "Layout" },
-    ShortcutEntry { chord: "Alt+Left drag", action: "Move / float window", group: "Layout" },
-    ShortcutEntry { chord: "Alt+Right drag", action: "Resize floating window", group: "Layout" },
-    ShortcutEntry { chord: "Super+1/2/3", action: "Switch workspace", group: "Workspaces" },
-    ShortcutEntry { chord: "Super+Shift+1/2/3", action: "Move window to workspace", group: "Workspaces" },
-    ShortcutEntry { chord: "Super+Alt+1/2/3", action: "Switch output workspace", group: "Workspaces" },
-    ShortcutEntry { chord: "↑ / ↓", action: "Move selection", group: "Overlays" },
-    ShortcutEntry { chord: "Enter", action: "Activate selection", group: "Overlays" },
-    ShortcutEntry { chord: "PgUp / PgDn", action: "Page lists / chat", group: "Overlays" },
-    ShortcutEntry { chord: "P", action: "Cycle audio latency preset", group: "Overlays" },
-    ShortcutEntry { chord: "Esc", action: "Close overlay", group: "Overlays" },
+    ShortcutEntry {
+        chord: "Super+Space",
+        action: "Command palette",
+        group: "Surfaces",
+    },
+    ShortcutEntry {
+        chord: "Super+Return",
+        action: "New terminal",
+        group: "Surfaces",
+    },
+    ShortcutEntry {
+        chord: "Super+E",
+        action: "Explorer",
+        group: "Surfaces",
+    },
+    ShortcutEntry {
+        chord: "Super+C",
+        action: "Chat",
+        group: "Surfaces",
+    },
+    ShortcutEntry {
+        chord: "Super+A",
+        action: "Audio routes",
+        group: "Surfaces",
+    },
+    ShortcutEntry {
+        chord: "Super+/",
+        action: "Shortcut cheat sheet",
+        group: "Surfaces",
+    },
+    ShortcutEntry {
+        chord: "Super+Tab",
+        action: "Focus next (MRU)",
+        group: "Windows",
+    },
+    ShortcutEntry {
+        chord: "Super+Shift+Tab",
+        action: "Focus previous (MRU)",
+        group: "Windows",
+    },
+    ShortcutEntry {
+        chord: "Super+J",
+        action: "Focus next",
+        group: "Windows",
+    },
+    ShortcutEntry {
+        chord: "Super+K",
+        action: "Focus previous",
+        group: "Windows",
+    },
+    ShortcutEntry {
+        chord: "Super+M",
+        action: "Maximize / restore",
+        group: "Windows",
+    },
+    ShortcutEntry {
+        chord: "Super+F",
+        action: "Fullscreen / restore",
+        group: "Windows",
+    },
+    ShortcutEntry {
+        chord: "Super+Q",
+        action: "Close window",
+        group: "Windows",
+    },
+    ShortcutEntry {
+        chord: "Super+H",
+        action: "Narrow master",
+        group: "Layout",
+    },
+    ShortcutEntry {
+        chord: "Super+L",
+        action: "Widen master",
+        group: "Layout",
+    },
+    ShortcutEntry {
+        chord: "Alt+Left drag",
+        action: "Move / float window",
+        group: "Layout",
+    },
+    ShortcutEntry {
+        chord: "Alt+Right drag",
+        action: "Resize floating window",
+        group: "Layout",
+    },
+    ShortcutEntry {
+        chord: "Super+1/2/3",
+        action: "Switch workspace",
+        group: "Workspaces",
+    },
+    ShortcutEntry {
+        chord: "Super+Shift+1/2/3",
+        action: "Move window to workspace",
+        group: "Workspaces",
+    },
+    ShortcutEntry {
+        chord: "Super+Alt+1/2/3",
+        action: "Switch output workspace",
+        group: "Workspaces",
+    },
+    ShortcutEntry {
+        chord: "↑ / ↓",
+        action: "Move selection",
+        group: "Overlays",
+    },
+    ShortcutEntry {
+        chord: "Enter",
+        action: "Activate selection",
+        group: "Overlays",
+    },
+    ShortcutEntry {
+        chord: "PgUp / PgDn",
+        action: "Page lists / chat",
+        group: "Overlays",
+    },
+    ShortcutEntry {
+        chord: "P",
+        action: "Cycle audio latency preset",
+        group: "Overlays",
+    },
+    ShortcutEntry {
+        chord: "Esc",
+        action: "Close overlay",
+        group: "Overlays",
+    },
 ];
 
 /// Resolve a logo-modified key. Escape is handled by the overlay before this.

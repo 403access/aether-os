@@ -836,12 +836,9 @@ impl App {
                 ) {
                     panels.push((buffer, rect.x - 18, rect.y - 18));
                 }
-                if let Some(buffer) = self.chrome_round_top(
-                    rect.width.saturating_sub(2),
-                    58,
-                    13,
-                    [9, 49, 63, 255],
-                ) {
+                if let Some(buffer) =
+                    self.chrome_round_top(rect.width.saturating_sub(2), 58, 13, [9, 49, 63, 255])
+                {
                     panels.push((buffer, rect.x + 1, rect.y + 1));
                 }
                 display_icons.push((
@@ -896,13 +893,7 @@ impl App {
                             ));
                             y += 20;
                         }
-                        labels.push((
-                            entry.chord.into(),
-                            column_x,
-                            y + 5,
-                            0,
-                            [165, 219, 229, 255],
-                        ));
+                        labels.push((entry.chord.into(), column_x, y + 5, 0, [165, 219, 229, 255]));
                         labels.push((
                             entry.action.into(),
                             column_x + 140,
@@ -956,12 +947,9 @@ impl App {
                 ) {
                     panels.push((buffer, rect.x - 18, rect.y - 18));
                 }
-                if let Some(buffer) = self.chrome_round_top(
-                    rect.width.saturating_sub(2),
-                    58,
-                    13,
-                    [9, 49, 63, 255],
-                ) {
+                if let Some(buffer) =
+                    self.chrome_round_top(rect.width.saturating_sub(2), 58, 13, [9, 49, 63, 255])
+                {
                     panels.push((buffer, rect.x + 1, rect.y + 1));
                 }
                 display_icons.push((
@@ -1100,8 +1088,7 @@ impl App {
                             pill_w,
                             20,
                         );
-                        if let Some(buffer) = self.chrome_round(pill_w, 20, 6, [56, 214, 255, 36])
-                        {
+                        if let Some(buffer) = self.chrome_round(pill_w, 20, 6, [56, 214, 255, 36]) {
                             panels.push((buffer, pill.x, pill.y));
                         }
                         labels.push((

@@ -15,7 +15,8 @@ The VM is a **development harness**:
 
 - It boots a real Aether NixOS base (systemd, SSH, tooling, the same repo).
 - It is **not** the reference system: no custom 7700K kernel, no XFS layout, no
-  PipeWire, no agent supervisor, no compositor.
+  PipeWire service, no agent supervisor. The compositor is installed and can run
+  with `--gui`.
 - It is **not** an alternative supported install. The P1 gate still requires the
   hardware.
 
@@ -98,12 +99,65 @@ EFI system partition and systemd-boot.
 
 ## Boot
 
+### Serial only (default)
+
 ```bash
 ./scripts/vm-run.sh
 ```
 
-QEMU uses HVF acceleration and the EDK2 aarch64 firmware. You get a serial
-console; quit with `Ctrl-A X`.
+QEMU uses HVF acceleration and the EDK2 aarch64 firmware. You get the NixOS
+serial console; quit with `Ctrl-A X`. This mode has no virtual GPU and no
+graphical session.
+
+### Graphical session
+
+```bash
+./scripts/vm-run.sh --gui
+```
+
+This attaches a `virtio-gpu-pci`, virtio keyboard/tablet, a persistent QEMU
+process and a VNC server. The DRM bring-up check still runs first on tty7 for
+about 120 seconds; afterwards `aether-vm-session` starts the compositor on tty8.
+Connect while it runs:
+
+```bash
+open vnc://127.0.0.1:5905
+```
+
+or with a VNC client:
+
+```bash
+vncviewer 127.0.0.1:5905
+```
+
+To use QEMU's native macOS window instead of VNC:
+
+```bash
+VM_GUI_DISPLAY=cocoa ./scripts/vm-run.sh --gui
+```
+
+The VM has no installed application set beyond `aether-terminal`, `aether-audio`
+and the compositor. Press `Super+Space`, choose **New terminal**, and a
+Water-themed foot terminal opens inside the VM desktop. SSH remains available at
+`ssh -p 2222 aether@127.0.0.1`; the serial console is multiplexed in the terminal
+that started QEMU.
+
+### Transient DRM check with VNC
+
+```bash
+./scripts/vm-run.sh --drm-smoke
+open vnc://127.0.0.1:5905
+```
+
+This mode exists to prove the native DRM backend and hotplug path. It exits as
+soon as `AETHER_VM_DRM_STATUS=0` is reported, so the VNC view closes with it.
+
+### What the screenshots are
+
+The polished explorer/palette/chat/audio screenshots come from the **host-side
+Xvfb Smithay adapter**, not from this VM. The VM is an aarch64 boot and DRM test
+harness; `--gui` adds a persistent compositor session so the same shell can be
+inspected live, but it does not install the full application set.
 
 The script boots a **writable overlay** (`artifacts/vm/run.qcow2`) on top of the
 pristine build, so the image is never modified. Delete the overlay (or set
@@ -147,7 +201,9 @@ the first-boot checklist, not a substitute for it.
 | --- | --- |
 | systemd multi-user, DHCP, SSH | enabled |
 | `helix`, `tmux`, `htop`, `git` | installed |
-| PipeWire, agent daemons, compositor | **not installed** |
+| PipeWire | **not enabled**; `aether-audio` CLI is installed for route inspection |
+| Compositor | installed; `--drm-smoke` runs tty7 for ~120 s; `--gui` then runs a persistent session on tty8 |
+| Agent daemons | not installed |
 | Firewall | disabled (user-mode NAT only) |
 | Passwordless sudo | enabled for convenience |
 

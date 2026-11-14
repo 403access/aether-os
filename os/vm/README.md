@@ -43,9 +43,14 @@ Artifacts are copied to `artifacts/vm/` (gitignored).
 ## Boot
 
 ```bash
-./scripts/vm-run.sh          # interactive serial console
+./scripts/vm-run.sh          # interactive serial console (no GPU)
+./scripts/vm-run.sh --gui    # persistent compositor + VNC on 127.0.0.1:5905
 ./scripts/vm-smoke.sh        # headless boot, waits for AETHER_VM_READY
 ```
+
+`--gui` attaches a virtio GPU, keyboard and tablet, waits for the DRM check to
+finish, then starts `aether-vm-session` on tty8. Open `vnc://127.0.0.1:5905`, or
+use `VM_GUI_DISPLAY=cocoa` for a native QEMU window. `Ctrl-A X` quits QEMU.
 
 QEMU is driven directly with HVF acceleration and the EDK2 aarch64 firmware.
 The image is `qemu-efi`, so no bootloader setup is needed on the host.

@@ -395,9 +395,9 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                             .find(|window| window.id == id)
                             .map(|window| window.rect)
                         {
-                            let local = smithay::utils::Point::from((
-                                position.x - rect.x as f64,
-                                position.y - rect.y as f64,
+                            let origin = smithay::utils::Point::from((
+                                rect.x as f64,
+                                rect.y as f64,
                             ));
                             let surface = state
                                 .windows
@@ -408,9 +408,9 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                             let pointer = state.seat.get_pointer().expect("seat pointer");
                             pointer.motion(
                                 &mut state,
-                                surface.map(|surface| (surface, local)),
+                                surface.map(|surface| (surface, origin)),
                                 &MotionEvent {
-                                    location: local,
+                                    location: position,
                                     serial,
                                     time,
                                 },
@@ -551,9 +551,9 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                             .find(|window| window.id == id)
                             .map(|window| window.rect)
                         {
-                            let local = smithay::utils::Point::from((
-                                point.x as f64 - rect.x as f64,
-                                point.y as f64 - rect.y as f64,
+                            let origin = smithay::utils::Point::from((
+                                rect.x as f64,
+                                rect.y as f64,
                             ));
                             let surface = state
                                 .windows
@@ -564,9 +564,9 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                             let pointer = state.seat.get_pointer().expect("seat pointer");
                             pointer.motion(
                                 &mut state,
-                                surface.map(|surface| (surface, local)),
+                                surface.map(|surface| (surface, origin)),
                                 &MotionEvent {
-                                    location: local,
+                                    location: position,
                                     serial,
                                     time,
                                 },

@@ -181,6 +181,10 @@ drag and both toggles with `xdotool` and asserts each transition.*
   work between clients. The compositor forwards data-device and primary focus
   with keyboard focus so selection offers reach the right client. DnD and
   clipboard persistence after the source exits are not implemented.
+- **Output globals.** A single 1280x800@60 `wl_output` is advertised with
+  `zxdg_output_manager_v1` geometry, scale 1 and physical dimensions. Toplevels
+  receive `wl_output.enter` on map and leave on destroy. `smoke-output-xvfb.sh`
+  checks the globals with `wayland-info`.
 - **Idle frame skipping and partial damage.** Input events request a full
   redraw; client commits damage the surface rectangles they report, falling
   back to the whole window when no usable damage arrives (buffer-coordinate
@@ -242,9 +246,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
   atlas is needed before text-heavy apps.
 - **Cursor themes on the DRM backend.** The winit adapter uses system cursor
   icons; a DRM target needs client cursor images and an xcursor theme.
-- **Multi-output edge snapping** is not implemented. Fullscreen, maximize,
-  halves, floating resize and single-output snapping work. Popups and
-  drag-and-drop are ignored.
+- **Multi-output** is not implemented: there is one hard-coded output, no
+  hotplug and no per-output workspaces. Fullscreen, maximize, halves, floating
+  resize and single-output snapping work. Popups and drag-and-drop are ignored.
 - **Buffer-coordinate damage and occlusion.** Surface-coordinate damage is used;
   buffer-coordinate damage falls back to the window, and opaque-region
   occlusion/per-subsurface tracking are not wired in yet.
@@ -294,11 +298,12 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-refresh-xvfb.sh   # live provider refresh
 ./os/compositor/aether-shell-smithay/smoke-fullscreen-xvfb.sh # Super+F fullscreen
 ./os/compositor/aether-shell-smithay/smoke-agents-xvfb.sh     # external agent launcher
+./os/compositor/aether-shell-smithay/smoke-output-xvfb.sh     # wl_output/xdg-output globals
 ```
 
-The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. The picker,
-resize, palette, window, cursor and provider smokes require `xdotool`, which the
-`.#smithay` dev shell provides (`wl-copy`/`wl-paste` for the clipboard smoke and
+The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. Most use
+`xdotool`; the output smoke uses `wayland-info`; both are in the `.#smithay` dev
+shell (`wl-copy`/`wl-paste` for the clipboard smoke and
 the idle-frame smoke for `AETHER_FRAME_LOG`).
 Set `AETHER_TERMINAL` to change the built-in
 terminal launcher. Desktop apps come from `XDG_DATA_HOME`/`XDG_DATA_DIRS`

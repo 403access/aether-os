@@ -92,10 +92,11 @@ Deliverables:
   commits use surface damage when available and fall back to the window rect.
   Palette app/file/external-launcher providers refresh on open; agent sessions
   can be published through the external manifest. Fullscreen uses xdg
-  fullscreen state and hides shell chrome.
+  fullscreen state and hides shell chrome. A single 1280x800@60 output is
+  advertised with xdg-output geometry.
 - ⏳ Live agent-session IPC, system content index integration, desktop-entry
   SVG icons/theme inheritance/actions/DBus, clipboard persistence/DnD, IME
-  support, multi-output snapping, DRM cursor images/themes,
+  support, multi-output/hotplug, DRM cursor images/themes,
   buffer-damage/occlusion, udev/DRM.
 - ⏳ udev/DRM backend, libinput seat, wgpu renderer, output hotplug.
 - Scene graph with damage tracking; shell chrome in one draw pass.

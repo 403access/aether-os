@@ -56,7 +56,7 @@ use smithay::utils::{
 use smithay::wayland::buffer::BufferHandler;
 use smithay::wayland::compositor::{
     with_states, with_surface_tree_downward, CompositorClientState, CompositorHandler,
-    CompositorState, SurfaceAttributes, TraversalAction,
+    CompositorState, Damage, SurfaceAttributes, TraversalAction,
 };
 use smithay::wayland::selection::data_device::{
     set_data_device_focus, ClientDndGrabHandler, DataDeviceHandler, DataDeviceState,
@@ -997,17 +997,50 @@ impl CompositorHandler for App {
             .windows
             .iter()
             .find_map(|(id, toplevel)| (toplevel.wl_surface() == surface).then_some(*id));
-        match id.and_then(|id| {
+        let Some(window) = id.and_then(|id| {
             self.shell
                 .windows()
                 .into_iter()
                 .find(|window| window.id == id)
-        }) {
-            Some(window) if window.workspace == self.shell.active_workspace() => {
-                self.mark_window_damage(window.rect);
+        }) else {
+            self.mark_full_damage();
+            return;
+        };
+        if window.workspace != self.shell.active_workspace() {
+            return;
+        }
+
+        let damage = with_states(surface, |states| {
+            let mut guard = states.cached_state.get::<SurfaceAttributes>();
+            let attributes = guard.current();
+            std::mem::take(&mut attributes.damage)
+        });
+        if damage.is_empty() {
+            self.mark_window_damage(window.rect);
+            return;
+        }
+        for damage in damage {
+            match damage {
+                Damage::Surface(rect) => {
+                    if rect.size.w <= 0 || rect.size.h <= 0 {
+                        continue;
+                    }
+                    let rect = AetherRect::new(
+                        window.rect.x + rect.loc.x,
+                        window.rect.y + rect.loc.y,
+                        rect.size.w as u32,
+                        rect.size.h as u32,
+                    );
+                    if let Some(clipped) = rect.intersect(window.rect) {
+                        self.mark_damage_rect(clipped);
+                    }
+                }
+                Damage::Buffer(_) => {
+                    // Buffer coordinates need scale/transform handling; be
+                    // conservative until that is wired through.
+                    self.mark_window_damage(window.rect);
+                }
             }
-            Some(_) => {}
-            None => self.mark_full_damage(),
         }
     }
 }
@@ -1265,7 +1298,11 @@ impl App {
     }
 
     fn mark_window_damage(&mut self, rect: AetherRect) {
-        if self.full_damage {
+        self.mark_damage_rect(rect);
+    }
+
+    fn mark_damage_rect(&mut self, rect: AetherRect) {
+        if self.full_damage || rect.is_empty() {
             return;
         }
         self.damage.push(Rectangle::new(

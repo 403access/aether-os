@@ -71,6 +71,8 @@
     usbutils
     curl
     git
+    aether-shell-drm
+    cage
   ];
 
   documentation.enable = false;
@@ -99,6 +101,34 @@
       ];
       Restart = "on-failure";
     };
+  };
+
+  # Native DRM bring-up on the VM's virtio-gpu. Runs on tty7 with a logind
+  # session so libseat can open /dev/dri/card0, then reports the result on the
+  # serial console. This is VM-only validation for the same backend the
+  # reference install runs.
+  systemd.services.aether-vm-drm = {
+    description = "Aether native DRM boot check";
+    wantedBy = ["multi-user.target"];
+    after = ["systemd-user-sessions.service" "systemd-logind.service"];
+    serviceConfig = {
+      PAMName = "login";
+      TTYPath = "/dev/tty7";
+      StandardInput = "tty";
+      StandardOutput = "journal";
+      TimeoutStartSec = 120;
+    };
+    script = ''
+      ${pkgs.kbd}/bin/chvt 7 || true
+      export XDG_RUNTIME_DIR=/run/user/$(id -u)
+      mkdir -p "$XDG_RUNTIME_DIR" 2>/dev/null || true
+      ${pkgs.aether-shell-drm}/bin/aether-shell-drm --frames 120 >/tmp/aether-drm.log 2>&1
+      status=$?
+      {
+        echo "AETHER_VM_DRM_STATUS=$status"
+        tail -20 /tmp/aether-drm.log
+      } > /dev/ttyAMA0
+    '';
   };
 
   # A deterministic marker for headless smoke tests. It only writes to the

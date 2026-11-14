@@ -83,7 +83,9 @@
       wireplumber
       wl-clip-persist
       cage
+      aether-shell-drm
       aether-shell-smithay
+      aether-session
       intel-gpu-tools
       vulkan-tools
       libva-utils

@@ -103,7 +103,7 @@ Deliverables:
   connectors, input and memory with fixture coverage.
 - ⏳ Live agent-session IPC, native inotify indexing, desktop-entry SVG
   icons/theme inheritance/DBus, clipboard persistence/DnD, IME
-  engine/input-method service, multi-output/hotplug, client cursor surfaces,
+  engine/input-method service, client cursor surfaces,
   udev/DRM.
 - ⏳ udev/DRM backend, libinput seat, wgpu renderer, output hotplug.
 - Scene graph with damage tracking; shell chrome in one draw pass.

@@ -198,7 +198,7 @@ impl CompositorHandler for App {
             self.mark_full_damage();
             return;
         };
-        if window.workspace != self.shell.active_workspace() {
+        if window.workspace != self.shell.output_workspace(window.output) {
             return;
         }
 
@@ -1698,6 +1698,11 @@ impl App {
     /// Replace the scale used by the backend (winit HiDPI).
     pub fn set_scale(&mut self, scale: f64) {
         self.scale = if scale > 0.0 { scale } else { 1.0 };
+    }
+
+    /// Whether compositor content changed since the last presented frame.
+    pub fn needs_frame(&self) -> bool {
+        self.full_damage || !self.damage.is_empty()
     }
 
     pub fn mark_full_damage(&mut self) {

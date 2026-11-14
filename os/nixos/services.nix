@@ -56,11 +56,12 @@
   services.printing.enable = false;
   services.fwupd.enable = false;
 
-  # DRM bring-up session. cage owns DRM/libinput/seat0 and launches the Aether
-  # winit adapter fullscreen; Wayland clients then connect to Aether's socket.
-  # The native aether-shell-drm backend is still future work.
+  # DRM session. aether-shell-drm is the native single-process backend: it
+  # owns seat0, libinput and KMS page-flips directly. If it cannot start
+  # (no seat access, unknown GPU, crash) the wrapper falls back to cage
+  # running the winit adapter fullscreen.
   systemd.services.aether-session = {
-    description = "Aether session (cage DRM adapter)";
+    description = "Aether session (native DRM, cage fallback)";
     wantedBy = ["multi-user.target"];
     after = ["systemd-user-sessions.service"];
     serviceConfig = {
@@ -69,7 +70,7 @@
       TTYPath = "/dev/tty7";
       StandardInput = "tty";
       StandardOutput = "journal";
-      ExecStart = "${pkgs.cage}/bin/cage -s -m extend -- ${pkgs.aether-shell-smithay}/bin/aether-shell-smithay";
+      ExecStart = "${pkgs.aether-session}/bin/aether-session";
       Restart = "on-failure";
       RestartSec = 2;
     };

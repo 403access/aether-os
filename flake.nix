@@ -96,6 +96,8 @@
         p.runCommand "aether-smithay-src" {} ''
           mkdir -p $out
           cp -r ${sceneSource}/aether-shell-smithay $out/
+          cp -r ${sceneSource}/aether-shell-wayland $out/
+          cp -r ${sceneSource}/aether-shell-drm $out/
           cp -r ${sceneSource}/crates $out/
           cp ${sceneSource}/Cargo.toml $out/
           cp ${sceneSource}/Cargo.lock $out/
@@ -164,6 +166,47 @@
           };
         };
 
+        aether-shell-drm = final.rustPlatform.buildRustPackage {
+          pname = "aether-shell-drm";
+          version = "0.1.0";
+          src = makeSmithaySource final;
+          sourceRoot = "aether-smithay-src/aether-shell-drm";
+          cargoLock.lockFile = ./os/compositor/aether-shell-drm/Cargo.lock;
+          nativeBuildInputs = [final.pkg-config];
+          buildInputs = with final; [
+            wayland
+            libxkbcommon
+            libGL
+            mesa
+            libgbm
+            udev
+            seatd
+            libinput
+          ];
+          doCheck = true;
+          installPhase = ''
+            mkdir -p $out/bin
+            cp target/aarch64-unknown-linux-gnu/release/aether-shell-drm $out/bin/aether-shell-drm
+          '';
+          meta = with final.lib; {
+            description = "Aether native KMS/DRM + libinput compositor";
+            license = licenses.mit;
+            platforms = ["x86_64-linux" "aarch64-linux"];
+          };
+        };
+
+        aether-session = final.writeShellScriptBin "aether-session" ''
+          export XDG_RUNTIME_DIR="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+          mkdir -p "$XDG_RUNTIME_DIR" 2>/dev/null || true
+          ${final.aether-shell-drm}/bin/aether-shell-drm
+          status=$?
+          if [ "$status" -eq 0 ]; then
+            exit 0
+          fi
+          echo "aether-session: native DRM backend exited $status; using cage adapter" >&2
+          exec ${final.cage}/bin/cage -s -m extend -- ${final.aether-shell-smithay}/bin/aether-shell-smithay
+        '';
+
         aether-index-service = final.stdenvNoCC.mkDerivation {
           pname = "aether-index-service";
           version = "0.1.0";
@@ -217,6 +260,8 @@
         aether-scene = pkgs.aether-scene;
         index-service = pkgs.aether-index-service;
         aether-shell-smithay = pkgs.aether-shell-smithay;
+        aether-shell-drm = pkgs.aether-shell-drm;
+        aether-session = pkgs.aether-session;
       };
 
       # ---------------------------------------------------------------------
@@ -245,6 +290,8 @@
         vm-image = vm.config.system.build.images.qemu-efi;
         index-service = vmPkgs.aether-index-service;
         aether-shell-smithay = vmPkgs.aether-shell-smithay;
+        aether-shell-drm = vmPkgs.aether-shell-drm;
+        aether-session = vmPkgs.aether-session;
         default = vm.config.system.build.images.qemu-efi;
       };
 

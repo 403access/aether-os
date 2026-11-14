@@ -1,0 +1,3 @@
+aether-shell: loaded 0 desktop apps, 0 files on WAYLAND_DISPLAY=aether-0
+aether-shell-drm: seat seat0
+Error: "no usable DRM device (no seat access or no GPU)"

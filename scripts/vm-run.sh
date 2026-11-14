@@ -2,8 +2,10 @@
 #
 # Boot the development VM image with QEMU/HVF on macOS.
 #
-#   ./scripts/vm-run.sh           interactive serial console
-#   ./scripts/vm-run.sh --smoke   headless, wait for AETHER_VM_READY
+#   ./scripts/vm-run.sh             interactive serial console
+#   ./scripts/vm-run.sh --smoke     headless, wait for AETHER_VM_READY
+#   ./scripts/vm-run.sh --drm-smoke headless virtio-gpu, wait for the native
+#                                   DRM backend result
 #
 # The VM target lives in os/vm; it is not the i7-7700K installation target.
 set -euo pipefail
@@ -60,6 +62,43 @@ else
     -netdev "user,id=net0,hostfwd=tcp::${SSH_PORT}-:22"
     -device virtio-net-pci,netdev=net0
   )
+fi
+
+if [ "${MODE}" = "--drm-smoke" ]; then
+  VNC_PORT="${VM_VNC_PORT:-5905}"
+  LOG="${ART}/drm-serial.log"
+  : >"${LOG}"
+  say "booting headless with virtio-gpu; waiting up to ${TIMEOUT}s for AETHER_VM_DRM_STATUS"
+  qemu-system-aarch64 "${QEMU_ARGS[@]}" \
+    -device virtio-gpu-pci \
+    -display none -vnc "127.0.0.1:${VNC_PORT}" -monitor none \
+    -serial "file:${LOG}" &
+  PID=$!
+  trap 'kill "${PID}" 2>/dev/null || true; wait "${PID}" 2>/dev/null || true' EXIT
+
+  START="$(date +%s)"
+  while true; do
+    if grep -q "AETHER_VM_DRM_STATUS=" "${LOG}" 2>/dev/null; then
+      say "DRM result after $(( $(date +%s) - START ))s"
+      grep -E "AETHER_VM_|aether-shell" "${LOG}" | tail -30
+      STATUS_LINE="$(grep "AETHER_VM_DRM_STATUS=" "${LOG}" | tail -1)"
+      case "${STATUS_LINE}" in
+        *"=0") exit 0 ;;
+        *) die "native DRM backend failed: ${STATUS_LINE}" ;;
+      esac
+    fi
+    if ! kill -0 "${PID}" 2>/dev/null; then
+      echo "--- serial log ---" >&2
+      tail -60 "${LOG}" >&2
+      die "QEMU exited before the DRM result"
+    fi
+    if [ $(( $(date +%s) - START )) -gt "${TIMEOUT}" ]; then
+      echo "--- serial log ---" >&2
+      tail -60 "${LOG}" >&2
+      die "timed out waiting for the native DRM result"
+    fi
+    sleep 2
+  done
 fi
 
 if [ "${MODE}" = "--smoke" ]; then

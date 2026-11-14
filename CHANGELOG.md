@@ -1,3 +1,20 @@
+## v0.1.0-alpha.58
+
+- Add the shared `aether-shell-wayland` crate: `App` now owns protocol globals,
+  seat, input policy, render composition, palette/agent providers and the
+  listening socket; winit and DRM adapters are thin backends.
+- Add per-output workspaces to `aether-shell`: windows belong to an output,
+  each output shows its own workspace, tiling/clamping/maximise/fullscreen use
+  that output's bounds, and hotplug reassigns orphaned windows.
+- Finish the native `aether-shell-drm` backend: libseat session, udev GPU
+  discovery, GBM/EGL renderer, `DrmOutputManager` per connector, VBlank
+  page-flips, libinput keyboard/pointer/axis input, connector hotplug, session
+  pause/resume and the shared Wayland/render path.
+- Add `aether-session`: native DRM first, cage + winit adapter fallback, used by
+  the target systemd unit. Package `aether-shell-drm` and `aether-session` in
+  Nix; add 3 DRM unit tests, a DRM bring-up smoke script and a VM virtio-gpu
+  boot check (`scripts/vm-run.sh --drm-smoke`).
+
 # Changelog
 
 All notable changes to Aether OS. Format follows

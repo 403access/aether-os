@@ -237,14 +237,18 @@ drag and both toggles with `xdotool` and asserts each transition.*
   keyboard focus. Input-method popup surfaces are stored and rendered above
   clients at the parent window plus popup location. The target and VM enable
   fcitx5, so candidate/preedit windows can be shown.
-- **Multi-output policy.** `aether-shell` tracks output rectangles, scale and a
-  primary output; the viewport is their bounding box, `output_at` resolves a
-  point to an output and `set_outputs` hotplug/reflows the tiled desktop. The
-  winit adapter reports one output; a DRM backend can attach several.
-- **Output globals.** A single 1280x800@60 `wl_output` is advertised with
-  `zxdg_output_manager_v1` geometry, scale 1 and physical dimensions. Toplevels
-  receive `wl_output.enter` on map and leave on destroy. `smoke-output-xvfb.sh`
-  checks the globals with `wayland-info`.
+- **Multi-output policy and per-output workspaces.** `aether-shell` tracks
+  output rectangles, scale, a primary output and a workspace per output.
+  `output_at` resolves points, `set_outputs` handles hotplug, and relayout tiles
+  each output's visible workspace inside that output's own bounds. Floating
+  clamping, maximize, fullscreen and half-snaps use the window's output.
+  Removing an output reassigns its windows to the primary output. The winit
+  adapter reports one output; the DRM backend exposes every connected connector.
+- **Output globals.** Each backend output is advertised as a `wl_output` with
+  `zxdg_output_manager_v1` geometry, mode, scale and physical dimensions.
+  Toplevels receive `wl_output.enter` on map and leave on destroy. The winit
+  adapter reports a single 1280x800@60 output; `smoke-output-xvfb.sh` checks
+  the globals with `wayland-info`.
 - **Idle frame skipping and partial damage.** Input events request a full
   redraw; client commits damage the surface rectangles they report. Buffer
   damage is divided by the surface scale (rounded outward) when the transform is
@@ -301,43 +305,64 @@ drag and both toggles with `xdotool` and asserts each transition.*
 - **Desktop-entry SVG icons, theme inheritance and D-Bus activation.** Entries
   rescans, hicolor/pixmap PNG icons and `[Desktop Action]` groups work; SVG
   icons, full icon-theme lookup and D-Bus activation are not implemented.
-- **Text input methods.** Printable keys are mapped from keysyms; there is no
-  `text-input`/IME protocol support yet.
+- **XDG popup surfaces.** xdg-shell popup surfaces (menus/tooltips) are still
+  accepted and ignored; IME popup surfaces are rendered.
 - **Text cache/atlas.** Every frame rebuilds small RGBA text buffers; a cached
   atlas is needed before text-heavy apps.
 - **Animated cursor frames.** Xcursor/theme and client cursor surfaces work; the
   first/current image is used, without timed animation frames.
-- **Backend multi-output hotplug and per-output workspaces.** The shell's
-  output model supports several rectangles and hotplug updates, but the winit
-  adapter exposes one output and workspaces are shared. Fullscreen, maximize,
-  halves, floating resize and single-output snapping work. Popups are ignored;
-  DnD works.
+- **Per-output shell chrome.** Workspace indicators and the palette draw on the
+  primary output only; per-output status bars are future work.
 - **Per-subsurface damage.** Top-level surface and buffer damage are used;
   Smithay also subtracts opaque regions when drawing the z-ordered element list,
   but nested subsurface damage is not tracked separately.
-- **Popups, drag-and-drop and grabs** are accepted/ignored at the protocol level.
-- **udev/DRM backend.** The target path for the 7700K (no X server) is not written;
-  winit is the development adapter.
+- **XDG popups and popup grabs** are accepted/ignored; drag-and-drop works.
 - **Damage from client buffers** is tracked as a full-window redraw for now.
 
 The P2 gate remains: a real client window, 120 Hz pacing and input on the target.
 
-## Native DRM status
+## Native DRM backend
 
-`aether-shell-drm` now has a KMS probe that opens `/dev/dri/cardN`, enumerates
-CRTCs/connectors/modes and fails if no connected connector with modes exists.
-The rendering/input/client backend (libinput, GBM/EGL, `DrmCompositor`
-page-flip and shared Wayland handlers) is not finished; the target still uses
-the cage adapter below.
+`aether-shell-drm` is the single-process backend. It owns the session, DRM
+devices, libinput seat and Wayland display in one process:
 
-## DRM session (cage adapter)
+- **Session and devices.** `LibSeatSession` opens `/dev/dri/cardN` through
+  libseat (logind or seatd). Each GPU gets a `DrmDevice`, `GbmDevice`,
+  `EGLDisplay`/`GlesRenderer`, `GbmAllocator`, `GbmFramebufferExporter` and a
+  `DrmOutputManager`.
+- **Outputs.** Connectors are enumerated through the DRM control API. A
+  connected connector with modes picks its preferred mode and a free CRTC,
+  creates a `wl_output` and an `OutputInfo` (laid out left-to-right), and
+  `DrmOutputManager::initialize_output` creates the `DrmCompositor`.
+- **Page-flips.** Every dirty output renders the shared `AetherRenderElement`
+  list with `DrmCompositor::render_frame`, queues the frame, and calls
+  `frame_submitted()` from the DRM VBlank event before the next frame.
+- **Input.** `LibinputInputBackend` feeds relative/absolute motion, buttons,
+  axis and keyboard events into the same `App` input methods the winit adapter
+  uses. Absolute devices map onto the extended desktop.
+- **Hotplug.** `UdevBackend` adds devices and rescans connector state on change.
+  New connectors get output IDs/workspaces; disconnected or removed outputs are
+  unregistered and their windows move to the surviving primary output.
+- **Session pause/resume.** Pause suspends libinput and pauses the DRM managers;
+  resume reactivates them and repaints.
+- **Fallback.** `aether-session` tries the native backend first and falls back
+  to cage running the winit adapter if it exits non-zero.
 
-The 7700K target runs `cage` on `/dev/tty7` as a DRM/libinput/seat0 session and
-launches `aether-shell-smithay` fullscreen inside it. cage owns KMS and input; Aether
-owns its Wayland socket, tiling, palette and clients. This is a working DRM
-bring-up path, not a single-process native backend: `aether-shell-drm` is still
-future work. The service is `systemd.services.aether-session` in
-`os/nixos/services.nix`; `cage -m extend` supports multiple connected outputs.
+The VM target runs the same backend on a virtio-gpu and reports
+`AETHER_VM_DRM_STATUS` on the serial console. Build/run:
+
+```bash
+nix run .#aether-shell-drm            # on a VT with seat access
+AETHER_DRM_DEVICE=/dev/dri/card0 nix run .#aether-shell-drm -- --frames 120
+```
+
+## Session on the target
+
+`systemd.services.aether-session` on `os/nixos/services.nix` runs
+`aether-session` on `/dev/tty7` with a logind session, so the native backend can
+open DRM. If it cannot start, the wrapper execs `cage -m extend` with the winit
+adapter as the fallback. The VM registers the native backend on tty7 as a boot
+check.
 
 ## Build and run
 

@@ -222,6 +222,10 @@ drag and both toggles with `xdotool` and asserts each transition.*
   leak to a client underneath. The seat advertises `wl_pointer`.
 - **Interactive layout resize.** Dragging the gap between the master and stack
   updates the split ratio (clamped 0.2–0.8) and reconfigures clients live.
+- **Drag and drop.** Client-to-client `wl_data_device` DnD works: the pointer
+  grab receives global coordinates, target enter/action/drop are forwarded and
+  the source data transfer completes. The smoke drags a Weston flower between
+  two clients and asserts `dnd_drop_performed` plus the flower MIME transfer.
 - **Client clipboard.** `wl_data_device` copy/paste and `zwp_primary_selection`
   work between clients. The compositor forwards data-device and primary focus
   with keyboard focus so selection offers reach the right client. It also
@@ -306,8 +310,8 @@ drag and both toggles with `xdotool` and asserts each transition.*
 - **Backend multi-output hotplug and per-output workspaces.** The shell's
   output model supports several rectangles and hotplug updates, but the winit
   adapter exposes one output and workspaces are shared. Fullscreen, maximize,
-  halves, floating resize and single-output snapping work. Popups and
-  drag-and-drop are ignored.
+  halves, floating resize and single-output snapping work. Popups are ignored;
+  DnD works.
 - **Per-subsurface damage.** Top-level surface and buffer damage are used;
   Smithay also subtracts opaque regions when drawing the z-ordered element list,
   but nested subsurface damage is not tracked separately.
@@ -372,6 +376,7 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-index-live-xvfb.sh # live index update
 ./os/compositor/aether-shell-smithay/smoke-actions-xvfb.sh     # desktop action launcher
 ./os/compositor/aether-shell-smithay/smoke-agent-ipc-xvfb.sh   # live agent session IPC
+./os/compositor/aether-shell-smithay/smoke-dnd-xvfb.sh         # client drag and drop
 ```
 
 The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. Most use

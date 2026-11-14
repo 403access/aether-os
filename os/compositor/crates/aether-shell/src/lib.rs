@@ -82,6 +82,7 @@ pub struct WindowInfo {
     pub workspace: usize,
     pub rect: Rect,
     pub floating: bool,
+    pub maximized: bool,
     pub focused: bool,
 }
 
@@ -135,6 +136,15 @@ struct Window {
     workspace: usize,
     surface: SurfaceId,
     floating: bool,
+    floating_rect: Option<Rect>,
+    maximized: bool,
+    restore: Option<WindowRestore>,
+}
+
+#[derive(Clone, Copy, Debug)]
+struct WindowRestore {
+    floating: bool,
+    floating_rect: Option<Rect>,
 }
 
 #[derive(Clone, Debug)]
@@ -300,6 +310,9 @@ impl Shell {
                 workspace,
                 surface,
                 floating,
+                floating_rect: None,
+                maximized: false,
+                restore: None,
             },
         );
         self.workspaces[workspace].windows.push(id);
@@ -430,15 +443,65 @@ impl Shell {
     }
 
     pub fn set_floating(&mut self, id: WindowId, floating: bool) -> bool {
-        let Some(window) = self.windows.get_mut(&id) else {
+        let Some((surface, current_floating, preferred)) = self
+            .windows
+            .get(&id)
+            .map(|window| (window.surface, window.floating, window.spec.preferred_size))
+        else {
             return false;
         };
-        if window.floating == floating {
+        if current_floating == floating {
             return true;
         }
-        window.floating = floating;
+        let floating_rect = if floating {
+            if current_floating {
+                self.scene.get(surface).map(|surface| surface.rect)
+            } else {
+                Some(self.floating_rect(0, preferred))
+            }
+        } else {
+            None
+        };
+        if let Some(window) = self.windows.get_mut(&id) {
+            window.floating = floating;
+            window.maximized = false;
+            window.restore = None;
+            window.floating_rect = floating_rect;
+        }
         self.relayout();
         true
+    }
+
+    /// Start an interactive move. Promotes a tiled window to its preferred
+    /// floating size, centred on the pointer, and returns the new rect.
+    pub fn begin_floating_move(&mut self, id: WindowId, pointer: Point) -> Option<Rect> {
+        let window = self.windows.get(&id)?;
+        if window.maximized {
+            return None;
+        }
+        let surface = window.surface;
+        let floating = window.floating;
+        let preferred = window.spec.preferred_size;
+        let rect = if floating {
+            self.scene.get(surface)?.rect
+        } else {
+            let bounds = Rect::from_size(self.viewport).inset(self.layout.outer_gap as i32);
+            let width = preferred.width.min(bounds.width).max(1);
+            let height = preferred.height.min(bounds.height).max(1);
+            self.clamp_rect(Rect::new(
+                pointer.x - width as i32 / 2,
+                pointer.y - height as i32 / 2,
+                width,
+                height,
+            ))
+        };
+        let window = self.windows.get_mut(&id)?;
+        window.floating = true;
+        window.maximized = false;
+        window.restore = None;
+        window.floating_rect = Some(rect);
+        self.relayout();
+        Some(rect)
     }
 
     pub fn toggle_floating(&mut self, id: WindowId) -> bool {
@@ -447,6 +510,78 @@ impl Shell {
             Some(current) => self.set_floating(id, !current),
             None => false,
         }
+    }
+
+    pub fn is_maximized(&self, id: WindowId) -> bool {
+        self.windows.get(&id).is_some_and(|window| window.maximized)
+    }
+
+    /// Toggle a window between its floating/tiled rect and a full viewport.
+    pub fn toggle_maximized(&mut self, id: WindowId) -> bool {
+        let Some(window) = self.windows.get(&id) else {
+            return false;
+        };
+        let (surface, maximized, floating, floating_rect) = (
+            window.surface,
+            window.maximized,
+            window.floating,
+            window.floating_rect,
+        );
+
+        if maximized {
+            if let Some(window) = self.windows.get_mut(&id) {
+                window.maximized = false;
+                if let Some(restore) = window.restore.take() {
+                    window.floating = restore.floating;
+                    window.floating_rect = restore.floating_rect;
+                } else {
+                    window.floating = false;
+                    window.floating_rect = None;
+                }
+            }
+        } else {
+            let current = self.scene.get(surface).map(|surface| surface.rect);
+            if let Some(window) = self.windows.get_mut(&id) {
+                window.restore = Some(WindowRestore {
+                    floating,
+                    floating_rect,
+                });
+                window.maximized = true;
+                window.floating = false;
+                window.floating_rect = current;
+            }
+        }
+        self.relayout();
+        true
+    }
+
+    /// Move a window on screen, promoting it to floating if necessary.
+    pub fn move_floating(&mut self, id: WindowId, position: Point) -> bool {
+        let Some((surface, maximized)) = self
+            .windows
+            .get(&id)
+            .map(|window| (window.surface, window.maximized))
+        else {
+            return false;
+        };
+        if maximized {
+            return false;
+        }
+        let Some(current) = self.scene.get(surface).map(|surface| surface.rect) else {
+            return false;
+        };
+        let moved = self.clamp_rect(Rect::new(
+            position.x,
+            position.y,
+            current.width,
+            current.height,
+        ));
+        if let Some(window) = self.windows.get_mut(&id) {
+            window.floating = true;
+            window.floating_rect = Some(moved);
+        }
+        self.relayout();
+        true
     }
 
     /// Open the overlay with a default centred rect and reset the query.
@@ -691,6 +826,20 @@ impl Shell {
             .find_map(|(id, window)| (window.surface == surface).then_some(*id))
     }
 
+    /// Window ids in compositor draw order, topmost first.
+    pub fn window_stack(&self) -> Vec<WindowId> {
+        self.scene
+            .draw_order()
+            .into_iter()
+            .rev()
+            .filter_map(|surface| {
+                self.windows
+                    .iter()
+                    .find_map(|(id, window)| (window.surface == surface).then_some(*id))
+            })
+            .collect()
+    }
+
     pub fn windows(&self) -> Vec<WindowInfo> {
         let mut infos: Vec<WindowInfo> = self
             .windows
@@ -706,6 +855,7 @@ impl Shell {
                     .map(|surface| surface.rect)
                     .unwrap_or_default(),
                 floating: window.floating,
+                maximized: window.maximized,
                 focused: self.focus == Some(*id),
             })
             .collect();
@@ -781,7 +931,7 @@ impl Shell {
             .iter()
             .filter_map(|id| {
                 let window = self.windows.get(id)?;
-                (!window.floating).then_some((*id, window.surface))
+                (!window.floating && !window.maximized).then_some((*id, window.surface))
             })
             .collect();
         let rects = tile(Rect::from_size(self.viewport), tiled.len(), self.layout);
@@ -789,17 +939,27 @@ impl Shell {
             self.scene.move_to(*surface, rect);
         }
 
-        let floating: Vec<(SurfaceId, Size)> = ids
+        let floating: Vec<(SurfaceId, Option<Rect>, Size, bool)> = ids
             .iter()
             .filter_map(|id| {
                 let window = self.windows.get(id)?;
-                window
-                    .floating
-                    .then_some((window.surface, window.spec.preferred_size))
+                (window.floating || window.maximized).then_some((
+                    window.surface,
+                    window.floating_rect,
+                    window.spec.preferred_size,
+                    window.maximized,
+                ))
             })
             .collect();
-        for (index, (surface, size)) in floating.into_iter().enumerate() {
-            self.scene.move_to(surface, self.floating_rect(index, size));
+        for (index, (surface, explicit, size, maximized)) in floating.into_iter().enumerate() {
+            let rect = if maximized {
+                Rect::from_size(self.viewport)
+            } else if let Some(rect) = explicit {
+                self.clamp_rect(rect)
+            } else {
+                self.floating_rect(index, size)
+            };
+            self.scene.move_to(surface, rect);
         }
 
         if let Some(focus) = self.focus {
@@ -970,6 +1130,120 @@ mod tests {
     }
 
     #[test]
+    fn moving_a_window_promotes_it_and_keeps_its_position() {
+        let mut shell = shell();
+        let first = shell.add_window(WindowSpec {
+            title: "first".into(),
+            app_id: "test".into(),
+            preferred_size: Size::new(320, 200),
+            floating: true,
+        });
+        assert!(shell.move_floating(first, Point::new(120, 80)));
+
+        let info = shell
+            .windows()
+            .into_iter()
+            .find(|window| window.id == first)
+            .expect("first window");
+        assert!(info.floating);
+        assert_eq!(info.rect.x, 120);
+        assert_eq!(info.rect.y, 80);
+
+        // Tiling another window must not recenter the moved one.
+        window(&mut shell, "second");
+        let info = shell
+            .windows()
+            .into_iter()
+            .find(|window| window.id == first)
+            .unwrap();
+        assert_eq!((info.rect.x, info.rect.y), (120, 80));
+
+        shell.add_workspace("other");
+        assert!(shell.switch_workspace(1));
+        assert!(shell.switch_workspace(0));
+        let info = shell
+            .windows()
+            .into_iter()
+            .find(|window| window.id == first)
+            .unwrap();
+        assert_eq!((info.rect.x, info.rect.y), (120, 80));
+    }
+
+    #[test]
+    fn beginning_a_floating_move_uses_the_preferred_size() {
+        let mut shell = shell();
+        let id = shell.add_window(WindowSpec {
+            title: "draggable".into(),
+            app_id: "test".into(),
+            preferred_size: Size::new(320, 200),
+            floating: false,
+        });
+        let rect = shell
+            .begin_floating_move(id, Point::new(400, 300))
+            .expect("drag rect");
+        assert_eq!(rect.size(), Size::new(320, 200));
+        assert!(rect.contains(Point::new(400, 300)));
+        let info = shell
+            .windows()
+            .into_iter()
+            .find(|window| window.id == id)
+            .unwrap();
+        assert!(info.floating);
+        assert_eq!(info.rect, rect);
+    }
+
+    #[test]
+    fn maximize_covers_the_viewport_and_restores_the_layout() {
+        let mut shell = shell();
+        let first = window(&mut shell, "first");
+        let second = window(&mut shell, "second");
+        let before_first = shell
+            .windows()
+            .into_iter()
+            .find(|window| window.id == first)
+            .unwrap()
+            .rect;
+        let before_second = shell
+            .windows()
+            .into_iter()
+            .find(|window| window.id == second)
+            .unwrap()
+            .rect;
+
+        assert!(shell.toggle_maximized(first));
+        assert!(shell.is_maximized(first));
+        let maximized = shell
+            .windows()
+            .into_iter()
+            .find(|window| window.id == first)
+            .unwrap();
+        assert_eq!(maximized.rect, Rect::from_size(shell.viewport()));
+        let remaining = shell
+            .windows()
+            .into_iter()
+            .find(|window| window.id == second)
+            .unwrap();
+        assert_eq!(remaining.rect, Rect::from_size(shell.viewport()).inset(8));
+        assert!(!shell.move_floating(first, Point::new(10, 10)));
+
+        assert!(shell.toggle_maximized(first));
+        assert!(!shell.is_maximized(first));
+        let restored_first = shell
+            .windows()
+            .into_iter()
+            .find(|window| window.id == first)
+            .unwrap();
+        let restored_second = shell
+            .windows()
+            .into_iter()
+            .find(|window| window.id == second)
+            .unwrap();
+        assert_eq!(restored_first.rect, before_first);
+        assert_eq!(restored_second.rect, before_second);
+        assert!(!shell.toggle_maximized(999));
+    }
+
+    #[test]
     fn overlay_is_topmost_and_blocks_window_hit_testing() {
         let mut shell = shell();
         let a = window(&mut shell, "a");
@@ -1069,6 +1343,16 @@ mod tests {
 
         assert!(shell.palette_backspace());
         assert_eq!(shell.palette_entries().len(), 1);
+    }
+
+    #[test]
+    fn window_stack_is_topmost_first() {
+        let mut shell = shell();
+        let first = window(&mut shell, "first");
+        let second = window(&mut shell, "second");
+        assert_eq!(shell.window_stack(), vec![second, first]);
+        assert!(shell.focus_window(first));
+        assert_eq!(shell.window_stack(), vec![first, second]);
     }
 
     #[test]

@@ -103,7 +103,9 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         scale: 1.0,
         pointer_pos: smithay::utils::Point::from((0.0, 0.0)),
         resize_drag: None,
+        window_drag: None,
         pointer_captured: false,
+        modifiers: ModifiersState::default(),
     };
 
     let listener = ListeningSocket::bind_auto("aether", 0..8)?;
@@ -167,6 +169,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     0.into(),
                     0,
                     |state, modifiers, keysym| {
+                        state.modifiers = *modifiers;
                         let sym = keysym.modified_sym();
                         if pressed && state.handle_shortcut(modifiers, sym) {
                             FilterResult::Intercept(())
@@ -183,6 +186,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                         }
                     },
                 );
+                state.modifiers = keyboard.modifier_state();
             }
             WinitEvent::Input(InputEvent::PointerMotionAbsolute { event }) => {
                 let logical = state.shell.viewport();
@@ -192,7 +196,13 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                 )));
                 state.pointer_pos = position;
 
-                if let Some(mut drag) = state.resize_drag {
+                if let Some(drag) = state.window_drag {
+                    let x = (position.x - drag.offset_x).round() as i32;
+                    let y = (position.y - drag.offset_y).round() as i32;
+                    if state.shell.move_floating(drag.id, AetherPoint::new(x, y)) {
+                        state.configure_all();
+                    }
+                } else if let Some(mut drag) = state.resize_drag {
                     // Drag the master/stack divider. Ratio is measured against
                     // the usable inner width (viewport minus outer gaps and gap).
                     let layout = state.shell.layout();
@@ -315,6 +325,28 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                         {
                             state.toggle_overlay();
                         }
+                    } else if state.modifiers.alt
+                        && event.button() == Some(MouseButton::Left)
+                    {
+                        if let Some(id) = state.shell.window_at(point) {
+                            state.shell.focus_window(id);
+                            state.sync_focus();
+                            if let Some(rect) = state
+                                .shell
+                                .begin_floating_move(id, AetherPoint::new(point.x, point.y))
+                            {
+                                state.window_drag = Some(WindowDrag {
+                                    id,
+                                    offset_x: position.x - rect.x as f64,
+                                    offset_y: position.y - rect.y as f64,
+                                });
+                                state.pointer_captured = true;
+                                state.configure_all();
+                                println!(
+                                    "aether-shell-smithay: window drag started id={id} rect={rect:?}"
+                                );
+                            }
+                        }
                     } else if let Some(id) = state.shell.window_at(point) {
                         state.shell.focus_window(id);
                         state.sync_focus();
@@ -323,6 +355,18 @@ pub fn run() -> Result<(), Box<dyn Error>> {
 
                 let forward = !state.pointer_captured;
                 if event.state() == ButtonState::Released {
+                    if let Some(drag) = state.window_drag.take() {
+                        let rect = state
+                            .shell
+                            .windows()
+                            .into_iter()
+                            .find(|window| window.id == drag.id)
+                            .map(|window| window.rect);
+                        println!(
+                            "aether-shell-smithay: window moved id={} rect={rect:?}",
+                            drag.id
+                        );
+                    }
                     if state.resize_drag.take().is_some() {
                         println!(
                             "aether-shell-smithay: master ratio -> {:.2}",
@@ -377,10 +421,17 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                 .filter(|window| window.workspace == state.shell.active_workspace())
                 .map(|window| (window.id, window.rect))
                 .collect();
+            // Render in compositor z-order (topmost first) so raised, floating
+            // and maximized windows are not covered by HashMap iteration order.
             let elements: Vec<WaylandSurfaceRenderElement<GlesRenderer>> = state
-                .windows
-                .iter()
-                .filter_map(|(id, toplevel)| rects.get(id).map(|rect| (rect, toplevel)))
+                .shell
+                .window_stack()
+                .into_iter()
+                .filter_map(|id| {
+                    let rect = rects.get(&id)?;
+                    let toplevel = state.windows.get(&id)?;
+                    Some((*rect, toplevel))
+                })
                 .flat_map(|(rect, toplevel)| {
                     render_elements_from_surface_tree(
                         renderer,
@@ -814,6 +865,13 @@ struct ResizeDrag {
     last_ratio: f32,
 }
 
+#[derive(Clone, Copy)]
+struct WindowDrag {
+    id: WindowId,
+    offset_x: f64,
+    offset_y: f64,
+}
+
 struct App {
     compositor_state: CompositorState,
     xdg_shell_state: XdgShellState,
@@ -830,7 +888,9 @@ struct App {
     scale: f64,
     pointer_pos: smithay::utils::Point<f64, smithay::utils::Logical>,
     resize_drag: Option<ResizeDrag>,
+    window_drag: Option<WindowDrag>,
     pointer_captured: bool,
+    modifiers: ModifiersState,
 }
 
 impl App {
@@ -857,6 +917,7 @@ impl App {
         let three: Keysym = keysyms::KEY_3.into();
         let space: Keysym = keysyms::KEY_space.into();
         let close: Keysym = keysyms::KEY_q.into();
+        let maximize: Keysym = keysyms::KEY_m.into();
 
         if modifiers.shift {
             let target = if keysym == one {
@@ -904,6 +965,17 @@ impl App {
             if let Some(id) = self.shell.focused_window() {
                 if let Some(toplevel) = self.windows.get(&id) {
                     toplevel.send_close();
+                }
+            }
+            return true;
+        }
+        if keysym == maximize {
+            if let Some(id) = self.shell.focused_window() {
+                let maximized = !self.shell.is_maximized(id);
+                if self.shell.toggle_maximized(id) {
+                    println!("aether-shell-smithay: maximized -> {maximized}");
+                    self.sync_focus();
+                    self.configure_all();
                 }
             }
             return true;

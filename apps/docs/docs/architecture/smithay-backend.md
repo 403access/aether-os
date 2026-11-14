@@ -102,8 +102,9 @@ results for non-empty queries; running one invokes `AETHER_OPENER` (default
 
 *Client-to-client clipboard works through `wl_data_device`: keyboard focus is
 forwarded with `set_data_device_focus`, so the newly focused client receives the
-selection offer. The smoke copies with `wl-copy` in one terminal and pastes with
-`wl-paste` in the other.*
+selection offer. Primary selection uses the same focus forwarding via
+`set_primary_focus`. The smoke copies with `wl-copy`/`wl-copy --primary` in one
+terminal and pastes with `wl-paste`/`wl-paste --primary` in the other.*
 
 ![The same window maximized](/img/smithay-window-maximized.png)
 
@@ -147,10 +148,10 @@ drag and both toggles with `xdotool` and asserts each transition.*
   leak to a client underneath. The seat advertises `wl_pointer`.
 - **Interactive layout resize.** Dragging the gap between the master and stack
   updates the split ratio (clamped 0.2–0.8) and reconfigures clients live.
-- **Client clipboard.** `wl_data_device` copy/paste works between clients. The
-  compositor forwards the data-device focus with keyboard focus so selection
-  offers reach the right client. Primary selection, DnD and clipboard
-  persistence after the source exits are not implemented.
+- **Client clipboard.** `wl_data_device` copy/paste and `zwp_primary_selection`
+  work between clients. The compositor forwards data-device and primary focus
+  with keyboard focus so selection offers reach the right client. DnD and
+  clipboard persistence after the source exits are not implemented.
 - **Pointer cursor feedback.** The winit window's system cursor changes with
   the hover target: `ColResize` on the master/stack divider, `Pointer` on
   workspace chips and palette rows, `Text` on the palette input, `Move` over a
@@ -248,7 +249,7 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-provider-xvfb.sh # spawn a client from the palette
 ./os/compositor/aether-shell-smithay/smoke-desktop-xvfb.sh  # launch a discovered .desktop app
 ./os/compositor/aether-shell-smithay/smoke-files-xvfb.sh    # search/open a fixture file
-./os/compositor/aether-shell-smithay/smoke-clipboard-xvfb.sh # copy/paste between terminals
+./os/compositor/aether-shell-smithay/smoke-clipboard-xvfb.sh # clipboard + primary between terminals
 ```
 
 The smoke scripts manage `XDG_RUNTIME_DIR`, Xvfb and the test client. The picker,

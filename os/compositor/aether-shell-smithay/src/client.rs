@@ -15,6 +15,7 @@ use std::os::unix::net::UnixStream;
 use std::sync::Arc;
 use std::time::Duration;
 
+use crate::damage::buffer_damage_to_logical;
 use aether_cursor::{render as render_cursor, CursorShape};
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect, Size as AetherSize};
 use aether_layout::LayoutConfig;
@@ -1157,10 +1158,14 @@ impl CompositorHandler for App {
             return;
         }
 
-        let damage = with_states(surface, |states| {
+        let (damage, buffer_scale, buffer_transform) = with_states(surface, |states| {
             let mut guard = states.cached_state.get::<SurfaceAttributes>();
             let attributes = guard.current();
-            std::mem::take(&mut attributes.damage)
+            (
+                std::mem::take(&mut attributes.damage),
+                attributes.buffer_scale,
+                attributes.buffer_transform,
+            )
         });
         if damage.is_empty() {
             self.mark_window_damage(window.rect);
@@ -1182,10 +1187,27 @@ impl CompositorHandler for App {
                         self.mark_damage_rect(clipped);
                     }
                 }
-                Damage::Buffer(_) => {
-                    // Buffer coordinates need scale/transform handling; be
-                    // conservative until that is wired through.
-                    self.mark_window_damage(window.rect);
+                Damage::Buffer(rect) => {
+                    let transform_ok = buffer_transform
+                        == smithay::reexports::wayland_server::protocol::wl_output::Transform::Normal;
+                    let converted = if transform_ok {
+                        buffer_damage_to_logical(rect, buffer_scale)
+                    } else {
+                        None
+                    };
+                    if let Some(local) = converted {
+                        let rect = AetherRect::new(
+                            window.rect.x + local.x,
+                            window.rect.y + local.y,
+                            local.width,
+                            local.height,
+                        );
+                        if let Some(clipped) = rect.intersect(window.rect) {
+                            self.mark_damage_rect(clipped);
+                        }
+                    } else {
+                        self.mark_window_damage(window.rect);
+                    }
                 }
             }
         }

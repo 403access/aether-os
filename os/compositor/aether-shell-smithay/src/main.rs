@@ -5,6 +5,7 @@
 //!   aether-shell-smithay --frames N exit after N iterations
 
 mod client;
+mod damage;
 mod demo;
 
 use std::error::Error;

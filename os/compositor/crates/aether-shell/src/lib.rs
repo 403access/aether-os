@@ -117,6 +117,7 @@ pub enum PaletteAction {
 pub struct PaletteLauncher {
     pub name: String,
     pub detail: String,
+    pub icon: Option<String>,
     pub program: String,
     pub args: Vec<String>,
 }
@@ -1741,12 +1742,14 @@ mod tests {
             PaletteLauncher {
                 name: "Example Editor".into(),
                 detail: "application".into(),
+                icon: Some("/tmp/editor.png".into()),
                 program: "example-editor".into(),
                 args: vec!["--new".into()],
             },
             PaletteLauncher {
                 name: "Browser".into(),
                 detail: "application".into(),
+                icon: None,
                 program: "browser".into(),
                 args: Vec::new(),
             },
@@ -1775,6 +1778,7 @@ mod tests {
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].action, PaletteAction::LaunchApp(0));
         let launcher = shell.launcher(0).expect("launcher");
+        assert_eq!(launcher.icon.as_deref(), Some("/tmp/editor.png"));
         assert_eq!(launcher.program, "example-editor");
         assert_eq!(launcher.args, ["--new"]);
         assert!(shell.launcher(2).is_none());

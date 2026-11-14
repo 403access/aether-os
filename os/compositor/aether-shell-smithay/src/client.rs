@@ -122,6 +122,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         socket_name: String::new(),
         full_damage: true,
         damage: Vec::new(),
+        icons: HashMap::new(),
     };
 
     let listener = ListeningSocket::bind_auto("aether", 0..8)?;
@@ -602,6 +603,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                 // structure; aether-text supplies the glyphs.
                 let mut chrome: Vec<(AetherRect, [f32; 4])> = Vec::new();
                 let mut labels: Vec<(String, i32, i32, u32, [u8; 4])> = Vec::new();
+                let mut icons: Vec<(String, i32, i32)> = Vec::new();
 
                 if let Some(rect) = state.shell.overlay_rect() {
                     chrome.push((rect, [0.05, 0.24, 0.29, 0.96]));
@@ -693,9 +695,22 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                                         [0.22, 0.84, 1.0, 1.0],
                                     ));
                                 }
+                                let icon = match entry.action {
+                                    PaletteAction::LaunchApp(index) => state
+                                        .shell
+                                        .launcher(index)
+                                        .and_then(|launcher| launcher.icon),
+                                    _ => None,
+                                };
+                                let title_x = if let Some(icon) = icon {
+                                    icons.push((icon, row_rect.x + 10, row_rect.y + 8));
+                                    row_rect.x + 34
+                                } else {
+                                    row_rect.x + 12
+                                };
                                 labels.push((
                                     entry.title.clone(),
-                                    row_rect.x + 12,
+                                    title_x,
                                     row_rect.y + 12,
                                     1,
                                     if active {
@@ -753,6 +768,37 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                             [102, 158, 173, 255]
                         },
                     ));
+                }
+
+                let mut icon_elements: Vec<MemoryRenderBufferRenderElement<GlesRenderer>> =
+                    Vec::new();
+                for (path, x, y) in &icons {
+                    if !state.icons.contains_key(path) {
+                        if let Some((width, height, pixels)) = load_icon(path) {
+                            let buffer = MemoryRenderBuffer::from_slice(
+                                &pixels,
+                                Fourcc::Abgr8888,
+                                (width as i32, height as i32),
+                                1,
+                                Transform::Normal,
+                                None,
+                            );
+                            state.icons.insert(path.to_string(), buffer);
+                        }
+                    }
+                    if let Some(buffer) = state.icons.get(path) {
+                        if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
+                            renderer,
+                            (*x as f64, *y as f64),
+                            buffer,
+                            None,
+                            None,
+                            Some(SSize::from((16, 16))),
+                            Kind::Unspecified,
+                        ) {
+                            icon_elements.push(element);
+                        }
+                    }
                 }
 
                 let text_elements: Vec<MemoryRenderBufferRenderElement<GlesRenderer>> = labels
@@ -816,6 +862,13 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     draw_render_elements::<GlesRenderer, f64, SolidColorRenderElement>(
                         &mut frame, 1.0, &elements, &damage,
                     )?;
+                }
+                if !icon_elements.is_empty() {
+                    draw_render_elements::<
+                        GlesRenderer,
+                        f64,
+                        MemoryRenderBufferRenderElement<GlesRenderer>,
+                    >(&mut frame, 1.0, &icon_elements, &damage)?;
                 }
                 if !text_elements.is_empty() {
                     draw_render_elements::<
@@ -1131,11 +1184,34 @@ fn desktop_launchers() -> Vec<PaletteLauncher> {
             } else {
                 entry.comment
             },
+            icon: entry
+                .icon_path
+                .map(|path| path.to_string_lossy().to_string()),
             name: entry.name,
             program: entry.program,
             args: entry.args,
         })
         .collect()
+}
+
+fn load_icon(path: &str) -> Option<(u32, u32, Vec<u8>)> {
+    let file = std::fs::File::open(path).ok()?;
+    let decoder = png::Decoder::new(std::io::BufReader::new(file));
+    let mut reader = decoder.read_info().ok()?;
+    let mut buffer = vec![0u8; reader.output_buffer_size()?];
+    let info = reader.next_frame(&mut buffer).ok()?;
+    let data = &buffer[..info.buffer_size()];
+    let pixels = match info.color_type {
+        png::ColorType::Rgba => data.to_vec(),
+        png::ColorType::Rgb => data
+            .as_chunks::<3>()
+            .0
+            .iter()
+            .flat_map(|pixel| [pixel[0], pixel[1], pixel[2], 255])
+            .collect(),
+        _ => return None,
+    };
+    Some((info.width, info.height, pixels))
 }
 
 fn toplevel_title(surface: &ToplevelSurface) -> Option<String> {
@@ -1289,6 +1365,7 @@ struct App {
     socket_name: String,
     full_damage: bool,
     damage: Vec<Rectangle<i32, Physical>>,
+    icons: HashMap<String, MemoryRenderBuffer>,
 }
 
 impl App {

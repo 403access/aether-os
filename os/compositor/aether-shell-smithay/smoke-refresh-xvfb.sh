@@ -35,6 +35,7 @@ export XDG_DATA_DIRS="${OUT}/refresh-data"
 FILES="${OUT}/refresh-files"
 rm -rf "${XDG_DATA_HOME}" "${XDG_DATA_DIRS}" "${FILES}"
 mkdir -p "${XDG_DATA_HOME}" "${XDG_DATA_DIRS}/applications" "${FILES}"
+mkdir -p "${XDG_DATA_DIRS}/icons/hicolor/32x32/apps"
 export AETHER_FILE_ROOTS="${FILES}"
 export AETHER_FILE_LIMIT=100
 export AETHER_FILE_DEPTH=3
@@ -62,12 +63,15 @@ if ! grep -q "loaded 0 desktop apps" "${OUT}/refresh-app.log"; then
 fi
 
 # Install a desktop entry and a file while the compositor is running.
+convert -size 16x16 xc:'#38d6ff' \
+  "PNG24:${XDG_DATA_DIRS}/icons/hicolor/32x32/apps/refresh-test.png"
 cat >"${XDG_DATA_DIRS}/applications/refresh-test.desktop" <<'DESKTOP'
 [Desktop Entry]
 Type=Application
 Name=Refresh Test App
 Comment=Installed at runtime
 Exec=weston-terminal
+Icon=refresh-test
 Terminal=false
 DESKTOP
 printf 'new' >"${FILES}/new-note.txt"

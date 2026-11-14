@@ -19,6 +19,8 @@ pub struct DesktopEntry {
     pub id: String,
     pub name: String,
     pub comment: String,
+    pub icon: Option<String>,
+    pub icon_path: Option<PathBuf>,
     pub program: String,
     pub args: Vec<String>,
     /// The entry asked for a terminal (`Terminal=true`). Callers may skip it.
@@ -32,6 +34,7 @@ pub fn parse(id: &str, contents: &str) -> Option<DesktopEntry> {
     let mut name = None;
     let mut comment = String::new();
     let mut exec = None;
+    let mut icon = None;
     let mut is_application = false;
     let mut no_display = false;
     let mut hidden = false;
@@ -57,6 +60,7 @@ pub fn parse(id: &str, contents: &str) -> Option<DesktopEntry> {
             "Name" => name = Some(value.to_string()),
             "Comment" => comment = value.to_string(),
             "Exec" => exec = Some(value.to_string()),
+            "Icon" => icon = Some(value.to_string()),
             "Type" => is_application = value == "Application",
             "NoDisplay" => no_display = value.eq_ignore_ascii_case("true"),
             "Hidden" => hidden = value.eq_ignore_ascii_case("true"),
@@ -77,6 +81,8 @@ pub fn parse(id: &str, contents: &str) -> Option<DesktopEntry> {
         id: id.to_string(),
         name,
         comment,
+        icon,
+        icon_path: None,
         program,
         args: argv,
         terminal,
@@ -148,8 +154,39 @@ pub fn discover(data_dirs: &[PathBuf]) -> Vec<DesktopEntry> {
         walk(&applications, &applications, &mut entries);
     }
     let mut found: Vec<DesktopEntry> = entries.into_values().collect();
+    for entry in &mut found {
+        entry.icon_path = entry
+            .icon
+            .as_deref()
+            .and_then(|icon| find_icon(icon, data_dirs));
+    }
     found.sort_by_key(|a| a.name.to_lowercase());
     found
+}
+
+fn find_icon(name: &str, data_dirs: &[PathBuf]) -> Option<PathBuf> {
+    let direct = Path::new(name);
+    if direct.is_absolute() && direct.is_file() {
+        return Some(direct.to_path_buf());
+    }
+    const SIZES: [&str; 5] = ["48x48", "32x32", "64x64", "128x128", "256x256"];
+    for dir in data_dirs {
+        for size in SIZES {
+            let path = dir
+                .join("icons/hicolor")
+                .join(size)
+                .join("apps")
+                .join(format!("{name}.png"));
+            if path.is_file() {
+                return Some(path);
+            }
+        }
+        let path = dir.join("pixmaps").join(format!("{name}.png"));
+        if path.is_file() {
+            return Some(path);
+        }
+    }
+    None
 }
 
 fn walk(root: &Path, current: &Path, entries: &mut BTreeMap<String, DesktopEntry>) {
@@ -199,6 +236,7 @@ Terminal=false
         assert_eq!(entry.comment, "Edit things");
         assert_eq!(entry.program, "example-editor");
         assert_eq!(entry.args, ["--new"]);
+        assert_eq!(entry.icon, None);
         assert!(!entry.terminal);
     }
 
@@ -277,9 +315,13 @@ Exec=right
         .unwrap();
         fs::write(
             low.join("applications/two.desktop"),
-            "[Desktop Entry]\nType=Application\nName=Two\nExec=two\n",
+            "[Desktop Entry]\nType=Application\nName=Two\nExec=two\nIcon=two-icon\n",
         )
         .unwrap();
+        let icon_dir = low.join("icons/hicolor/32x32/apps");
+        fs::create_dir_all(&icon_dir).unwrap();
+        let icon_path = icon_dir.join("two-icon.png");
+        fs::write(&icon_path, b"png").unwrap();
         fs::write(
             low.join("applications/skip.desktop"),
             "[Desktop Entry]\nType=Application\nName=Skip\nExec=skip\nNoDisplay=true\n",
@@ -291,6 +333,8 @@ Exec=right
         assert_eq!(entries[0].name, "High One");
         assert_eq!(entries[0].program, "high-one");
         assert_eq!(entries[1].name, "Two");
+        assert_eq!(entries[1].icon.as_deref(), Some("two-icon"));
+        assert_eq!(entries[1].icon_path.as_deref(), Some(icon_path.as_path()));
         fs::remove_dir_all(root).ok();
     }
 }

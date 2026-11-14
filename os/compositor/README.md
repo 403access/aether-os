@@ -18,7 +18,7 @@ aether-pacing        FramePacer, deadlines, missed frames       (no deps)
 aether-scene         Surface, Layer, Scene, hit testing          (geometry, damage)
 aether-shell         windows, workspaces, focus, FramePlan      (all core crates)
 aether-text          8x8 bitmap text -> RGBA buffer              (font8x8)
-aether-desktop       XDG .desktop discovery + Exec parsing       (std)
+aether-desktop       XDG .desktop discovery + icons/Exec         (std)
 aether-files         bounded filename index for the palette      (std)
 aether-preview       software renderer + PNG preview            (shell, text)
 aether-compositor    facade + prelude + demo binary             (core crates)
@@ -38,7 +38,7 @@ Dependency direction is one-way. There are no cycles and no optional GPU code.
 | `aether-scene` | You model surfaces, z-order and hit testing |
 | `aether-shell` | You need windows, workspaces, focus or frame plans |
 | `aether-text` | You need cropped bitmap text as RGBA pixels |
-| `aether-desktop` | You need to discover/parse launchable XDG apps |
+| `aether-desktop` | You need to discover/parse launchable XDG apps and PNG icons |
 | `aether-files` | You need a small bounded filename index |
 | `aether-preview` | You want to render a frame to PNG without a display |
 | `aether-compositor` | You want the facade/prelude, or run the demo |

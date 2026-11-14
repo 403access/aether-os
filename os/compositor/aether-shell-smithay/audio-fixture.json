@@ -1,0 +1,76 @@
+{
+  "preset": "media",
+  "xruns": 0,
+  "routes": [
+    {
+      "id": 42,
+      "name": "alsa_output.pci-0000_00_1f.3.analog-stereo",
+      "description": "Speakers · Analog",
+      "kind": "output",
+      "transport": "analog",
+      "profile": "analog-stereo",
+      "codec": null,
+      "default": true,
+      "available": true,
+      "muted": false,
+      "volume": 65,
+      "pinned": false
+    },
+    {
+      "id": 43,
+      "name": "alsa_output.usb-headset",
+      "description": "USB Headset",
+      "kind": "output",
+      "transport": "usb",
+      "profile": "analog-stereo",
+      "codec": null,
+      "default": false,
+      "available": true,
+      "muted": false,
+      "volume": 58,
+      "pinned": false
+    },
+    {
+      "id": 44,
+      "name": "bluez_output.AC_80_0A_11_22_33",
+      "description": "AirPods Pro",
+      "kind": "output",
+      "transport": "bluetooth",
+      "profile": "a2dp-sink",
+      "codec": "LDAC",
+      "default": false,
+      "available": true,
+      "muted": false,
+      "volume": 72,
+      "pinned": false
+    },
+    {
+      "id": 51,
+      "name": "alsa_input.usb-mic",
+      "description": "USB Microphone",
+      "kind": "input",
+      "transport": "usb",
+      "profile": "mono-fallback",
+      "codec": null,
+      "default": true,
+      "available": true,
+      "muted": false,
+      "volume": 70,
+      "pinned": false
+    },
+    {
+      "id": 52,
+      "name": "alsa_input.pci-0000_00_1f.3.analog-stereo",
+      "description": "Built-in Microphone",
+      "kind": "input",
+      "transport": "analog",
+      "profile": "analog-stereo",
+      "codec": null,
+      "default": false,
+      "available": true,
+      "muted": false,
+      "volume": 70,
+      "pinned": false
+    }
+  ]
+}

@@ -28,6 +28,31 @@ application → PipeWire stream → graph → device (analog / USB / Bluetooth)
 | `aether-audio` | Aether policy: naming, presets, switching rules, overlay state |
 | Shell overlay | Device picker, per-app volume, input meter |
 
+## Implementation
+
+| Piece | Location |
+| --- | --- |
+| Route model, transports, presets, xrun parser | `os/compositor/crates/aether-audio` |
+| PipeWire/WirePlumber adapter | `aether-audio/src/pipewire.rs` (`pw-dump`, `wpctl`, `pw-metadata`, `pw-top`) |
+| CLI | `aether-audio list`, `switch`, `preset`, `xruns` |
+| Shell overlay | `aether-shell-wayland` audio layer (`Super+A`) |
+| Service policy | `os/nixos/services.nix` |
+
+The crate contains no PipeWire headers or bindings. It consumes `pw-dump` JSON
+and `wpctl` ids, which keeps the shell testable in CI and makes every policy
+decision inspectable from a terminal:
+
+```bash
+aether-audio list
+aether-audio switch 44
+aether-audio preset voice
+aether-audio xruns
+```
+
+`AETHER_AUDIO_FIXTURE` points the adapter at a JSON snapshot. The shell smokes use
+it so overlay behaviour is deterministic without a live sound server. Preset
+choice is stored under `$XDG_STATE_HOME/aether/audio/preset`.
+
 ## Device model
 
 Every route is described by:

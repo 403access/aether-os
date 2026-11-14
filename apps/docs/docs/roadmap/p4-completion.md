@@ -64,7 +64,7 @@ route model exists; T4 can land alongside T2; T5 exercises T1/T4; T6 is last.
 | Task | Status | Commit |
 | --- | --- | --- |
 | Plan | ✅ | this document |
-| P4-T1 | ⏳ | |
+| P4-T1 | ✅ crate, adapter, CLI, fixture tests | `artifacts/p4/audio-list.json` |
 | P4-T2 | ⏳ | |
 | P4-T3 | ⏳ | |
 | P4-T4 | ⏳ | |

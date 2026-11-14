@@ -64,7 +64,7 @@ if ! grep -q "palette action SpawnTerminal" "${OUT}/provider-app.log"; then
   cat "${OUT}/provider-app.log" >&2
   exit 1
 fi
-if ! grep -q "spawned terminal (pid" "${OUT}/provider-app.log"; then
+if ! grep -q "spawned app terminal (pid" "${OUT}/provider-app.log"; then
   echo "error: terminal process was not spawned" >&2
   cat "${OUT}/provider-app.log" >&2
   exit 1

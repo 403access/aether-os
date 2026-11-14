@@ -1,0 +1,24 @@
+[package]
+name = "aether-shell-wayland"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Backend-agnostic Wayland shell state and composition for Aether"
+publish = false
+
+# Standalone: Smithay is Linux-only and must never join the default workspace,
+# so macOS/CI do not try to build it. Build with --manifest-path on Linux.
+[workspace]
+
+[dependencies]
+smithay = { version = "0.7", default-features = false, features = ["wayland_frontend", "renderer_gl"] }
+aether-geometry = { path = "../crates/aether-geometry" }
+aether-layout = { path = "../crates/aether-layout" }
+aether-shell = { path = "../crates/aether-shell" }
+aether-scene = { path = "../crates/aether-scene" }
+aether-text = { path = "../crates/aether-text" }
+aether-cursor = { path = "../crates/aether-cursor" }
+aether-desktop = { path = "../crates/aether-desktop" }
+aether-files = { path = "../crates/aether-files" }
+png = "0.18"
+serde_json = "1"

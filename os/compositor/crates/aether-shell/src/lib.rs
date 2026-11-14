@@ -98,6 +98,7 @@ pub struct WindowInfo {
     pub title: String,
     pub app_id: String,
     pub workspace: usize,
+    pub output: OutputId,
     pub rect: Rect,
     pub floating: bool,
     pub maximized: bool,
@@ -182,6 +183,7 @@ pub struct FramePlan {
 struct Window {
     spec: WindowSpec,
     workspace: usize,
+    output: OutputId,
     surface: SurfaceId,
     floating: bool,
     floating_rect: Option<Rect>,
@@ -212,6 +214,7 @@ pub struct Shell {
     focus: Option<WindowId>,
     overlay: Option<SurfaceId>,
     outputs: Vec<OutputInfo>,
+    output_workspaces: HashMap<OutputId, usize>,
     palette: PaletteState,
     launchers: Vec<PaletteLauncher>,
     files: Vec<PaletteFile>,
@@ -241,6 +244,7 @@ impl Shell {
                 scale: 1.0,
                 primary: true,
             }],
+            output_workspaces: HashMap::from([(1, 0)]),
             palette: PaletteState::default(),
             launchers: Vec::new(),
             files: Vec::new(),
@@ -280,15 +284,20 @@ impl Shell {
     /// Draggable divider between the master window and the first stack column.
     /// `None` unless the active workspace has at least two tiled windows.
     pub fn master_gap_rect(&self) -> Option<Rect> {
-        let ids = &self.workspaces[self.active].windows;
+        let output = self.primary_output()?.clone();
+        let ids = &self.workspaces[self.output_workspace(output.id)].windows;
         let tiled = ids
             .iter()
-            .filter(|id| self.windows.get(id).is_some_and(|window| !window.floating))
+            .filter(|id| {
+                self.windows
+                    .get(id)
+                    .is_some_and(|window| !window.floating && window.output == output.id)
+            })
             .count();
         if tiled < 2 {
             return None;
         }
-        let rects = tile(Rect::from_size(self.viewport), tiled, self.layout);
+        let rects = tile(output.rect, tiled, self.layout);
         let master = rects[0];
         let stack = rects[1];
         let gap_start = master.x + master.width as i32;
@@ -365,12 +374,14 @@ impl Shell {
         let rect = Rect::new(0, 0, size.width, size.height);
         let surface = self.scene.add(Layer::WINDOW, rect);
         let workspace = self.active;
+        let output = self.primary_output().map(|output| output.id).unwrap_or(1);
 
         self.windows.insert(
             id,
             Window {
                 spec,
                 workspace,
+                output,
                 surface,
                 floating,
                 floating_rect: None,
@@ -404,7 +415,8 @@ impl Shell {
         let Some(window) = self.windows.get(&id) else {
             return false;
         };
-        if window.workspace != self.active {
+        let output_workspace = self.output_workspace(window.output);
+        if window.workspace != output_workspace {
             return false;
         }
         self.focus = Some(id);
@@ -414,7 +426,8 @@ impl Shell {
     }
 
     pub fn focus_next(&mut self) -> Option<WindowId> {
-        let ids = self.workspaces[self.active].windows.clone();
+        let primary = self.primary_output().map(|output| output.id).unwrap_or(1);
+        let ids = self.visible_windows_on(primary);
         if ids.is_empty() {
             self.focus = None;
             return None;
@@ -428,7 +441,8 @@ impl Shell {
     }
 
     pub fn focus_previous(&mut self) -> Option<WindowId> {
-        let ids = self.workspaces[self.active].windows.clone();
+        let primary = self.primary_output().map(|output| output.id).unwrap_or(1);
+        let ids = self.visible_windows_on(primary);
         if ids.is_empty() {
             self.focus = None;
             return None;
@@ -451,22 +465,12 @@ impl Shell {
             return false;
         }
 
-        let outgoing = self.workspaces[self.active].windows.clone();
-        for id in outgoing {
-            if let Some(window) = self.windows.get(&id) {
-                self.scene.set_visible(window.surface, false);
-            }
-        }
-
         self.active = index;
-        let incoming = self.workspaces[index].windows.clone();
-        for id in &incoming {
-            if let Some(window) = self.windows.get(id) {
-                self.scene.set_visible(window.surface, true);
-            }
+        if let Some(primary) = self.primary_output().map(|output| output.id) {
+            self.output_workspaces.insert(primary, index);
         }
-
-        self.focus = incoming.last().copied();
+        let primary = self.primary_output().map(|output| output.id).unwrap_or(1);
+        self.focus = self.visible_windows_on(primary).last().copied();
         self.relayout();
         true
     }
@@ -492,13 +496,16 @@ impl Shell {
             window.workspace = target;
         }
 
-        if target != self.active {
-            self.scene.set_visible(surface, false);
+        let output = self
+            .windows
+            .get(&id)
+            .map(|window| window.output)
+            .unwrap_or(1);
+        if target != self.output_workspace(output) {
             if self.focus == Some(id) {
-                self.focus = self.workspaces[self.active].windows.last().copied();
+                self.focus = self.visible_windows_on(output).last().copied();
             }
         } else {
-            self.scene.set_visible(surface, true);
             self.focus = Some(id);
             self.scene.raise(surface);
         }
@@ -517,11 +524,17 @@ impl Shell {
         if current_floating == floating {
             return true;
         }
+        let output = self
+            .windows
+            .get(&id)
+            .map(|window| window.output)
+            .unwrap_or(1);
+        let output_bounds = self.output_bounds(output);
         let floating_rect = if floating {
             if current_floating {
                 self.scene.get(surface).map(|surface| surface.rect)
             } else {
-                Some(self.floating_rect(0, preferred))
+                Some(self.floating_rect(0, preferred, output_bounds))
             }
         } else {
             None
@@ -546,18 +559,28 @@ impl Shell {
         let surface = window.surface;
         let floating = window.floating;
         let preferred = window.spec.preferred_size;
+        let output = self
+            .windows
+            .get(&id)
+            .map(|window| window.output)
+            .unwrap_or(1);
         let rect = if floating {
             self.scene.get(surface)?.rect
         } else {
-            let bounds = Rect::from_size(self.viewport).inset(self.layout.outer_gap as i32);
+            let bounds = self
+                .output_bounds(output)
+                .inset(self.layout.outer_gap as i32);
             let width = preferred.width.min(bounds.width).max(1);
             let height = preferred.height.min(bounds.height).max(1);
-            self.clamp_rect(Rect::new(
-                pointer.x - width as i32 / 2,
-                pointer.y - height as i32 / 2,
-                width,
-                height,
-            ))
+            self.clamp_rect_to(
+                Rect::new(
+                    pointer.x - width as i32 / 2,
+                    pointer.y - height as i32 / 2,
+                    width,
+                    height,
+                ),
+                self.output_bounds(output),
+            )
         };
         let window = self.windows.get_mut(&id)?;
         window.floating = true;
@@ -588,11 +611,10 @@ impl Shell {
 
     /// Fullscreen window on the active workspace, if any.
     pub fn fullscreen_window(&self) -> Option<WindowId> {
-        self.workspaces[self.active]
-            .windows
-            .iter()
-            .find(|id| self.is_fullscreen(**id))
-            .copied()
+        let primary = self.primary_output().map(|output| output.id).unwrap_or(1);
+        self.visible_windows_on(primary)
+            .into_iter()
+            .find(|id| self.is_fullscreen(*id))
     }
 
     /// Toggle a window between its previous state and full-output fullscreen.
@@ -687,13 +709,17 @@ impl Shell {
         let Some(current) = self.scene.get(surface).map(|surface| surface.rect) else {
             return false;
         };
-        let moved = self.clamp_rect(Rect::new(
-            position.x,
-            position.y,
-            current.width,
-            current.height,
-        ));
-        let moved = self.snap_floating(moved);
+        let output = self
+            .windows
+            .get(&id)
+            .map(|window| window.output)
+            .unwrap_or(1);
+        let bounds = self.output_bounds(output);
+        let moved = self.clamp_rect_to(
+            Rect::new(position.x, position.y, current.width, current.height),
+            bounds,
+        );
+        let moved = self.snap_floating(moved, bounds);
         if let Some(window) = self.windows.get_mut(&id) {
             window.floating = true;
             window.floating_rect = Some(moved);
@@ -729,7 +755,12 @@ impl Shell {
         if window.maximized {
             return false;
         }
-        let viewport = Rect::from_size(self.viewport);
+        let output = self
+            .windows
+            .get(&id)
+            .map(|window| window.output)
+            .unwrap_or(1);
+        let viewport = self.output_bounds(output);
         if zone == SnapZone::Maximize {
             let was_maximized = self.is_maximized(id);
             return if was_maximized {
@@ -771,15 +802,21 @@ impl Shell {
         if blocked {
             return false;
         }
+        let output = self
+            .windows
+            .get(&id)
+            .map(|window| window.output)
+            .unwrap_or(1);
+        let bounds = self.output_bounds(output);
         let width = rect
             .width
-            .max(MIN_FLOATING_WIDTH.min(self.viewport.width.max(1)))
-            .min(self.viewport.width.max(1));
+            .max(MIN_FLOATING_WIDTH.min(bounds.width.max(1)))
+            .min(bounds.width.max(1));
         let height = rect
             .height
-            .max(MIN_FLOATING_HEIGHT.min(self.viewport.height.max(1)))
-            .min(self.viewport.height.max(1));
-        let resized = self.clamp_rect(Rect::new(rect.x, rect.y, width, height));
+            .max(MIN_FLOATING_HEIGHT.min(bounds.height.max(1)))
+            .min(bounds.height.max(1));
+        let resized = self.clamp_rect_to(Rect::new(rect.x, rect.y, width, height), bounds);
         if let Some(window) = self.windows.get_mut(&id) {
             window.floating = true;
             window.floating_rect = Some(resized);
@@ -790,8 +827,7 @@ impl Shell {
         true
     }
 
-    fn snap_floating(&self, rect: Rect) -> Rect {
-        let bounds = Rect::from_size(self.viewport);
+    fn snap_floating(&self, rect: Rect, bounds: Rect) -> Rect {
         let mut x = rect.x;
         let mut y = rect.y;
         if x - bounds.x <= FLOATING_SNAP_DISTANCE {
@@ -1107,11 +1143,14 @@ impl Shell {
     pub fn set_overlay(&mut self, rect: Option<Rect>) -> Option<SurfaceId> {
         match (rect, self.overlay) {
             (Some(rect), Some(surface)) => {
-                self.scene.move_to(surface, self.clamp_rect(rect));
+                self.scene
+                    .move_to(surface, self.clamp_rect_to(rect, self.ui_bounds()));
                 Some(surface)
             }
             (Some(rect), None) => {
-                let surface = self.scene.add(Layer::OVERLAY, self.clamp_rect(rect));
+                let surface = self
+                    .scene
+                    .add(Layer::OVERLAY, self.clamp_rect_to(rect, self.ui_bounds()));
                 self.overlay = Some(surface);
                 Some(surface)
             }
@@ -1163,6 +1202,25 @@ impl Shell {
             .max()
             .unwrap_or(1)
             .max(1);
+        let primary = outputs
+            .iter()
+            .find(|output| output.primary)
+            .map(|output| output.id)
+            .unwrap_or(outputs[0].id);
+        self.output_workspaces
+            .retain(|id, _| outputs.iter().any(|output| output.id == *id));
+        for output in &outputs {
+            self.output_workspaces.entry(output.id).or_insert(0);
+        }
+        if let Some(workspace) = self.output_workspaces.get_mut(&primary) {
+            *workspace = self.active;
+        }
+        let valid: Vec<OutputId> = outputs.iter().map(|output| output.id).collect();
+        for window in self.windows.values_mut() {
+            if !valid.contains(&window.output) {
+                window.output = primary;
+            }
+        }
         self.outputs = outputs;
         self.viewport = Size::new(width, height);
         self.scene.resize_viewport(self.viewport);
@@ -1236,6 +1294,7 @@ impl Shell {
                 title: window.spec.title.clone(),
                 app_id: window.spec.app_id.clone(),
                 workspace: window.workspace,
+                output: window.output,
                 rect: self
                     .scene
                     .get(window.surface)
@@ -1313,53 +1372,85 @@ impl Shell {
     }
 
     fn relayout(&mut self) {
-        let ids = self.workspaces[self.active].windows.clone();
+        let outputs = self.outputs.clone();
+        let mut visible_focus = false;
 
-        let tiled: Vec<(WindowId, SurfaceId)> = ids
-            .iter()
-            .filter_map(|id| {
-                let window = self.windows.get(id)?;
-                (!window.floating && !window.maximized && !window.fullscreen)
-                    .then_some((*id, window.surface))
-            })
-            .collect();
-        let rects = tile(Rect::from_size(self.viewport), tiled.len(), self.layout);
-        for ((_, surface), rect) in tiled.iter().zip(rects) {
-            self.scene.move_to(*surface, rect);
+        for output in &outputs {
+            let workspace = self.output_workspace(output.id);
+            let ids = self.workspaces[workspace].windows.clone();
+
+            let tiled: Vec<(WindowId, SurfaceId)> = ids
+                .iter()
+                .filter_map(|id| {
+                    let window = self.windows.get(id)?;
+                    (window.output == output.id
+                        && !window.floating
+                        && !window.maximized
+                        && !window.fullscreen)
+                        .then_some((*id, window.surface))
+                })
+                .collect();
+            let rects = tile(output.rect, tiled.len(), self.layout);
+            for ((_, surface), rect) in tiled.iter().zip(rects) {
+                self.scene.move_to(*surface, rect);
+            }
+
+            let floating: Vec<(SurfaceId, Option<Rect>, Size, bool)> = ids
+                .iter()
+                .filter_map(|id| {
+                    let window = self.windows.get(id)?;
+                    (window.output == output.id
+                        && (window.floating || window.maximized || window.fullscreen))
+                        .then_some((
+                            window.surface,
+                            window.floating_rect,
+                            window.spec.preferred_size,
+                            window.maximized || window.fullscreen,
+                        ))
+                })
+                .collect();
+            for (index, (surface, explicit, size, maximized)) in floating.into_iter().enumerate() {
+                let rect = if maximized {
+                    output.rect
+                } else if let Some(rect) = explicit {
+                    self.clamp_rect_to(rect, output.rect)
+                } else {
+                    self.floating_rect(index, size, output.rect)
+                };
+                self.scene.move_to(surface, rect);
+            }
+
+            if let Some(focus) = self.focus {
+                if self.windows.get(&focus).is_some_and(|window| {
+                    window.output == output.id && window.workspace == workspace
+                }) {
+                    visible_focus = true;
+                }
+            }
         }
 
-        let floating: Vec<(SurfaceId, Option<Rect>, Size, bool)> = ids
-            .iter()
-            .filter_map(|id| {
-                let window = self.windows.get(id)?;
-                (window.floating || window.maximized || window.fullscreen).then_some((
-                    window.surface,
-                    window.floating_rect,
-                    window.spec.preferred_size,
-                    window.maximized || window.fullscreen,
-                ))
-            })
-            .collect();
-        for (index, (surface, explicit, size, maximized)) in floating.into_iter().enumerate() {
-            let rect = if maximized {
-                Rect::from_size(self.viewport)
-            } else if let Some(rect) = explicit {
-                self.clamp_rect(rect)
-            } else {
-                self.floating_rect(index, size)
-            };
-            self.scene.move_to(surface, rect);
+        // Per-output workspaces: a window is visible only on its own output,
+        // and only while that output shows the window's workspace.
+        for (id, window) in &self.windows {
+            let visible = self.outputs.iter().any(|output| output.id == window.output)
+                && window.workspace == self.output_workspace(window.output);
+            self.scene.set_visible(window.surface, visible);
+            if visible && self.focus == Some(*id) {
+                visible_focus = true;
+            }
         }
 
         if let Some(focus) = self.focus {
             if let Some(window) = self.windows.get(&focus) {
-                self.scene.raise(window.surface);
+                if visible_focus {
+                    self.scene.raise(window.surface);
+                }
             }
         }
     }
 
-    fn floating_rect(&self, index: usize, size: Size) -> Rect {
-        let bounds = Rect::from_size(self.viewport).inset(self.layout.outer_gap as i32);
+    fn floating_rect(&self, index: usize, size: Size, output_bounds: Rect) -> Rect {
+        let bounds = output_bounds.inset(self.layout.outer_gap as i32);
         if bounds.is_empty() {
             return Rect::new(bounds.x, bounds.y, 0, 0);
         }
@@ -1368,11 +1459,10 @@ impl Shell {
         let offset = (index as i32) * 32;
         let x = bounds.x + ((bounds.width - width) / 2) as i32 + offset;
         let y = bounds.y + ((bounds.height - height) / 2) as i32 + offset;
-        self.clamp_rect(Rect::new(x, y, width, height))
+        self.clamp_rect_to(Rect::new(x, y, width, height), output_bounds)
     }
 
-    fn clamp_rect(&self, rect: Rect) -> Rect {
-        let bounds = Rect::from_size(self.viewport);
+    fn clamp_rect_to(&self, rect: Rect, bounds: Rect) -> Rect {
         if bounds.is_empty() || rect.is_empty() {
             return rect;
         }
@@ -1389,10 +1479,90 @@ impl Shell {
     }
 
     fn clamp_size(&self, size: Size) -> Size {
+        let bounds = self.output_bounds(self.primary_output().map(|o| o.id).unwrap_or(1));
         Size::new(
-            size.width.clamp(1, self.viewport.width.max(1)),
-            size.height.clamp(1, self.viewport.height.max(1)),
+            size.width.clamp(1, bounds.width.max(1)),
+            size.height.clamp(1, bounds.height.max(1)),
         )
+    }
+
+    /// Bounds of the primary output used for shell chrome (palette/indicators).
+    fn ui_bounds(&self) -> Rect {
+        self.primary_output()
+            .map(|output| output.rect)
+            .unwrap_or_else(|| Rect::from_size(self.viewport))
+    }
+
+    /// Bounds of one output in logical coordinates.
+    pub fn output_bounds(&self, output: OutputId) -> Rect {
+        self.outputs
+            .iter()
+            .find(|candidate| candidate.id == output)
+            .map(|candidate| candidate.rect)
+            .unwrap_or_else(|| Rect::from_size(self.viewport))
+    }
+
+    /// Active workspace shown on an output.
+    pub fn output_workspace(&self, output: OutputId) -> usize {
+        self.output_workspaces
+            .get(&output)
+            .copied()
+            .unwrap_or(0)
+            .min(self.workspaces.len().saturating_sub(1))
+    }
+
+    /// Assign a workspace to an output. This is per-output: the primary
+    /// output's assignment also drives `active_workspace`.
+    pub fn set_output_workspace(&mut self, output: OutputId, workspace: usize) -> bool {
+        if workspace >= self.workspaces.len()
+            || !self.outputs.iter().any(|candidate| candidate.id == output)
+        {
+            return false;
+        }
+        if self.output_workspace(output) == workspace {
+            return false;
+        }
+        self.output_workspaces.insert(output, workspace);
+        if self
+            .primary_output()
+            .is_some_and(|primary| primary.id == output)
+        {
+            self.active = workspace;
+            self.focus = self.visible_windows_on(output).last().copied();
+        }
+        self.relayout();
+        true
+    }
+
+    /// Move a window to another output, keeping its workspace assignment.
+    pub fn set_window_output(&mut self, id: WindowId, output: OutputId) -> bool {
+        if !self.outputs.iter().any(|candidate| candidate.id == output) {
+            return false;
+        }
+        let Some(window) = self.windows.get(&id) else {
+            return false;
+        };
+        if window.output == output {
+            return false;
+        }
+        if let Some(window) = self.windows.get_mut(&id) {
+            window.output = output;
+        }
+        self.relayout();
+        true
+    }
+
+    /// Visible window ids on an output, topmost first.
+    pub fn visible_windows_on(&self, output: OutputId) -> Vec<WindowId> {
+        let workspace = self.output_workspace(output);
+        self.window_stack()
+            .into_iter()
+            .filter(|id| {
+                self.windows
+                    .get(id)
+                    .is_some_and(|window| window.output == output && window.workspace == workspace)
+            })
+            .collect()
     }
 }
 
@@ -1800,8 +1970,13 @@ mod tests {
         assert_eq!(shell.viewport(), Size::new(1824, 768));
         assert_eq!(shell.output_at(Point::new(1700, 400)), Some(2));
         assert_eq!(shell.output_at(Point::new(1900, 400)), None);
+
+        // Existing windows stay on the primary output and re-tile inside it.
         let windows = shell.windows();
-        assert!(windows.iter().any(|window| window.rect.right() > 800));
+        assert!(windows
+            .iter()
+            .filter(|window| window.id == first || window.id == second)
+            .all(|window| window.output == 1 && window.rect.right() <= 800));
         assert_eq!(
             windows
                 .iter()
@@ -1809,8 +1984,29 @@ mod tests {
                 .unwrap()
                 .rect
                 .height,
-            752
+            584
         );
+
+        // A window placed on the second output tiles inside its own bounds.
+        let third = window(&mut shell, "third");
+        assert!(shell.set_window_output(third, 2));
+        let third_rect = shell
+            .windows()
+            .into_iter()
+            .find(|window| window.id == third)
+            .unwrap()
+            .rect;
+        assert!(third_rect.x >= 800);
+        assert!(third_rect.right() <= 1824);
+
+        // Per-output workspaces: output 2 can show a different workspace.
+        shell.add_workspace("web");
+        assert!(shell.set_output_workspace(2, 1));
+        assert_eq!(shell.output_workspace(1), 0);
+        assert_eq!(shell.output_workspace(2), 1);
+        assert!(!shell.visible_windows_on(2).contains(&third));
+        assert!(shell.set_output_workspace(2, 0));
+        assert!(shell.visible_windows_on(2).contains(&third));
 
         assert!(shell.set_outputs(vec![OutputInfo {
             id: 1,
@@ -1828,6 +2024,16 @@ mod tests {
             .unwrap()
             .rect;
         assert_eq!(second_rect.bottom(), 712);
+        // Orphaned output-2 windows move back to the surviving output.
+        assert_eq!(
+            shell
+                .windows()
+                .iter()
+                .find(|w| w.id == third)
+                .unwrap()
+                .output,
+            1
+        );
         assert!(!shell.set_outputs(Vec::new()));
     }
 

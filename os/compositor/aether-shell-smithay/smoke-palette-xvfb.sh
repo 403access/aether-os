@@ -80,7 +80,7 @@ fi
 # Reopen and filter to the client window provider, then activate with Enter.
 xdotool key super+space
 sleep 1
-xdotool type --delay 120 "term"
+xdotool type --delay 120 "wayland"
 sleep 1
 import -window root "${OUT}/palette-window.png"
 xdotool key Return

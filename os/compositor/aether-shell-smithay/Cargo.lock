@@ -66,6 +66,19 @@ name = "aether-shell-smithay"
 version = "0.1.0"
 dependencies = [
  "aether-cursor",
+ "aether-geometry",
+ "aether-layout",
+ "aether-scene",
+ "aether-shell",
+ "aether-shell-wayland",
+ "smithay",
+]
+
+[[package]]
+name = "aether-shell-wayland"
+version = "0.1.0"
+dependencies = [
+ "aether-cursor",
  "aether-desktop",
  "aether-files",
  "aether-geometry",

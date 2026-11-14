@@ -90,6 +90,7 @@ pub struct WindowInfo {
     pub rect: Rect,
     pub floating: bool,
     pub maximized: bool,
+    pub fullscreen: bool,
     pub focused: bool,
 }
 
@@ -174,6 +175,7 @@ struct Window {
     floating: bool,
     floating_rect: Option<Rect>,
     maximized: bool,
+    fullscreen: bool,
     restore: Option<WindowRestore>,
 }
 
@@ -352,6 +354,7 @@ impl Shell {
                 floating,
                 floating_rect: None,
                 maximized: false,
+                fullscreen: false,
                 restore: None,
             },
         );
@@ -556,6 +559,59 @@ impl Shell {
         self.windows.get(&id).is_some_and(|window| window.maximized)
     }
 
+    pub fn is_fullscreen(&self, id: WindowId) -> bool {
+        self.windows
+            .get(&id)
+            .is_some_and(|window| window.fullscreen)
+    }
+
+    /// Fullscreen window on the active workspace, if any.
+    pub fn fullscreen_window(&self) -> Option<WindowId> {
+        self.workspaces[self.active]
+            .windows
+            .iter()
+            .find(|id| self.is_fullscreen(**id))
+            .copied()
+    }
+
+    /// Toggle a window between its previous state and full-output fullscreen.
+    pub fn toggle_fullscreen(&mut self, id: WindowId) -> bool {
+        let Some(window) = self.windows.get(&id) else {
+            return false;
+        };
+        let (surface, fullscreen, floating, floating_rect) = (
+            window.surface,
+            window.fullscreen,
+            window.floating,
+            window.floating_rect,
+        );
+
+        if fullscreen {
+            if let Some(window) = self.windows.get_mut(&id) {
+                window.fullscreen = false;
+                if let Some(restore) = window.restore.take() {
+                    window.floating = restore.floating;
+                    window.floating_rect = restore.floating_rect;
+                    window.maximized = false;
+                }
+            }
+        } else {
+            let current = self.scene.get(surface).map(|surface| surface.rect);
+            if let Some(window) = self.windows.get_mut(&id) {
+                window.restore = Some(WindowRestore {
+                    floating,
+                    floating_rect,
+                });
+                window.fullscreen = true;
+                window.maximized = false;
+                window.floating = false;
+                window.floating_rect = current;
+            }
+        }
+        self.relayout();
+        true
+    }
+
     /// Toggle a window between its floating/tiled rect and a full viewport.
     pub fn toggle_maximized(&mut self, id: WindowId) -> bool {
         let Some(window) = self.windows.get(&id) else {
@@ -597,14 +653,14 @@ impl Shell {
 
     /// Move a window on screen, promoting it to floating if necessary.
     pub fn move_floating(&mut self, id: WindowId, position: Point) -> bool {
-        let Some((surface, maximized)) = self
+        let Some((surface, blocked)) = self
             .windows
             .get(&id)
-            .map(|window| (window.surface, window.maximized))
+            .map(|window| (window.surface, window.maximized || window.fullscreen))
         else {
             return false;
         };
-        if maximized {
+        if blocked {
             return false;
         }
         let Some(current) = self.scene.get(surface).map(|surface| surface.rect) else {
@@ -629,7 +685,7 @@ impl Shell {
     /// keeping its current rect, and returns that rect.
     pub fn begin_floating_resize(&mut self, id: WindowId) -> Option<Rect> {
         let window = self.windows.get(&id)?;
-        if window.maximized {
+        if window.maximized || window.fullscreen {
             return None;
         }
         let surface = window.surface;
@@ -684,14 +740,14 @@ impl Shell {
 
     /// Resize a floating window, enforcing the minimum size and output bounds.
     pub fn resize_floating(&mut self, id: WindowId, rect: Rect) -> bool {
-        let Some((surface, maximized)) = self
+        let Some((surface, blocked)) = self
             .windows
             .get(&id)
-            .map(|window| (window.surface, window.maximized))
+            .map(|window| (window.surface, window.maximized || window.fullscreen))
         else {
             return false;
         };
-        if maximized {
+        if blocked {
             return false;
         }
         let width = rect
@@ -1087,6 +1143,7 @@ impl Shell {
                     .unwrap_or_default(),
                 floating: window.floating,
                 maximized: window.maximized,
+                fullscreen: window.fullscreen,
                 focused: self.focus == Some(*id),
             })
             .collect();
@@ -1162,7 +1219,8 @@ impl Shell {
             .iter()
             .filter_map(|id| {
                 let window = self.windows.get(id)?;
-                (!window.floating && !window.maximized).then_some((*id, window.surface))
+                (!window.floating && !window.maximized && !window.fullscreen)
+                    .then_some((*id, window.surface))
             })
             .collect();
         let rects = tile(Rect::from_size(self.viewport), tiled.len(), self.layout);
@@ -1174,11 +1232,11 @@ impl Shell {
             .iter()
             .filter_map(|id| {
                 let window = self.windows.get(id)?;
-                (window.floating || window.maximized).then_some((
+                (window.floating || window.maximized || window.fullscreen).then_some((
                     window.surface,
                     window.floating_rect,
                     window.spec.preferred_size,
-                    window.maximized,
+                    window.maximized || window.fullscreen,
                 ))
             })
             .collect();
@@ -1513,6 +1571,52 @@ mod tests {
         assert!(shell.move_floating(id, Point::new(200, 150)));
         let info = shell.windows().into_iter().find(|w| w.id == id).unwrap();
         assert_eq!((info.rect.x, info.rect.y), (200, 150));
+    }
+
+    #[test]
+    fn fullscreen_covers_the_viewport_and_restores_the_layout() {
+        let mut shell = shell();
+        let first = window(&mut shell, "first");
+        let second = window(&mut shell, "second");
+        let before = shell
+            .windows()
+            .into_iter()
+            .find(|window| window.id == first)
+            .unwrap()
+            .rect;
+        let before_second = shell
+            .windows()
+            .into_iter()
+            .find(|window| window.id == second)
+            .unwrap()
+            .rect;
+        assert!(shell.toggle_fullscreen(first));
+        assert!(shell.is_fullscreen(first));
+        assert_eq!(shell.fullscreen_window(), Some(first));
+        let info = shell
+            .windows()
+            .into_iter()
+            .find(|window| window.id == first)
+            .unwrap();
+        assert_eq!(info.rect, Rect::from_size(shell.viewport()));
+        assert!(!shell.move_floating(first, Point::new(10, 10)));
+
+        assert!(shell.toggle_fullscreen(first));
+        assert!(!shell.is_fullscreen(first));
+        assert_eq!(shell.fullscreen_window(), None);
+        let info = shell
+            .windows()
+            .into_iter()
+            .find(|window| window.id == first)
+            .unwrap();
+        assert_eq!(info.rect, before);
+        let other = shell
+            .windows()
+            .into_iter()
+            .find(|window| window.id == second)
+            .unwrap();
+        assert_eq!(other.rect, before_second);
+        assert!(!shell.toggle_fullscreen(999));
     }
 
     #[test]

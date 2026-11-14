@@ -742,32 +742,39 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     }
                 }
 
-                let names = state.shell.workspace_names();
-                for workspace in 0..state.shell.workspace_count() {
-                    let Some(chip) = state.shell.workspace_indicator_rect(workspace) else {
-                        continue;
-                    };
-                    let active = workspace == state.shell.active_workspace();
-                    chrome.push((
-                        AetherRect::new(chip.x, chip.y, chip.width, WORKSPACE_INDICATOR_BAR_HEIGHT),
-                        if active {
-                            [0.22, 0.84, 1.0, 1.0]
-                        } else {
-                            [0.12, 0.3, 0.35, 0.9]
-                        },
-                    ));
-                    let name = names.get(workspace).map(String::as_str).unwrap_or("");
-                    labels.push((
-                        format!("{} {name}", workspace + 1),
-                        chip.x + 4,
-                        chip.y + 12,
-                        1,
-                        if active {
-                            [56, 214, 255, 255]
-                        } else {
-                            [102, 158, 173, 255]
-                        },
-                    ));
+                if state.shell.fullscreen_window().is_none() {
+                    let names = state.shell.workspace_names();
+                    for workspace in 0..state.shell.workspace_count() {
+                        let Some(chip) = state.shell.workspace_indicator_rect(workspace) else {
+                            continue;
+                        };
+                        let active = workspace == state.shell.active_workspace();
+                        chrome.push((
+                            AetherRect::new(
+                                chip.x,
+                                chip.y,
+                                chip.width,
+                                WORKSPACE_INDICATOR_BAR_HEIGHT,
+                            ),
+                            if active {
+                                [0.22, 0.84, 1.0, 1.0]
+                            } else {
+                                [0.12, 0.3, 0.35, 0.9]
+                            },
+                        ));
+                        let name = names.get(workspace).map(String::as_str).unwrap_or("");
+                        labels.push((
+                            format!("{} {name}", workspace + 1),
+                            chip.x + 4,
+                            chip.y + 12,
+                            1,
+                            if active {
+                                [56, 214, 255, 255]
+                            } else {
+                                [102, 158, 173, 255]
+                            },
+                        ));
+                    }
                 }
 
                 let mut icon_elements: Vec<MemoryRenderBufferRenderElement<GlesRenderer>> =
@@ -1350,7 +1357,7 @@ struct App {
     seat: Seat<Self>,
     shell: Shell,
     windows: HashMap<WindowId, ToplevelSurface>,
-    configured: HashMap<WindowId, (i32, i32)>,
+    configured: HashMap<WindowId, (i32, i32, bool)>,
     focus: Option<WlSurface>,
     close_requested: bool,
     window_size: SSize<i32, Physical>,
@@ -1412,6 +1419,7 @@ impl App {
         let space: Keysym = keysyms::KEY_space.into();
         let close: Keysym = keysyms::KEY_q.into();
         let maximize: Keysym = keysyms::KEY_m.into();
+        let fullscreen_key: Keysym = keysyms::KEY_f.into();
 
         if modifiers.shift {
             let target = if keysym == one {
@@ -1468,6 +1476,17 @@ impl App {
                 let maximized = !self.shell.is_maximized(id);
                 if self.shell.toggle_maximized(id) {
                     println!("aether-shell-smithay: maximized -> {maximized}");
+                    self.sync_focus();
+                    self.configure_all();
+                }
+            }
+            return true;
+        }
+        if keysym == fullscreen_key {
+            if let Some(id) = self.shell.focused_window() {
+                let fullscreen = !self.shell.is_fullscreen(id);
+                if self.shell.toggle_fullscreen(id) {
+                    println!("aether-shell-smithay: fullscreen -> {fullscreen}");
                     self.sync_focus();
                     self.configure_all();
                 }
@@ -1638,12 +1657,19 @@ impl App {
             return;
         };
         let size = (rect.width.max(1) as i32, rect.height.max(1) as i32);
-        if self.configured.get(&id) == Some(&size) {
+        let fullscreen = self.shell.is_fullscreen(id);
+        let config = (size.0, size.1, fullscreen);
+        if self.configured.get(&id) == Some(&config) {
             return;
         }
-        self.configured.insert(id, size);
+        self.configured.insert(id, config);
         toplevel.with_pending_state(|state| {
             state.states.set(xdg_toplevel::State::Activated);
+            if fullscreen {
+                state.states.set(xdg_toplevel::State::Fullscreen);
+            } else {
+                state.states.unset(xdg_toplevel::State::Fullscreen);
+            }
             state.size = Some(SSize::from(size));
         });
         toplevel.send_configure();

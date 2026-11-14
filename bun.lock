@@ -37,6 +37,10 @@
         "typescript": "^5.9.3",
       },
     },
+    "apps/indexer-service": {
+      "name": "@aether/indexer-service",
+      "version": "0.1.0-alpha.0",
+    },
     "apps/web": {
       "name": "@aether/web",
       "version": "0.1.0-alpha.0",
@@ -131,6 +135,8 @@
     "@aether/docs": ["@aether/docs@workspace:apps/docs"],
 
     "@aether/indexer": ["@aether/indexer@workspace:packages/indexer"],
+
+    "@aether/indexer-service": ["@aether/indexer-service@workspace:apps/indexer-service"],
 
     "@aether/ipc": ["@aether/ipc@workspace:packages/ipc"],
 

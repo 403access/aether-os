@@ -5,6 +5,12 @@
   under the pointer and renders only there, and workspace switching/divider
   drag use the output under the pointer. Palette/indicator tests cover two
   outputs, overlay reassignment on hotplug and secondary master gaps.
+- Translate extended-desktop element positions into each DRM output's local
+  space; secondary outputs previously composited off-screen.
+- VM harness now runs the compositor for a timed window, unbinds/rebinds the
+  GPU and asserts output removal/recreation; the two-output policy is covered
+  by shell tests because headless QEMU cannot attach a second display without
+  stalling virtual GPU initialization.
 
 ## v0.1.0-alpha.58
 

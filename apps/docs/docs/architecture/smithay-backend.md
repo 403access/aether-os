@@ -359,8 +359,17 @@ devices, libinput seat and Wayland display in one process:
 Validated in the aarch64 development VM with a virtio-gpu under TCG: libseat
 opened `card0`, the backend detected `Virtual-1` (26 modes), created the GLES
 renderer, set 1280x800 on a CRTC, enabled the DrmCompositor output, presented a
-frame and exited cleanly (`AETHER_VM_DRM_STATUS=0`). The VM check has no input
-device wired, but libinput initializes the seat before DRM setup.
+frame and exited cleanly (`AETHER_VM_DRM_STATUS=0`). The VM check also unbinds
+and rebinds the GPU while the compositor runs: the output is torn down and
+re-added through udev. The VM check has no input device wired, but libinput
+initializes the seat before DRM setup.
+
+Simultaneous two-output rendering uses per-device renderers and output-local
+element coordinates, and the shell policy is covered by two-output unit tests.
+The headless QEMU harness cannot attach a second display to a second
+virtio-gpu (GBM initialization stalls with the extra virtual console), so the
+automated VM check currently asserts the hotplug cycle on one output rather
+than two live outputs.
 
 The VM target runs the same backend on a virtio-gpu and reports
 `AETHER_VM_DRM_STATUS` on the serial console. Build/run:

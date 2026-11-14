@@ -25,7 +25,9 @@ deliberately layered so a failure points at one boundary.
 The native backend has two extra checks: `os/compositor/aether-shell-drm/smoke-drm-probe.sh`
 (clear failure without DRM, short run with it) and the VM boot check
 (`scripts/vm-run.sh --drm-smoke` on KVM hosts, `scripts/vm-drm-tcg.sh` under
-TCG), which asserts `AETHER_VM_DRM_STATUS=0` on the serial console.
+TCG), which asserts `AETHER_VM_DRM_STATUS=0`, a presented frame and a
+GPU unbind/rebind output removal on the serial console. Two-output shell policy
+is covered by `aether-shell` unit tests.
 
 Run everything:
 

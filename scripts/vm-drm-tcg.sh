@@ -29,7 +29,7 @@ RUN="$(find "${RUNNER}/bin" -maxdepth 1 -name 'run-*-vm' | head -1)"
 
 : >"${OUT}/serial.log"
 say "booting under TCG; waiting up to ${TIMEOUT}s for AETHER_VM_DRM_STATUS"
-QEMU_OPTS="-smp 2 -vnc 127.0.0.1:${VNC_PORT} -vnc 127.0.0.1:$((VNC_PORT + 1)) -serial file:${OUT}/serial.log -device virtio-gpu-pci,id=gpu0 -device virtio-gpu-pci,id=gpu1" \
+QEMU_OPTS="-smp 2 -vnc 127.0.0.1:${VNC_PORT} -serial file:${OUT}/serial.log -device virtio-gpu-pci" \
   timeout -k 10 "${TIMEOUT}" "${RUN}" >"${OUT}/run.log" 2>&1 || true
 
 if ! grep -q "AETHER_VM_DRM_STATUS=" "${OUT}/serial.log"; then
@@ -42,10 +42,8 @@ STATUS="$(grep "AETHER_VM_DRM_STATUS=" "${OUT}/serial.log" | tail -1)"
 STATUS="${STATUS##*=}"
 STATUS="${STATUS%$'\r'}"
 [ "${STATUS}" = "0" ] || die "native DRM backend failed (status ${STATUS})"
-TWO_OUTPUTS="$(grep -c " (2 total)" "${OUT}/serial.log" || true)"
-REMOVED="$(grep -c "removed (1 remaining)" "${OUT}/serial.log" || true)"
+REMOVED="$(grep -c "removed (0 remaining)" "${OUT}/serial.log" || true)"
 REBOUND="$(grep -c "AETHER_VM_DRM_BIND=" "${OUT}/serial.log" || true)"
-[ "${TWO_OUTPUTS}" -ge 2 ] || die "expected two outputs before and after hotplug (${TWO_OUTPUTS})"
-[ "${REMOVED}" -ge 1 ] || die "hotplug did not remove an output"
-[ "${REBOUND}" -ge 1 ] || die "hotplug did not rebind the second GPU"
+[ "${REMOVED}" -ge 1 ] || die "hotplug did not remove the DRM output"
+[ "${REBOUND}" -ge 1 ] || die "hotplug did not rebind the DRM device"
 say "native DRM backend passed on virtio-gpu"

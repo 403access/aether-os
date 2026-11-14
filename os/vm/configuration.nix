@@ -143,8 +143,10 @@
       GPU_PCI=""
       if [ -e /sys/class/drm/card1/device ]; then
         GPU_PCI="$(basename "$(readlink -f /sys/class/drm/card1/device)")"
+      elif [ -e /sys/class/drm/card0/device ]; then
+        GPU_PCI="$(basename "$(readlink -f /sys/class/drm/card0/device)")"
       fi
-      echo "AETHER_VM_DRM_SECOND_GPU=$GPU_PCI" >>/dev/ttyAMA0
+      echo "AETHER_VM_DRM_HOTPLUG_GPU=$GPU_PCI" >>/dev/ttyAMA0
       HOTPLUG_PID=""
       if [ -n "$GPU_PCI" ]; then
         (

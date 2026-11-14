@@ -134,7 +134,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     let mut clients = Vec::new();
     state.socket_name = socket_name.clone();
 
-    let launchers = desktop_launchers();
+    let launchers = all_launchers();
     let launcher_count = launchers.len();
     state.shell.set_launchers(launchers);
     println!("aether-shell-smithay: loaded {launcher_count} desktop apps");
@@ -1182,6 +1182,62 @@ fn file_index() -> Vec<PaletteFile> {
         .collect()
 }
 
+fn all_launchers() -> Vec<PaletteLauncher> {
+    let mut launchers = desktop_launchers();
+    launchers.extend(external_launchers());
+    launchers
+}
+
+fn external_launchers() -> Vec<PaletteLauncher> {
+    let Some(path) = std::env::var_os("AETHER_PALETTE_JSON") else {
+        return Vec::new();
+    };
+    let Ok(contents) = std::fs::read_to_string(path) else {
+        return Vec::new();
+    };
+    let Ok(value) = serde_json::from_str::<serde_json::Value>(&contents) else {
+        return Vec::new();
+    };
+    let entries = value
+        .as_array()
+        .or_else(|| value.get("launchers").and_then(|value| value.as_array()));
+    let Some(entries) = entries else {
+        return Vec::new();
+    };
+    entries
+        .iter()
+        .filter_map(|entry| {
+            let name = entry.get("name")?.as_str()?.to_string();
+            let program = entry.get("program")?.as_str()?.to_string();
+            let detail = entry
+                .get("detail")
+                .and_then(|value| value.as_str())
+                .unwrap_or("external")
+                .to_string();
+            let icon = entry
+                .get("icon")
+                .and_then(|value| value.as_str())
+                .map(str::to_string);
+            let args = entry
+                .get("args")
+                .and_then(|value| value.as_array())
+                .map(|args| {
+                    args.iter()
+                        .filter_map(|arg| arg.as_str().map(str::to_string))
+                        .collect()
+                })
+                .unwrap_or_default();
+            Some(PaletteLauncher {
+                name,
+                detail,
+                icon,
+                program,
+                args,
+            })
+        })
+        .collect()
+}
+
 fn desktop_launchers() -> Vec<PaletteLauncher> {
     aether_desktop::discover(&desktop_data_dirs())
         .into_iter()
@@ -1504,7 +1560,7 @@ impl App {
     }
 
     fn refresh_providers(&mut self) {
-        let launchers = desktop_launchers();
+        let launchers = all_launchers();
         let files = file_index();
         println!(
             "aether-shell-smithay: reloaded {} desktop apps, {} files",

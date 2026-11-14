@@ -23,3 +23,4 @@ aether-text = { path = "../crates/aether-text" }
 aether-desktop = { path = "../crates/aether-desktop" }
 aether-files = { path = "../crates/aether-files" }
 png = "0.18"
+serde_json = "1"

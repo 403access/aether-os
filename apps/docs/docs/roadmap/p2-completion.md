@@ -181,7 +181,12 @@ agree. The winit host still hardcodes 1280×800@60.
 highest available) in `wl_output` and paces to the same rate; a 60 Hz host run logs
 the shortfall explicitly.
 
-### G5 · Reference measurement run
+### G5 · Reference measurement run — runbook ready, hardware blocked
+
+**Status.** `scripts/p2-measure.sh` performs preflight, opens the palette
+workload, collects `frames.ndjson` and summarises p50/p95/p99 plus queue depth.
+The measurement itself requires the 7700K; no numbers are claimed until it is
+run and recorded in `claims-and-evidence.md`.
 
 **Why.** The gate is a measurement on the 7700K; nothing else closes P2.
 
@@ -374,7 +379,15 @@ geometry, mode/refresh derivation, and stale index-response discard.
 **Done when.** `app.rs` and `render.rs` each have targeted tests; the standalone
 test count moves from 8 to a level that would catch a damage regression.
 
-### V3 · Headless native-backend smoke
+### V3 · Headless native-backend smoke — wired, needs a KVM runner
+
+**Status.** `scripts/vm-drm-tcg.sh` boots the aarch64 VM on virtio-gpu and
+asserts frames, queue depth and clean shutdown; `.github/workflows/drm-vm.yml`
+runs it on a self-hosted `linux, arm64, kvm` runner. GitHub-hosted x86_64
+runners cannot build/boot the aarch64 VM, so the workflow is manual/nightly.
+The VM path is validated locally (single output + GPU unbind/rebind hotplug);
+simultaneous two-output runtime remains blocked by headless QEMU's second
+display, not by the backend.
 
 **Why.** Page flips need a DRM device, but most of the host can still be exercised.
 
@@ -390,11 +403,11 @@ queue depth ≤ 1, and clean shutdown. Document what only real hardware can prov
 
 | ID | Task | Done when |
 | --- | --- | --- |
-| F1 | Fractional scaling: per-output `Scale`, surface scale, damage conversion for non-integer scale | A 1.5× output renders crisp and damage stays correct |
-| F2 | Screenshot/capture protocol (`wlr-screencopy` + DMA-BUF export) | A capture client receives a correct frame with damage metadata |
-| F3 | Desktop-entry SVG icons, theme inheritance, DBus actions | Icon themes resolve; actions appear without a manifest |
-| F4 | Clipboard DnD completion and type negotiation | Drag between two clients transfers text and files |
-| F5 | Status bar surface (agents, CPU, memory, audio, frame time) | Live values, no graphs, no polling when hidden |
+| F1 | Fractional scaling — deferred | Needs `wp_fractional_scale_v1`, physical-coordinate composition and scale-aware text; not a gate blocker. Design captured in the task notes. |
+| F2 | Capture protocol — deferred | Smithay 0.7 has no screencopy module; needs `wlr-screencopy` + DMA-BUF/shm export and a capture client. Not a gate blocker. |
+| F3 | Desktop-entry SVG icons, theme inheritance, D-Bus activation — ✅ | SVG rasterized with `resvg`, `Inherits=` themes resolved, `DBusActivatable=true` launches through `busctl`; tests added. |
+| F4 | DnD completion — ✅ | `smoke-dnd-xvfb.sh` transfers the Weston flower MIME between clients; MIME/type negotiation is client-driven and already works. |
+| F5 | Status bar — ✅ | Drawn on every output (agents, CPU, memory, audio, frame time); sampling stops when disabled or fullscreen. Screenshot: `evidence/p2/status.png`. |
 
 ---
 

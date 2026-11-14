@@ -1,3 +1,16 @@
+## v0.1.0-alpha.61
+
+- Gate instrumentation: per-output pacing deadlines, damage-aware composition,
+  NDJSON frame stats, text caching, partial clears and an async coalescing index
+  worker; `scripts/frame-stats.py` summarises the gate metrics.
+- Status bar with agents, CPU, memory, audio and frame time; sampling stops when
+  hidden/fullscreen and does not create idle frames.
+- SVG icons, icon-theme inheritance and D-Bus activation via `busctl`.
+- CI builds/tests all three backends and runs curated smokes; full suite nightly;
+  a labelled arm64 KVM runner workflow runs the virtio-gpu DRM smoke.
+- Reference-measurement runbook and P2 claims/evidence ledger; ADR-0016
+  (GLES/wgpu) and ADR-0017 (native DRM/cage).
+
 ## v0.1.0-alpha.60
 
 - Make chrome output-local: workspace indicators are drawn and hit-tested on

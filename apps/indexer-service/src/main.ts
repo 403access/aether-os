@@ -43,13 +43,16 @@ const buffers = new WeakMap<object, string>();
 const server = Bun.listen({
   unix: socketPath,
   socket: {
-    data(socket, chunk) {
+    async data(socket, chunk) {
       const previous = buffers.get(socket) ?? "";
       const lines = (previous + Buffer.from(chunk).toString("utf8")).split("\n");
       buffers.set(socket, lines.pop() ?? "");
       for (const line of lines) {
         if (line.trim().length > 0) {
-          socket.write(`${handleRequest(index, line)}\n`);
+          const response = `${handleRequest(index, line)}\n`;
+          const delay = Number.parseInt(process.env.AETHER_INDEX_DELAY_MS ?? "0", 10);
+          if (delay > 0) await Bun.sleep(delay);
+          socket.write(response);
         }
       }
     },

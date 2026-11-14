@@ -11,6 +11,7 @@ use std::sync::Arc;
 use crate::agents::{parse_launchers, AgentSessions};
 use crate::damage::buffer_damage_to_logical;
 use crate::index_worker::{should_apply, IndexWorker};
+use crate::status::{StatusSnapshot, SAMPLE_INTERVAL};
 use aether_cursor::{CursorShape, CursorTheme};
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect, Size as AetherSize};
 use aether_layout::LayoutConfig;
@@ -627,6 +628,11 @@ pub struct App {
     index_query: String,
     index_worker: Option<IndexWorker>,
     agent_sessions: AgentSessions,
+    status: StatusSnapshot,
+    status_cpu: Option<crate::status::CpuTimes>,
+    status_last: std::time::Instant,
+    status_enabled: bool,
+    frame_time_ms: f32,
     pub(crate) input_method_popups: Vec<InputMethodPopupSurface>,
     last_input_to_damage_ns: u64,
 }
@@ -1148,6 +1154,13 @@ impl App {
             index_query: String::new(),
             index_worker: None,
             agent_sessions: AgentSessions::bind(None),
+            status: StatusSnapshot::default(),
+            status_cpu: None,
+            status_last: std::time::Instant::now(),
+            status_enabled: std::env::var("AETHER_STATUS")
+                .map(|value| value != "0")
+                .unwrap_or(true),
+            frame_time_ms: 0.0,
             input_method_popups: Vec::new(),
             last_input_to_damage_ns: 0,
         };
@@ -1155,6 +1168,9 @@ impl App {
         state.agent_sessions = AgentSessions::bind(
             std::env::var_os("AETHER_AGENT_SOCKET").map(std::path::PathBuf::from),
         );
+        if let Some(socket) = state.index_socket.clone() {
+            state.index_worker = Some(IndexWorker::spawn(std::path::PathBuf::from(socket)));
+        }
         state.refresh_launchers();
         let file_count = if state.index_socket.is_some() {
             println!("aether-shell: using index service {:?}", state.index_socket);
@@ -1310,6 +1326,7 @@ impl App {
         display.dispatch_clients(self)?;
         display.flush_clients()?;
         self.poll_index_results();
+        self.poll_status();
         if self.agent_sessions.poll() {
             self.refresh_launchers();
             println!(
@@ -1781,6 +1798,44 @@ impl App {
 
     pub fn text_rasterizations(&self) -> u64 {
         self.text_rasterizations
+    }
+
+    pub fn set_frame_time_ms(&mut self, frame_ms: f32) {
+        self.frame_time_ms = frame_ms;
+    }
+
+    /// True when the status bar should be sampled and drawn. Fullscreen hides
+    /// it and stops polling.
+    pub fn status_visible(&self) -> bool {
+        self.status_enabled
+            && !self
+                .shell
+                .outputs()
+                .iter()
+                .all(|output| self.shell.fullscreen_window_on(output.id).is_some())
+    }
+
+    pub fn status(&self) -> &StatusSnapshot {
+        &self.status
+    }
+
+    fn poll_status(&mut self) {
+        // Sample only while a frame is already due. A timer-driven sample would
+        // itself create damage and break the zero-frame idle gate; values
+        // refresh on the next input-driven frame instead.
+        if !self.status_visible()
+            || !self.needs_frame()
+            || self.status_last.elapsed() < SAMPLE_INTERVAL
+        {
+            return;
+        }
+        self.status = StatusSnapshot::sample(
+            self.status_cpu,
+            self.agent_sessions.session_count(),
+            self.frame_time_ms,
+        );
+        self.status_cpu = crate::status::read_cpu();
+        self.status_last = std::time::Instant::now();
     }
 
     /// Whether compositor content changed since the last presented frame.

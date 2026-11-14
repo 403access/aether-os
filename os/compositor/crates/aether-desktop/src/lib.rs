@@ -29,6 +29,7 @@ pub struct DesktopEntry {
     pub comment: String,
     pub icon: Option<String>,
     pub icon_path: Option<PathBuf>,
+    pub dbus_activatable: bool,
     pub program: String,
     pub args: Vec<String>,
     pub actions: Vec<DesktopAction>,
@@ -49,6 +50,7 @@ pub fn parse(id: &str, contents: &str) -> Option<DesktopEntry> {
     let mut no_display = false;
     let mut hidden = false;
     let mut terminal = false;
+    let mut dbus_activatable = false;
 
     for line in contents.lines() {
         let line = line.trim();
@@ -83,6 +85,7 @@ pub fn parse(id: &str, contents: &str) -> Option<DesktopEntry> {
             "NoDisplay" => no_display = value.eq_ignore_ascii_case("true"),
             "Hidden" => hidden = value.eq_ignore_ascii_case("true"),
             "Terminal" => terminal = value.eq_ignore_ascii_case("true"),
+            "DBusActivatable" => dbus_activatable = value.eq_ignore_ascii_case("true"),
             _ => {}
         }
     }
@@ -91,18 +94,38 @@ pub fn parse(id: &str, contents: &str) -> Option<DesktopEntry> {
         return None;
     }
     let name = name?;
-    let exec = exec?;
-    let mut argv = split_exec(&exec);
-    let program = argv.first()?.clone();
-    argv.remove(0);
+    let application_id = id.trim_end_matches(".desktop").replace('/', ".");
+    let (program, args) = if dbus_activatable {
+        let object_path = format!("/{}", application_id.replace('.', "/"));
+        (
+            "busctl".to_string(),
+            vec![
+                "--user".to_string(),
+                "call".to_string(),
+                application_id.clone(),
+                object_path,
+                "org.freedesktop.Application".to_string(),
+                "Activate".to_string(),
+                "as".to_string(),
+                "0".to_string(),
+            ],
+        )
+    } else {
+        let exec = exec?;
+        let mut argv = split_exec(&exec);
+        let program = argv.first()?.clone();
+        argv.remove(0);
+        (program, argv)
+    };
     Some(DesktopEntry {
         id: id.to_string(),
         name,
         comment,
         icon,
         icon_path: None,
+        dbus_activatable,
         program,
-        args: argv,
+        args,
         actions: parse_actions(&actions, contents),
         terminal,
     })
@@ -236,21 +259,80 @@ fn find_icon(name: &str, data_dirs: &[PathBuf]) -> Option<PathBuf> {
     if direct.is_absolute() && direct.is_file() {
         return Some(direct.to_path_buf());
     }
-    const SIZES: [&str; 5] = ["48x48", "32x32", "64x64", "128x128", "256x256"];
-    for dir in data_dirs {
-        for size in SIZES {
-            let path = dir
-                .join("icons/hicolor")
-                .join(size)
-                .join("apps")
-                .join(format!("{name}.png"));
-            if path.is_file() {
-                return Some(path);
+    let mut themes = Vec::new();
+    if let Ok(theme) = std::env::var("AETHER_ICON_THEME") {
+        if !theme.trim().is_empty() {
+            themes.push(theme);
+        }
+    }
+    themes.push("hicolor".to_string());
+    for theme in &themes {
+        for dir in data_dirs {
+            if let Some(found) = find_icon_in_theme(name, dir, theme, 0) {
+                return Some(found);
             }
         }
+    }
+    for dir in data_dirs {
         let path = dir.join("pixmaps").join(format!("{name}.png"));
         if path.is_file() {
             return Some(path);
+        }
+    }
+    None
+}
+
+fn find_icon_in_theme(name: &str, data_dir: &Path, theme: &str, depth: usize) -> Option<PathBuf> {
+    if depth > 3 {
+        return None;
+    }
+    let root = data_dir.join("icons").join(theme);
+    let mut search_dirs: Vec<PathBuf> = Vec::new();
+    if let Ok(index) = fs::read_to_string(root.join("index.theme")) {
+        let mut inherits = Vec::new();
+        for line in index.lines() {
+            let Some((key, value)) = line.split_once('=') else {
+                continue;
+            };
+            match key.trim() {
+                "Directories" | "ScaledDirectories" => {
+                    search_dirs.extend(
+                        value
+                            .split(',')
+                            .map(str::trim)
+                            .filter(|dir| !dir.is_empty())
+                            .map(|dir| root.join(dir)),
+                    );
+                }
+                "Inherits" => {
+                    inherits.extend(
+                        value
+                            .split(',')
+                            .map(str::trim)
+                            .filter(|parent| !parent.is_empty())
+                            .map(str::to_string),
+                    );
+                }
+                _ => {}
+            }
+        }
+        for parent in inherits {
+            if let Some(found) = find_icon_in_theme(name, data_dir, &parent, depth + 1) {
+                return Some(found);
+            }
+        }
+    }
+    search_dirs.push(root.join("scalable").join("apps"));
+    for size in ["48x48", "32x32", "64x64", "128x128", "256x256"] {
+        search_dirs.push(root.join(size).join("apps"));
+    }
+    search_dirs.push(root.clone());
+    for dir in search_dirs {
+        for extension in ["png", "svg"] {
+            let path = dir.join(format!("{name}.{extension}"));
+            if path.is_file() {
+                return Some(path);
+            }
         }
     }
     None
@@ -433,5 +515,40 @@ Exec=right
         assert_eq!(entries[1].icon.as_deref(), Some("two-icon"));
         assert_eq!(entries[1].icon_path.as_deref(), Some(icon_path.as_path()));
         fs::remove_dir_all(root).ok();
+    }
+}
+
+#[cfg(test)]
+mod icon_tests {
+    use super::*;
+    use std::fs;
+
+    #[test]
+    fn inherited_theme_and_svg_icons_resolve() {
+        let dir = std::env::temp_dir().join(format!("aether-icon-test-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        let parent = dir.join("icons/Parent/scalable/apps");
+        fs::create_dir_all(&parent).unwrap();
+        fs::write(parent.join("demo.svg"), "<svg/>").unwrap();
+        let child = dir.join("icons/Child");
+        fs::create_dir_all(&child).unwrap();
+        fs::write(child.join("index.theme"), "[Icon Theme]\nInherits=Parent\n").unwrap();
+        std::env::set_var("AETHER_ICON_THEME", "Child");
+        let found = find_icon("demo", &[dir]).unwrap();
+        assert_eq!(found.extension().and_then(|e| e.to_str()), Some("svg"));
+        std::env::remove_var("AETHER_ICON_THEME");
+    }
+
+    #[test]
+    fn dbus_activatable_entries_launch_through_busctl() {
+        let entry = parse(
+            "org.example.App.desktop",
+            "[Desktop Entry]\nType=Application\nName=App\nDBusActivatable=true\n",
+        )
+        .unwrap();
+        assert!(entry.dbus_activatable);
+        assert_eq!(entry.program, "busctl");
+        assert!(entry.args.contains(&"/org/example/App".to_string()));
+        assert!(entry.args.contains(&"Activate".to_string()));
     }
 }

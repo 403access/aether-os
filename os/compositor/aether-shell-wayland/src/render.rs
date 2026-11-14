@@ -429,6 +429,17 @@ impl App {
             }
 
             if self.shell.fullscreen_window_on(chrome_output).is_none() {
+                if self.status_visible() {
+                    let bounds = self.shell.output_bounds(chrome_output);
+                    let text = self.status().label();
+                    let width = text_width(&text, 1) as i32 + 16;
+                    let x = bounds.x + bounds.width as i32 - width - 10;
+                    chrome.push((
+                        AetherRect::new(x, bounds.y + 10, width as u32, 22),
+                        [0.03, 0.12, 0.16, 0.9],
+                    ));
+                    labels.push((text, x + 8, bounds.y + 17, 1, [179, 235, 250, 255]));
+                }
                 let names = self.shell.workspace_names();
                 for workspace in 0..self.shell.workspace_count() {
                     let Some(chip) = self
@@ -692,6 +703,33 @@ fn cursor_hotspot(surface: &WlSurface) -> (i32, i32) {
 }
 
 fn load_icon(path: &str) -> Option<(u32, u32, Vec<u8>)> {
+    if path.ends_with(".svg") {
+        let data = std::fs::read_to_string(path).ok()?;
+        let tree = resvg::usvg::Tree::from_str(&data, &resvg::usvg::Options::default()).ok()?;
+        let size = tree.size();
+        let scale = 64.0 / size.width().max(1.0);
+        let mut pixmap = resvg::tiny_skia::Pixmap::new(64, 64)?;
+        resvg::render(
+            &tree,
+            resvg::tiny_skia::Transform::from_scale(scale, scale),
+            &mut pixmap.as_mut(),
+        );
+        let mut pixels = Vec::with_capacity(64 * 64 * 4);
+        for chunk in pixmap.data().as_chunks::<4>().0 {
+            let alpha = chunk[3];
+            let (red, green, blue) = if alpha == 0 {
+                (0, 0, 0)
+            } else {
+                (
+                    (u32::from(chunk[0]) * 255 / u32::from(alpha)) as u8,
+                    (u32::from(chunk[1]) * 255 / u32::from(alpha)) as u8,
+                    (u32::from(chunk[2]) * 255 / u32::from(alpha)) as u8,
+                )
+            };
+            pixels.extend_from_slice(&[red, green, blue, alpha]);
+        }
+        return Some((64, 64, pixels));
+    }
     let file = std::fs::File::open(path).ok()?;
     let decoder = png::Decoder::new(std::io::BufReader::new(file));
     let mut reader = decoder.read_info().ok()?;
@@ -709,4 +747,24 @@ fn load_icon(path: &str) -> Option<(u32, u32, Vec<u8>)> {
         _ => return None,
     };
     Some((info.width, info.height, pixels))
+}
+
+#[cfg(test)]
+mod icon_tests {
+    use super::load_icon;
+
+    #[test]
+    fn rasterizes_svg_icons() {
+        let path = std::env::temp_dir().join(format!("aether-icon-{}.svg", std::process::id()));
+        std::fs::write(
+            &path,
+            "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><rect width=\"16\" height=\"16\" fill=\"#38d6ff\"/></svg>",
+        )
+        .unwrap();
+        let (width, height, pixels) = load_icon(path.to_str().unwrap()).expect("svg icon");
+        assert_eq!((width, height), (64, 64));
+        assert_eq!(pixels.len(), 64 * 64 * 4);
+        assert!(pixels.chunks_exact(4).any(|pixel| pixel[3] > 0));
+        let _ = std::fs::remove_file(path);
+    }
 }

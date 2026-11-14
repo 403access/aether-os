@@ -490,7 +490,7 @@ impl DrmState {
             name,
             rect: AetherRect::new(x, 0, width as u32, height as u32),
             scale: 1.0,
-            refresh_hz: u32::from(candidate.mode.vrefresh()).max(1),
+            refresh_hz: candidate.mode.vrefresh().max(1),
             physical_size_mm: candidate.connector.size().unwrap_or((0, 0)),
             primary: self.app.shell().primary_output().is_none(),
         };
@@ -512,7 +512,7 @@ impl DrmState {
         );
         let elements: DrmOutputRenderElements<GlesRenderer, AetherRenderElement> =
             DrmOutputRenderElements::default();
-        let refresh_hz = u32::from(candidate.mode.vrefresh()).max(1);
+        let refresh_hz = candidate.mode.vrefresh().max(1);
         if refresh_hz < 120 {
             eprintln!(
                 "aether-shell-drm: output {} refreshes at {refresh_hz} Hz, below the 120 Hz P2 gate",
@@ -757,6 +757,9 @@ impl DrmState {
                             surface.max_queue_depth =
                                 surface.max_queue_depth.max(surface.in_flight);
                             surface.pacer.on_present(now);
+                            if interval > 0 {
+                                app.set_frame_time_ms(interval as f32 / 1_000_000.0);
+                            }
                             presented = true;
                             if let Some(path) = stats_path.as_deref() {
                                 append_stat(

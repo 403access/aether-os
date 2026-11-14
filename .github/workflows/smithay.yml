@@ -62,6 +62,7 @@ jobs:
               smoke-fullscreen-xvfb.sh \
               smoke-provider-xvfb.sh \
               smoke-index-xvfb.sh \
+              smoke-index-slow-xvfb.sh \
               smoke-text-input-xvfb.sh \
               smoke-agent-ipc-xvfb.sh \
               smoke-clipboard-persist-xvfb.sh \

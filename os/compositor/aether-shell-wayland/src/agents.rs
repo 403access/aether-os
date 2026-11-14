@@ -42,6 +42,10 @@ impl AgentSessions {
         &self.launchers
     }
 
+    pub fn session_count(&self) -> usize {
+        self.streams.len()
+    }
+
     /// Accept publishers and process complete snapshots. Returns true when the
     /// launcher list changed.
     pub fn poll(&mut self) -> bool {

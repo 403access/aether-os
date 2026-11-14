@@ -75,7 +75,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                 .window()
                 .current_monitor()
                 .and_then(|monitor| monitor.refresh_rate_millihertz())
-                .map(|milli| (milli / 1000).max(1) as u32)
+                .map(|milli| (milli / 1000).max(1))
                 .unwrap_or(60),
             physical_size_mm: backend
                 .window()
@@ -199,6 +199,9 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                         .map(|last| now.duration_since(last).as_nanos() as u64)
                         .unwrap_or(0);
                     last_present = Some(now);
+                    if interval > 0 && interval < 200_000_000 {
+                        state.set_frame_time_ms(interval as f32 / 1_000_000.0);
+                    }
                     if let Some(path) = stats_path.as_deref() {
                         append_stat(
                             path,

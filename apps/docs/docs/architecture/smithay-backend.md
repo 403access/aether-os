@@ -50,6 +50,12 @@ result focuses the window and switches to its workspace; the smoke test types
 capture is produced by `smoke-picker-xvfb.sh`, which drives the click with
 `xdotool` and asserts the shell log.*
 
+![Status bar and two tiled terminal clients](/img/smithay-status.png)
+
+*The status bar shows agent sessions, CPU, memory, audio and frame time on the
+active output. Sampling stops when `AETHER_STATUS=0` or a fullscreen client is
+visible.*
+
 ![Dragging the master/stack divider](/img/smithay-resize.png)
 
 *Dragging the gap between the master and stack changes the tiling ratio;
@@ -308,9 +314,10 @@ drag and both toggles with `xdotool` and asserts each transition.*
 - **Incremental index limits.** Agent sessions are live over
   `AETHER_AGENT_SOCKET`; index updates use the platform watcher (inotify on
   Linux). Periodic reconciliation for missed events is future work.
-- **Desktop-entry SVG icons, theme inheritance and D-Bus activation.** Entries
-  rescans, hicolor/pixmap PNG icons and `[Desktop Action]` groups work; SVG
-  icons, full icon-theme lookup and D-Bus activation are not implemented.
+- **Desktop-entry icons and actions.** SVG icons are rasterized with `resvg`,
+  `Inherits=` icon themes and `[Desktop Action]` groups resolve, and
+  `DBusActivatable=true` entries launch through `busctl --user call`. Entries
+  still rescan on palette open rather than inotify-watching app dirs.
 - **XDG popup surfaces.** xdg-shell popup surfaces (menus/tooltips) are still
   accepted and ignored; IME popup surfaces are rendered. Popup grabs are not
   implemented.
@@ -318,8 +325,8 @@ drag and both toggles with `xdotool` and asserts each transition.*
   a glyph atlas is still needed before text-heavy apps.
 - **Animated cursor frames.** Xcursor/theme and client cursor surfaces work; the
   first/current image is used, without timed animation frames.
-- **Per-output status bars.** Indicators and the palette are output-aware; a
-  configurable status bar per output is future work.
+- **Status bar theming.** A status bar renders agents, CPU, memory, audio and
+  frame time on every output; configuration/theming is future work.
 - **Per-subsurface damage.** Top-level surface and buffer damage are used;
   Smithay also subtracts opaque regions when drawing the z-ordered element list,
   but nested subsurface damage is not tracked separately.

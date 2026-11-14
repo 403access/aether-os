@@ -99,6 +99,31 @@ export function isProbablyText(buffer: Uint8Array): boolean {
   return true;
 }
 
+/** Read one file into a document, or return null for directories/unreadables. */
+export async function readFileDocument(
+  path: string,
+  maxBytes = 256 * 1024,
+): Promise<IndexDocument | null> {
+  try {
+    const info = await stat(path);
+    if (!info.isFile()) return null;
+    const document = deriveFileDocument({
+      path,
+      modifiedAt: Math.floor(info.mtimeMs),
+    });
+    const extension = extensionOf(path);
+    if (info.size <= maxBytes && TEXT_EXTENSIONS.has(extension)) {
+      const buffer = await readFile(path);
+      if (isProbablyText(buffer)) {
+        document.body = buffer.subarray(0, maxBytes).toString("utf8");
+      }
+    }
+    return document;
+  } catch {
+    return null;
+  }
+}
+
 export function deriveFileDocument(input: FileDocumentInput): IndexDocument {
   const title = basename(input.path) || input.path;
   const directory = dirname(input.path);
@@ -182,21 +207,8 @@ export async function scanDirectory(
       if (!includeHidden && entry.name.startsWith(".")) continue;
 
       try {
-        const info = await stat(fullPath);
-        const document = deriveFileDocument({
-          path: fullPath,
-          modifiedAt: Math.floor(info.mtimeMs),
-        });
-
-        const extension = extensionOf(fullPath);
-        if (info.size <= maxBytesPerFile && TEXT_EXTENSIONS.has(extension)) {
-          const buffer = await readFile(fullPath);
-          if (isProbablyText(buffer)) {
-            document.body = buffer.subarray(0, maxBytesPerFile).toString("utf8");
-          }
-        }
-
-        documents.push(document);
+        const document = await readFileDocument(fullPath, maxBytesPerFile);
+        if (document !== null) documents.push(document);
       } catch {
         // Unreadable entries are skipped; one bad file must not fail a scan.
       }

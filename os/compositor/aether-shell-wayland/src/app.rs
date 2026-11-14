@@ -1429,11 +1429,14 @@ impl App {
             // Shortcuts may move/close/raise windows or switch workspaces.
             self.mark_full_damage();
         } else if palette_key {
+            let new_overlay = self.shell.overlay_rect();
             if let Some(rect) = old_overlay {
                 self.mark_damage_rect(rect);
             }
-            if let Some(rect) = self.shell.overlay_rect() {
-                self.mark_damage_rect(rect);
+            if let Some(rect) = new_overlay {
+                if Some(rect) != old_overlay {
+                    self.mark_damage_rect(rect);
+                }
             } else {
                 // Enter/activation closed the palette and may have launched or
                 // switched workspace.

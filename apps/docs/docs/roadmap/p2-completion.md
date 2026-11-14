@@ -19,7 +19,7 @@ merges — the same rule as the phase gates.
 
 | Task | Status | Evidence / blocker |
 | --- | --- | --- |
-| G1 deadline loop | ✅ implemented / ⏳ verified | per-output pacers, idle blocking dispatch; p99 needs G5 |
+| G1 deadline loop | 🟡 implemented, unverified | per-output pacers, idle blocking dispatch; p99 needs G5 |
 | G2 frame damage | ✅ | precise input damage, per-output compose, drain-once; `typing-damage.log` |
 | G3 instrumentation | ✅ | `frames.ndjson` + `frame-stats.py` + summary |
 | G4 connector output model | ✅ | refresh/physical size from mode/monitor, shortfall log |
@@ -138,7 +138,9 @@ anything; keyboard palette keys damage the overlay rect, motion damages old/new
 cursor and moved window rects, shortcuts/layout changes mark full. The winit
 adapter's blanket per-event `mark_full_damage` was removed. Evidence:
 `typing-damage.log` (680×420 overlay damage per keystroke, not full output),
-`typing-frames.ndjson`, `damage.log`, and three `damage_for_bounds` tests.
+`typing-summary.txt` (damage-area p50 289,696 px = overlay + cursor, instead of
+a 1024k full frame), `typing-frames.ndjson`, `damage.log`, and three
+`damage_for_bounds` tests.
 
 **Why.** The frontend computes damage and then throws it away. Marking all outputs
 dirty on any damage means every keystroke redraws the whole 1440p scene — the largest

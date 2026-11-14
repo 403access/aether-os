@@ -1,0 +1,5 @@
+frames: 8
+present interval ns: p50=34776422 p95=308999842 p99=308999842
+input -> damage ns: p50=20833 p95=81209 p99=81209 max=92751
+queue depth: 0 (max 0), missed deadlines max 0
+damage area px: p50=289696 p95=1024000 p99=1024000 max=1024000

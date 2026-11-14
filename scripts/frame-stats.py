@@ -50,7 +50,12 @@ def main():
         "queue_depth_max": queued,
         "max_queue_depth": queue,
         "missed_deadlines_max": missed,
-        "damage_area_max": max(damage, default=0),
+        "damage_area": {
+            "p50": pct(damage, 50),
+            "p95": pct(damage, 95),
+            "p99": pct(damage, 99),
+            "max": max(damage, default=0),
+        },
     }
     if "--json" in sys.argv:
         print(json.dumps(summary, indent=2))
@@ -72,8 +77,14 @@ def main():
         print(
             f"queue depth: {summary['queue_depth_max']} "
             f"(max {summary['max_queue_depth']}), "
-            f"missed deadlines max {summary['missed_deadlines_max']}, "
-            f"damage area max {summary['damage_area_max']}"
+            f"missed deadlines max {summary['missed_deadlines_max']}"
+        )
+        print(
+            "damage area px: "
+            f"p50={summary['damage_area']['p50']} "
+            f"p95={summary['damage_area']['p95']} "
+            f"p99={summary['damage_area']['p99']} "
+            f"max={summary['damage_area']['max']}"
         )
     return 0 if queued <= 1 and queue <= 1 else 1
 

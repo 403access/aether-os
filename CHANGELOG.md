@@ -1,3 +1,9 @@
+## v0.1.0-alpha.63
+
+- Deduplicate unchanged overlay damage on palette keystrokes; typing damage-area
+  p50 is now 289,696 px (overlay + cursor) instead of a full output. Add
+  damage-area percentiles to `frame-stats.py` and regenerate typing evidence.
+
 ## v0.1.0-alpha.62
 
 - Fix input-path damage precision: palette typing damages the overlay rect,

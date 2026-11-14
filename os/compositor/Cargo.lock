@@ -85,6 +85,7 @@ dependencies = [
 name = "aether-shell"
 version = "0.1.0"
 dependencies = [
+ "aether-audio",
  "aether-damage",
  "aether-geometry",
  "aether-layout",

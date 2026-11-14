@@ -53,6 +53,23 @@ aether-audio xruns
 it so overlay behaviour is deterministic without a live sound server. Preset
 choice is stored under `$XDG_STATE_HOME/aether/audio/preset`.
 
+![Audio overlay with outputs, inputs, presets and input meter](/img/smithay-audio.png)
+
+*`Super+A` opens the compositor audio layer. The default route carries a labelled
+pill; transport and profile are text, never colour alone. `P` cycles the latency
+preset and `Enter` switches the selected route.*
+
+## Overlay
+
+The overlay is a shell layer, not a client. It lists up to four outputs and three
+inputs, keeps selection on the default output when opened, and closes with `Esc`.
+`↑`/`↓` move, `Enter` applies the route, `P` cycles the preset, and pointer clicks
+hit the same rows and preset chips.
+
+With `AETHER_AUDIO_FIXTURE` set, activation updates local state without touching
+PipeWire; this is the deterministic path used by `smoke-audio-xvfb.sh`. Live mode
+calls `wpctl set-default` and `pw-metadata` before the next snapshot.
+
 ## Device model
 
 Every route is described by:

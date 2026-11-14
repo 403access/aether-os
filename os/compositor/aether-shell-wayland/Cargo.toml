@@ -18,6 +18,7 @@ aether-shell = { path = "../crates/aether-shell" }
 aether-scene = { path = "../crates/aether-scene" }
 aether-text = { path = "../crates/aether-text" }
 aether-cursor = { path = "../crates/aether-cursor" }
+aether-audio = { path = "../crates/aether-audio" }
 aether-desktop = { path = "../crates/aether-desktop" }
 aether-files = { path = "../crates/aether-files" }
 png = "0.18"

@@ -11,6 +11,7 @@ aether-damage.workspace = true
 aether-layout.workspace = true
 aether-pacing.workspace = true
 aether-scene.workspace = true
+aether-audio.workspace = true
 
 [dev-dependencies]
 serde = { version = "1", features = ["derive"] }

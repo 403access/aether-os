@@ -69,7 +69,8 @@ jobs:
               smoke-text-input-xvfb.sh \
               smoke-agent-ipc-xvfb.sh \
               smoke-clipboard-persist-xvfb.sh \
-              smoke-actions-xvfb.sh; do
+              smoke-actions-xvfb.sh \
+              smoke-audio-xvfb.sh; do
                 echo "=== ${smoke}"
                 BIN="${BIN}" "./os/compositor/aether-shell-smithay/${smoke}"
             done

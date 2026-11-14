@@ -13,3 +13,11 @@ pub const TEXT_DIM: u32 = 0xA5DBE5;
 /// Reference explorer rows are 30 px (`packages/ui/src/ui.css`).
 pub const EXPLORER_ROW_HEIGHT: u32 = 30;
 pub const EXPLORER_VISIBLE_ROWS: usize = 14;
+
+/// Audio overlay geometry (660 x 560, four outputs + three inputs).
+pub const AUDIO_PANEL_WIDTH: u32 = 660;
+pub const AUDIO_PANEL_HEIGHT: u32 = 560;
+pub const AUDIO_ROW_HEIGHT: u32 = 40;
+pub const AUDIO_ROW_SPACING: u32 = 46;
+pub const AUDIO_ROWS_TOP: i32 = 94;
+pub const AUDIO_SECTION_GAP: i32 = 28;

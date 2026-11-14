@@ -409,6 +409,7 @@ impl App {
         let explorer_here =
             self.shell.explorer_open() && (output.is_none() || output == Some(primary));
         let chat_here = self.shell.chat_open() && (output.is_none() || output == Some(primary));
+        let audio_here = self.shell.audio_open() && (output.is_none() || output == Some(primary));
 
         let mut chrome: Vec<(AetherRect, [f32; 4])> = Vec::new();
         let mut labels: Vec<(String, i32, i32, u32, [u8; 4])> = Vec::new();
@@ -816,6 +817,282 @@ impl App {
                     "esc close   PgUp/PgDn scroll".into(),
                     rect.x + width - 176,
                     composer_y - 16,
+                    0,
+                    [107, 169, 182, 255],
+                ));
+            }
+
+            if audio_here {
+                let rect = self.shell.audio_rect();
+                let width = rect.width as i32;
+                let height = rect.height as i32;
+                let routes: Vec<aether_audio::AudioRoute> = self.shell.audio_routes().to_vec();
+                let selected = self
+                    .shell
+                    .audio_layer()
+                    .map(|layer| layer.selected())
+                    .unwrap_or(0);
+                let preset = self
+                    .shell
+                    .audio_layer()
+                    .map(|layer| layer.preset())
+                    .unwrap_or_default();
+                let xruns = self
+                    .shell
+                    .audio_layer()
+                    .map(|layer| layer.xruns())
+                    .unwrap_or(0);
+                let outputs = self
+                    .shell
+                    .audio_layer()
+                    .map(|layer| layer.output_count())
+                    .unwrap_or(0);
+                if let Some(buffer) = self.chrome_panel(
+                    rect.width,
+                    rect.height,
+                    14,
+                    [7, 39, 51, 250],
+                    Some([127, 230, 255, 34]),
+                ) {
+                    panels.push((buffer, rect.x - 18, rect.y - 18));
+                }
+                if let Some(buffer) = self.chrome_round_top(
+                    rect.width.saturating_sub(2),
+                    58,
+                    13,
+                    [9, 49, 63, 255],
+                ) {
+                    panels.push((buffer, rect.x + 1, rect.y + 1));
+                }
+                display_icons.push((
+                    "audio".into(),
+                    20,
+                    [56, 214, 255, 255],
+                    rect.x + 18,
+                    rect.y + 18,
+                ));
+                labels.push((
+                    "Audio".into(),
+                    rect.x + 50,
+                    rect.y + 12,
+                    2,
+                    [233, 251, 255, 255],
+                ));
+                let subtitle = if xruns > 0 {
+                    format!("PipeWire · 48 kHz · {xruns} xruns")
+                } else {
+                    "PipeWire · 48 kHz · no xruns".to_string()
+                };
+                labels.push((
+                    subtitle,
+                    rect.x + 50,
+                    rect.y + 35,
+                    0,
+                    if xruns > 0 {
+                        [232, 197, 71, 255]
+                    } else {
+                        [107, 169, 182, 255]
+                    },
+                ));
+                let key = "Super+A";
+                let key_w = self.text_width(key, 0) as i32 + 22;
+                if let Some(buffer) = self.chrome_round(key_w as u32, 22, 6, [3, 25, 34, 255]) {
+                    panels.push((buffer, rect.x + width - key_w - 14, rect.y + 18));
+                }
+                labels.push((
+                    key.into(),
+                    rect.x + width - key_w - 3,
+                    rect.y + 23,
+                    0,
+                    [107, 169, 182, 255],
+                ));
+                labels.push((
+                    "OUTPUT".into(),
+                    rect.x + 18,
+                    rect.y + 72,
+                    0,
+                    [107, 169, 182, 255],
+                ));
+                if outputs > 0 {
+                    if let Some(first_input) = self.shell.audio_route_rect(outputs) {
+                        labels.push((
+                            "INPUT".into(),
+                            rect.x + 18,
+                            first_input.y - 22,
+                            0,
+                            [107, 169, 182, 255],
+                        ));
+                    }
+                }
+                let row_rects: Vec<AetherRect> = (0..routes.len())
+                    .filter_map(|index| self.shell.audio_route_rect(index))
+                    .collect();
+                for (index, route) in routes.iter().enumerate() {
+                    let Some(row_rect) = row_rects.get(index).copied() else {
+                        continue;
+                    };
+                    let active = index == selected;
+                    if active {
+                        if let Some(buffer) = self.chrome_round(
+                            row_rect.width,
+                            row_rect.height,
+                            8,
+                            [56, 214, 255, 46],
+                        ) {
+                            panels.push((buffer, row_rect.x, row_rect.y));
+                        }
+                        if let Some(buffer) = self.chrome_round(
+                            3,
+                            row_rect.height.saturating_sub(14),
+                            2,
+                            [56, 214, 255, 255],
+                        ) {
+                            panels.push((buffer, row_rect.x, row_rect.y + 7));
+                        }
+                    }
+                    let tile = AetherRect::new(row_rect.x + 10, row_rect.y + 7, 28, 26);
+                    if let Some(buffer) = self.chrome_round(28, 26, 7, [3, 25, 34, 210]) {
+                        panels.push((buffer, tile.x, tile.y));
+                    }
+                    display_icons.push((
+                        if route.kind == aether_audio::RouteKind::Output {
+                            "audio".into()
+                        } else {
+                            "mic".into()
+                        },
+                        16,
+                        if active {
+                            [56, 214, 255, 255]
+                        } else {
+                            [165, 219, 229, 255]
+                        },
+                        tile.x + 6,
+                        tile.y + 5,
+                    ));
+                    labels.push((
+                        route.label().to_string(),
+                        row_rect.x + 48,
+                        row_rect.y + 6,
+                        1,
+                        if active {
+                            [233, 251, 255, 255]
+                        } else {
+                            [217, 247, 255, 255]
+                        },
+                    ));
+                    let mut detail = format!("{} · {}", route.transport.label(), route.profile);
+                    if let Some(codec) = &route.codec {
+                        detail.push_str(" · ");
+                        detail.push_str(codec);
+                    }
+                    labels.push((
+                        detail,
+                        row_rect.x + 48,
+                        row_rect.y + 22,
+                        0,
+                        [107, 169, 182, 255],
+                    ));
+                    if route.default {
+                        let pill_w = 64u32;
+                        let pill = AetherRect::new(
+                            row_rect.x + row_rect.width as i32 - pill_w as i32 - 10,
+                            row_rect.y + 10,
+                            pill_w,
+                            20,
+                        );
+                        if let Some(buffer) = self.chrome_round(pill_w, 20, 6, [56, 214, 255, 36])
+                        {
+                            panels.push((buffer, pill.x, pill.y));
+                        }
+                        labels.push((
+                            "default".into(),
+                            pill.x + 9,
+                            pill.y + 5,
+                            0,
+                            [56, 214, 255, 255],
+                        ));
+                    }
+                }
+                // Input level meter (deterministic placeholder until live peaks).
+                labels.push((
+                    "INPUT LEVEL".into(),
+                    rect.x + 18,
+                    rect.y + height - 118,
+                    0,
+                    [107, 169, 182, 255],
+                ));
+                for bar in 0..14 {
+                    let level = ((bar * 37 + 53) % 11 + 3) as u32;
+                    let bar_x = rect.x + 96 + bar * 11;
+                    let bar_y = rect.y + height - 122 - level as i32;
+                    if let Some(buffer) = self.chrome_round(
+                        6,
+                        level * 2,
+                        2,
+                        [56, 214, 255, 90 + (bar as u8 % 5) * 28],
+                    ) {
+                        panels.push((buffer, bar_x, bar_y));
+                    }
+                }
+                labels.push((
+                    "mic locked".into(),
+                    rect.x + width - 86,
+                    rect.y + height - 118,
+                    0,
+                    [107, 169, 182, 255],
+                ));
+                display_icons.push((
+                    "mic".into(),
+                    14,
+                    [107, 169, 182, 255],
+                    rect.x + width - 106,
+                    rect.y + height - 122,
+                ));
+
+                for (index, option) in aether_audio::LatencyPreset::ALL.into_iter().enumerate() {
+                    let Some(chip) = self.shell.audio_preset_rect(index) else {
+                        continue;
+                    };
+                    let active = option == preset;
+                    if let Some(buffer) = self.chrome_round(
+                        chip.width,
+                        chip.height,
+                        8,
+                        if active {
+                            [56, 214, 255, 46]
+                        } else {
+                            [3, 25, 34, 210]
+                        },
+                    ) {
+                        panels.push((buffer, chip.x, chip.y));
+                    }
+                    let mut name = option.name().to_string();
+                    if let Some(first) = name.get_mut(0..1) {
+                        first.make_ascii_uppercase();
+                    }
+                    labels.push((
+                        name,
+                        chip.x + 12,
+                        chip.y + 7,
+                        1,
+                        if active {
+                            [233, 251, 255, 255]
+                        } else {
+                            [165, 219, 229, 255]
+                        },
+                    ));
+                    labels.push((
+                        format!("{} frames", option.quantum()),
+                        chip.x + chip.width as i32 - 68,
+                        chip.y + 9,
+                        0,
+                        [107, 169, 182, 255],
+                    ));
+                }
+                labels.push((
+                    "↑↓ select   Enter switch   P preset   Esc close".into(),
+                    rect.x + 16,
+                    rect.y + height - 22,
                     0,
                     [107, 169, 182, 255],
                 ));

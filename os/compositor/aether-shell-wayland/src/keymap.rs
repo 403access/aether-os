@@ -7,6 +7,7 @@ pub enum Shortcut {
     TogglePalette,
     ToggleExplorer,
     ToggleChat,
+    ToggleAudio,
     FocusNext,
     FocusPrevious,
     SwitchWorkspace(usize),
@@ -54,6 +55,7 @@ pub fn lookup(logo: bool, shift: bool, alt: bool, keysym: Keysym) -> Option<Shor
     let space: Keysym = keysyms::KEY_space.into();
     let explorer: Keysym = keysyms::KEY_e.into();
     let chat: Keysym = keysyms::KEY_c.into();
+    let audio: Keysym = keysyms::KEY_a.into();
     let close: Keysym = keysyms::KEY_q.into();
     let maximize: Keysym = keysyms::KEY_m.into();
     let fullscreen: Keysym = keysyms::KEY_f.into();
@@ -61,6 +63,7 @@ pub fn lookup(logo: bool, shift: bool, alt: bool, keysym: Keysym) -> Option<Shor
         _ if keysym == space => Shortcut::TogglePalette,
         _ if keysym == explorer => Shortcut::ToggleExplorer,
         _ if keysym == chat => Shortcut::ToggleChat,
+        _ if keysym == audio => Shortcut::ToggleAudio,
         _ if keysym == close => Shortcut::CloseWindow,
         _ if keysym == maximize => Shortcut::Maximize,
         _ if keysym == fullscreen => Shortcut::Fullscreen,
@@ -118,6 +121,10 @@ mod tests {
         assert_eq!(
             lookup(true, false, false, key(keysyms::KEY_c)),
             Some(Shortcut::ToggleChat)
+        );
+        assert_eq!(
+            lookup(true, false, false, key(keysyms::KEY_a)),
+            Some(Shortcut::ToggleAudio)
         );
         assert_eq!(
             lookup(true, false, false, key(keysyms::KEY_q)),

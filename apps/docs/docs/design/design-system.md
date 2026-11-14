@@ -101,6 +101,7 @@ premultiplied alpha, soft shadows, SVG icons and a deep-sea gradient.
 | Palette | 680 × 420, 58 px search header, six 40 px rows at 46 px pitch, keycap footer |
 | Chat | 400 px drawer, header pill, assistant card with code strips, 38 px composer |
 | Terminal | `aether-terminal` (foot) with Water ANSI palette, 11 px mono, 28 px top pad, 1 px CSD border |
+| Audio overlay | 660 × 560 glass panel, section labels, route rows, preset chips, input meter |
 
 ![Water explorer in the compositor](/img/smithay-explorer.png)
 
@@ -119,6 +120,11 @@ composer with send affordance. Bold spans are rendered with a second coverage
 pass, not a different font.*
 
 ![Water-themed terminal](/img/smithay-terminal.png)
+
+![Audio overlay](/img/smithay-audio.png)
+
+*Audio overlay: output/input sections, default pills, transport and codec labels,
+input level meter, capability state and latency preset chips.*
 
 *`aether-terminal` runs foot with the Water ANSI palette, DejaVu Sans Mono at
 11 px and a 1 px border. It has no client-side titlebar under the compositor, so the

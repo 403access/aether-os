@@ -44,7 +44,8 @@ use smithay::backend::renderer::{Color32F, Frame, Renderer};
 use smithay::backend::winit::{self, WinitEvent};
 use smithay::input::keyboard::{keysyms, xkb, FilterResult, Keysym, ModifiersState};
 use smithay::input::pointer::{
-    AxisFrame, ButtonEvent, CursorIcon as PointerIcon, CursorImageStatus, MotionEvent,
+    AxisFrame, ButtonEvent, CursorIcon as PointerIcon, CursorImageStatus, CursorImageSurfaceData,
+    MotionEvent,
 };
 use smithay::input::{Seat, SeatHandler, SeatState};
 use smithay::output::{Mode as OutputMode, Output, PhysicalProperties, Scale, Subpixel};
@@ -59,7 +60,8 @@ use smithay::reexports::winit::dpi::LogicalSize;
 use smithay::reexports::winit::platform::pump_events::PumpStatus;
 use smithay::reexports::winit::window::WindowAttributes;
 use smithay::utils::{
-    Logical, Physical, Point as SPoint, Rectangle, Serial, Size as SSize, Transform, SERIAL_COUNTER,
+    IsAlive, Logical, Physical, Point as SPoint, Rectangle, Serial, Size as SSize, Transform,
+    SERIAL_COUNTER,
 };
 use smithay::wayland::buffer::BufferHandler;
 use smithay::wayland::compositor::{
@@ -172,6 +174,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         cursor_buffers: HashMap::new(),
         cursor_theme: Some(CursorTheme::discover()),
         client_cursor: None,
+        client_cursor_surface: None,
         cursor_hidden: false,
         index_socket: std::env::var("AETHER_INDEX_SOCKET").ok(),
         index_query: String::new(),
@@ -1000,6 +1003,34 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                     })
                     .flatten();
 
+                let client_cursor_elements: Vec<WaylandSurfaceRenderElement<GlesRenderer>> = state
+                    .client_cursor_surface
+                    .clone()
+                    .filter(|surface| surface.alive())
+                    .map(|surface| {
+                        let hotspot = with_states(&surface, |states| {
+                            states
+                                .data_map
+                                .get::<CursorImageSurfaceData>()
+                                .and_then(|data| data.lock().ok())
+                                .map(|attributes| (attributes.hotspot.x, attributes.hotspot.y))
+                                .unwrap_or((0, 0))
+                        });
+                        let position = state.pointer_pos;
+                        render_elements_from_surface_tree(
+                            renderer,
+                            &surface,
+                            (
+                                position.x.round() as i32 - hotspot.0,
+                                position.y.round() as i32 - hotspot.1,
+                            ),
+                            1.0,
+                            1.0,
+                            Kind::Unspecified,
+                        )
+                    })
+                    .unwrap_or_default();
+
                 let mut frame = renderer.render(&mut framebuffer, size, Transform::Flipped180)?;
                 frame.clear(Color32F::new(0.01, 0.06, 0.08, 1.0), &damage)?;
                 // Client surfaces are painted over the shell background.
@@ -1054,6 +1085,9 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                         f64,
                         MemoryRenderBufferRenderElement<GlesRenderer>,
                     >(&mut frame, 1.0, &[cursor], &damage)?;
+                }
+                if !client_cursor_elements.is_empty() {
+                    draw_render_elements(&mut frame, 1.0, &client_cursor_elements, &damage)?;
                 }
                 let _ = frame.finish()?;
             }
@@ -1358,14 +1392,17 @@ impl SeatHandler for App {
             CursorImageStatus::Hidden => {
                 self.cursor_hidden = true;
                 self.client_cursor = None;
+                self.client_cursor_surface = None;
             }
             CursorImageStatus::Named(icon) => {
                 self.cursor_hidden = false;
                 self.client_cursor = Some(pointer_shape(icon));
+                self.client_cursor_surface = None;
             }
-            CursorImageStatus::Surface(_) => {
+            CursorImageStatus::Surface(surface) => {
                 self.cursor_hidden = false;
                 self.client_cursor = None;
+                self.client_cursor_surface = Some(surface);
             }
         }
         self.cursor = cursor_for(self);
@@ -1658,6 +1695,7 @@ struct App {
     cursor_buffers: HashMap<CursorShape, CursorCacheEntry>,
     cursor_theme: Option<CursorTheme>,
     client_cursor: Option<CursorShape>,
+    client_cursor_surface: Option<WlSurface>,
     cursor_hidden: bool,
     index_socket: Option<String>,
     index_query: String,

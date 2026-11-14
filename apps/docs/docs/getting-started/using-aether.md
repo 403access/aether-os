@@ -206,6 +206,27 @@ aether-audio preset voice
 aether-audio apps
 ```
 
+## Task manager
+
+Open from the palette: `Ctrl+Alt+Space` (Simple) or `Super+Space`, type **task**,
+press Enter.
+
+![Task manager](/img/task-manager.png)
+
+| Input | Action |
+| --- | --- |
+| `Tab` / `Shift+Tab` | Processes / Users / Resources |
+| `Up` / `Down` | Select a process |
+| `PgUp` / `PgDn` | Page |
+| `Space` or `Left` / `Right` | Collapse / expand the process tree |
+| `R` | Force a refresh |
+| `Esc` | Close |
+
+The process tab shows the parent/child tree, owner, CPU, memory, state and
+command. Users aggregates by UID. Resources shows CPU cores, memory/swap,
+network rates, disk rates, load and uptime. The surface refreshes from `/proc`
+once per second while open.
+
 ## Terminal
 
 `Super+Return` launches `aether-terminal` immediately—no palette step.

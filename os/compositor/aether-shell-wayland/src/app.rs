@@ -16,6 +16,8 @@ use crate::keymap::{lookup_profile, KeyProfile, Shortcut};
 use crate::status::{StatusSnapshot, SAMPLE_INTERVAL};
 use crate::topbar::{self, TopAction};
 use aether_audio::{LatencyPreset, SystemAudio};
+use crate::task::{TaskManagerState, TaskTab};
+use aether_system::SystemMonitor;
 use aether_cursor::{CursorShape, CursorTheme};
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect, Size as AetherSize};
 use aether_layout::LayoutConfig;
@@ -476,6 +478,12 @@ fn cursor_for(state: &App) -> CursorShape {
     if state.window_drag.is_some() {
         return CursorShape::Grabbing;
     }
+    if state.task_manager_open() {
+        if state.task_close_rect().contains(point) || state.task_row_at(point).is_some() {
+            return CursorShape::Pointer;
+        }
+        return CursorShape::Arrow;
+    }
     if state.shortcuts_open {
         return CursorShape::Arrow;
     }
@@ -495,6 +503,12 @@ fn cursor_for(state: &App) -> CursorShape {
             if point.y >= input_top && point.y < input_top + 36 {
                 return CursorShape::Text;
             }
+        }
+        return CursorShape::Arrow;
+    }
+    if state.task_manager_open() {
+        if state.task_close_rect().contains(point) || state.task_row_at(point).is_some() {
+            return CursorShape::Pointer;
         }
         return CursorShape::Arrow;
     }
@@ -661,6 +675,9 @@ pub struct App {
     status_cpu: Option<crate::status::CpuTimes>,
     chat_demo: Option<ChatDemo>,
     pub(crate) shortcuts_open: bool,
+    pub(crate) task_manager: Option<TaskManagerState>,
+    task_monitor: SystemMonitor,
+    task_last: std::time::Instant,
     pub(crate) key_profile: KeyProfile,
     audio_backend: SystemAudio,
     status_last: std::time::Instant,
@@ -821,6 +838,7 @@ impl App {
     pub fn toggle_overlay(&mut self) {
         if self.shell.overlay().is_none() {
             self.shortcuts_open = false;
+            self.close_task_manager();
             self.shell.close_audio();
             self.shell.close_explorer();
             self.shell.close_chat();
@@ -836,6 +854,7 @@ impl App {
             self.shell.close_chat();
         } else {
             self.shortcuts_open = false;
+            self.close_task_manager();
             self.shell.close_overlay();
             self.shell.close_explorer();
             self.shell.close_audio();
@@ -897,6 +916,181 @@ impl App {
         }
     }
 
+    fn open_task_manager(&mut self) {
+        self.shortcuts_open = false;
+        self.shell.close_audio();
+        self.shell.close_explorer();
+        self.shell.close_chat();
+        let snapshot = self.task_monitor.sample();
+        println!(
+            "aether-shell: task manager opened ({} processes, {} users)",
+            snapshot.process_count,
+            snapshot.users.len()
+        );
+        self.task_manager = Some(TaskManagerState::new(snapshot));
+        self.task_last = std::time::Instant::now();
+        self.mark_full_damage();
+    }
+
+    pub fn task_manager_open(&self) -> bool {
+        self.task_manager.is_some()
+    }
+
+    fn close_task_manager(&mut self) {
+        if self.task_manager.take().is_some() {
+            self.mark_full_damage();
+        }
+    }
+
+    pub(crate) fn task_rect(&self) -> AetherRect {
+        self.shell
+            .primary_output()
+            .map(|output| output.rect)
+            .unwrap_or_else(|| AetherRect::new(0, 0, 1280, 800))
+    }
+
+    pub(crate) fn task_pane_rect(&self) -> AetherRect {
+        let bounds = self.task_rect();
+        AetherRect::new(
+            bounds.x + 16,
+            bounds.y + 74,
+            bounds.width.saturating_sub(32),
+            bounds.height.saturating_sub(74 + 52),
+        )
+    }
+
+    pub(crate) fn task_rows_top(&self) -> i32 {
+        self.task_pane_rect().y + 56 + 30
+    }
+
+    pub(crate) fn task_visible_rows(&self) -> usize {
+        let pane = self.task_pane_rect();
+        (pane.height.saturating_sub(56 + 30 + 30) / 28).max(1) as usize
+    }
+
+    pub(crate) fn task_row_rect(&self, index: usize) -> AetherRect {
+        let pane = self.task_pane_rect();
+        AetherRect::new(
+            pane.x + 8,
+            self.task_rows_top() + index as i32 * 28,
+            pane.width.saturating_sub(16),
+            26,
+        )
+    }
+
+    pub(crate) fn task_close_rect(&self) -> AetherRect {
+        let rect = self.task_rect();
+        AetherRect::new(rect.right() as i32 - 42, rect.y + 20, 24, 24)
+    }
+
+    pub(crate) fn task_row_at(&self, point: AetherPoint) -> Option<usize> {
+        let state = self.task_manager.as_ref()?;
+        let rows = match state.tab() {
+            TaskTab::Processes => state.rows_len(),
+            TaskTab::Users => state.snapshot().users.len(),
+            TaskTab::Resources => 0,
+        };
+        let start = state.scroll();
+        (0..rows.min(self.task_visible_rows())).find(|offset| {
+            self.task_row_rect(*offset)
+                .contains(AetherPoint::new(point.x, point.y))
+        }).map(|offset| start + offset)
+    }
+
+    pub fn poll_task_manager(&mut self) {
+        if self.task_manager.is_none() || self.task_last.elapsed() < std::time::Duration::from_secs(1) {
+            return;
+        }
+        let snapshot = self.task_monitor.sample();
+        if let Some(state) = self.task_manager.as_mut() {
+            state.refresh(snapshot);
+        }
+        self.task_last = std::time::Instant::now();
+        self.mark_full_damage();
+    }
+
+    pub fn task_refresh_in(&self) -> Option<std::time::Duration> {
+        if self.task_manager.is_none() {
+            return None;
+        }
+        Some(
+            std::time::Duration::from_secs(1)
+                .saturating_sub(self.task_last.elapsed())
+                .max(std::time::Duration::from_millis(50)),
+        )
+    }
+
+    fn handle_task_key(&mut self, keysym: Keysym) {
+        let escape: Keysym = keysyms::KEY_Escape.into();
+        let tab: Keysym = keysyms::KEY_Tab.into();
+        let up: Keysym = keysyms::KEY_Up.into();
+        let down: Keysym = keysyms::KEY_Down.into();
+        let left: Keysym = keysyms::KEY_Left.into();
+        let right: Keysym = keysyms::KEY_Right.into();
+        let page_up: Keysym = keysyms::KEY_Page_Up.into();
+        let page_down: Keysym = keysyms::KEY_Page_Down.into();
+        let refresh: Keysym = keysyms::KEY_r.into();
+        let space: Keysym = keysyms::KEY_space.into();
+        if keysym == escape {
+            self.close_task_manager();
+            return;
+        }
+        let visible = self.task_visible_rows();
+        if keysym == tab {
+            let shift = self.modifiers.shift;
+            if let Some(state) = self.task_manager.as_mut() {
+                state.set_tab(if shift { state.tab().previous() } else { state.tab().next() });
+            }
+            self.mark_task_damage();
+        } else if keysym == up {
+            if let Some(state) = self.task_manager.as_mut() {
+                state.move_selection(-1, visible);
+            }
+            self.mark_task_damage();
+        } else if keysym == down {
+            if let Some(state) = self.task_manager.as_mut() {
+                state.move_selection(1, visible);
+            }
+            self.mark_task_damage();
+        } else if keysym == page_up {
+            if let Some(state) = self.task_manager.as_mut() {
+                state.page(-1, visible);
+            }
+            self.mark_task_damage();
+        } else if keysym == page_down {
+            if let Some(state) = self.task_manager.as_mut() {
+                state.page(1, visible);
+            }
+            self.mark_task_damage();
+        } else if keysym == space {
+            if let Some(state) = self.task_manager.as_mut() {
+                state.toggle_collapse(visible);
+            }
+            self.mark_task_damage();
+        } else if keysym == left {
+            if let Some(state) = self.task_manager.as_mut() {
+                state.collapse(visible);
+            }
+            self.mark_task_damage();
+        } else if keysym == right {
+            if let Some(state) = self.task_manager.as_mut() {
+                state.expand(visible);
+            }
+            self.mark_task_damage();
+        } else if keysym == refresh {
+            self.task_last = std::time::Instant::now() - std::time::Duration::from_secs(2);
+            self.poll_task_manager();
+            self.mark_task_damage();
+        }
+    }
+
+    fn mark_task_damage(&mut self) {
+        if self.task_manager.is_some() {
+            let rect = self.task_rect();
+            self.mark_damage_rect(rect);
+        }
+    }
+
     fn toggle_shortcuts(&mut self) {
         if self.shortcuts_open {
             self.close_shortcuts();
@@ -951,6 +1145,7 @@ impl App {
             return;
         }
         self.shortcuts_open = false;
+        self.close_task_manager();
         self.shell.close_overlay();
         self.shell.close_explorer();
         self.shell.close_chat();
@@ -1099,6 +1294,7 @@ impl App {
             self.shell.close_explorer();
         } else {
             self.shortcuts_open = false;
+            self.close_task_manager();
             self.shell.close_overlay();
             self.shell.close_chat();
             self.shell.close_audio();
@@ -1284,6 +1480,10 @@ impl App {
             PaletteAction::SpawnTerminal => {
                 self.shell.close_overlay();
                 self.spawn_terminal();
+            }
+            PaletteAction::OpenTaskManager => {
+                self.shell.close_overlay();
+                self.open_task_manager();
             }
             PaletteAction::OpenFile(index) => {
                 self.shell.close_overlay();
@@ -1515,6 +1715,9 @@ impl App {
             status_cpu: None,
             chat_demo: None,
             shortcuts_open: false,
+            task_manager: None,
+            task_monitor: SystemMonitor::default(),
+            task_last: std::time::Instant::now(),
             key_profile: KeyProfile::from_env(),
             audio_backend: SystemAudio::new(),
             status_last: std::time::Instant::now(),
@@ -1778,6 +1981,11 @@ impl App {
                     FilterResult::Intercept(())
                 } else if state.shortcuts_open {
                     FilterResult::Intercept(())
+                } else if state.task_manager_open() {
+                    if pressed {
+                        state.handle_task_key(sym);
+                    }
+                    FilterResult::Intercept(())
                 } else if state.shell.overlay().is_some() {
                     if pressed {
                         state.handle_palette_key(sym);
@@ -1825,6 +2033,8 @@ impl App {
             self.mark_audio_damage();
         } else if self.shortcuts_open {
             self.mark_shortcuts_damage();
+        } else if self.task_manager_open() {
+            self.mark_task_damage();
         } else if palette_key {
             let new_overlay = self.shell.overlay_rect();
             if let Some(rect) = old_overlay {
@@ -2041,7 +2251,8 @@ impl App {
                 || self.shell.explorer_open()
                 || self.shell.chat_open()
                 || self.shell.audio_open()
-                || self.shortcuts_open;
+                || self.shortcuts_open
+                || self.task_manager_open();
             if let Some(action) = self.top_shortcut_at(point) {
                 self.pointer_captured = true;
                 self.activate_top_shortcut(action);
@@ -2055,6 +2266,21 @@ impl App {
                     self.close_shortcuts();
                 }
                 self.mark_shortcuts_damage();
+                self.cursor = cursor_for(self);
+                self.mark_cursor_damage(self.pointer_pos);
+                self.end_input(started);
+                return;
+            }
+            if self.task_manager_open() {
+                if self.task_close_rect().contains(point) {
+                    self.close_task_manager();
+                } else if let Some(index) = self.task_row_at(point) {
+                    let visible = self.task_visible_rows();
+                    if let Some(state) = self.task_manager.as_mut() {
+                        state.select(index, visible);
+                    }
+                }
+                self.mark_task_damage();
                 self.cursor = cursor_for(self);
                 self.mark_cursor_damage(self.pointer_pos);
                 self.end_input(started);

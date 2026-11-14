@@ -43,6 +43,7 @@ const sidebars: SidebarsConfig = {
         "architecture/agent-isolation",
         "architecture/collaboration",
         "architecture/audio",
+        "architecture/task-manager",
         "architecture/browser",
         "architecture/media",
         "architecture/files-and-storage",

@@ -14,6 +14,7 @@ mod keymap;
 mod render;
 mod stats;
 mod status;
+mod task;
 mod topbar;
 
 pub use app::App;

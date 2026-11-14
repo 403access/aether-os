@@ -255,6 +255,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     loop {
         let timeout = state.poll_timeout();
         event_loop.dispatch(timeout, &mut state)?;
+        state.app.poll_task_manager();
         state.app.poll_clients(&mut state.display)?;
         state.app.flush_focus(&state.keyboard);
         let presented = state.render_all();
@@ -676,7 +677,7 @@ impl DrmState {
     /// indefinitely, so there are no periodic wakeups.
     fn poll_timeout(&self) -> Option<Duration> {
         if !self.app.needs_frame() {
-            return None;
+            return self.app.task_refresh_in();
         }
         if self.max_frames.is_some() {
             return Some(Duration::from_millis(16));
@@ -691,6 +692,9 @@ impl DrmState {
                 };
                 wait_ns = wait_ns.min(candidate);
             }
+        }
+        if let Some(wait) = self.app.task_refresh_in() {
+            wait_ns = wait_ns.min(wait.as_nanos() as u64);
         }
         if wait_ns == u64::MAX {
             return Some(Duration::from_millis(1));

@@ -94,12 +94,17 @@ dependencies = [
  "aether-layout",
  "aether-scene",
  "aether-shell",
+ "aether-system",
  "aether-text",
  "png 0.18.1",
  "resvg",
  "serde_json",
  "smithay",
 ]
+
+[[package]]
+name = "aether-system"
+version = "0.1.0"
 
 [[package]]
 name = "aether-text"

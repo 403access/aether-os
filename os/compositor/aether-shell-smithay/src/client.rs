@@ -224,6 +224,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
             let _ = state.take_damage();
         }
 
+        state.poll_task_manager();
         state.poll_clients(&mut display)?;
         state.spawn_test_clients();
         state.configure_all();

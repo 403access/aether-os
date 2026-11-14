@@ -1,0 +1,10 @@
+[package]
+name = "aether-system"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Linux /proc sampler for the Aether task manager"
+
+[lib]
+name = "aether_system"
+path = "src/lib.rs"

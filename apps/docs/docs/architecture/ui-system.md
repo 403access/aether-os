@@ -19,6 +19,7 @@ not a widget toolkit with a plugin ecosystem.
 | Command palette | shell scene graph | modal keyboard | on demand |
 | Chat drawer | shell scene graph | text + shortcuts | session or on demand |
 | Audio overlay | shell scene graph | keyboard + pointer | on demand |
+| Task manager | shell scene graph | keyboard + pointer | on demand |
 | Explorer | shell layer or native client | keyboard-first list | session |
 | Browser | WebKitGTK buffer | web event loop | tab |
 | Media | libmpv buffer | media keys + pointer | file/session |

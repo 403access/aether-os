@@ -149,6 +149,7 @@ pub enum PaletteAction {
     FocusWindow(WindowId),
     LaunchApp(usize),
     SpawnTerminal,
+    OpenTaskManager,
     OpenFile(usize),
     Close,
 }
@@ -1696,13 +1697,21 @@ impl Shell {
         }
 
         if matches!(mode, PaletteMode::All | PaletteMode::Command) {
+            let task = PaletteEntry {
+                title: "Task manager".to_string(),
+                detail: "Processes · users · cpu · memory · network · disk".to_string(),
+                action: PaletteAction::OpenTaskManager,
+            };
+            if let Some(score) = palette_score(&query, &task.title) {
+                scored.push((score, window_offset + self.windows.len(), task));
+            }
             let close = PaletteEntry {
                 title: "Close palette".to_string(),
                 detail: "Esc".to_string(),
                 action: PaletteAction::Close,
             };
             if let Some(score) = palette_score(&query, &close.title) {
-                scored.push((score, window_offset + self.windows.len(), close));
+                scored.push((score, window_offset + self.windows.len() + 1, close));
             }
         }
 
@@ -3244,7 +3253,14 @@ mod tests {
             .collect();
         assert_eq!(
             titles,
-            ["main", "code", "web", "New terminal", "Close palette"]
+            [
+                "main",
+                "code",
+                "web",
+                "New terminal",
+                "Task manager",
+                "Close palette"
+            ]
         );
 
         assert!(shell.palette_push_char('c'));
@@ -3388,6 +3404,7 @@ mod tests {
                 "Example Editor",
                 "Browser",
                 "New terminal",
+                "Task manager",
                 "Close palette"
             ]
         );
@@ -3447,7 +3464,7 @@ mod tests {
         }
         shell.open_overlay();
 
-        assert_eq!(shell.palette_entries().len(), 8);
+        assert_eq!(shell.palette_entries().len(), 9);
         assert_eq!(shell.palette_visible_start(), 0);
         let first = shell.palette_row_rect(0).expect("row 0");
         assert_eq!(first.x, 70);
@@ -3469,7 +3486,7 @@ mod tests {
         );
         assert!(shell.palette_select(7));
         assert_eq!(shell.palette_selected(), 7);
-        assert!(!shell.palette_select(8));
+        assert!(!shell.palette_select(9));
     }
 
     #[test]
@@ -3480,7 +3497,7 @@ mod tests {
 
         assert_eq!(shell.palette_selected(), 0);
         assert!(shell.palette_move_selection(-1));
-        assert_eq!(shell.palette_selected(), 3);
+        assert_eq!(shell.palette_selected(), 4);
         assert_eq!(shell.palette_activate(), Some(PaletteAction::Close));
 
         assert!(shell.palette_move_selection(1));

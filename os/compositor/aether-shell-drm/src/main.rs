@@ -83,10 +83,12 @@ struct DrmState {
     next_output_id: OutputId,
     frames: u32,
     max_frames: Option<u32>,
+    max_seconds: Option<u64>,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
     let max_frames = parse_frames();
+    let max_seconds = parse_seconds();
     let mut event_loop = EventLoop::try_new()?;
     let display: Display<App> = Display::new()?;
     let (app, keyboard) = App::new(&display.handle())?;
@@ -152,6 +154,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         next_output_id: 1,
         frames: 0,
         max_frames,
+        max_seconds,
     };
 
     let udev_backend = UdevBackend::new(&seat_name)?;
@@ -226,6 +229,16 @@ fn main() -> Result<(), Box<dyn Error>> {
     state.render_all();
     state.app.spawn_test_clients();
 
+    let output_count: usize = state
+        .devices
+        .values()
+        .map(|device| device.surfaces.len())
+        .sum();
+    println!("aether-shell-drm: all outputs initialized: {output_count}");
+    if let Ok(path) = std::env::var("AETHER_DRM_READY_FILE") {
+        let _ = std::fs::write(path, format!("{output_count}\n"));
+    }
+
     let start = std::time::Instant::now();
     loop {
         event_loop.dispatch(Some(Duration::from_millis(16)), &mut state)?;
@@ -244,6 +257,12 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         state.frames += 1;
         if state.max_frames.is_some_and(|limit| state.frames >= limit) {
+            return Ok(());
+        }
+        if state
+            .max_seconds
+            .is_some_and(|limit| start.elapsed() >= Duration::from_secs(limit))
+        {
             return Ok(());
         }
     }
@@ -728,6 +747,20 @@ fn parse_frames() -> Option<u32> {
     parse_frames_from(std::env::args().skip(1))
 }
 
+fn parse_seconds() -> Option<u64> {
+    parse_seconds_from(std::env::args().skip(1))
+}
+
+fn parse_seconds_from(args: impl Iterator<Item = String>) -> Option<u64> {
+    let mut args = args;
+    while let Some(arg) = args.next() {
+        if arg == "--seconds" {
+            return args.next().and_then(|value| value.parse().ok());
+        }
+    }
+    None
+}
+
 fn parse_frames_from(args: impl Iterator<Item = String>) -> Option<u32> {
     let mut args = args;
     while let Some(arg) = args.next() {
@@ -765,5 +798,18 @@ mod tests {
             None
         );
         assert_eq!(parse_frames_from(std::iter::empty()), None);
+    }
+
+    #[test]
+    fn seconds_flag_is_parsed() {
+        assert_eq!(
+            parse_seconds_from(["--seconds".to_string(), "40".to_string()].into_iter()),
+            Some(40)
+        );
+        assert_eq!(
+            parse_seconds_from(["--seconds".to_string()].into_iter()),
+            None
+        );
+        assert_eq!(parse_seconds_from(std::iter::empty()), None);
     }
 }

@@ -215,6 +215,7 @@ pub struct Shell {
     overlay: Option<SurfaceId>,
     outputs: Vec<OutputInfo>,
     output_workspaces: HashMap<OutputId, usize>,
+    overlay_output: Option<OutputId>,
     palette: PaletteState,
     launchers: Vec<PaletteLauncher>,
     files: Vec<PaletteFile>,
@@ -245,6 +246,7 @@ impl Shell {
                 primary: true,
             }],
             output_workspaces: HashMap::from([(1, 0)]),
+            overlay_output: Some(1),
             palette: PaletteState::default(),
             launchers: Vec::new(),
             files: Vec::new(),
@@ -281,10 +283,15 @@ impl Shell {
         true
     }
 
-    /// Draggable divider between the master window and the first stack column.
-    /// `None` unless the active workspace has at least two tiled windows.
-    pub fn master_gap_rect(&self) -> Option<Rect> {
-        let output = self.primary_output()?.clone();
+    /// Draggable divider between the master window and the first stack column
+    /// on an output. `None` unless that output's visible workspace has at least
+    /// two tiled windows.
+    pub fn master_gap_rect_on(&self, output: OutputId) -> Option<Rect> {
+        let output = self
+            .outputs
+            .iter()
+            .find(|candidate| candidate.id == output)?
+            .clone();
         let ids = &self.workspaces[self.output_workspace(output.id)].windows;
         let tiled = ids
             .iter()
@@ -307,6 +314,12 @@ impl Shell {
             (stack.x - gap_start).max(0) as u32,
             master.height,
         ))
+    }
+
+    /// Primary-output divider, kept for compatibility with single-output
+    /// callers.
+    pub fn master_gap_rect(&self) -> Option<Rect> {
+        self.master_gap_rect_on(self.primary_output().map(|output| output.id)?)
     }
 
     pub fn window_count(&self) -> usize {
@@ -336,25 +349,57 @@ impl Shell {
         self.workspaces.iter().map(|ws| ws.name.clone()).collect()
     }
 
-    /// Picker hit area for a workspace: the bar plus its label.
-    pub fn workspace_indicator_rect(&self, index: usize) -> Option<Rect> {
+    /// Picker hit area for a workspace on an output: the bar plus its label.
+    pub fn workspace_indicator_rect_for(&self, output: OutputId, index: usize) -> Option<Rect> {
         if index >= self.workspaces.len() {
             return None;
         }
+        let bounds = self.output_bounds(output);
         Some(Rect::new(
-            WORKSPACE_INDICATOR_X + index as i32 * WORKSPACE_INDICATOR_SPACING,
-            WORKSPACE_INDICATOR_Y,
+            bounds.x + WORKSPACE_INDICATOR_X + index as i32 * WORKSPACE_INDICATOR_SPACING,
+            bounds.y + WORKSPACE_INDICATOR_Y,
             WORKSPACE_INDICATOR_WIDTH,
             WORKSPACE_INDICATOR_HIT_HEIGHT,
         ))
     }
 
-    /// Workspace whose indicator (bar or label) contains `point`.
-    pub fn workspace_at(&self, point: Point) -> Option<usize> {
+    /// Picker hit area on the primary output.
+    pub fn workspace_indicator_rect(&self, index: usize) -> Option<Rect> {
+        let primary = self.primary_output().map(|output| output.id)?;
+        self.workspace_indicator_rect_for(primary, index)
+    }
+
+    /// Workspace whose indicator on `output` contains `point`.
+    pub fn workspace_at_in_output(&self, output: OutputId, point: Point) -> Option<usize> {
         (0..self.workspaces.len()).find(|&index| {
-            self.workspace_indicator_rect(index)
+            self.workspace_indicator_rect_for(output, index)
                 .is_some_and(|rect| rect.contains(point))
         })
+    }
+
+    /// Workspace whose indicator on any output contains `point`.
+    pub fn workspace_at_global(&self, point: Point) -> Option<usize> {
+        self.outputs
+            .iter()
+            .find_map(|output| self.workspace_at_in_output(output.id, point))
+    }
+
+    /// Workspace whose indicator on the primary output contains `point`
+    /// (delegates to the global search).
+    pub fn workspace_at(&self, point: Point) -> Option<usize> {
+        self.workspace_at_global(point)
+    }
+
+    /// Switch an output's workspace, routing primary changes through the
+    /// regular active-workspace path so focus/palette state stays coherent.
+    pub fn switch_workspace_on(&mut self, output: OutputId, index: usize) -> bool {
+        if index >= self.workspaces.len() {
+            return false;
+        }
+        if self.primary_output().map(|candidate| candidate.id) == Some(output) {
+            return self.switch_workspace(index);
+        }
+        self.set_output_workspace(output, index)
     }
 
     pub fn add_workspace(&mut self, name: impl Into<String>) -> usize {
@@ -632,12 +677,17 @@ impl Shell {
             .is_some_and(|window| window.fullscreen)
     }
 
-    /// Fullscreen window on the active workspace, if any.
-    pub fn fullscreen_window(&self) -> Option<WindowId> {
-        let primary = self.primary_output().map(|output| output.id).unwrap_or(1);
-        self.visible_windows_on(primary)
+    /// Fullscreen window visible on an output, if any.
+    pub fn fullscreen_window_on(&self, output: OutputId) -> Option<WindowId> {
+        self.visible_windows_on(output)
             .into_iter()
             .find(|id| self.is_fullscreen(*id))
+    }
+
+    /// Fullscreen window on the primary output, if any.
+    pub fn fullscreen_window(&self) -> Option<WindowId> {
+        let primary = self.primary_output().map(|output| output.id).unwrap_or(1);
+        self.fullscreen_window_on(primary)
     }
 
     /// Toggle a window between its previous state and full-output fullscreen.
@@ -869,31 +919,52 @@ impl Shell {
         Rect::new(x, y, rect.width, rect.height)
     }
 
-    /// Open the overlay with a default centred rect and reset the query.
-    pub fn open_overlay(&mut self) -> Option<SurfaceId> {
+    /// Output that owns the palette overlay.
+    pub fn overlay_output(&self) -> Option<OutputId> {
+        self.overlay_output
+    }
+
+    /// Open the overlay centred in `output` and reset the query.
+    pub fn open_overlay_on(&mut self, output: OutputId) -> Option<SurfaceId> {
         self.palette = PaletteState::default();
-        let width = 680.min(self.viewport.width.saturating_sub(64)).max(1);
-        let height = 420.min(self.viewport.height.saturating_sub(64)).max(1);
-        let x = ((self.viewport.width.saturating_sub(width)) / 2) as i32;
-        let y = ((self.viewport.height.saturating_sub(height)) / 2) as i32;
+        self.overlay_output = Some(output);
+        let bounds = self.output_bounds(output);
+        let width = 680.min(bounds.width.saturating_sub(64)).max(1);
+        let height = 420.min(bounds.height.saturating_sub(64)).max(1);
+        let x = bounds.x + ((bounds.width.saturating_sub(width)) / 2) as i32;
+        let y = bounds.y + ((bounds.height.saturating_sub(height)) / 2) as i32;
         self.set_overlay(Some(Rect::new(x, y, width, height)))
+    }
+
+    /// Open the overlay on the primary output.
+    pub fn open_overlay(&mut self) -> Option<SurfaceId> {
+        let primary = self.primary_output().map(|output| output.id).unwrap_or(1);
+        self.open_overlay_on(primary)
     }
 
     /// Close the overlay and clear the palette query.
     pub fn close_overlay(&mut self) -> Option<SurfaceId> {
         self.palette = PaletteState::default();
-        self.set_overlay(None)
+        let removed = self.set_overlay(None);
+        self.overlay_output = None;
+        removed
     }
 
-    /// Toggle the overlay. Returns whether it is now open.
-    pub fn toggle_overlay(&mut self) -> bool {
+    /// Toggle the overlay on `output`. Returns whether it is now open.
+    pub fn toggle_overlay_on(&mut self, output: OutputId) -> bool {
         if self.overlay.is_some() {
             self.close_overlay();
             false
         } else {
-            self.open_overlay();
+            self.open_overlay_on(output);
             true
         }
+    }
+
+    /// Toggle the overlay on the primary output.
+    pub fn toggle_overlay(&mut self) -> bool {
+        let primary = self.primary_output().map(|output| output.id).unwrap_or(1);
+        self.toggle_overlay_on(primary)
     }
 
     /// Replace the application launchers shown in the palette.
@@ -1164,16 +1235,21 @@ impl Shell {
     /// Create or update the single overlay surface (palette/chat). Passing
     /// `None` removes it.
     pub fn set_overlay(&mut self, rect: Option<Rect>) -> Option<SurfaceId> {
+        let bounds = self.output_bounds(
+            self.overlay_output
+                .or_else(|| self.primary_output().map(|output| output.id))
+                .unwrap_or(1),
+        );
         match (rect, self.overlay) {
             (Some(rect), Some(surface)) => {
                 self.scene
-                    .move_to(surface, self.clamp_rect_to(rect, self.ui_bounds()));
+                    .move_to(surface, self.clamp_rect_to(rect, bounds));
                 Some(surface)
             }
             (Some(rect), None) => {
                 let surface = self
                     .scene
-                    .add(Layer::OVERLAY, self.clamp_rect_to(rect, self.ui_bounds()));
+                    .add(Layer::OVERLAY, self.clamp_rect_to(rect, bounds));
                 self.overlay = Some(surface);
                 Some(surface)
             }
@@ -1242,6 +1318,16 @@ impl Shell {
         for window in self.windows.values_mut() {
             if !valid.contains(&window.output) {
                 window.output = primary;
+            }
+        }
+        if self
+            .overlay_output
+            .is_some_and(|output| !valid.contains(&output))
+        {
+            self.overlay_output = Some(primary);
+            if let Some(rect) = self.overlay_rect() {
+                self.outputs = outputs.clone();
+                self.set_overlay(Some(rect));
             }
         }
         self.outputs = outputs;
@@ -1507,13 +1593,6 @@ impl Shell {
             size.width.clamp(1, bounds.width.max(1)),
             size.height.clamp(1, bounds.height.max(1)),
         )
-    }
-
-    /// Bounds of the primary output used for shell chrome (palette/indicators).
-    fn ui_bounds(&self) -> Rect {
-        self.primary_output()
-            .map(|output| output.rect)
-            .unwrap_or_else(|| Rect::from_size(self.viewport))
     }
 
     /// Bounds of one output in logical coordinates.
@@ -1977,6 +2056,142 @@ mod tests {
         assert_eq!(restored_first.rect, before_first);
         assert_eq!(restored_second.rect, before_second);
         assert!(!shell.toggle_maximized(999));
+    }
+
+    #[test]
+    fn chrome_is_positioned_on_its_own_output() {
+        let mut shell = shell();
+        assert!(shell.set_outputs(vec![
+            OutputInfo {
+                id: 1,
+                name: "left".into(),
+                rect: Rect::new(0, 0, 800, 600),
+                scale: 1.0,
+                primary: true,
+            },
+            OutputInfo {
+                id: 2,
+                name: "right".into(),
+                rect: Rect::new(800, 0, 1024, 768),
+                scale: 1.0,
+                primary: false,
+            },
+        ]));
+        assert!(shell.open_overlay_on(2).is_some());
+        let overlay = shell.overlay_rect().unwrap();
+        assert_eq!(shell.overlay_output(), Some(2));
+        assert!(overlay.x >= 800);
+        assert!(overlay.right() <= 1824);
+
+        let chip = shell.workspace_indicator_rect_for(2, 0).unwrap();
+        assert_eq!(chip.x, 810);
+        assert_eq!(chip.y, 10);
+        assert_eq!(
+            shell.workspace_at_global(Point::new(chip.x + 2, chip.y + 2)),
+            Some(0)
+        );
+        assert_eq!(
+            shell.workspace_at_in_output(1, Point::new(chip.x + 2, chip.y + 2)),
+            None
+        );
+
+        shell.add_workspace("web");
+        assert!(shell.set_output_workspace(2, 1));
+        shell.close_overlay();
+        assert_eq!(shell.overlay_rect(), None);
+        assert_eq!(shell.overlay_output(), None);
+    }
+
+    #[test]
+    fn switching_a_secondary_output_leaves_the_primary_alone() {
+        let mut shell = shell();
+        shell.add_workspace("web");
+        assert!(shell.set_outputs(vec![
+            OutputInfo {
+                id: 1,
+                name: "left".into(),
+                rect: Rect::new(0, 0, 800, 600),
+                scale: 1.0,
+                primary: true,
+            },
+            OutputInfo {
+                id: 2,
+                name: "right".into(),
+                rect: Rect::new(800, 0, 1024, 768),
+                scale: 1.0,
+                primary: false,
+            },
+        ]));
+        assert!(shell.switch_workspace_on(2, 1));
+        assert_eq!(shell.active_workspace(), 0);
+        assert_eq!(shell.output_workspace(1), 0);
+        assert_eq!(shell.output_workspace(2), 1);
+        assert!(shell.switch_workspace_on(1, 1));
+        assert_eq!(shell.active_workspace(), 1);
+    }
+
+    #[test]
+    fn removing_the_overlay_output_recentres_the_palette() {
+        let mut shell = shell();
+        assert!(shell.set_outputs(vec![
+            OutputInfo {
+                id: 1,
+                name: "left".into(),
+                rect: Rect::new(0, 0, 800, 600),
+                scale: 1.0,
+                primary: true,
+            },
+            OutputInfo {
+                id: 2,
+                name: "right".into(),
+                rect: Rect::new(800, 0, 1024, 768),
+                scale: 1.0,
+                primary: false,
+            },
+        ]));
+        assert!(shell.open_overlay_on(2).is_some());
+        assert!(shell.overlay_rect().unwrap().x >= 800);
+        assert!(shell.set_outputs(vec![OutputInfo {
+            id: 1,
+            name: "left".into(),
+            rect: Rect::new(0, 0, 1280, 720),
+            scale: 1.0,
+            primary: true,
+        }]));
+        assert_eq!(shell.overlay_output(), Some(1));
+        let overlay = shell.overlay_rect().unwrap();
+        assert!(overlay.x < 1280);
+        assert!(overlay.right() <= 1280);
+    }
+
+    #[test]
+    fn secondary_output_has_its_own_master_gap() {
+        let mut shell = shell();
+        assert!(shell.set_outputs(vec![
+            OutputInfo {
+                id: 1,
+                name: "left".into(),
+                rect: Rect::new(0, 0, 800, 600),
+                scale: 1.0,
+                primary: true,
+            },
+            OutputInfo {
+                id: 2,
+                name: "right".into(),
+                rect: Rect::new(800, 0, 1024, 768),
+                scale: 1.0,
+                primary: false,
+            },
+        ]));
+        let a = shell.add_window_on_output(WindowSpec::new("a", "app"), 2);
+        let b = shell.add_window_on_output(WindowSpec::new("b", "app"), 2);
+        assert!(shell.windows().iter().any(|window| window.id == a));
+        assert!(shell.windows().iter().any(|window| window.id == b));
+        let gap = shell.master_gap_rect_on(2).expect("second output gap");
+        assert!(gap.x >= 800);
+        assert!(gap.right() <= 1824);
+        let primary_gap = shell.master_gap_rect();
+        assert!(primary_gap.is_none());
     }
 
     #[test]

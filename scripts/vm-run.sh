@@ -70,9 +70,10 @@ if [ "${MODE}" = "--drm-smoke" ]; then
   : >"${LOG}"
   say "booting headless with virtio-gpu; waiting up to ${TIMEOUT}s for AETHER_VM_DRM_STATUS"
   qemu-system-aarch64 "${QEMU_ARGS[@]}" \
-    -device virtio-gpu-pci \
-    -display none -vnc "127.0.0.1:${VNC_PORT}" -monitor none \
-    -serial "file:${LOG}" &
+    -device virtio-gpu-pci,id=gpu0 \
+    -device virtio-gpu-pci,id=gpu1 \
+    -vnc "127.0.0.1:${VNC_PORT}" -vnc "127.0.0.1:$((VNC_PORT + 1))" \
+    -monitor none -serial "file:${LOG}" &
   PID=$!
   trap 'kill "${PID}" 2>/dev/null || true; wait "${PID}" 2>/dev/null || true' EXIT
 
@@ -82,6 +83,12 @@ if [ "${MODE}" = "--drm-smoke" ]; then
       say "DRM result after $(( $(date +%s) - START ))s"
       grep -E "AETHER_VM_|aether-shell" "${LOG}" | tail -30
       STATUS_LINE="$(grep "AETHER_VM_DRM_STATUS=" "${LOG}" | tail -1)"
+      TWO_OUTPUTS="$(grep -c " (2 total)" "${LOG}" || true)"
+      REMOVED="$(grep -c "removed (1 remaining)" "${LOG}" || true)"
+      REBOUND="$(grep -c "AETHER_VM_DRM_BIND=" "${LOG}" || true)"
+      [ "${TWO_OUTPUTS}" -ge 2 ] || die "expected two outputs before and after hotplug (${TWO_OUTPUTS})"
+      [ "${REMOVED}" -ge 1 ] || die "hotplug did not remove an output"
+      [ "${REBOUND}" -ge 1 ] || die "hotplug did not rebind the second GPU"
       case "${STATUS_LINE}" in
         *"=0"*) exit 0 ;;
         *) die "native DRM backend failed: ${STATUS_LINE}" ;;

@@ -244,6 +244,11 @@ drag and both toggles with `xdotool` and asserts each transition.*
   clamping, maximize, fullscreen and half-snaps use the window's output.
   Removing an output reassigns its windows to the primary output. The winit
   adapter reports one output; the DRM backend exposes every connected connector.
+- **Per-output chrome.** Workspace indicators are hit-tested and drawn at each
+  output's own origin, showing that output's active workspace. The palette opens
+  centred in the output under the pointer and only renders there; workspace
+  activation, `Super+Alt+1/2/3` and the master/stack divider all operate on the
+  output under the pointer.
 - **Output globals.** Each backend output is advertised as a `wl_output` with
   `zxdg_output_manager_v1` geometry, mode, scale and physical dimensions.
   Toplevels receive `wl_output.enter` on map and leave on destroy. The winit
@@ -312,8 +317,8 @@ drag and both toggles with `xdotool` and asserts each transition.*
   atlas is needed before text-heavy apps.
 - **Animated cursor frames.** Xcursor/theme and client cursor surfaces work; the
   first/current image is used, without timed animation frames.
-- **Per-output shell chrome.** Workspace indicators and the palette draw on the
-  primary output only; per-output status bars are future work.
+- **Per-output status bars.** Indicators and the palette are output-aware; a
+  configurable status bar per output is future work.
 - **Per-subsurface damage.** Top-level surface and buffer damage are used;
   Smithay also subtracts opaque regions when drawing the z-ordered element list,
   but nested subsurface damage is not tracked separately.

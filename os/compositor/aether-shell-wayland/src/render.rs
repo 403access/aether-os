@@ -215,6 +215,15 @@ impl App {
         output: Option<OutputId>,
     ) -> ComposedFrame {
         let mut elements: Vec<AetherRenderElement> = Vec::new();
+        // DRM compositors are output-sized; translate extended-desktop
+        // coordinates into the output's local space. Winit (None) keeps the
+        // global origin because its single output starts at (0, 0).
+        let offset = output
+            .map(|id| {
+                let rect = self.shell.output_bounds(id);
+                (rect.x, rect.y)
+            })
+            .unwrap_or((0, 0));
 
         let visible: Vec<WindowId> = match output {
             Some(output) => self.shell.visible_windows_on(output),
@@ -253,7 +262,7 @@ impl App {
                 >(
                     renderer,
                     toplevel.wl_surface(),
-                    (rect.x, rect.y),
+                    (rect.x - offset.0, rect.y - offset.1),
                     1.0,
                     1.0,
                     Kind::Unspecified,
@@ -268,153 +277,165 @@ impl App {
             .primary_output()
             .map(|output| output.id)
             .unwrap_or(1);
-        let show_chrome = output.is_none() || output == Some(primary);
+        let chrome_output = output.unwrap_or(primary);
+        let palette_here = output.is_none()
+            || self.shell.overlay_output() == Some(chrome_output)
+            || self.shell.overlay_output().is_none();
 
         let mut chrome: Vec<(AetherRect, [f32; 4])> = Vec::new();
         let mut labels: Vec<(String, i32, i32, u32, [u8; 4])> = Vec::new();
         let mut icons: Vec<(String, i32, i32)> = Vec::new();
 
-        if show_chrome {
-            if let Some(rect) = self.shell.overlay_rect() {
-                chrome.push((rect, [0.05, 0.24, 0.29, 0.96]));
-                chrome.push((
-                    AetherRect::new(rect.x, rect.y, rect.width, 36.min(rect.height)),
-                    [0.09, 0.42, 0.5, 1.0],
-                ));
-                labels.push((
-                    "Aether Palette".into(),
-                    rect.x + 14,
-                    rect.y + 10,
-                    2,
-                    [235, 252, 255, 255],
-                ));
-                let hint = "Super+Space";
-                labels.push((
-                    hint.into(),
-                    rect.x + rect.width as i32 - text_width(hint, 1) as i32 - 14,
-                    rect.y + 14,
-                    1,
-                    [179, 235, 250, 255],
-                ));
+        {
+            if palette_here {
+                if let Some(rect) = self.shell.overlay_rect() {
+                    chrome.push((rect, [0.05, 0.24, 0.29, 0.96]));
+                    chrome.push((
+                        AetherRect::new(rect.x, rect.y, rect.width, 36.min(rect.height)),
+                        [0.09, 0.42, 0.5, 1.0],
+                    ));
+                    labels.push((
+                        "Aether Palette".into(),
+                        rect.x + 14,
+                        rect.y + 10,
+                        2,
+                        [235, 252, 255, 255],
+                    ));
+                    let hint = "Super+Space";
+                    labels.push((
+                        hint.into(),
+                        rect.x + rect.width as i32 - text_width(hint, 1) as i32 - 14,
+                        rect.y + 14,
+                        1,
+                        [179, 235, 250, 255],
+                    ));
 
-                if rect.height > 96 {
-                    let input = AetherRect::new(
-                        rect.x + 16,
-                        rect.y + 52,
-                        rect.width.saturating_sub(32),
-                        28,
-                    );
-                    chrome.push((input, [0.03, 0.12, 0.16, 1.0]));
-                    let query = self.shell.palette_query();
-                    if query.is_empty() {
-                        labels.push((
-                            "Search workspaces...".into(),
-                            input.x + 10,
-                            input.y + 10,
-                            1,
-                            [122, 173, 189, 255],
-                        ));
-                    } else {
-                        labels.push((
-                            format!("> {query}_"),
-                            input.x + 10,
-                            input.y + 10,
-                            1,
-                            [235, 252, 255, 255],
-                        ));
-                    }
-
-                    let entries = self.shell.palette_entries();
-                    let selected = self.shell.palette_selected();
-                    if entries.is_empty() {
-                        labels.push((
-                            "No matching commands".into(),
-                            rect.x + 26,
-                            rect.y + 106,
-                            1,
-                            [128, 184, 199, 255],
-                        ));
-                    }
-                    let start = self.shell.palette_visible_start();
-                    for (row, entry) in entries
-                        .iter()
-                        .skip(start)
-                        .take(PALETTE_VISIBLE_ROWS)
-                        .enumerate()
-                    {
-                        let y = rect.y + 96 + row as i32 * 48;
-                        if y + 32 < rect.y + rect.height as i32 {
-                            let row_rect =
-                                AetherRect::new(rect.x + 16, y, rect.width.saturating_sub(32), 32);
-                            let active = start + row == selected;
-                            chrome.push((
-                                row_rect,
-                                if active {
-                                    [0.09, 0.42, 0.5, 1.0]
-                                } else {
-                                    [0.05, 0.31, 0.37, 1.0]
-                                },
-                            ));
-                            if active {
-                                chrome.push((
-                                    AetherRect::new(row_rect.x, row_rect.y, 3, row_rect.height),
-                                    [0.22, 0.84, 1.0, 1.0],
-                                ));
-                            }
-                            let icon = match entry.action {
-                                PaletteAction::LaunchApp(index) => self
-                                    .shell
-                                    .launcher(index)
-                                    .and_then(|launcher| launcher.icon),
-                                _ => None,
-                            };
-                            let title_x = if let Some(icon) = icon {
-                                icons.push((icon, row_rect.x + 10, row_rect.y + 8));
-                                row_rect.x + 34
-                            } else {
-                                row_rect.x + 12
-                            };
+                    if rect.height > 96 {
+                        let input = AetherRect::new(
+                            rect.x + 16,
+                            rect.y + 52,
+                            rect.width.saturating_sub(32),
+                            28,
+                        );
+                        chrome.push((input, [0.03, 0.12, 0.16, 1.0]));
+                        let query = self.shell.palette_query();
+                        if query.is_empty() {
                             labels.push((
-                                entry.title.clone(),
-                                title_x,
-                                row_rect.y + 12,
+                                "Search workspaces...".into(),
+                                input.x + 10,
+                                input.y + 10,
                                 1,
-                                if active {
-                                    [235, 252, 255, 255]
-                                } else {
-                                    [217, 247, 255, 255]
-                                },
+                                [122, 173, 189, 255],
                             ));
+                        } else {
                             labels.push((
-                                entry.detail.clone(),
-                                row_rect.x + row_rect.width as i32
-                                    - text_width(&entry.detail, 1) as i32
-                                    - 10,
-                                row_rect.y + 12,
+                                format!("> {query}_"),
+                                input.x + 10,
+                                input.y + 10,
+                                1,
+                                [235, 252, 255, 255],
+                            ));
+                        }
+
+                        let entries = self.shell.palette_entries();
+                        let selected = self.shell.palette_selected();
+                        if entries.is_empty() {
+                            labels.push((
+                                "No matching commands".into(),
+                                rect.x + 26,
+                                rect.y + 106,
                                 1,
                                 [128, 184, 199, 255],
                             ));
                         }
-                    }
+                        let start = self.shell.palette_visible_start();
+                        for (row, entry) in entries
+                            .iter()
+                            .skip(start)
+                            .take(PALETTE_VISIBLE_ROWS)
+                            .enumerate()
+                        {
+                            let y = rect.y + 96 + row as i32 * 48;
+                            if y + 32 < rect.y + rect.height as i32 {
+                                let row_rect = AetherRect::new(
+                                    rect.x + 16,
+                                    y,
+                                    rect.width.saturating_sub(32),
+                                    32,
+                                );
+                                let active = start + row == selected;
+                                chrome.push((
+                                    row_rect,
+                                    if active {
+                                        [0.09, 0.42, 0.5, 1.0]
+                                    } else {
+                                        [0.05, 0.31, 0.37, 1.0]
+                                    },
+                                ));
+                                if active {
+                                    chrome.push((
+                                        AetherRect::new(row_rect.x, row_rect.y, 3, row_rect.height),
+                                        [0.22, 0.84, 1.0, 1.0],
+                                    ));
+                                }
+                                let icon = match entry.action {
+                                    PaletteAction::LaunchApp(index) => self
+                                        .shell
+                                        .launcher(index)
+                                        .and_then(|launcher| launcher.icon),
+                                    _ => None,
+                                };
+                                let title_x = if let Some(icon) = icon {
+                                    icons.push((icon, row_rect.x + 10, row_rect.y + 8));
+                                    row_rect.x + 34
+                                } else {
+                                    row_rect.x + 12
+                                };
+                                labels.push((
+                                    entry.title.clone(),
+                                    title_x,
+                                    row_rect.y + 12,
+                                    1,
+                                    if active {
+                                        [235, 252, 255, 255]
+                                    } else {
+                                        [217, 247, 255, 255]
+                                    },
+                                ));
+                                labels.push((
+                                    entry.detail.clone(),
+                                    row_rect.x + row_rect.width as i32
+                                        - text_width(&entry.detail, 1) as i32
+                                        - 10,
+                                    row_rect.y + 12,
+                                    1,
+                                    [128, 184, 199, 255],
+                                ));
+                            }
+                        }
 
-                    let footer = "Esc close   Enter run   Up/Down select";
-                    labels.push((
-                        footer.into(),
-                        rect.x + 16,
-                        rect.y + rect.height as i32 - 22,
-                        1,
-                        [128, 184, 199, 255],
-                    ));
+                        let footer = "Esc close   Enter run   Up/Down select";
+                        labels.push((
+                            footer.into(),
+                            rect.x + 16,
+                            rect.y + rect.height as i32 - 22,
+                            1,
+                            [128, 184, 199, 255],
+                        ));
+                    }
                 }
             }
 
-            if self.shell.fullscreen_window().is_none() {
+            if self.shell.fullscreen_window_on(chrome_output).is_none() {
                 let names = self.shell.workspace_names();
                 for workspace in 0..self.shell.workspace_count() {
-                    let Some(chip) = self.shell.workspace_indicator_rect(workspace) else {
+                    let Some(chip) = self
+                        .shell
+                        .workspace_indicator_rect_for(chrome_output, workspace)
+                    else {
                         continue;
                     };
-                    let active = workspace == self.shell.active_workspace();
+                    let active = workspace == self.shell.output_workspace(chrome_output);
                     chrome.push((
                         AetherRect::new(chip.x, chip.y, chip.width, WORKSPACE_INDICATOR_BAR_HEIGHT),
                         if active {
@@ -453,7 +474,7 @@ impl App {
                 .map(|(buffer, (rect, _))| {
                     AetherRenderElement::from(SolidColorRenderElement::from_buffer(
                         buffer,
-                        (rect.x, rect.y),
+                        (rect.x - offset.0, rect.y - offset.1),
                         1.0f64,
                         1.0,
                         Kind::Unspecified,
@@ -479,7 +500,7 @@ impl App {
             if let Some(buffer) = self.icons.get(path) {
                 if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
                     renderer,
-                    (*x as f64, *y as f64),
+                    ((*x - offset.0) as f64, (*y - offset.1) as f64),
                     buffer,
                     None,
                     None,
@@ -507,7 +528,7 @@ impl App {
             );
             if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
                 renderer,
-                (*x as f64, *y as f64),
+                ((*x - offset.0) as f64, (*y - offset.1) as f64),
                 &buffer,
                 None,
                 None,
@@ -531,10 +552,10 @@ impl App {
             if output.is_some() && !parent.is_some_and(|id| visible.contains(&id)) {
                 continue;
             }
-            let origin = parent
+            let parent_origin = parent
                 .and_then(|id| rects.get(&id).copied())
-                .map(|rect| (rect.x, rect.y))
-                .unwrap_or((0, 0));
+                .map(|rect| (rect.x - offset.0, rect.y - offset.1))
+                .unwrap_or((-offset.0, -offset.1));
             let location = popup.location();
             elements.extend(
                 render_elements_from_surface_tree::<
@@ -543,7 +564,7 @@ impl App {
                 >(
                     renderer,
                     popup.wl_surface(),
-                    (origin.0 + location.x, origin.1 + location.y),
+                    (parent_origin.0 + location.x, parent_origin.1 + location.y),
                     1.0,
                     1.0,
                     Kind::Unspecified,
@@ -587,8 +608,8 @@ impl App {
             });
             if !self.cursor_hidden {
                 if let Some(entry) = self.cursor_buffers.get(&shape) {
-                    let x = pointer.x.round() as i32 - entry.hotspot_x;
-                    let y = pointer.y.round() as i32 - entry.hotspot_y;
+                    let x = pointer.x.round() as i32 - offset.0 - entry.hotspot_x;
+                    let y = pointer.y.round() as i32 - offset.1 - entry.hotspot_y;
                     if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
                         renderer,
                         (x as f64, y as f64),
@@ -617,8 +638,8 @@ impl App {
                         renderer,
                         &surface,
                         (
-                            pointer.x.round() as i32 - hotspot.0,
-                            pointer.y.round() as i32 - hotspot.1,
+                            pointer.x.round() as i32 - offset.0 - hotspot.0,
+                            pointer.y.round() as i32 - offset.1 - hotspot.1,
                         ),
                         1.0,
                         1.0,

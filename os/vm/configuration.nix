@@ -137,8 +137,38 @@
       export MESA_LOADER_DRIVER_OVERRIDE=llvmpipe
       export LIBGL_ALWAYS_SOFTWARE=1
       mkdir -p "$XDG_RUNTIME_DIR" 2>/dev/null || true
-      timeout -k 10 800 ${pkgs.aether-shell-drm}/bin/aether-shell-drm --frames 1 >>/dev/ttyAMA0 2>&1
-      echo "AETHER_VM_DRM_STATUS=$?" >>/dev/ttyAMA0
+
+      READY=/run/aether-drm-ready
+      rm -f "$READY"
+      GPU_PCI=""
+      if [ -e /sys/class/drm/card1/device ]; then
+        GPU_PCI="$(basename "$(readlink -f /sys/class/drm/card1/device)")"
+      fi
+      echo "AETHER_VM_DRM_SECOND_GPU=$GPU_PCI" >>/dev/ttyAMA0
+      HOTPLUG_PID=""
+      if [ -n "$GPU_PCI" ]; then
+        (
+          i=0
+          while [ "$i" -lt 900 ] && [ ! -f "$READY" ]; do
+            sleep 1
+            i=$((i + 1))
+          done
+          sleep 5
+          echo "AETHER_VM_DRM_UNBIND=$GPU_PCI" >>/dev/ttyAMA0
+          echo "$GPU_PCI" > /sys/bus/pci/drivers/virtio-pci/unbind || echo "unbind failed" >>/dev/ttyAMA0
+          sleep 10
+          echo "AETHER_VM_DRM_BIND=$GPU_PCI" >>/dev/ttyAMA0
+          echo "$GPU_PCI" > /sys/bus/pci/drivers/virtio-pci/bind || echo "bind failed" >>/dev/ttyAMA0
+        ) &
+        HOTPLUG_PID=$!
+      fi
+
+      AETHER_DRM_READY_FILE="$READY" timeout -k 10 800 ${pkgs.aether-shell-drm}/bin/aether-shell-drm --seconds 120 >>/dev/ttyAMA0 2>&1
+      status=$?
+      if [ -n "$HOTPLUG_PID" ]; then
+        wait "$HOTPLUG_PID" 2>/dev/null || true
+      fi
+      echo "AETHER_VM_DRM_STATUS=$status" >>/dev/ttyAMA0
     '';
   };
 

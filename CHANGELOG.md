@@ -1,3 +1,11 @@
+## v0.1.0-alpha.60
+
+- Make chrome output-local: workspace indicators are drawn and hit-tested on
+  every output at that output's origin, the palette opens centred in the output
+  under the pointer and renders only there, and workspace switching/divider
+  drag use the output under the pointer. Palette/indicator tests cover two
+  outputs, overlay reassignment on hotplug and secondary master gaps.
+
 ## v0.1.0-alpha.58
 
 - Add the shared `aether-shell-wayland` crate: `App` now owns protocol globals,

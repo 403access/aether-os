@@ -490,10 +490,15 @@ fn cursor_for(state: &App) -> CursorShape {
         }
         return CursorShape::Arrow;
     }
-    if state.shell.workspace_at(point).is_some() {
+    if state.shell.workspace_at_global(point).is_some() {
         return CursorShape::Pointer;
     }
-    if let Some(gap) = state.shell.master_gap_rect() {
+    let output = state
+        .shell
+        .output_at(point)
+        .or_else(|| state.shell.primary_output().map(|output| output.id))
+        .unwrap_or(1);
+    if let Some(gap) = state.shell.master_gap_rect_on(output) {
         let handle = AetherRect::new(gap.x - 5, gap.y, gap.width + 10, gap.height);
         if handle.contains(point) {
             return CursorShape::ResizeHorizontal;
@@ -652,6 +657,15 @@ impl App {
         }
     }
 
+    fn switch_workspace_on(&mut self, output: OutputId, workspace: usize) {
+        if self.shell.switch_workspace_on(output, workspace) {
+            println!("aether-shell: output {output} workspace -> {workspace}");
+            self.sync_focus();
+            self.configure_all();
+            self.mark_full_damage();
+        }
+    }
+
     fn handle_shortcut(&mut self, modifiers: &ModifiersState, keysym: Keysym) -> bool {
         let escape: Keysym = keysyms::KEY_Escape.into();
         if self.shell.overlay().is_some() && keysym == escape {
@@ -768,11 +782,24 @@ impl App {
         false
     }
 
+    /// Output currently under the pointer, falling back to the primary.
+    pub fn output_under_pointer(&self) -> OutputId {
+        let point = AetherPoint::new(
+            self.pointer_pos.x.round() as i32,
+            self.pointer_pos.y.round() as i32,
+        );
+        self.shell
+            .output_at(point)
+            .or_else(|| self.shell.primary_output().map(|output| output.id))
+            .unwrap_or(1)
+    }
+
     pub fn toggle_overlay(&mut self) {
         if self.shell.overlay().is_none() {
             self.refresh_providers();
         }
-        self.shell.toggle_overlay();
+        let output = self.output_under_pointer();
+        self.shell.toggle_overlay_on(output);
     }
 
     fn combined_launchers(&self) -> Vec<PaletteLauncher> {
@@ -870,8 +897,9 @@ impl App {
         println!("aether-shell-smithay: palette action {action:?}");
         match action {
             PaletteAction::SwitchWorkspace(index) => {
+                let output = self.shell.overlay_output().unwrap_or(1);
                 self.shell.close_overlay();
-                self.switch_workspace(index);
+                self.switch_workspace_on(output, index);
             }
             PaletteAction::FocusWindow(id) => {
                 self.shell.close_overlay();
@@ -1468,7 +1496,7 @@ impl App {
                 }
             }
             let chrome_owns_pointer =
-                self.shell.overlay().is_some() || self.shell.workspace_at(point).is_some();
+                self.shell.overlay().is_some() || self.shell.workspace_at_global(point).is_some();
             if chrome_owns_pointer {
                 // Compositor-owned chrome never focuses a client underneath.
             } else if let Some(id) = self.shell.window_at(point) {
@@ -1548,8 +1576,9 @@ impl App {
         let position = self.pointer_pos;
         let point = AetherPoint::new(position.x.round() as i32, position.y.round() as i32);
         let modal = self.shell.overlay().is_some();
-        let over_picker = self.shell.workspace_at(point).is_some();
-        let over_divider = self.shell.master_gap_rect().is_some_and(|gap| {
+        let over_picker = self.shell.workspace_at_global(point).is_some();
+        let output = self.output_under_pointer();
+        let over_divider = self.shell.master_gap_rect_on(output).is_some_and(|gap| {
             AetherRect::new(gap.x - 5, gap.y, gap.width + 10, gap.height).contains(point)
         });
         let mouse_button = match button {
@@ -1567,8 +1596,9 @@ impl App {
                 });
                 self.pointer_captured = true;
                 println!("aether-shell: resize drag started");
-            } else if let Some(workspace) = self.shell.workspace_at(point) {
-                self.switch_workspace(workspace);
+            } else if let Some(workspace) = self.shell.workspace_at_global(point) {
+                let output = self.output_under_pointer();
+                self.switch_workspace_on(output, workspace);
             } else if modal {
                 if let Some(index) = self.shell.palette_row_at(point) {
                     self.shell.palette_select(index);

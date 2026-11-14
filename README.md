@@ -18,7 +18,7 @@ in-memory index that answers in single-digit milliseconds.
   │  palette · chat · files · media · browser (thin native apps) │
   ├──────────────────────────────────────────────────────────────┤
   │  aetherd: supervisor, capability broker, agent scheduler     │
-  │  aether-ipc: memfd SPSC rings · aether-index: BM25 + fuzzy    │
+  │  aether-ipc: memfd SPSC rings · aether-index: inotify + ranked │
   ├──────────────────────────────────────────────────────────────┤
   │  PipeWire/WirePlumber · XFS root · NixOS + custom 7700K kernel│
   └──────────────────────────────────────────────────────────────┘
@@ -29,8 +29,9 @@ in-memory index that answers in single-digit milliseconds.
 This repository is the **installable base release (v0.1 "Kestrel")**. It is a
 working monorepo: the product surfaces, design system, indexing engine, IPC
 protocol, capability model, bootable NixOS system, live installer ISO, disk layout
-and install guide all exist as real, tested code. The compositor UI and daemons are
-the next phase; first boot lands in a console, not the finished desktop.
+and install guide all exist as real, tested code. The compositor shell, palette,
+explorer, chat drawer, status bar and index daemon are implemented; reference-
+hardware gate measurements and P4+ remain.
 
 | Area | State | Where |
 | --- | --- | --- |
@@ -50,7 +51,8 @@ the next phase; first boot lands in a console, not the finished desktop.
 | Native DRM backend (Linux-only) | ✅ libseat + KMS page-flips, libinput, udev hotplug, per-output workspaces, cage fallback | `os/compositor/aether-shell-drm` |
 | Target preflight | ✅ UEFI/KMS/input/memory checks with fixtures | `scripts/target-check.sh` |
 | DRM session | ✅ native backend on tty7, cage + winit fallback | `os/nixos/services.nix` |
-| Compositor UI (`aether-shell`) | ⏳ roadmap P2 | — |
+| Shell surfaces | ✅ palette/explorer/chat/status, 10k palette p95 1.11 ms, explorer scroll p95 0.004 ms | `os/compositor` |
+| System index daemon | ✅ inotify, socket queries, event ring (6 tests) | `os/index/aether-index` |
 | WebRTC remote display | ⏳ roadmap P7 | — |
 
 > **On numbers:** the docs distinguish *measured*, *budgeted*, and *speculative*

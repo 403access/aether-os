@@ -93,17 +93,18 @@ resumable within the session.
 
 ## Index integration
 
-The index daemon watches roots with inotify (fanotify for large trees where
-available). Events are debounced (50 ms) and coalesced by path:
+The installed `aether-index` daemon watches roots recursively with inotify and
+updates the index on create/write/move/delete events:
 
 ```text
-create/modify → upsert (read up to 20k chars for text extensions)
+create/modify → upsert path metadata
 delete        → remove
-move          → remove old id, upsert new id
-overflow      → schedule a rescan of the affected root
+move          → remove old path, add new path
+new directory → watch it and index its files
 ```
 
-`packages/indexer/src/fs.ts` is the reference ingestion policy. It skips dotfiles and
+`packages/indexer/src/fs.ts` is the reference ingestion policy for the Bun
+engine; both skip the same vendor/build directories. It skips dotfiles and
 build directories by default (`node_modules`, `.git`, `dist`, `target`, …) and never
 indexes the body of a binary file.
 

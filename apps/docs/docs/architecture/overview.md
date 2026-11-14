@@ -135,7 +135,8 @@ Aether prefers **fail-closed and degrade visibly** over fail-open:
 | Concept | Code |
 | --- | --- |
 | Domain types | `packages/protocol` |
-| Search | `packages/indexer` |
+| Search reference | `packages/indexer` |
+| Installed index daemon | `os/index/aether-index` |
 | Ring + capabilities | `packages/ipc` |
 | Policy + scheduling + collaboration | `packages/agents` |
 | Palette state machine | `packages/palette` |

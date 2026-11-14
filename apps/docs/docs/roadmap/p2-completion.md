@@ -503,12 +503,12 @@ prerequisite for both the 120 Hz loop and an honest input→damage number.
 
 ## Beyond P2
 
-P3–P8 remain as specified in the [roadmap](/roadmap/). The first actionable
-P3 tasks, given what now exists:
+P3 shipped (see [P3 completion](/roadmap/p3-completion)); P4–P8 remain as
+specified in the [roadmap](/roadmap/).
 
 | Phase | First tasks |
 | --- | --- |
-| P3 | Promote the Bun index service to `aether-index` over the IPC ring; move the palette into the compositor as a layer; explorer virtualisation at 10k rows; screenshot parity with the reference explorer |
+| P3 (shipped) | Rust `aether-index` with inotify + socket + event ring; palette parity at 1.11 ms p95/10k; explorer 10k rows; streaming chat; screenshot-checked design parity |
 | P4 | PipeWire/WirePlumber policy; device overlay on the shell's chrome primitives; route-switch harness |
 | P5 | `aetherd` admission control and capability issuance; per-runtime Landlock/seccomp profiles; red-team suite |
 | P6 | WebKitGTK shell with per-tab processes; libmpv frontend; file operations |

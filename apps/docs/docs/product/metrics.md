@@ -52,6 +52,12 @@ Reference measurements at v0.1:
 | SPSC ring throughput | 4.5 M msgs/s |
 | Capability verify | 9.2 M ops/s |
 | Palette p50, 1k items | 0.78 ms |
+| Palette p95, 10k files (Rust, release) | 1.11 ms |
+| Explorer scroll p95, 10k rows | 0.004 ms |
+| Chat stream | 52 presented frames / 3 s |
+
+The last three are P3 compositor measurements on the same development host; the
+120 Hz explorer/chat gate still needs the reference machine.
 
 These are **reference-host measurements**, not promises about the target machine.
 They exist to catch regressions and to keep the optimisation work honest.

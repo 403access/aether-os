@@ -11,7 +11,16 @@ description: Tokenizer, BM25F scoring, prefix expansion, fuzzy matching, ranking
 indexes applications, files, extracted content, commands, agents and settings, and
 answers in single-digit milliseconds at ten thousand documents.
 
-The reference implementation is `packages/indexer/src/search-index.ts`.
+Two implementations share the policy:
+
+- **Installed daemon:** `os/index/aether-index` — Rust, inotify, prefix/contains/
+  subsequence ranking and a Unix-socket query protocol. This is what the shell uses.
+- **Reference engine:** `packages/indexer/src/search-index.ts` — the BM25F/fuzzy
+  implementation used by the web palette demo and the benchmark harness.
+
+The BM25 pipeline below describes the reference engine. The daemon is
+deliberately smaller (title/path ranking plus fuzzy acceptance) and is covered by
+its own tests and [daemon docs](/architecture/index-daemon).
 
 ## Pipeline
 

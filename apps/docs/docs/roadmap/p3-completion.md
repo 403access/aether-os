@@ -63,9 +63,9 @@ introduced by T2 only for scoring reuse; they can land independently.
 | Task | Status | Commit |
 | --- | --- | --- |
 | Plan | ✅ | this document |
-| P3-T1 | ✅ | Rust daemon, inotify, socket, ring; `artifacts/p3/index-smoke.log` |
-| P3-T2 | ✅ | prefix modes, subsequence scoring, TS/Rust fixture, 10k p95 1.11 ms |
-| P3-T3 | ✅ | cached match indices, 14-row render window, 10k p95 0.004 ms, `evidence/p3-explorer.log` |
-| P3-T4 | ✅ | streamed markdown drawer, bounded rows, 52 frames during a 3s stream |
-| P3-T5 | ✅ | central keymap table, MRU history, Super+Tab smoke |
-| P3-T6 | ✅ | token constants + parity script, screenshot pixel probes, status audit |
+| P3-T1 | ✅ `8914f88` | Rust daemon, inotify, socket, ring; `artifacts/p3/index-smoke.log` |
+| P3-T2 | ✅ `7f38877` | prefix modes, subsequence scoring, TS/Rust fixture, 10k p95 1.11 ms |
+| P3-T3 | ✅ `e5dd3ba` | cached match indices, 14-row render window, 10k p95 0.004 ms, `evidence/p3-explorer.log` |
+| P3-T4 | ✅ `ac7dfa6` | streamed markdown drawer, bounded rows, 52 frames during a 3s stream |
+| P3-T5 | ✅ `725b031` | central keymap table, MRU history, Super+Tab smoke |
+| P3-T6 | ✅ `1215846` | token constants + parity script, screenshot pixel probes, status audit |

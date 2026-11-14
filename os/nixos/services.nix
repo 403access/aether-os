@@ -1,8 +1,8 @@
 # Services: audio, device policy and journal limits.
 #
-# The Aether session units (aetherd, aether-index, aether-shell) are added in
-# P1/P3 once their binaries are packaged. Until then the session is started
-# manually from tty1 (see os/README.md); there is no display manager.
+# The compositor session and aether-index daemon are packaged and enabled here.
+# aetherd (P5) is future work; there is no display manager, the native session
+# starts on tty7 and falls back to cage.
 {
   config,
   lib,

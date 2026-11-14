@@ -117,7 +117,7 @@ The session target starts a minimal set:
 ```text
 aether-session.target
 ├── aetherd.service          broker / scheduler
-├── aether-index.service     sandboxed indexer
+├── aether-index.service     user + sandboxed index daemon
 ├── aether-shell.service     compositor (WantedBy=graphical.target)
 ├── pipewire.service         user
 ├── pipewire-pulse.service   user

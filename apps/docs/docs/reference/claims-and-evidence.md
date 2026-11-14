@@ -56,6 +56,17 @@ source. Everything else is a target or an aspiration.
 | Queue depth ≤ 1 | **Budget** | P2 gate; tracked by G6, VM instrumentation |
 | Input → damage < 2 ms | **Budget** | P2 gate; dev-host proxy is measured above |
 
+## Shell surfaces (P3)
+
+| Claim | Label | Evidence |
+| --- | --- | --- |
+| Palette p95 1.11 ms at 10k files | **Measured (dev host)** | Rust release test, `evidence/p3-palette.log` |
+| Explorer scroll p95 0.004 ms at 10k rows | **Measured (dev host)** | Rust release test, `evidence/p3-explorer.log` |
+| Chat keeps presenting while tokens stream | **Measured (dev host)** | 52 frames in 3 s, `evidence/p3-chat.ndjson` |
+| Palette p95 < 10 ms on the 7700K | **Budget** | P3 gate; dev-host proxy is 1.11 ms |
+| Explorer 10k rows at 120 Hz | **Budget** | P3 gate; needs reference machine |
+| No dropped frames while streaming on target | **Budget** | P3 gate; dev-host smoke only |
+
 ## Concurrency
 
 | Claim | Label | Evidence |

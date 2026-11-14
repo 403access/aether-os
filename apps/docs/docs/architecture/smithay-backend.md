@@ -451,7 +451,7 @@ WAYLAND_DISPLAY=aether-0 weston-terminal
 ./os/compositor/aether-shell-smithay/smoke-agents-xvfb.sh     # external agent launcher
 ./os/compositor/aether-shell-smithay/smoke-output-xvfb.sh     # wl_output/xdg-output globals
 ./os/compositor/aether-shell-smithay/smoke-text-input-xvfb.sh # text-input + input-method globals
-./os/compositor/aether-shell-smithay/smoke-index-xvfb.sh      # Bun index service query
+./os/compositor/aether-shell-smithay/smoke-index-xvfb.sh      # index socket query
 ./os/compositor/aether-shell-smithay/smoke-index-live-xvfb.sh # live index update
 ./os/compositor/aether-shell-smithay/smoke-actions-xvfb.sh     # desktop action launcher
 ./os/compositor/aether-shell-smithay/smoke-agent-ipc-xvfb.sh   # live agent session IPC
@@ -488,7 +488,7 @@ terminal launcher. Desktop apps come from `XDG_DATA_HOME`/`XDG_DATA_DIRS`
 uses `AETHER_FILE_ROOTS` (default `$HOME`), `AETHER_FILE_LIMIT` (default 2000),
 `AETHER_FILE_DEPTH` (default 5), `AETHER_OPENER` (default `xdg-open`),
 `AETHER_PALETTE_JSON` (external launchers), `AETHER_AGENT_SOCKET` (live agent
-session snapshots) and `AETHER_INDEX_SOCKET` (Bun index service; see
+session snapshots) and `AETHER_INDEX_SOCKET` (aether-index daemon; see
 `apps/indexer-service`).
 
 The environment sets:

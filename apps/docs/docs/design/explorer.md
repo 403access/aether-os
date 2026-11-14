@@ -119,17 +119,17 @@ executable by default.
 | Reference app | `jottacloud-comparison/app/src/web/components/Pane.tsx` |
 
 The React component is presentational. Data loading, navigation history and
-comparison logic live in the host (the shell layer in P3).
+comparison logic live in the host (the `Super+E` shell layer).
 
 ## Known gaps vs. the reference
 
 | Gap | Plan |
 | --- | --- |
-| Column customisation (show/hide/resize) | P3, reusing the `columns` model from the reference |
+| Column customisation (show/hide/resize) | Future, reusing the `columns` model |
 | Analytics sidebar | Not applicable; no telemetry |
-| Multi-select and bulk operations | P3 |
+| Multi-select and bulk operations | Future (P4 explorer operations) |
 | Drag-and-drop between panes | P6 |
-| Virtualised 10k-row rendering | P3 |
+| Virtualised 10k-row rendering | ✅ P3 shell explorer |
 | Provider switching (Jottacloud/Google Drive) | Not applicable; roots are configured locally |
 
 ## Testing

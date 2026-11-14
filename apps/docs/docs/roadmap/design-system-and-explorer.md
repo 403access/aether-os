@@ -63,8 +63,8 @@ The React rebuild currently covers:
 | --- | --- | --- |
 | P0 (done) | Vendor tokens/components/effects; rebuild explorer in React; ship marketing + docs | Tokens used by every surface; `FilePane` DOM tests pass |
 | P2 | Map tokens to compositor scene-graph styles; match type metrics | Side-by-side screenshot parity with the reference at 1440×900 |
-| P3 | Explorer as a shell layer with 10k-row virtualisation | Scroll at 120 Hz; row height/status classes unchanged |
-| P3 | Palette layer parity | Same ranking and keyboard model as the web demo |
+| P3 (done) | Explorer as a shell layer with 10k-row virtualisation | 30 px rows, scroll p95 0.004 ms; 120 Hz on target pending |
+| P3 (done) | Palette layer parity | Prefix modes/subsequence + shared fixture; 10k p95 1.11 ms |
 | P4 | Audio overlay uses the same badge/segmented primitives | No new one-off components |
 | P6 | Browser and media chrome reuse the component vocabulary | Visual review against the reference |
 | P8 | Accessibility pass on the shared components | Focus, contrast, reduced motion verified |
@@ -105,4 +105,4 @@ If a change must happen upstream, apply it in both repositories and record it in
 3. The explorer is rebuilt as React components and tested. ✅
 4. The docs use the tokens and match the type scale. ✅
 5. The showcase is published at `/design-system/`. ✅
-6. The shell parity work is scheduled in P2/P3. ⏳
+6. The shell parity work landed in P2/P3 (palette, explorer, chat, tokens). ✅

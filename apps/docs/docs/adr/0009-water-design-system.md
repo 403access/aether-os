@@ -48,4 +48,5 @@ in P2/P3.
 
 - Parity screenshots against the reference at 1440×900 (P2).
 - Token → compositor style mapping (P2).
-- Explorer virtualisation and column model (P3).
+- Explorer virtualisation landed in P3 (10k rows, 30 px rows); column
+  customisation remains future work.

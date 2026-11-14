@@ -14,7 +14,7 @@ deliverables. A phase is done when the gate passes, not when the code merges.
 P0 Foundations      ████████████  done
 P1 NixOS bring-up   ██████████░░  in progress
 P2 Compositor MVP   ███████████░  in progress
-P3 Shell surfaces   ░░░░░░░░░░░░
+P3 Shell surfaces   ██████████░░  gate pending
 P4 Audio            ░░░░░░░░░░░░
 P5 Agents & chat    ░░░░░░░░░░░░
 P6 Applications     ░░░░░░░░░░░░
@@ -132,6 +132,10 @@ Deliverables:
 
 **Gate.** Palette p95 < 10 ms at 10k documents; explorer scrolls 10k rows at 120 Hz;
 no dropped frames while streaming tokens.
+
+Dev-host measurements: palette 1.11 ms p95 at 10k, explorer scroll 0.004 ms p95,
+chat 52 presented frames in 3 s. The 120 Hz and target-machine halves remain
+budgets until the reference run.
 
 **Dependencies.** P2. **Risk:** text shaping, IME, clipboard integration.
 

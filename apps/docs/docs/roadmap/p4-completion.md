@@ -67,6 +67,6 @@ route model exists; T4 can land alongside T2; T5 exercises T1/T4; T6 is last.
 | P4-T1 | ✅ crate, adapter, CLI, fixture tests | `artifacts/p4/audio-list.json` |
 | P4-T2 | ✅ overlay, `Super+A`, fixture smoke, screenshots | `artifacts/smithay/audio.png`, `audio-preset.png` |
 | P4-T3 | ✅ `audio.capture` scope, `MicrophoneGate`, audit tests | `packages/agents/src/audio.test.ts` |
-| P4-T4 | ⏳ | |
+| P4-T4 | ✅ PipeWire/Bluetooth policy, packaged `aether-audio` | `flake.nix`, `os/nixos/services.nix`, `nix build .#aether-audio` |
 | P4-T5 | ⏳ | |
 | P4-T6 | ⏳ | |

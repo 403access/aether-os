@@ -166,3 +166,8 @@ Each gap is documented; none of them silently mutate `/etc`.
 - `nix flake check --no-build` is a manual Linux workflow; both targets are evaluated locally during development. The VM image is booted headlessly as a smoke test.
 - `nixos-rebuild build-vm` smoke test for the service graph.
 - `systemd-analyze critical-chain` recorded with every release.
+
+## Audio
+
+PipeWire + WirePlumber are enabled with a 48 kHz graph, a 64–2048 frame
+quantum range, Bluetooth at boot and `aether-audio` on PATH. See [Audio](/architecture/audio).

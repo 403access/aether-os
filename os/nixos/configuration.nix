@@ -84,6 +84,7 @@
       wl-clip-persist
       cage
       aether-index
+      aether-audio
       aether-shell-drm
       aether-shell-smithay
       aether-session

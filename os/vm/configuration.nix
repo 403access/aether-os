@@ -73,6 +73,7 @@
     usbutils
     curl
     git
+    aether-audio
     aether-shell-drm
     aether-terminal
     cage

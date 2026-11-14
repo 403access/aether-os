@@ -161,7 +161,12 @@ audit log.
 
 ## Configuration
 
-- WirePlumber rules live in `os/nixos/services.nix`.
+- PipeWire/WirePlumber rules live in `os/nixos/services.nix`.
+- 48 kHz graph, 1024-frame default quantum, 64-frame floor (monitoring preset),
+  2048-frame ceiling, `link.max-buffers=16`.
+- Bluetooth is enabled at boot; WirePlumber prefers LDAC → aptX-HD → aptX → AAC →
+  SBC and enables SBC-XQ, mSBC and hardware volume when advertised.
+- `aether-audio` is installed by the target and VM profiles.
 - Per-app routing presets are TOML in `~/.config/aether/audio.toml`.
 - The daemon validates presets at load; invalid rules are ignored with a warning.
 - No UI for creating PipeWire graphs. The graph is an implementation detail; the

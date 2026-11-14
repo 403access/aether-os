@@ -11,6 +11,11 @@
 }: {
   services.dbus.enable = true;
 
+  # Bluetooth transport for headsets and speakers. WirePlumber owns the
+  # profile/codec choice; aether-audio only reports and switches routes.
+  hardware.bluetooth.enable = true;
+  hardware.bluetooth.powerOnBoot = true;
+
   services.pipewire = {
     enable = true;
     alsa.enable = true;
@@ -23,8 +28,9 @@
       "context.properties" = {
         "default.clock.rate" = 48000;
         "default.clock.quantum" = 1024;
-        "default.clock.min-quantum" = 128;
+        "default.clock.min-quantum" = 64;
         "default.clock.max-quantum" = 2048;
+        "link.max-buffers" = 16;
       };
     };
 
@@ -32,6 +38,14 @@
       "wireplumber.settings" = {
         "device.routes.default-sink-volume" = 0.65;
         "device.routes.default-source-volume" = 0.7;
+      };
+      # Prefer quality codecs when the device advertises them. SBC remains the
+      # compatibility floor; the active codec is reported by aether-audio.
+      "monitor.bluez.properties" = {
+        "bluez5.enable-sbc-xq" = true;
+        "bluez5.enable-msbc" = true;
+        "bluez5.enable-hw-volume" = true;
+        "bluez5.codecs" = ["ldac" "aptx_hd" "aptx" "aac" "sbc"];
       };
     };
   };

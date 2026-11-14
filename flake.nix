@@ -140,6 +140,24 @@
           };
         };
 
+        aether-audio = final.rustPlatform.buildRustPackage {
+          pname = "aether-audio";
+          version = "0.1.0";
+          src = sceneSource;
+          cargoLock.lockFile = ./os/compositor/Cargo.lock;
+          cargoBuildFlags = ["-p" "aether-audio"];
+          doCheck = false;
+          installPhase = ''
+            mkdir -p $out/bin
+            install -Dm755 "$(find target -path '*/release/aether-audio' -type f | head -1)" $out/bin/aether-audio
+          '';
+          meta = with final.lib; {
+            description = "Aether PipeWire route policy and audio CLI";
+            license = licenses.mit;
+            platforms = ["x86_64-linux" "aarch64-linux"];
+          };
+        };
+
         aether-shell-smithay = final.rustPlatform.buildRustPackage {
           pname = "aether-shell-smithay";
           version = "0.1.0";
@@ -294,6 +312,7 @@
         aether-scene = pkgs.aether-scene;
         index-service = pkgs.aether-index-service;
         aether-index = pkgs.aether-index;
+        aether-audio = pkgs.aether-audio;
         aether-shell-smithay = pkgs.aether-shell-smithay;
         aether-shell-drm = pkgs.aether-shell-drm;
         aether-session = pkgs.aether-session;
@@ -327,6 +346,7 @@
         vm = vm.config.system.build.vm;
         index-service = vmPkgs.aether-index-service;
         aether-index = vmPkgs.aether-index;
+        aether-audio = vmPkgs.aether-audio;
         aether-shell-smithay = vmPkgs.aether-shell-smithay;
         aether-shell-drm = vmPkgs.aether-shell-drm;
         aether-terminal = vmPkgs.aether-terminal;

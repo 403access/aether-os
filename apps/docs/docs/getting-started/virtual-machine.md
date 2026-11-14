@@ -130,8 +130,15 @@ or with a VNC client:
 vncviewer 127.0.0.1:5905
 ```
 
-The display number is configurable: `VM_VNC_DISPLAY=6 ./scripts/vm-run.sh --gui`
-listens on `127.0.0.1:5906`.
+The VNC password defaults to **`aether`** (the VM login password). Override it
+with `VM_VNC_PASSWORD`:
+
+```bash
+VM_VNC_PASSWORD='choose-a-password' ./scripts/vm-run.sh --gui
+```
+
+The listener is loopback-only. The display number is configurable:
+`VM_VNC_DISPLAY=6 ./scripts/vm-run.sh --gui` listens on `127.0.0.1:5906`.
 
 To use QEMU's native macOS window instead of VNC:
 
@@ -247,6 +254,7 @@ docker volume rm aether-vm-nix
 | QEMU exits immediately | Missing EDK2 firmware | `brew install qemu`; or set `QEMU_EFI` |
 | `HVF` error | Nested virtualization/unsupported host | Remove `-accel hvf` (slow TCG) |
 | No login prompt | Console wrong | Use `-serial`/`-nographic`; kernel console is `ttyAMA0` |
+| VNC asks for a password | `--gui` enables VNC auth | Enter `aether`, or the value of `VM_VNC_PASSWORD` |
 | `Could not open ... Permission denied` | Old script booted the read-only image | Re-run; the current script uses a writable overlay |
 | SSH refused | VM still booting or host port busy | Wait for the marker; change `VM_SSH_PORT` |
 

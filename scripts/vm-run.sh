@@ -24,6 +24,8 @@ MEM="${VM_MEM:-4096}"
 CPUS="${VM_CPUS:-4}"
 SSH_PORT="${VM_SSH_PORT:-2222}"
 TIMEOUT="${VM_TIMEOUT:-240}"
+VNC_PASSWORD="${VM_VNC_PASSWORD:-aether}"
+QMP_SOCKET="${TMPDIR:-/tmp}/aether-vm-qmp.sock"
 
 die() { printf '\n\033[1;31merror:\033[0m %s\n' "$*" >&2; exit 1; }
 say() { printf '\n\033[1;36m==>\033[0m %s\n' "$*"; }
@@ -84,7 +86,11 @@ if [ "${GUI}" = "1" ]; then
   else
     VNC_DISPLAY="${VM_VNC_DISPLAY:-5}"
     VNC_PORT=$((5900 + VNC_DISPLAY))
-    GUI_ARGS+=(-display "vnc=127.0.0.1:${VNC_DISPLAY}")
+    rm -f "${QMP_SOCKET}"
+    GUI_ARGS+=(
+      -display "vnc=127.0.0.1:${VNC_DISPLAY},password=on"
+      -qmp "unix:${QMP_SOCKET},server,nowait"
+    )
   fi
 fi
 
@@ -172,7 +178,47 @@ if [ "${GUI}" = "1" ]; then
     printf 'qemu-system-aarch64'; printf ' %q' "${QEMU_ARGS[@]}" "${GUI_ARGS[@]}" -serial mon:stdio; printf '\n'
     exit 0
   fi
-  exec qemu-system-aarch64 "${QEMU_ARGS[@]}" "${GUI_ARGS[@]}" -serial mon:stdio
+  command -v python3 >/dev/null || die "python3 is required to set the VNC password"
+  qemu-system-aarch64 "${QEMU_ARGS[@]}" "${GUI_ARGS[@]}" -serial mon:stdio &
+  QEMU_PID=$!
+  trap 'kill "${QEMU_PID}" 2>/dev/null || true; rm -f "${QMP_SOCKET}"' EXIT INT TERM
+  python3 - "${QMP_SOCKET}" "${VNC_PASSWORD}" <<'PYQMP'
+import json
+import socket
+import sys
+import time
+
+path, password = sys.argv[1], sys.argv[2]
+for _ in range(200):
+    try:
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        sock.connect(path)
+        break
+    except OSError:
+        time.sleep(0.05)
+else:
+    raise SystemExit("QMP socket did not appear")
+
+stream = sock.makefile("rwb")
+stream.readline()
+
+
+def command(payload):
+    stream.write((json.dumps(payload) + "\n").encode())
+    stream.flush()
+    return json.loads(stream.readline().decode())
+
+
+command({"execute": "qmp_capabilities"})
+result = command({
+    "execute": "set_password",
+    "arguments": {"protocol": "vnc", "password": password},
+})
+if "return" not in result:
+    raise SystemExit(f"set_password failed: {result}")
+PYQMP
+  say "VNC password: ${VNC_PASSWORD} (127.0.0.1 only)"
+  wait "${QEMU_PID}"
 fi
 
 say "booting ${IMAGE} (Ctrl-A X to quit QEMU)"

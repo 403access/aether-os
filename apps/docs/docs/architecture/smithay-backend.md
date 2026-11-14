@@ -277,9 +277,9 @@ drag and both toggles with `xdotool` and asserts each transition.*
 
 ## What is not implemented
 
-- **Native inotify daemon.** Agent sessions are live over
-  `AETHER_AGENT_SOCKET`; index updates use `fs.watch`. A dedicated native
-  inotify daemon is future work.
+- **Incremental index limits.** Agent sessions are live over
+  `AETHER_AGENT_SOCKET`; index updates use the platform watcher (inotify on
+  Linux). Periodic reconciliation for missed events is future work.
 - **Desktop-entry SVG icons, theme inheritance and D-Bus activation.** Entries
   rescans, hicolor/pixmap PNG icons and `[Desktop Action]` groups work; SVG
   icons, full icon-theme lookup and D-Bus activation are not implemented.

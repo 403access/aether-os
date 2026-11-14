@@ -225,6 +225,10 @@ drag and both toggles with `xdotool` and asserts each transition.*
   keyboard focus and popup requests are accepted. The target and VM enable
   fcitx5. Candidate popup surfaces are not rendered yet, so composed-text UI is
   still incomplete.
+- **Multi-output policy.** `aether-shell` tracks output rectangles, scale and a
+  primary output; the viewport is their bounding box, `output_at` resolves a
+  point to an output and `set_outputs` hotplug/reflows the tiled desktop. The
+  winit adapter reports one output; a DRM backend can attach several.
 - **Output globals.** A single 1280x800@60 `wl_output` is advertised with
   `zxdg_output_manager_v1` geometry, scale 1 and physical dimensions. Toplevels
   receive `wl_output.enter` on map and leave on destroy. `smoke-output-xvfb.sh`
@@ -291,9 +295,11 @@ drag and both toggles with `xdotool` and asserts each transition.*
   atlas is needed before text-heavy apps.
 - **Client cursor surfaces and animation.** Named cursors and Xcursor theme
   images work; `wl_cursor` surface images and animated cursors are not rendered.
-- **Multi-output** is not implemented: there is one hard-coded output, no
-  hotplug and no per-output workspaces. Fullscreen, maximize, halves, floating
-  resize and single-output snapping work. Popups and drag-and-drop are ignored.
+- **Backend multi-output hotplug and per-output workspaces.** The shell's
+  output model supports several rectangles and hotplug updates, but the winit
+  adapter exposes one output and workspaces are shared. Fullscreen, maximize,
+  halves, floating resize and single-output snapping work. Popups and
+  drag-and-drop are ignored.
 - **Per-subsurface damage.** Top-level surface and buffer damage are used;
   Smithay also subtracts opaque regions when drawing the z-ordered element list,
   but nested subsurface damage is not tracked separately.

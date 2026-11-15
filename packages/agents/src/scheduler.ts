@@ -33,9 +33,19 @@ export interface Usage {
   memoryPercent: number;
 }
 
-export type AdmissionFailure = "cpu" | "memory" | "agents" | "duplicate" | "oversized";
+export type AdmissionFailure =
+  | "cpu"
+  | "memory"
+  | "agents"
+  | "duplicate"
+  | "oversized"
+  | "invalid";
 
 export type AdmissionResult = { ok: true } | { ok: false; reason: AdmissionFailure };
+
+function isPositiveFinite(value: number): boolean {
+  return Number.isFinite(value) && value > 0;
+}
 
 export class AdmissionController {
   readonly #memoryMiB: number;
@@ -74,6 +84,12 @@ export class AdmissionController {
 
   tryAdmit(spec: AgentSpec): AdmissionResult {
     if (this.#running.has(spec.id)) return { ok: false, reason: "duplicate" };
+    // Never let a malformed spec reduce the accounting counters. Negative,
+    // zero, NaN or infinite requests would otherwise let an untrusted agent
+    // create capacity for itself or every later agent.
+    if (!isPositiveFinite(spec.cpuWeight) || !isPositiveFinite(spec.memoryMiB)) {
+      return { ok: false, reason: "invalid" };
+    }
     if (spec.memoryMiB > this.#memoryMiB || spec.cpuWeight > this.#cpuPoints) {
       return { ok: false, reason: "oversized" };
     }
@@ -162,7 +178,7 @@ export class AgentScheduler {
     if (admission.ok) {
       return { status: "running", lease: this.#lease(spec, priority) };
     }
-    if (admission.reason === "oversized") {
+    if (admission.reason === "oversized" || admission.reason === "invalid") {
       return { status: "rejected", reason: admission.reason };
     }
 

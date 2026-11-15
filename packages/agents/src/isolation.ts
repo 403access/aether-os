@@ -23,6 +23,9 @@ import {
 export const PRACTICAL_MEMORY_WARN_MIB = 2_048;
 export const HIGH_CPU_WEIGHT = 50;
 
+const TRUST_LEVELS: readonly AgentSpec["trust"][] = ["trusted", "untrusted", "hostile"];
+const TIERS: readonly IsolationTier[] = ["in-process", "process-landlock", "microvm"];
+
 export interface IsolationOptions {
   hardware?: HardwareProfile;
   /** Overrides the practical memory guidance for this machine. */
@@ -38,6 +41,16 @@ export function planIsolation(spec: AgentSpec, options: IsolationOptions = {}): 
   const blockers: string[] = [];
 
   let tier: IsolationTier = spec.tier;
+
+  // Fail closed if a spec bypassed protocol validation. An unknown tier used
+  // to fall through to the in-process branch with no enforcement at all.
+  if (!TIERS.includes(spec.tier)) {
+    blockers.push(`Unknown isolation tier "${String(spec.tier)}"; refusing to launch.`);
+    tier = "process-landlock";
+  }
+  if (!TRUST_LEVELS.includes(spec.trust)) {
+    blockers.push(`Unknown trust level "${String(spec.trust)}"; refusing to launch.`);
+  }
 
   switch (spec.trust) {
     case "hostile":

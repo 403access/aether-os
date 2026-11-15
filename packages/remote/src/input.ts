@@ -9,6 +9,12 @@ export const MAX_SCANCODE = 0x2ff;
 export const MAX_MOTION_PER_EVENT = 2048;
 export const DEFAULT_EVENTS_PER_SECOND = 500;
 
+/** Clamp a signed pointer delta, rejecting NaN/Infinity instead of forwarding them. */
+function clampDelta(value: number): number | undefined {
+  if (!Number.isFinite(value)) return undefined;
+  return Math.max(-MAX_MOTION_PER_EVENT, Math.min(MAX_MOTION_PER_EVENT, value));
+}
+
 /** Browser `KeyboardEvent.code` → Linux evdev scancode. */
 export const SCANCODES: Readonly<Record<string, number>> = {
   Escape: 1,
@@ -139,7 +145,9 @@ export class InputBatcher {
   #rejected = 0;
 
   constructor(maxPerSecond = DEFAULT_EVENTS_PER_SECOND) {
-    this.maxPerSecond = Math.max(1, maxPerSecond);
+    this.maxPerSecond = Number.isFinite(maxPerSecond)
+      ? Math.max(1, Math.trunc(maxPerSecond))
+      : DEFAULT_EVENTS_PER_SECOND;
   }
 
   get focused(): boolean {
@@ -167,7 +175,7 @@ export class InputBatcher {
   }
 
   pushMotion(dx: number, dy: number, nowMs = 0): boolean {
-    if (!this.#focused) {
+    if (!this.#focused || !Number.isFinite(dx) || !Number.isFinite(dy)) {
       this.#rejected += 1;
       return false;
     }
@@ -178,7 +186,7 @@ export class InputBatcher {
   }
 
   pushButton(button: number, pressed: boolean, nowMs = 0): boolean {
-    if (button < 0 || button > 7) {
+    if (!Number.isInteger(button) || button < 0 || button > 7) {
       this.#rejected += 1;
       return false;
     }
@@ -186,7 +194,13 @@ export class InputBatcher {
   }
 
   pushWheel(dx: number, dy: number, nowMs = 0): boolean {
-    return this.#pushEvent({ kind: "wheel", dx, dy }, nowMs);
+    const boundedX = clampDelta(dx);
+    const boundedY = clampDelta(dy);
+    if (boundedX === undefined || boundedY === undefined) {
+      this.#rejected += 1;
+      return false;
+    }
+    return this.#pushEvent({ kind: "wheel", dx: boundedX, dy: boundedY }, nowMs);
   }
 
   drain(): {

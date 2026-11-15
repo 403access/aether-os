@@ -147,8 +147,17 @@ export class RingBuffer {
       throw new Error(`unsupported ring version ${version} (expected ${RING_VERSION})`);
     }
     const capacity = view.getUint32(OFFSET_CAPACITY, true);
-    if (capacity < MIN_CAPACITY || capacity + RING_HEADER_BYTES > buffer.byteLength) {
+    if (
+      capacity < MIN_CAPACITY ||
+      capacity % 8 !== 0 ||
+      capacity + RING_HEADER_BYTES > buffer.byteLength
+    ) {
       throw new RangeError("ring capacity does not match the backing buffer");
+    }
+    const head = view.getBigInt64(OFFSET_HEAD, true);
+    const tail = view.getBigInt64(OFFSET_TAIL, true);
+    if (head < 0n || tail < 0n || head < tail || head - tail > BigInt(capacity)) {
+      throw new RangeError("ring counters are inconsistent");
     }
     return new RingBuffer(buffer, capacity);
   }
@@ -283,14 +292,22 @@ export class RingBuffer {
       const position = Number(tail % BigInt(this.capacity));
       const base = RING_HEADER_BYTES + position;
       const length = this.#view.getUint32(base, true);
+      const available = head - tail;
 
       if (length === WRAP_MARKER) {
-        tail += BigInt(this.capacity - position);
+        const padding = BigInt(this.capacity - position);
+        if (padding > available) {
+          throw new Error("corrupt ring: wrap marker beyond published bytes");
+        }
+        tail += padding;
         this.#storeTail(tail);
         continue;
       }
-      if (length > this.capacity) {
+      if (length > this.capacity - position - RECORD_HEADER_BYTES) {
         throw new Error("corrupt ring: record length exceeds capacity");
+      }
+      if (BigInt(align8(RECORD_HEADER_BYTES + length)) > available) {
+        throw new Error("corrupt ring: record exceeds published bytes");
       }
 
       const kind = this.#view.getUint32(base + 4, true);

@@ -52,6 +52,11 @@ export interface CapabilityTableOptions {
  *    (`fs:/work/project/src/main.rs`) but never siblings (`fs:/work/project2`)
  */
 export function resourceMatches(pattern: string, resource: string): boolean {
+  // A capability is a lexical grant. Reject NULs and dot segments so a
+  // request such as `fs:/work/project/../.ssh/id_rsa` cannot escape the
+  // granted subtree when a later layer normalizes the path.
+  if (!isSafeResource(pattern) || !isSafeResource(resource)) return false;
+
   if (pattern === "*") return true;
   if (pattern === resource) return true;
   if (pattern.endsWith("/*")) {
@@ -59,6 +64,14 @@ export function resourceMatches(pattern: string, resource: string): boolean {
     return resource === base || resource.startsWith(`${base}/`);
   }
   return resource.startsWith(`${pattern}/`);
+}
+
+function isSafeResource(value: string): boolean {
+  if (value.length === 0 || value.includes("\0")) return false;
+  for (const segment of value.split("/")) {
+    if (segment === "." || segment === "..") return false;
+  }
+  return true;
 }
 
 export class CapabilityTable {

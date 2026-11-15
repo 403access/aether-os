@@ -100,4 +100,4 @@ M3; the target is the i7-7700K.
 | P7-T6 | ✅ `ab88628` | browser client, capability probe, WebCodecs/JPEG sinks |
 | P7-T7 | ✅ `b67656c` | marketing viewer, e2e, screenshots |
 | P7-T8 | ✅ `5096ff6` | shell overlay, `Super+R`, status chip, preview screenshots |
-| P7-T9 | ✅ | Nix package/service, docs and claims reconciliation; Linux `nix flake check` still required |
+| P7-T9 | ✅ `8f3aee7` | Nix package/service, docs and claims reconciliation; Linux `nix flake check` still required |

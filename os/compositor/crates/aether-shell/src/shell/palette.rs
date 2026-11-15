@@ -2,7 +2,7 @@
 
 use aether_geometry::{Point, Rect};
 
-use crate::palette::{
+use crate::model::palette::{
     palette_score, parse_palette_query, PaletteAction, PaletteEntry, PaletteFile, PaletteLauncher,
     PaletteMode, PALETTE_CONTENT_TOP, PALETTE_ROW_HEIGHT, PALETTE_ROW_SPACING,
     PALETTE_VISIBLE_ROWS,

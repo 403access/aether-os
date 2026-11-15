@@ -1,6 +1,6 @@
 //! Frame-plan production from the scene and pacer.
 
-use crate::frame::{FrameItem, FramePlan};
+use crate::model::frame::{FrameItem, FramePlan};
 
 use super::Shell;
 

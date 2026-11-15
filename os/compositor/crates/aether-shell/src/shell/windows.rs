@@ -3,7 +3,7 @@
 use aether_geometry::{Point, Rect};
 use aether_scene::Layer;
 
-use crate::window::{WindowInfo, WindowSpec};
+use crate::model::window::{WindowInfo, WindowSpec};
 use crate::{OutputId, WindowId};
 
 use super::{Shell, Window};

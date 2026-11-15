@@ -1,5 +1,5 @@
 use super::*;
-use crate::palette::palette_score;
+use crate::model::palette::palette_score;
 
 #[derive(serde::Deserialize)]
 struct Fixture {

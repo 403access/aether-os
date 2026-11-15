@@ -4,7 +4,7 @@ use aether_geometry::{Rect, Size};
 use aether_layout::tile;
 use aether_scene::SurfaceId;
 
-use crate::window::FLOATING_SNAP_DISTANCE;
+use crate::model::window::FLOATING_SNAP_DISTANCE;
 use crate::WindowId;
 
 use super::Shell;

@@ -3,8 +3,8 @@
 use aether_geometry::{Point, Rect};
 
 use crate::design;
-use crate::explorer::ExplorerState;
-use crate::palette::{palette_score, PaletteFile};
+use crate::model::explorer::ExplorerState;
+use crate::model::palette::{palette_score, PaletteFile};
 
 use super::Shell;
 

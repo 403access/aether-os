@@ -3,7 +3,7 @@
 use aether_geometry::{Point, Rect, Size};
 use aether_layout::LayoutConfig;
 
-use crate::output::OutputInfo;
+use crate::model::output::OutputInfo;
 use crate::{OutputId, WindowId};
 
 use super::Shell;

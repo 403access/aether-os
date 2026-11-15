@@ -2,7 +2,7 @@
 
 use aether_geometry::Rect;
 
-use crate::chat::{chat_materialize, ChatLine, ChatState};
+use crate::model::chat::{chat_materialize, ChatLine, ChatState};
 
 use super::Shell;
 

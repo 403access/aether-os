@@ -17,12 +17,13 @@
 //!
 //! Layout:
 //!
-//! - `output` — output descriptors and indicator geometry.
-//! - `window` — window specs, info, snap zones and limits.
-//! - `palette` — providers, actions, scoring and overlay constants.
-//! - `chat` — transcript model and markdown parsing.
-//! - `explorer` — virtualised explorer state.
-//! - `frame` — frame plans handed to backends.
+//! - `model` — backend-independent domain types and algorithms:
+//!   - `output` — output descriptors and indicator geometry.
+//!   - `window` — window specs, info, snap zones and limits.
+//!   - `palette` — providers, actions, scoring and overlay constants.
+//!   - `chat` — transcript model and markdown parsing.
+//!   - `explorer` — virtualised explorer state.
+//!   - `frame` — frame plans handed to backends.
 //! - `theme` — Themes app settings and chrome tokens.
 //! - `shell` — [`Shell`] plus focused implementation modules.
 
@@ -31,32 +32,27 @@ pub mod design;
 pub mod remote;
 pub mod theme;
 
-mod chat;
-mod explorer;
-mod frame;
-mod output;
-mod palette;
+mod model;
 mod shell;
-mod window;
 
 pub type WindowId = u64;
 pub type OutputId = u64;
 
-pub use chat::{ChatLine, ChatSpan, ChatSpanKind, ChatState};
-pub use explorer::ExplorerState;
-pub use frame::{FrameItem, FramePlan};
-pub use output::{
+pub use model::chat::{ChatLine, ChatSpan, ChatSpanKind, ChatState};
+pub use model::explorer::ExplorerState;
+pub use model::frame::{FrameItem, FramePlan};
+pub use model::output::{
     OutputInfo, WORKSPACE_INDICATOR_BAR_HEIGHT, WORKSPACE_INDICATOR_HIT_HEIGHT,
     WORKSPACE_INDICATOR_SPACING, WORKSPACE_INDICATOR_WIDTH, WORKSPACE_INDICATOR_X,
     WORKSPACE_INDICATOR_Y,
 };
-pub use palette::{
+pub use model::palette::{
     is_subsequence, parse_palette_query, PaletteAction, PaletteEntry, PaletteFile, PaletteLauncher,
     PaletteMode, PALETTE_CONTENT_TOP, PALETTE_ROW_HEIGHT, PALETTE_ROW_SPACING,
     PALETTE_VISIBLE_ROWS,
 };
-pub use shell::Shell;
-pub use window::{
+pub use model::window::{
     SnapZone, WindowInfo, WindowSpec, FLOATING_SNAP_DISTANCE, MIN_FLOATING_HEIGHT,
     MIN_FLOATING_WIDTH,
 };
+pub use shell::Shell;

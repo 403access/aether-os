@@ -8,13 +8,13 @@ use aether_pacing::FramePacer;
 use aether_scene::{Scene, SurfaceId};
 
 use crate::audio::AudioLayer;
-use crate::chat::ChatState;
-use crate::explorer::ExplorerState;
-use crate::output::OutputInfo;
-use crate::palette::{PaletteFile, PaletteLauncher};
+use crate::model::chat::ChatState;
+use crate::model::explorer::ExplorerState;
+use crate::model::output::OutputInfo;
+use crate::model::palette::{PaletteFile, PaletteLauncher};
+use crate::model::window::WindowSpec;
 use crate::remote::RemoteLayer;
 use crate::theme::{ThemeLayer, ThemeSettings};
-use crate::window::WindowSpec;
 use crate::{OutputId, WindowId};
 
 mod audio;

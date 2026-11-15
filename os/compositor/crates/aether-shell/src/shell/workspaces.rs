@@ -2,7 +2,7 @@
 
 use aether_geometry::{Point, Rect};
 
-use crate::output::{
+use crate::model::output::{
     WORKSPACE_INDICATOR_HIT_HEIGHT, WORKSPACE_INDICATOR_SPACING, WORKSPACE_INDICATOR_WIDTH,
     WORKSPACE_INDICATOR_X, WORKSPACE_INDICATOR_Y,
 };

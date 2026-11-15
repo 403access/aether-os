@@ -2,7 +2,7 @@
 
 use aether_geometry::{Point, Rect};
 
-use crate::window::{SnapZone, MIN_FLOATING_HEIGHT, MIN_FLOATING_WIDTH};
+use crate::model::window::{SnapZone, MIN_FLOATING_HEIGHT, MIN_FLOATING_WIDTH};
 use crate::{OutputId, WindowId};
 
 use super::{Shell, WindowRestore};

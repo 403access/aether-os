@@ -66,7 +66,7 @@ session in the shell; T9 packages and reconciles.
 | `bun test packages tests` | 231 passed across 24 files |
 | `cargo test --manifest-path os/compositor/Cargo.toml` | 175 passed |
 | `bun run verify` | passed |
-| `aether-remote serve` signaling smoke | `/health` + hello → welcome + SDP offer; status document published |
+| `aether-remote serve` signaling smoke | `/health` + hello → welcome + SDP offer; status document published (`scripts/remote-smoke.sh`) |
 | Wayland backend compile | `cargo check` passed; tests need Linux `libxkbcommon` |
 | Glass-to-glass < 40 ms on target | **budget**; harness committed, target run pending |
 | No CPU pixel copies on target | **budget**; audit + DMA-BUF descriptor committed, compositor import pending |

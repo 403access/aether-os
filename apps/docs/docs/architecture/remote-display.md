@@ -177,4 +177,5 @@ The architecture document promises a measurement, not a technology. See
 Runbook and evidence: [P7 completion](/roadmap/p7-completion). The service is
 local-only by default: `aether-remote serve` binds `127.0.0.1:7443` for signaling
 and an ephemeral loopback UDP port for media. `systemctl --user start aether-remote`
-starts it; no firewall port is opened.
+starts it; no firewall port is opened. `scripts/remote-smoke.sh` exercises
+`/health`, pairing, the welcome/offer exchange and the published status document.

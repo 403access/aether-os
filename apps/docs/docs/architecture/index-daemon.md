@@ -65,3 +65,16 @@ worker queries the socket off-thread and discards stale generations.
 
 The Bun `apps/indexer-service` remains in the tree for the reference indexer
 tests and the marketing demo; the installed session uses `aether-index`.
+
+## Memory
+
+The index stores one `Document` per file: path, title, subtitle, a pre-folded
+lowercase title and a lowercase path for matching. At the 20k limit that is
+roughly 8–10 MiB. Titles are folded once at insert rather than per query, and a
+query selects top-k with `select_nth_unstable_by` before sorting only the page,
+so a keystroke does not allocate once per document. The daemon still opens one
+connection per query; persistent connections are tracked in the
+[memory scenarios](/roadmap/memory-scenarios).
+
+Budget definition, harness and the rest of the session footprint:
+[memory footprint](/architecture/memory-footprint).

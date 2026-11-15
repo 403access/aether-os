@@ -21,6 +21,9 @@ pub struct Document {
     pub path: PathBuf,
     pub title: String,
     pub subtitle: String,
+    /// Case-folded title, computed once. Query scoring and result ordering used
+    /// to lowercase every title per query and per comparison.
+    lower_title: String,
     haystack: String,
 }
 
@@ -130,19 +133,24 @@ impl Index {
     }
 
     pub fn query(&self, query: &str, limit: usize) -> Vec<Hit> {
+        if limit == 0 {
+            return Vec::new();
+        }
         let query = query.trim().to_lowercase();
         let mut scored: Vec<(u8, &Document)> = self
             .documents
             .iter()
             .filter_map(|doc| score(&query, doc).map(|value| (value, doc)))
             .collect();
-        scored.sort_by(|a, b| {
-            a.0.cmp(&b.0)
-                .then_with(|| a.1.title.to_lowercase().cmp(&b.1.title.to_lowercase()))
-        });
+        if scored.len() > limit {
+            // Selection is cheaper than sorting every match when the caller
+            // only wants a palette page; sort the selected prefix afterwards.
+            scored.select_nth_unstable_by(limit, ranked);
+            scored.truncate(limit);
+        }
+        scored.sort_by(ranked);
         scored
             .into_iter()
-            .take(limit)
             .map(|(_, doc)| Hit {
                 title: doc.title.clone(),
                 subtitle: doc.subtitle.clone(),
@@ -150,6 +158,12 @@ impl Index {
             })
             .collect()
     }
+}
+
+/// Ranking is stable by score, then case-folded title.
+fn ranked(a: &(u8, &Document), b: &(u8, &Document)) -> std::cmp::Ordering {
+    a.0.cmp(&b.0)
+        .then_with(|| a.1.lower_title.cmp(&b.1.lower_title))
 }
 
 fn document(path: &Path) -> Document {
@@ -170,10 +184,12 @@ fn document(path: &Path) -> Document {
     } else {
         format!("{parent}  ·  {extension}")
     };
+    let lower_title = title.to_lowercase();
     Document {
         path: path.to_path_buf(),
         title,
         subtitle,
+        lower_title,
         haystack: path.to_string_lossy().to_lowercase(),
     }
 }
@@ -186,7 +202,7 @@ fn ignored(path: &Path) -> bool {
 
 /// Prefix > word-prefix > substring > path substring > subsequence.
 pub(crate) fn score(query: &str, doc: &Document) -> Option<u8> {
-    let title = doc.title.to_lowercase();
+    let title = doc.lower_title.as_str();
     if query.is_empty() {
         return Some(0);
     }
@@ -205,7 +221,7 @@ pub(crate) fn score(query: &str, doc: &Document) -> Option<u8> {
     if doc.haystack.contains(query) {
         return Some(3);
     }
-    if subsequence(query, &title) {
+    if subsequence(query, title) {
         return Some(4);
     }
     None
@@ -287,6 +303,33 @@ mod tests {
             .query("ct", 10)
             .iter()
             .any(|hit| hit.title == "car.txt"));
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn limit_returns_the_prefix_of_the_full_ranking() {
+        let root = fixture("limit");
+        for name in ["bravo.txt", "charlie.txt", "delta.txt"] {
+            fs::write(root.join(name), name).unwrap();
+        }
+        let index = Index::build(std::slice::from_ref(&root), 100, 4);
+        let all = index.query("", 100);
+        let page = index.query("", 2);
+        assert_eq!(page.len(), 2);
+        assert_eq!(
+            page.iter().map(|hit| &hit.path).collect::<Vec<_>>(),
+            all.iter().take(2).map(|hit| &hit.path).collect::<Vec<_>>()
+        );
+        assert!(index.query("", 0).is_empty());
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn case_folded_query_matches_mixed_case_titles() {
+        let root = fixture("fold");
+        fs::write(root.join("Bravo.md"), "bravo").unwrap();
+        let index = Index::build(std::slice::from_ref(&root), 100, 4);
+        assert_eq!(index.query("BRAVO", 5)[0].title, "Bravo.md");
         let _ = fs::remove_dir_all(root);
     }
 

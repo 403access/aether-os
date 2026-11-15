@@ -24,7 +24,7 @@ creates, and the measurement that proves it worked.
 | S1 | Bounded, byte-accounted text/chrome caches | Removes unbounded growth | session delta → ~0; cap 20–30 MiB | M | low |
 | S2 | Glyph atlas + layout cache | Removes per-label bitmaps | 5–10× less text memory, fewer draws | L | medium |
 | S3 | One background per output | Stops full-screen style accumulation | saves 8–24 MiB per stale style | S | low |
-| S4 | Decide on and compact the file index | Smaller daemon, cheaper queries | removes 12–18 MiB if unused; −30–50% index RSS if wired | M | low |
+| S4 | Compact the file index | Wired and allocation-light queries | −30–50% index RSS before BM25 | M | low |
 | S5 | Measure and gate the process floor | Removes optional services | 25–45 MiB if the IME is opt-out | S | product |
 | S6 | Idle reclamation (trim after use) | Returns freed memory | approaches boot footprint | M | medium |
 | S7 | zram safety valve (optional) | Prevents OOM instead of a leak | no steady-state saving | S | latency |
@@ -46,8 +46,8 @@ output when implemented.
    optimisation hides the floor.
 5. **S2** — do it only if S1's cap is still routinely hit, or when real shaping
    lands. The atlas is the right long-term design but a bigger change.
-6. **S4** — do it before full-text/BM25 indexing is added; the current filename
-   index is small, but the future one is not.
+6. **S4** — wiring and query allocation hygiene landed; finish the representation
+   before full-text/BM25 indexing makes the index several times larger.
 7. **S6, S8** — refinement after the caches are bounded; reclamation on top of an
    unbounded cache just hides the problem until it is touched again.
 8. **S7** — a safety valve, never a substitute for S1.
@@ -191,37 +191,36 @@ re-rasterizing on every switch instead of reusing a stale bitmap.
 
 ## S4 — Compact the file index
 
-**Why.** The current daemon is small (~12–18 MiB modelled) because it stores only
-filenames — and on the stock target it is not even connected to the shell (F5),
-so that memory buys nothing while the shell scans 2,000 files itself. It is also
-the component most likely to grow: the documentation describes BM25/inverted
-indexing, which multiplies memory by the number of unique tokens. Decide its fate
-and fix the representation before the feature arrives.
+**Status.** Partial: `aether-session` exports the index socket and the shell uses
+the daemon; titles are case-folded once and the palette selects top-k instead of
+sorting every match. Remaining: the on-disk representation and connection reuse.
+
+**Why.** The daemon is connected and small (~12–18 MiB modelled) because it
+stores only filenames. It is also the component most likely to grow: the
+documentation describes BM25/inverted indexing, which multiplies memory by the
+number of unique tokens. Every query currently rebuilds allocations that could be
+pruned at insert.
 
 **How.**
 
-- **Decide first:** export `AETHER_INDEX_SOCKET` from `aether-session` and use the
-  worker, or remove the daemon from `wantedBy`. The current state is the worst of
-  both: paid-for memory and a smaller palette result set.
+- Keep the socket export in `aether-session`; the 2,000-file local scan is only
+  the fallback when no service is configured.
 - Store one record per document: an interned or arena-owned path plus a small
   flags/enum. Derive `title` (basename) and `subtitle` (parent + extension) at
   query time or cache them only for matched rows.
 - Drop `haystack`: the path is already lowercased once; keep one lowercase copy,
   not a second full path.
-- Precompute the lowercase title once per document instead of lowercasing in
-  `score()` on every query (`index.rs:189`) and in the sort comparator
-  (`index.rs:139`). Compare precomputed keys.
-- Use `select_nth_unstable_by_key` (top-k) instead of a full sort of all matches
-  for the palette; the explorer still needs the full filtered list, but it can
-  sort indices rather than clone strings.
+- Case-fold the title once per document (done) so `score()` and the comparator do
+  not allocate. Select top-k with `select_nth_unstable_by` before sorting the
+  page (done).
 - Reuse one connection per shell worker (or a small pool) instead of
   connect-per-query + thread-per-connection; this removes thread/arena churn.
 - Keep the hard document limit and expose the current document count and
   approximate bytes in the hello/status line.
 
-**Expected impact.** ~30–50% less daemon RSS now (a few MiB), and the difference
-between a bounded and an unbounded future when postings lists arrive. Query
-allocation churn drops by orders of magnitude, stabilising RSS high-water.
+**Expected impact.** The cached titles and top-k remove the per-keystroke
+allocation churn now; compacting the record is a few MiB today and the difference
+between a bounded and an unbounded future when postings lists arrive.
 
 **Risk.** Low; behaviour is covered by the existing index tests. The main trap is
 re-deriving `title`/`subtitle` per hit and shifting the allocation to the response

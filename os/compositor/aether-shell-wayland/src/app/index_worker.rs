@@ -51,11 +51,10 @@ impl IndexWorker {
                         if let Some(request) = slot.take() {
                             break Some(request);
                         }
-                        let (guard, _) = worker_state
-                            .signal
-                            .wait_timeout(slot, Duration::from_millis(200))
-                            .unwrap();
-                        slot = guard;
+                        // Block until a request arrives or the worker is
+                        // dropped. A timed wait here used to wake five times a
+                        // second for the life of the session.
+                        slot = worker_state.signal.wait(slot).unwrap();
                     }
                 };
                 let Some((mut generation, mut query, mut limit)) = first else {
@@ -119,6 +118,10 @@ impl IndexWorker {
 
 impl Drop for IndexWorker {
     fn drop(&mut self) {
+        // Take the lock so a worker cannot slip between its alive check and a
+        // blocking wait; without it, the notification could be lost and the
+        // thread would park forever.
+        let _slot = self.shared.slot.lock().unwrap();
         self.shared.alive.store(false, Ordering::SeqCst);
         self.shared.signal.notify_all();
     }

@@ -42,8 +42,9 @@ pointer when the code moves.
   keyboard input (F1). Bounding the caches makes that history collectable.
 - **The largest GPU item is invisible to PSS.** Two 1080p scan-out buffers are
   ~16 MiB of kernel GEM that `smem` does not see (F4).
-- **The index daemon is paid for but not connected** to the shell, so ~12–18 MiB
-  buys nothing while the shell scans 2,000 files itself (F5).
+- **The index daemon is wired** to the shell: the session exports its socket and
+  the shell queries it. Its query path no longer case-folds every title per
+  comparison, and the worker no longer wakes five times a second (F5, F8).
 - **There was no gate.** `scripts/memory-report.sh` now measures attributed PSS +
   resident DRM, machine use, and idle growth.
 
@@ -100,7 +101,7 @@ the union of:
 | Scan-out swapchain | 2 buffers per output × mode × 4 B | 15.8 MiB at FHD; 28.1 MiB at QHD | Modelled |
 | Background bitmap | one full-output RGBA per active output size, replaced on style change | +7.9 MiB per output (CPU) + 7.9 MiB (GPU) | Modelled |
 | Text / chrome caches | byte-bounded LRUs, see F1/F2 | 0 MiB on a fresh boot; ≤ ~20 MiB CPU after use | Modelled |
-| `aether-index` | 20k filename documents, inotify watches, 1 MiB ring file | ~12–18 MiB **while unused by the shell** (F5) | Modelled |
+| `aether-index` | 20k filename documents, inotify watches, 1 MiB ring file | ~12–18 MiB, now serving the palette (F5) | Modelled |
 | Shell file list | 2,000-file synchronous scan when the socket is not set | ~0.6–1 MiB | Modelled |
 | PipeWire + WirePlumber | realtime graph, device objects | ~15–30 MiB | Unmeasured |
 | IME (fcitx5) | enabled by default in `configuration.nix` | ~25–45 MiB with addons | Unmeasured |
@@ -191,38 +192,33 @@ at 2560×1440, in kernel GEM. `smem`/PSS does not see them. A PSS-only report ca
 show a "pass" while the machine is 16–60 MiB heavier. The harness adds
 `drm-resident-*` from `fdinfo` to close this gap.
 
-### F5 — The index is compact, but the daemon is disconnected from the shell
+### F5 — The index is compact, but it re-allocated on every query
 
-A `Document` is `{ PathBuf, String, String, String }` — path, title, subtitle and
-a lowercased `haystack` (`os/index/aether-index/src/index.rs:19`). With allocator
-headers that is roughly 350–450 B per document at 20k entries, i.e. ~7–9 MiB of
-documents, plus inotify watch paths and a 1 MiB ring file.
+A `Document` is `{ PathBuf, title, subtitle, lower_title, haystack }`
+(`os/index/aether-index/src/index.rs`). With allocator headers that is roughly
+400–500 B per document at 20k entries, i.e. ~8–10 MiB of documents, plus inotify
+watch paths and a 1 MiB ring file. `lower_title` is the one addition made by this
+audit: ~1 MiB at 20k documents.
 
-Two things are worth separating:
+- **Wiring.** `aether-session` exports
+  `AETHER_INDEX_SOCKET="$XDG_RUNTIME_DIR/aether-index.sock"` (`flake.nix`), so
+  `App::new` spawns `IndexWorker` and the palette queries the daemon instead of
+  the bounded 2,000-file fallback. The fallback remains for a session with no
+  service configured. The earlier audit revision found the socket was not
+  exported; that is fixed.
+- **Query allocations (fixed).** `score()` used to lowercase the title for
+  **every** document on **every** query, so a keystroke allocated ~20k short
+  strings; the sort comparator lowercased both titles per comparison, ~n·log₂n
+  more. Titles are now case-folded once at insert, and the palette selects the
+  top-k with `select_nth_unstable_by` before sorting only the page. This trades
+  ~1 MiB of retained lowercase titles for the removal of the per-keystroke churn
+  that inflated RSS high-water and glibc arenas.
 
-- **The daemon is enabled but not wired.** `systemd.user.services.aether-index`
-  is `wantedBy = ["default.target"]` (`os/nixos/services.nix:111`), but
-  `AETHER_INDEX_SOCKET` is exported only into the daemon's own unit. The
-  `aether-session` wrapper does not export it (`flake.nix:259`), and `App::new`
-  reads only the environment (`App::new`, `index_socket`). On the stock target the
-  compositor therefore has `index_worker = None` and falls back to its own
-  synchronous 2,000-file scan (`app/launcher.rs:47`), while the 20k-document
-  daemon keeps watching `$HOME` at depth 12. **The session pays ~12–18 MiB for an
-  index nobody queries.** Either wire it or stop it; both are valid, silently
-  paying for it is not.
-- **If it is wired, queries allocate heavily.** `score()` lowercases the title for
-  **every** document on **every** query (`index.rs:189`), so a keystroke allocates
-  ~20k short strings. The sort comparator lowercases both titles per comparison
-  (`index.rs:139`), ~n·log₂n comparisons. An empty explorer query with
-  `limit = 5000` can allocate hundreds of thousands of temporary strings. They are
-  freed, but they inflate RSS high-water and glibc arenas, and they are paid on the
-  keystroke path.
-
-The daemon also accepts a **new connection and a new thread per query**
-(`main.rs:83`, and the shell connects per request in `index_worker.rs:132`).
-Thread stacks are virtual and small resident, but per-thread allocator arenas are
-retained by glibc. It is survivable for one user; it is not a design that will
-hold its RSS under sustained typing — nor is it the memory profile of the BM25
+The daemon still accepts a **new connection and a new thread per query**
+(`main.rs`, and the shell connects per request in `index_worker.rs`). Thread
+stacks are virtual and small resident, but per-thread allocator arenas are
+retained by glibc. It is survivable for one user; a persistent connection is the
+next step if queries become hotter. Nor is this the memory profile of the BM25
 index the documentation describes, which would be several times larger than this
 filename-only table. Fix the representation before that feature lands (S4).
 
@@ -246,15 +242,13 @@ number.
   (`reference/claims-and-evidence.md:53`), which is correct and orthogonal: the
   problem is that *unique labels never stop accumulating*.
 
-### F8 — When wired, the index worker wakes five times a second
+### F8 — The index worker used to wake five times a second
 
-This finding is conditional on `AETHER_INDEX_SOCKET` being present (it is not
-today; see F5). The shell's index worker waits on a condvar with a 200 ms timeout
-in a loop (`index_worker.rs:54`). The compositor genuinely blocks with no timer,
-but this thread would wake 5×/s for the life of the session. It is not filesystem
-polling and the CPU cost is small, but "zero polling" in the product metrics is
-false the moment the socket is wired. A 1 s or unbounded wait would make idle
-claims literal. The same applies to the 30 ms debounce sleep after each request.
+The shell's index worker waited on a condvar with a 200 ms timeout in a loop
+(`index_worker.rs`). The compositor genuinely blocked with no timer, but this
+thread woke 5×/s for the life of the session once the socket was wired. It now
+blocks until a request arrives or the worker is dropped, so idle wakeups are zero
+in every session. The 30 ms debounce after a request is active-work only.
 
 ### F9 — The status bar forks `wpctl` once per sampled frame
 
@@ -293,8 +287,9 @@ Then:
   **110 MiB**.
 - **A task-manager session left open for ten minutes** ≈ 600 refreshes ×
   ≥0.6 MiB ≈ **≥360 MiB** (long command lines push this higher).
-- **Index steady state** at 20k docs ≈ **7–9 MiB** of documents; query churn adds
-  transient allocation, not retention.
+- **Index steady state** at 20k docs ≈ **8–10 MiB** of documents; the cached
+  lowercase titles remove the per-query allocation churn rather than adding
+  retention.
 
 These are the numbers that explain why a shell can pass a 60-second idle check and
 still be over budget an hour later. The budget must be checked **after use**, not
@@ -311,8 +306,7 @@ What happens when nothing is happening:
   for another reason (`app/status.rs:54-63`). At true idle it does not run.
 - Task manager: samples at most 1 Hz and only while open (`task_manager.rs:96`).
 - Index daemon: blocking `inotify` read; no scans, no polling.
-- Shell index worker: absent unless `AETHER_INDEX_SOCKET` is set; when present it
-  wakes on a 200 ms timed wait (F8).
+- Shell index worker: blocks on a condvar until a request; no timed wakeups (F8).
 - Audio: no periodic sampling in `aether-audio`; status calls `wpctl` when a
   status sample runs.
 
@@ -363,9 +357,8 @@ is the pass condition.
   storage (`aether-scene`).
 - **The explorer is virtualised**: `matches: Vec<usize>` for at most 5,000 files is
   ~40 KiB; only the visible slice becomes labels (`model/explorer.rs`).
-- **The index has a hard document limit** (`AETHER_INDEX_LIMIT=20000`) and ignores
-  vendor directories. Its steady state is small; its problem is being unused
-  (F5), not being large.
+- **The index has a hard document limit** (`AETHER_INDEX_LIMIT=20000`), ignores
+  vendor directories and is wired to the palette. Its steady state is small.
 - **The shell's fallback file list is bounded** to 2,000 entries at depth 5, and
   it is a one-time synchronous scan at startup, not a watcher.
 - **`/var/index` tmpfs is a cap, not a reservation** (tmpfs is lazy); it is also

@@ -1,104 +1,80 @@
 # Aether OS
 
-A **single-target** Linux workstation OS built for exactly one machine: an Intel
-Core i7-7700K (Kaby Lake, 4c/8t) with a discrete or integrated GPU. No
-portability layer, no generic desktop environment, no telemetry. Every subsystem
-is chosen for deterministic latency and a small resident footprint, then tuned
-at compile time for this CPU.
+[![ci](https://github.com/403access/aether-os/actions/workflows/ci.yml/badge.svg)](https://github.com/403access/aether-os/actions/workflows/ci.yml)
+[![license: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+![target: i7-7700K](https://img.shields.io/badge/target-i7--7700K-blue)
+![status: v0.1 Kestrel](https://img.shields.io/badge/status-v0.1%20Kestrel-orange)
 
-The visual/UX thesis: **one fast surface** — a compositor that also renders the
-command palette, AI chat, and system chrome in a single scene graph, backed by an
-in-memory index that answers in single-digit milliseconds.
+A **single-target Linux workstation OS** built for exactly one machine: an Intel
+Core i7-7700K (Kaby Lake, 4c/8t). Every subsystem is chosen for deterministic
+latency and a small resident footprint, then compiled for this CPU. No
+portability layer, no generic desktop environment, no telemetry.
 
-```text
-  ┌──────────────────────────────────────────────────────────────┐
-  │  aether-shell (Rust): compositor + scene graph + chrome      │
-  │  GLES/EGL · damage-tracked · 120 Hz frame pacing          │
-  ├──────────────────────────────────────────────────────────────┤
-  │  palette · chat · files · media · browser (thin native apps) │
-  ├──────────────────────────────────────────────────────────────┤
-  │  aetherd: supervisor, capability broker, agent scheduler     │
-  │  aether-ipc: memfd SPSC rings · aether-index: inotify + ranked │
-  ├──────────────────────────────────────────────────────────────┤
-  │  PipeWire/WirePlumber · XFS root · NixOS + custom 7700K kernel│
-  └──────────────────────────────────────────────────────────────┘
-```
+The thesis is **one fast surface**: a Rust compositor that renders the window
+manager, command palette, AI chat and system chrome in a single scene graph,
+backed by an in-memory index that answers in single-digit milliseconds.
+
+![Aether shell with the command palette open over a terminal](apps/web/public/screenshots/palette.png)
+
+## Screenshots
+
+| | |
+|:--:|:--:|
+| ![Indexed file explorer](apps/web/public/screenshots/explorer.png)<br>**Indexed explorer** — search hits the index, not the filesystem | ![Chat drawer with MCP tool traces](apps/web/public/screenshots/chat.png)<br>**Streaming chat** — markdown and tool calls, bounded per frame |
+| ![Task manager over live /proc samples](apps/web/public/screenshots/task-manager.png)<br>**Task manager** — process tree, per-UID totals, resource bars | ![Themes app](apps/web/public/screenshots/themes.png)<br>**Themes** — Water effects, flow, tone and glass, applied live |
+| ![Audio overlay with routes and meter](apps/web/public/screenshots/audio.png)<br>**Audio** — outputs, inputs, presets and a live meter | ![Remote display overlay with pairing code](apps/docs/static/img/smithay-remote.png)<br>**Remote display** — one-shot pairing, WebRTC, live HUD |
+
+More surface-by-surface evidence, including the keymap cheatsheet and window
+management: [`architecture/smithay-backend.md`](apps/docs/docs/architecture/smithay-backend.md).
 
 ## What exists today
 
-This repository is the **installable base release (v0.1 "Kestrel")**. It is a
-working monorepo: the product surfaces, design system, indexing engine, IPC
-protocol, capability model, bootable NixOS system, live installer ISO, disk layout
-and install guide all exist as real, tested code. The compositor shell, palette,
-explorer, chat drawer, status bar and index daemon are implemented; reference-
-hardware gate measurements and P5/P6 remain. The P4 audio layer and the P7 remote
-display path are implemented; their target gates are budgets until run on the
-7700K.
+This repository is the **installable base release (v0.1 “Kestrel”)**: the product
+surfaces, libraries, indexing engine, IPC protocol, capability model, bootable
+NixOS system, live installer ISO and install path are real, tested code.
 
-| Area | State | Where |
+| Layer | What is in the repo | State |
 | --- | --- | --- |
-| Marketing site + live palette + remote viewer | ✅ built, 17 e2e specs | `apps/web` |
-| Documentation site | ✅ built | `apps/docs` |
-| Search/index engine (BM25, fuzzy, prefix) | ✅ 59 tests | `packages/indexer` |
-| Shared-memory SPSC ring + capabilities | ✅ 28 tests (incl. cross-thread) | `packages/ipc` |
-| Agent isolation policy + scheduling | ✅ 43 tests, including microphone capability | `packages/agents` |
-| Command palette state machine | ✅ 27 tests | `packages/palette` |
-| React UI kit | ✅ 17 DOM tests | `packages/ui` |
-| Remote browser client | ✅ 10 tests: WebCodecs/JPEG sinks, tier ladder, input batching, state machine | `packages/remote` |
-| Benchmark harness + regression gate | ✅ baseline committed | `packages/bench` |
-| NixOS system + installer ISO | ✅ evaluates (`nix flake check`); not booted in CI | `os/nixos` |
-| aarch64 development VM target | ✅ built + booted headless in ~10–12 s (HVF) | `os/vm` |
-| disko disk layout + install script | ✅ written, evaluation-checked | `os/nixos/disko.nix`, `scripts/install.sh` |
-| Compositor core + shell state + preview | ✅ 110 core + 19 shared + 4 DRM + 6 index Rust tests | `os/compositor` |
-| Smithay winit backend (Linux-only) | ✅ clients, palette + index + live agents, desktop actions, clipboard, outputs, text-input, window mgmt, cursors, partial damage | `os/compositor/aether-shell-smithay` |
-| Native DRM backend (Linux-only) | ✅ libseat + KMS page-flips, libinput, udev hotplug, per-output workspaces, cage fallback | `os/compositor/aether-shell-drm` |
-| Target preflight | ✅ UEFI/KMS/input/memory checks with fixtures | `scripts/target-check.sh` |
-| DRM session | ✅ native backend on tty7, cage + winit fallback | `os/nixos/services.nix` |
-| Shell surfaces | ✅ palette/explorer/chat/status/audio/remote/themes, 10k palette p95 1.11 ms, explorer scroll p95 0.004 ms | `os/compositor` |
-| Audio | ✅ PipeWire/WirePlumber + Bluetooth policy, overlay, presets, per-app moves, mic capability gate; target latency/xrun gates pending | `os/compositor/crates/aether-audio`, `os/nixos/services.nix` |
-| Agent sandbox | ✅ Landlock + seccomp + per-agent UID + rlimits + optional cgroup v2; `Super+B` registry monitor with stop/log/prune; supervisor/red-team still P5 | `os/compositor/crates/aether-sandbox` |
-| System MCP + chat tools | ✅ 13 audited tools, shell control socket, model loop, scripted mode | `os/compositor/crates/aether-mcp`, `aether-chat` |
-| Installer + full live ISO | ✅ `.#iso` and `.#live-iso` (x86_64; live ISO requires an x86_64 builder) | `os/nixos/installer.nix`, `os/live` |
-| System index daemon | ✅ inotify, socket queries, event ring (6 tests) | `os/index/aether-index` |
-| Remote display | ✅ DMA-BUF capture model + copy audit, real software H.264, str0m WebRTC, pairing/DTLS, virtual seat, browser client, `Super+R` overlay; compositor DMA-BUF import and target latency gate pending | `os/compositor/crates/aether-remote`, `packages/remote` |
+| **Shell** | Compositor core, Smithay and native DRM backends, palette, explorer, chat, status bar, task manager, themes, audio, agent sandboxes, remote overlay; window management, clipboard, text input, cursors, damage tracking | ✅ Built; 10k palette p95 1.11 ms, explorer scroll p95 0.004 ms |
+| **Services** | `aether-index` (inotify + socket queries), `aether-mcp` (13 audited tools), `aether-chat` model loop, `aether-remote` (H.264/WebRTC), `aether-sandbox` (Landlock + seccomp + per-agent UID) | ✅ Built and screenshot-tested |
+| **Libraries** | Domain protocol, BM25F/fuzzy/prefix indexer, SPSC rings + capabilities, agent policy, palette state machine, React UI kit, remote client, benchmark gate | ✅ Unit-tested and typechecked |
+| **Web** | Marketing site with the live palette and explorer, documentation site, browser remote viewer | ✅ Built; Playwright e2e suite |
+| **OS** | NixOS flake with the custom 7700K kernel, disko layout, install script, live installer ISO, aarch64 development VM | ✅ `nix flake check` evaluates; hardware boot not in CI |
+| **Remaining** | P5 agent supervisor and red-team, reference-hardware latency/RAM gates, compositor DMA-BUF import | 🚧 [Roadmap](apps/docs/docs/roadmap/roadmap.md) |
 
 > **On numbers:** the docs distinguish *measured*, *budgeted*, and *speculative*
-> figures. Idle-RAM and latency numbers in the architecture discussion are
-> **budgets and targets**, not results — see
-> `apps/docs/docs/reference/claims-and-evidence.md`.
+> figures. Idle-RAM and latency numbers elsewhere are **budgets and targets**, not
+> results — see [`claims-and-evidence.md`](apps/docs/docs/reference/claims-and-evidence.md).
 
 ## Quickstart
 
-Requires [Bun](https://bun.sh) ≥ 1.3 and Rust (stable) for the compositor core.
-Node 26 is optional for tooling that insists on Node; Bun runs installs, builds
-and tests.
+Requires [Bun](https://bun.sh) ≥ 1.3 and Rust 1.99.1 (pinned in
+`rust-toolchain.toml`). Node 26 is optional for tooling that insists on Node; Bun
+runs installs, builds and tests.
 
 ```bash
 bun install
 bun run dev:web          # marketing site  → http://localhost:4321
 bun run dev:docs         # documentation   → http://localhost:4322/docs/
 
-bun run test:unit        # 231 package tests (bun test)
-bun run test:e2e         # 17 Playwright specs against the assembled build
-bun run typecheck        # strict TS across the monorepo
+bun run verify           # typecheck + unit tests + design parity + build
+bun run test:e2e         # Playwright against the assembled build
 bun run os:test          # Rust compositor/shell/audio/sandbox workspace tests
-bun run bench            # benchmarks; `bun run bench:check` gates regressions
-bun run build            # assembles a single deployable tree in apps/web/dist
-./scripts/clean.sh --dry-run  # show/remove generated state; --all includes deps
-./scripts/memory-report.sh   # idle PSS + resident DRM per session process (Linux)
+bun run bench:check      # benchmark suite with regression gate
+bun run build            # one deployable tree in apps/web/dist
 ```
 
 Daily-use manual and global hotkeys:
-[`apps/docs/docs/getting-started/using-aether.md`](apps/docs/docs/getting-started/using-aether.md).
-Open `Super+/` inside the compositor for the same cheat sheet.
+[`using-aether.md`](apps/docs/docs/getting-started/using-aether.md). Inside the
+compositor, `Super+/` opens the same cheatsheet.
 
 `bun run build` produces one artifact: the marketing site at `/` and the docs at
-`/docs/`, which is exactly what the GitHub Pages workflow publishes.
+`/docs/` — exactly what the GitHub Pages workflow publishes.
 
 ## Install on the reference machine
 
-Aether installs from any current NixOS minimal ISO, or from the included installer
-ISO. The target machine must be UEFI x86_64 and **the whole target disk is wiped**.
+Aether installs from a current NixOS minimal ISO or the included installer ISO.
+The target must be UEFI x86_64, and **the whole target disk is wiped**.
 
 ```bash
 # on a live NixOS ISO, in a clone of this repo:
@@ -106,25 +82,22 @@ ISO. The target machine must be UEFI x86_64 and **the whole target disk is wiped
 sudo ./scripts/install.sh /dev/nvme0n1
 ```
 
-Then reboot and sign in as `oliver` (initial password `aether`). Full guide,
-including firmware settings, manual disko/install commands, recovery and a
-hardware checklist:
+Then reboot and sign in as `oliver` (initial password `aether`).
 
-- [`apps/docs/docs/getting-started/install.md`](apps/docs/docs/getting-started/install.md)
-- [`apps/docs/docs/getting-started/first-boot.md`](apps/docs/docs/getting-started/first-boot.md)
-- [`apps/docs/docs/getting-started/hardware.md`](apps/docs/docs/getting-started/hardware.md)
+- [Install guide](apps/docs/docs/getting-started/install.md) — firmware settings, disko commands, recovery
+- [First boot checklist](apps/docs/docs/getting-started/first-boot.md)
+- [Hardware notes](apps/docs/docs/getting-started/hardware.md)
 
-To build the live installer ISO (requires an x86_64 Linux host with Nix):
+Build the live installer ISO (x86_64 Linux host with Nix):
 
 ```bash
 nix build .#iso
 ```
 
-### Boot it in a VM on this Mac
+## Boot it in a VM
 
-The VM target is deliberately separate from the reference install: `os/vm` only,
-no 7700K kernel, no XFS layout, no PipeWire, no daemons. It is a development
-harness, not a supported deployment.
+`os/vm` is a deliberately separate aarch64 development target: no 7700K kernel,
+no XFS layout, no PipeWire, no daemons. It is a harness, not a supported install.
 
 ```bash
 ./scripts/vm-build.sh     # builds aarch64 qcow2 via OrbStack + Nix
@@ -132,72 +105,92 @@ harness, not a supported deployment.
 ./scripts/vm-smoke.sh     # headless boot check
 ```
 
-See [`apps/docs/docs/getting-started/virtual-machine.md`](apps/docs/docs/getting-started/virtual-machine.md).
+![Aether booted in the development VM with the command palette open](apps/docs/static/img/vm-gui.png)
+
+See [`virtual-machine.md`](apps/docs/docs/getting-started/virtual-machine.md).
+
+## Architecture
+
+```text
+aether-shell    compositor · scene graph · palette · chat · chrome   (Rust/GLES)
+──────────────────────────────────────────────────────────────────────────────
+aether-index    inotify daemon · socket queries · event ring
+aether-mcp      audited system tools  ←  aether-chat model loop
+aether-ipc      memfd-style SPSC rings · capability table
+──────────────────────────────────────────────────────────────────────────────
+PipeWire/WirePlumber · XFS root · NixOS + custom i7-7700K kernel
+```
+
+Agents are untrusted by default: Kaby Lake has no PKU, so isolation is Landlock,
+seccomp, a dedicated UID, rlimits and an optional cgroup — never a promise.
+
+![Agent sandboxes surface with running and stale agents](apps/docs/static/img/smithay-agent-sandboxes.png)
+
+Start with the [architecture overview](apps/docs/docs/architecture/overview.md),
+then the [hardware dossier](apps/docs/docs/architecture/hardware-target.md) and
+[agent isolation without PKU](apps/docs/docs/architecture/agent-isolation.md).
+
+### Design commitments
+
+1. **Single target.** `-C target-cpu=native`, `localmodconfig`, hardware facts in
+   config. Portability is a non-goal, not an accident.
+2. **No idle tax.** No background indexer polling, no Electron, no Qt/GTK runtime
+   in the shell. Idle budget: **≤ 200 MB RAM, < 0.5% CPU**.
+3. **Explicit trust.** Agents collaborate only through capability-gated shared
+   memory, and every system tool call is audited.
+4. **Measured, not asserted.** Every performance claim has a benchmark, a budget
+   and a CI gate — or is labelled speculative.
+5. **Legible.** Every architectural choice has an ADR; every subsystem has a spec
+   with non-goals and failure modes.
 
 ## Repository layout
 
 ```text
-apps/web              marketing site, live palette demo (Vite + React)
-apps/docs             Docusaurus: architecture, PRD, roadmap, ADRs, ops
-packages/protocol     shared domain types + runtime validation
-packages/indexer      tokenizer, inverted index, BM25, fuzzy + prefix search
-packages/ipc          memfd-style SPSC ring buffer + capability table
-packages/agents       isolation tiers, admission control, collaboration bus
-packages/palette      headless command-palette state machine
-packages/ui           React design system (palette, chat, chrome)
-packages/bench        benchmark runner + regression gate (--check)
-os/nixos              reference target: kernel, hardware, disko, installer, services
-os/vm                 separate aarch64 development VM target
-os/common             the only Nix module shared by both targets
-os/compositor         Rust crates + software preview; Smithay backend is standalone
-scripts               assemble, publish, install, static server
-e2e                   Playwright specs for web + docs
-.github/workflows     CI, Pages deploy, perf gate
+apps/web               marketing site, live palette + explorer demo (Vite + React)
+apps/docs              Docusaurus: architecture, PRD, roadmap, ADRs, ops
+apps/indexer-service   Bun service exposing the TS indexer over a Unix socket
+packages/protocol      shared domain types + runtime validation
+packages/indexer       tokenizer, inverted index, BM25, fuzzy + prefix search
+packages/ipc           memfd-style SPSC ring buffer + capability table
+packages/agents        isolation tiers, admission control, collaboration bus
+packages/palette       headless command-palette state machine
+packages/ui            React design system (palette, chat, chrome)
+packages/design-system vendored Water tokens and component primitives
+packages/remote        browser remote client (WebCodecs, tiers, input batching)
+packages/bench         benchmark runner + regression gate (--check)
+os/nixos               reference target: kernel, hardware, disko, installer, services
+os/vm                  separate aarch64 development VM target
+os/live                live ISO configuration
+os/index               system index daemon
+os/compositor          Rust workspace: compositor crates and shell backends
+scripts                assemble, publish, install, verify helpers
+e2e                    Playwright specs for web + docs
+.github/workflows      CI, Pages deploy, perf and Nix gates
 ```
-
-## The five commitments
-
-1. **Single target.** `-C target-cpu=native`, `localmodconfig`, hardware facts
-   encoded in config. Portability is a non-goal, not an accident.
-2. **No idle tax.** No background indexer polling, no Electron, no Qt/GTK
-   runtime in the shell. Idle budget: **≤ 200 MB RAM, < 0.5% CPU**.
-3. **Explicit trust.** Agents are untrusted by default, isolated with
-   Landlock + seccomp + per-agent UID (PKU is unavailable on Kaby Lake), and
-   collaborate only through capability-gated shared memory.
-4. **Measured, not asserted.** Every performance claim has a benchmark, a
-   budget, and a CI gate — or is labelled speculative.
-5. **Legible.** Every architectural choice has an ADR; every subsystem has a
-   spec with non-goals and failure modes.
 
 ## Documentation
 
-Start at `apps/docs/docs/intro.md`, or run the docs site. Highlights:
+Start at [`intro.md`](apps/docs/docs/intro.md), or run the docs site.
 
-- [Install on the i7-7700K](apps/docs/docs/getting-started/install.md)
-- [First boot checklist](apps/docs/docs/getting-started/first-boot.md)
-- [Hardware notes](apps/docs/docs/getting-started/hardware.md)
-- [Product requirements](apps/docs/docs/product/prd.md)
+- [Using Aether](apps/docs/docs/getting-started/using-aether.md) — daily manual and keymap
+- [Product requirements](apps/docs/docs/product/prd.md) — scope, non-goals, personas
 - [Architecture overview](apps/docs/docs/architecture/overview.md)
-- [Hardware dossier: i7-7700K](apps/docs/docs/architecture/hardware-target.md)
-- [Agent isolation without PKU](apps/docs/docs/architecture/agent-isolation.md)
+- [System MCP and the chat trust boundary](apps/docs/docs/architecture/system-mcp.md)
 - [Roadmap](apps/docs/docs/roadmap/roadmap.md)
-- [Claims & evidence](apps/docs/docs/reference/claims-and-evidence.md)
+- [Design system and explorer](apps/docs/docs/roadmap/design-system-and-explorer.md) — provenance from the Data Cloud Compare project
+- [Build, release and rollback](apps/docs/docs/ops/build-and-release.md) — CI stages, Pages assembly, publishing
+- [ADRs](apps/docs/docs/adr/index.md) — one record per architectural decision
 
-The visual language and the explorer GUI are adopted from the Data Cloud Compare
-project (`/Users/olivermolnar/Developer/jottacloud-comparison`, live reference at
-`http://localhost:8787/`). The tokens and components are vendored in
-`packages/design-system`; provenance and the adoption plan are recorded in
-[design system and explorer source](apps/docs/docs/roadmap/design-system-and-explorer.md).
-
-## Publishing to GitHub
-
-GitHub CLI is not authenticated in this environment. After `gh auth login`:
+## Contributing
 
 ```bash
-./scripts/publish.sh            # creates the repo, pushes main, enables Pages
+bun run verify           # must pass before a PR
+bun run os:test          # Rust workspace tests
+bun run test:e2e         # assembled-build browser tests
 ```
 
-The Pages deployment builds both sites and serves docs under `/docs/`.
+Development setup and conventions: [`contributing/development.md`](apps/docs/docs/contributing/development.md).
+Testing strategy: [`contributing/testing.md`](apps/docs/docs/contributing/testing.md).
 
 ## License
 

@@ -18,6 +18,7 @@ interface Shot {
   category: Category;
   caption: string;
   alt: string;
+  wide?: boolean;
   featured?: boolean;
 }
 
@@ -93,6 +94,16 @@ const SHOTS: Shot[] = [
     alt: "Aether Themes app listing theme mode, Water effect switches, flow speed, drip energy, background, water tone and glass surfaces.",
   },
   {
+    id: "task-manager",
+    file: "screenshots/task-manager.png",
+    title: "Task manager",
+    shortcut: "Palette → task",
+    category: "windows",
+    caption:
+      "A full-output view over live /proc samples: the process tree, per-UID totals and per-core resource bars, refreshed once per second. CPU, network and disk rates are delta-based.",
+    alt: "Aether task manager showing the Processes tab with PID, user, CPU, memory, state and command columns.",
+  },
+  {
     id: "remote",
     file: "screenshots/remote.png",
     title: "Remote display",
@@ -111,6 +122,7 @@ const SHOTS: Shot[] = [
     caption:
       "One central keymap, two profiles: Simple on Ctrl+Alt for VNC clients that swallow Super, Standard on Super for the machine itself.",
     alt: "Aether keyboard shortcut cheatsheet grouped into surfaces, windows, workspaces and overlays.",
+    wide: true,
   },
 ];
 
@@ -315,7 +327,10 @@ export function Screenshots() {
 
       <div className="shot-grid">
         {visible.map((shot) => (
-          <figure className="shot" key={shot.id}>
+          <figure
+            className={`shot${shot.wide === true ? " shot--wide" : ""}`}
+            key={shot.id}
+          >
             <button
               type="button"
               className="shot__button"

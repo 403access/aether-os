@@ -1,3 +1,19 @@
+## v0.1.0-alpha.69
+
+- Add P7 remote display: `aether-remote` (DMA-BUF capture descriptors + copy
+  audit, low-latency H.264 software encode, pairing/tokens/audit, virtual-seat
+  input, str0m WebRTC transport, no-queue pipeline, latency ledger and the
+  `aether-remote` bench/serve CLI).
+- Add `@aether/remote`: browser client with WebCodecs and JPEG sinks, capability
+  probe, tier ladder, scancode input batching and session stats; plus a marketing
+  viewer with e2e coverage.
+- Add the `Super+R` remote overlay, recording indicator, status-bar session chip
+  and preview screenshots.
+- Package `aether-remote`, add the opt-in local-only systemd user unit and iHD
+  VA-API packages. Target glass-to-glass and zero-copy gates remain budgets.
+- Verification: 42 `aether-remote` Rust tests, 175 workspace Rust tests, 231
+  TypeScript tests, 17 Playwright specs. See the P7 completion ledger.
+
 ## v0.1.0-alpha.68
 
 - Add design-token constants, a TS/Rust parity check (`test:design`) and

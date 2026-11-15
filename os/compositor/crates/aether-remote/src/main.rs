@@ -56,6 +56,12 @@ fn main() {
                 std::process::exit(1);
             }
         }
+        Some("serve") => {
+            if let Err(error) = serve(&args) {
+                eprintln!("aether-remote: {error}");
+                std::process::exit(1);
+            }
+        }
         Some("--help" | "-h" | "help") => usage(),
         Some(other) => {
             eprintln!("aether-remote: unknown command {other}");
@@ -75,6 +81,7 @@ fn usage() {
          \x20 pair [--json PATH]                                           mint a one-shot pairing code and welcome\n\
          \x20 webrtc [--json PATH]                                         negotiate and drive a loopback str0m session\n\
          \x20 bench [--width N] [--height N] [--frames N] [--ndjson PATH]    capture→encode→transport with latency ledger\n\
+         \x20 serve [--http ADDR] [--code CODE] [--status PATH] [--seconds N]  LAN signaling + synthetic media host\n\
          \x20 help                                                           this message"
     );
 }
@@ -155,6 +162,40 @@ fn capture(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
         println!("{text}");
     }
     println!("capture: {}", auditor.summary());
+    Ok(())
+}
+
+fn serve(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
+    use std::net::SocketAddr;
+    let http = flag(args, "--http")
+        .unwrap_or_else(|| "127.0.0.1:7443".to_string())
+        .parse::<SocketAddr>()?;
+    let udp = flag(args, "--udp")
+        .unwrap_or_else(|| "127.0.0.1:0".to_string())
+        .parse::<SocketAddr>()?;
+    let code = flag(args, "--code").map(|code| code.replace(['-', ' '], "").to_uppercase());
+    if let Some(code) = &code {
+        if code.len() != 8
+            || !code
+                .bytes()
+                .all(|byte| b"23456789ABCDEFGHJKLMNPQRSTUVWXYZ".contains(&byte))
+        {
+            return Err("--code must be 8 characters from the pairing alphabet".into());
+        }
+    }
+    let seconds: Option<u64> = flag(args, "--seconds").and_then(|value| value.parse().ok());
+    let config = aether_remote::serve::ServeConfig {
+        http_addr: http,
+        udp_addr: udp,
+        width: number(args, "--width", 640),
+        height: number(args, "--height", 360),
+        fps: number(args, "--fps", 30),
+        bitrate_kbps: number(args, "--bitrate", 4_000),
+        status_path: flag(args, "--status").map(PathBuf::from),
+        code,
+        run_for: seconds.map(Duration::from_secs),
+    };
+    aether_remote::serve::serve(config)?;
     Ok(())
 }
 

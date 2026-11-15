@@ -16,8 +16,9 @@ Determinism, latency and a small resident footprint are the goals.
   <strong>Status: v0.1 “Kestrel” — installable base.</strong> The product
   surfaces, the tested core libraries and the full OS configuration exist in this
   repository. The NixOS system and a live installer ISO evaluate, and the install
-  path for the reference machine is written end to end. The compositor surfaces and
-  audio layer are implemented; P5 agent supervision and later application work remain. See the{" "}
+  path for the reference machine is written end to end. The compositor surfaces,
+  audio layer and remote display path are implemented; P5 agent supervision,
+  application work and the target measurements remain. See the{" "}
   <a href="/roadmap">roadmap</a>, the <a href="/getting-started/install">install guide</a>
   and the <a href="/getting-started/using-aether">daily-use manual</a>.
 </div>
@@ -50,6 +51,7 @@ not need. Aether removes them:
 | Isolation planner, scheduler, collaboration bus, audit | ✅ 39 tests | `packages/agents` |
 | Headless command palette | ✅ 27 tests | `packages/palette` |
 | React UI kit on the Water design system | ✅ 17 DOM tests | `packages/ui` |
+| Remote browser client | ✅ 10 tests: WebCodecs/JPEG sinks, tier ladder, input batching | `packages/remote` |
 | Benchmark harness + regression gate | ✅ baseline committed | `packages/bench` |
 | NixOS flake + installer ISO | ✅ evaluates; not booted in CI | `os/nixos` |
 | disko layout + install script | ✅ written, evaluation-checked | `os/nixos/disko.nix`, `scripts/install.sh` |
@@ -59,7 +61,7 @@ not need. Aether removes them:
 | Compositor core + shell state + preview | ✅ 110 core + 19 shared + 4 DRM + 6 index Rust tests | `os/compositor` |
 | Shell surfaces | ✅ palette, explorer, chat, keymap, status bar | `os/compositor` |
 | System index daemon | ✅ inotify + socket queries + event ring | `os/index/aether-index` |
-| Remote display | ⏳ P7 | — |
+| Remote display | ✅ capture + H.264 + str0m + WebCodecs client + `Super+R` overlay; target capture binding and latency gate pending | `os/compositor/crates/aether-remote`, `packages/remote` |
 
 ## Reading paths
 
@@ -97,9 +99,10 @@ packages/ipc        memfd-style SPSC ring + capability table
 packages/agents     isolation planner, admission control, collaboration bus, audit
 packages/palette    headless command palette + search adapter
 packages/ui         React components on the Water design system
+packages/remote     browser remote-display client (WebCodecs, input, tiers)
 packages/bench      benchmark harness + regression gate
 os/nixos            flake, kernel, hardware, filesystem, services
-os/compositor       Rust scene graph, tiling layout, frame pacing
+os/compositor       Rust scene graph, tiling layout, frame pacing, remote pipeline
 e2e                 Playwright specs for both built sites
 ```
 

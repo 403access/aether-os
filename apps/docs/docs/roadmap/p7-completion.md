@@ -57,28 +57,45 @@ session in the shell; T9 packages and reconciles.
 
 | Check | Result |
 | --- | --- |
-| `aether-remote` unit/integration tests | pending |
-| str0m loopback handshake | pending |
-| `packages/remote` tests | pending |
-| Web viewer e2e | pending |
-| Shell remote-overlay tests | pending |
-| `bun run verify` | pending |
-| `cargo test --manifest-path os/compositor/Cargo.toml` | pending |
+| `aether-remote` tests | 42 passed |
+| str0m loopback handshake | passed: peers connect, input channel opens, `aether-input` echoes, video write accepted |
+| `packages/remote` tests | 10 passed |
+| Web viewer e2e | 2 passed (`e2e/remote.spec.ts`); 17 Playwright specs total |
+| Shell remote-overlay tests | 3 passed (58 shell tests total) |
+| Preview remote renderer | 1 test + `artifacts/shell/remote.png`, `remote-idle.png` |
+| `bun test packages tests` | 231 passed across 24 files |
+| `cargo test --manifest-path os/compositor/Cargo.toml` | 175 passed |
+| `bun run verify` | passed |
+| `aether-remote serve` signaling smoke | `/health` + hello → welcome + SDP offer; status document published |
+| Wayland backend compile | `cargo check` passed; tests need Linux `libxkbcommon` |
 | Glass-to-glass < 40 ms on target | **budget**; harness committed, target run pending |
-| No CPU pixel copies on target | **budget**; audit + DMA-BUF plan committed, target run pending |
-| p99 frame interval < 1.5× target | **budget**; dev-host harness records, target run pending |
+| No CPU pixel copies on target | **budget**; audit + DMA-BUF descriptor committed, compositor import pending |
+| p99 frame interval < 1.5× target | **budget**; dev-host synthetic p99 20.47 ms at 60 fps (budget 25 ms), target run pending |
+
+### Dev-host measurements
+
+These are development-host observations, not gate results. The host is an Apple
+M3; the target is the i7-7700K.
+
+| Observation | Value | Where |
+| --- | --- | --- |
+| Software H.264 encode, 320×180, release | p99 2.62 ms | `artifacts/p7/bench.ndjson` |
+| Synthetic pipeline interval, 60 fps | p99 20.47 ms (1.5× budget 25 ms) | `artifacts/p7/bench.ndjson` |
+| str0m DTLS/ICE loopback connect | 37 ms | `artifacts/p7/webrtc.json` |
+| DMA-BUF copy audit | 0 copied bytes, 1 descriptor | `artifacts/p7/capture.json` |
+| Pairing/session/welcome | audit chain verifies | `artifacts/p7/pair.json` |
 
 ## Execution ledger
 
 | Task | Status | Commit |
 | --- | --- | --- |
-| Plan | ✅ this document | roadmap and sidebar |
-| P7-T1 | ⏳ | capture model |
-| P7-T2 | ⏳ | encode |
-| P7-T3 | ⏳ | session and signaling |
-| P7-T4 | ⏳ | input and WebRTC |
-| P7-T5 | ⏳ | pipeline and harness |
-| P7-T6 | ⏳ | browser client |
-| P7-T7 | ⏳ | web viewer |
-| P7-T8 | ⏳ | compositor integration |
-| P7-T9 | ⏳ | packaging and reconciliation |
+| Plan | ✅ `84732fa` | roadmap and sidebar |
+| P7-T1 | ✅ `8839e2b` | descriptors, DMA-BUF validation, copy audit, synthetic source |
+| P7-T2 | ✅ `f251c7c` | real software H.264, low-latency contract, capability ladder |
+| P7-T3 | ✅ `ff8e40c` | pairing registry, tokens, policy, audit chain, signaling |
+| P7-T4 | ✅ `e647d9b` | input batching, wire framing, str0m loopback transport |
+| P7-T5 | ✅ `48c489b` | no-queue pipeline, latency ledger, bench harness |
+| P7-T6 | ✅ `ab88628` | browser client, capability probe, WebCodecs/JPEG sinks |
+| P7-T7 | ✅ `b67656c` | marketing viewer, e2e, screenshots |
+| P7-T8 | ✅ `5096ff6` | shell overlay, `Super+R`, status chip, preview screenshots |
+| P7-T9 | ✅ | Nix package/service, docs and claims reconciliation (this commit) |

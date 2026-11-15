@@ -42,7 +42,7 @@ source. Everything else is a target or an aspiration.
 | 100× faster IPC than sockets | **Speculative** | Depends on payload; no controlled comparison committed |
 | Network latency 15–45 µs with AF_XDP | **Speculative** | Not implemented; hardware-dependent |
 | 50× lower jitter with AF_XDP | **Speculative** | Not measured; claim withdrawn until tested |
-| Glass-to-glass < 40 ms | **Budget** | P7 gate |
+| Glass-to-glass < 40 ms | **Budget** | P7 gate; harness + client committed, target run pending |
 | Input → paint < 16 ms | **Budget** | P2 gate |
 
 ## Compositor (P2)
@@ -86,6 +86,20 @@ source. Everything else is a target or an aspiration.
 | Seccomp denies `unshare` inside the sandbox | **Measured (Linux integration test)** | `aether-sandbox` runs `unshare` under the filter |
 | Seccomp network syscalls are denied unless `net` | **Measured (filter test)** | `denied_syscalls` assertions; syscall fuzzing is P5 |
 | Sandbox overhead | **Not claimed** | No helper process; rules install once between fork and exec, but no target benchmark yet |
+
+## Remote display (P7)
+
+| Claim | Label | Evidence |
+| --- | --- | --- |
+| Software H.264 encodes 320×180 at p99 2.62 ms | **Measured (dev host)** | `aether-remote bench`, `artifacts/p7/bench.ndjson`; not the target |
+| Synthetic pipeline interval p99 20.47 ms at 60 fps | **Measured (dev host)** | 1.5× budget is 25 ms; target run pending |
+| DMA-BUF descriptor records zero copied bytes | **Measured (unit test)** | `aether-remote` capture tests + `artifacts/p7/capture.json` |
+| str0m loopback establishes DTLS and opens the input channel | **Measured (integration test)** | `aether-remote` transport test; input echoes; `artifacts/p7/webrtc.json` |
+| Pairing code is one-shot, expiring, and the audit chain verifies | **Measured (unit test)** | `aether-remote` session tests |
+| Tier ladder selects WebRTC / WS-AU / JPEG / VNC | **Measured (unit test)** | `packages/remote` tests |
+| Glass-to-glass < 40 ms on LAN | **Budget** | P7 gate; needs the reference machine capture path |
+| No CPU pixel copies on target | **Budget** | Audit + descriptors exist; compositor DMA-BUF import pending |
+| Input round trip < 20 ms on target | **Budget** | Loopback input channel tested; target timing pending |
 
 ## Concurrency
 

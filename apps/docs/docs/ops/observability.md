@@ -49,6 +49,7 @@ It shows only live values. No graphs, no sparklines, no “health score”.
 - Per-agent CPU/memory and isolation tier.
 - Index coverage and staleness.
 - Audio graph summary.
+- Remote-session summary (tier, codec, latency, bitrate, viewer count).
 - Capability audit tail (last 50 entries, chain status).
 
 The overlay is shell-owned and cannot be captured by remote display without an
@@ -124,4 +125,5 @@ is rejected, not debated.
 | Capability denial is recorded | ✅ collaboration tests |
 | No telemetry network calls | P1 (strace the session for 10 min) |
 | Journal cap enforced | P1 |
-| Overlay cannot be captured silently | P7 |
+| Remote session shows a recording indicator | ✅ shell overlay + browser HUD |
+| Overlay cannot be captured silently | P7 target check |

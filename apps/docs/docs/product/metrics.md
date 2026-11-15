@@ -33,7 +33,7 @@ machine that lets an agent read your SSH keys is not a win.
 | Capability verify | > 2 M ops/s | `bench --check` |
 | Userspace boot | < 1.5 s cold | P1 boot test |
 | Audio route switch | < 100 ms | `scripts/audio-stress.sh`, target budget |
-| Glass-to-glass remote | < 40 ms LAN | P7 harness |
+| Glass-to-glass remote | < 40 ms LAN | P7 harness committed; target run pending |
 
 ## What is measured now
 

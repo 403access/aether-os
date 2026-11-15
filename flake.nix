@@ -176,6 +176,24 @@
           };
         };
 
+        aether-remote = final.rustPlatform.buildRustPackage {
+          pname = "aether-remote";
+          version = "0.1.0";
+          src = sceneSource;
+          cargoLock.lockFile = ./os/compositor/Cargo.lock;
+          cargoBuildFlags = ["-p" "aether-remote"];
+          doCheck = false;
+          installPhase = ''
+            mkdir -p $out/bin
+            install -Dm755 "$(find target -path '*/release/aether-remote' -type f | head -1)" $out/bin/aether-remote
+          '';
+          meta = with final.lib; {
+            description = "Aether remote display: capture, low-latency H.264, str0m signaling and WebCodecs client protocol";
+            license = licenses.mit;
+            platforms = ["x86_64-linux" "aarch64-linux"];
+          };
+        };
+
         aether-shell-smithay = final.rustPlatform.buildRustPackage {
           pname = "aether-shell-smithay";
           version = "0.1.0";
@@ -356,6 +374,7 @@ EOF
         index-service = pkgs.aether-index-service;
         aether-index = pkgs.aether-index;
         aether-audio = pkgs.aether-audio;
+        aether-remote = pkgs.aether-remote;
         aether-sandbox = pkgs.aether-sandbox;
         aether-applications = pkgs.aether-applications;
         aether-shell-smithay = pkgs.aether-shell-smithay;
@@ -392,6 +411,7 @@ EOF
         index-service = vmPkgs.aether-index-service;
         aether-index = vmPkgs.aether-index;
         aether-audio = vmPkgs.aether-audio;
+        aether-remote = vmPkgs.aether-remote;
         aether-sandbox = vmPkgs.aether-sandbox;
         aether-applications = vmPkgs.aether-applications;
         aether-shell-smithay = vmPkgs.aether-shell-smithay;

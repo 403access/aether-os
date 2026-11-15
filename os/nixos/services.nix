@@ -11,6 +11,14 @@
 }: {
   services.dbus.enable = true;
 
+  # QuickSync encode/decode for the remote-display fallback. The software H.264
+  # path still works if the iHD driver is unavailable; the shell labels it.
+  hardware.graphics.enable = true;
+  hardware.graphics.extraPackages = [pkgs.intel-media-driver];
+  environment.sessionVariables = {
+    LIBVA_DRIVER_NAME = "iHD";
+  };
+
   # Bluetooth transport for headsets and speakers. WirePlumber owns the
   # profile/codec choice; aether-audio only reports and switches routes.
   hardware.bluetooth.enable = true;
@@ -114,6 +122,32 @@
       Restart = "on-failure";
       RestartSec = 2;
     };
+  };
+
+  # Remote display signaling is opt-in and local-only: the HTTP listener binds
+  # 127.0.0.1 and the firewall gains no inbound rule. Start it for a session
+  # with `systemctl --user start aether-remote`; the shell reads the published
+  # status document through `Super+R`.
+  systemd.user.services.aether-remote = {
+    description = "Aether remote display signaling (local-only, opt-in)";
+    serviceConfig = {
+      ExecStart = "${pkgs.aether-remote}/bin/aether-remote serve --http 127.0.0.1:7443 --udp 127.0.0.1:0 --status %t/aether/remote-session.json";
+      Environment = [
+        "LIBVA_DRIVER_NAME=iHD"
+        "AETHER_REMOTE_STATUS=%t/aether/remote-session.json"
+      ];
+      RuntimeDirectory = "aether";
+      Restart = "on-failure";
+      RestartSec = 2;
+      NoNewPrivileges = true;
+      PrivateTmp = true;
+      ProtectSystem = "strict";
+      ProtectHome = "read-only";
+      ReadWritePaths = ["%t/aether"];
+      RestrictAddressFamilies = ["AF_INET" "AF_INET6" "AF_UNIX"];
+    };
+    # Not wantedBy default. The host starts it explicitly for a session.
+    wantedBy = [];
   };
 
   # Keep clipboard data after the source client exits. wlr-data-control is

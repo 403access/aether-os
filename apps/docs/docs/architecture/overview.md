@@ -97,8 +97,9 @@ compositor DMA-BUF → VA-API encode → str0m (WebRTC) → browser
                                                  → WebCodecs → canvas
 ```
 
-There is no CPU pixel copy in the intended path. Input returns over a data channel
-and is injected into a virtual seat after validation. See
+The capture descriptor and copy audit are implemented; the compositor binding
+that supplies exported DMA-BUFs is the remaining target step. Input returns over a
+data channel and is injected into a virtual seat after validation. See
 [remote display](/architecture/remote-display).
 
 ## Failure model

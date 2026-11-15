@@ -165,6 +165,13 @@ impl PairingRegistry {
         Ok(candidate.clone())
     }
 
+    /// Seed a deterministic code for the smoke harness. Production callers use
+    /// [`Self::issue`]; this only bypasses random generation, not redemption.
+    pub fn seed(&mut self, mut code: PairingCode) {
+        code.used = false;
+        self.codes.push(code);
+    }
+
     pub fn active(&self, now_ms: u64) -> usize {
         self.codes
             .iter()

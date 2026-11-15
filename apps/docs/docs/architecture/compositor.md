@@ -266,7 +266,8 @@ Capture is implemented as a protocol the shell serves, not a screen-scraper:
 - Real text shaping (cosmic-text or swash) and the font atlas.
 - Fractional scaling polish and per-surface scale factors.
 - HDR and colour management.
-- The virtual seat used by remote display.
+- The compositor DMA-BUF export binding used by remote capture. The virtual-seat
+  input policy and remote overlay are implemented in `aether-sandbox`/`aether-shell`.
 
 These are P2/P3 work. The pure core (geometry, damage, layout, pacing) is
 implemented and tested now so the integration has a stable foundation.

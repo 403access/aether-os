@@ -6,7 +6,7 @@ sidebar_position: 8
 
 # ADR-0007 — WebRTC + WebCodecs remote display
 
-**Status:** Proposed (P7) · **Date:** 2026-11-12
+**Status:** Accepted (P7 code-complete; target capture/measurement pending) · **Date:** 2026-11-12
 
 ## Context
 
@@ -22,8 +22,10 @@ WebCodecs.
 
 ## Consequences
 
-- Sub-40 ms LAN latency is plausible, but unproven until P7.
-- Encoder/driver matrix becomes a support surface.
+- Sub-40 ms LAN latency remains a P7 target until measured on the 7700K.
+- Encoder/driver matrix becomes a support surface; the software H.264 path is the
+  documented fallback.
+- The 24-byte `AEM1` wire format carries the WebSocket/JPEG fallback tiers.
 - WebCodecs support varies by browser; H.264 is the compatibility floor.
 - Security needs DTLS, a session token and a pairing code; no public listener.
 - AF_XDP is deferred until measurement shows the kernel stack dominates.

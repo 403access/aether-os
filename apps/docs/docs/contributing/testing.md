@@ -62,8 +62,9 @@ fixture and the subject close and makes deletion obvious.
 | Palette | `palette.test.ts` | Modes, ranking, dedupe, stale queries, keyboard |
 | Adapter | `adapters.test.ts` | Index → palette mapping, filters, empty query |
 | UI | `ui.test.tsx` | ARIA, click, keyboard, explorer, meters |
+| Remote client | `packages/remote/src/remote.test.ts` | Capability probe, tiers, wire format, input batching, session state |
 | Boundary | `tests/separation.test.ts` | No VM/reference imports; no VM posture in the reference |
-| Rust | `os/compositor/**` | Damage, layout, shell policy, preview, pacing |
+| Rust | `os/compositor/**` | Damage, layout, shell policy, preview, pacing, capture/encode/session/transport |
 
 ## Reusable fixtures
 
@@ -171,6 +172,6 @@ Guidelines:
 - Real Landlock/seccomp enforcement (P1/P5).
 - GPU paths and frame presentation (P2).
 - WebKit and mpv integration (P6).
-- WebRTC/WebCodecs latency (P7).
+- Compositor DMA-BUF import and glass-to-glass latency on the target (P7).
 
 These are listed in the roadmap gates; until then, the docs say so.

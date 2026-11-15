@@ -28,7 +28,7 @@ resemble a general-purpose distribution.
 
 | Feature | Why it waits | Earliest phase |
 | --- | --- | --- |
-| Remote display (WebRTC/WebCodecs) | Needs a stable compositor and capture path | P7 |
+| Remote display (WebRTC/WebCodecs) | Code-complete; compositor DMA-BUF import + target measurement | P7 |
 | AF_XDP transport | Only justified if measurement shows kernel networking is the bottleneck | P7 |
 | MicroVM agent tier | Useful before hostile workloads; expensive to operate | P8 |
 | PGO + ThinLTO pipeline | Baseline must exist before profile-guided tuning | P8 |

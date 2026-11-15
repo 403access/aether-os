@@ -138,5 +138,5 @@ exports everything needed.
 | --- | --- |
 | P5 | Six agents, cross-read suite, zero successes |
 | P5 | Seccomp profile corpus passes for Rust/Python/Node |
-| P7 | Remote session requires a valid token; input is scancode-only |
+| P7 | Remote session requires a one-shot pairing code + token; input is scancode-only; clipboard is off by default and audited |
 | P8 | MicroVM escape corpus; capability fuzzing; audit verification |

@@ -9,15 +9,18 @@ use serde::{Deserialize, Serialize};
 use crate::encode::Codec;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
 pub enum Tier {
     /// WebRTC + WebCodecs. The product path.
+    #[serde(rename = "webrtc")]
     WebRtc,
     /// WebSocket + low-latency access units + WebCodecs. UDP is blocked.
+    #[serde(rename = "ws-au")]
     WebSocketAccessUnits,
     /// WebSocket + JPEG tiles. No WebCodecs.
+    #[serde(rename = "ws-jpeg")]
     JpegTiles,
     /// VNC. A debugging tool, explicitly labelled.
+    #[serde(rename = "vnc")]
     Vnc,
 }
 

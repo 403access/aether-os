@@ -42,6 +42,7 @@ The in-shell cheat sheet (`Super+/` or `Ctrl+Alt+/`) shows the active profile.
 | Explorer | `Ctrl+Alt+E` | `Super+E` |
 | Chat | `Ctrl+Alt+C` | `Super+C` |
 | Audio routes | `Ctrl+Alt+A` | `Super+A` |
+| Remote session | `Ctrl+Alt+R` | `Super+R` |
 | Shortcut cheat sheet | `Ctrl+Alt+/` | `Super+/` |
 | Focus next window | `Ctrl+Alt+Tab` | `Super+Tab` |
 | Switch workspace | `Ctrl+Alt+1/2/3` | `Super+1/2/3` |
@@ -67,6 +68,7 @@ The top-centre dock is the mouse-friendly mirror of the global shortcuts:
 | Files | `Super+E` |
 | Chat | `Super+C` |
 | Audio | `Super+A` |
+| Remote | `Super+R` |
 | Shortcuts | `Super+/` |
 
 Click any button. The dock hides while a surface is open so it never competes
@@ -86,6 +88,7 @@ parentheses. Pointer actions are identical in both profiles.
 | `Ctrl+Alt+E` (`Super+E`) | Toggle the full-output explorer |
 | `Ctrl+Alt+C` (`Super+C`) | Toggle the streaming chat drawer |
 | `Ctrl+Alt+A` (`Super+A`) | Toggle the audio overlay |
+| `Ctrl+Alt+R` (`Super+R`) | Toggle the remote-session overlay |
 | `Ctrl+Alt+/` (`Super+/`) | Toggle the shortcut cheat sheet |
 | `Esc` | Close the open overlay, one layer at a time |
 
@@ -209,6 +212,34 @@ aether-audio preset voice
 aether-audio apps
 ```
 
+## Remote display
+
+`Super+R` opens the remote-session panel. It shows the one-shot pairing code,
+the session id, the transport tier, codec, latency, bitrate and the always-visible
+recording indicator.
+
+| Input | Action |
+| --- | --- |
+| `Up` / `Down` | Move through the audited actions |
+| `Enter` | Activate the selected action |
+| `I` | Toggle remote input |
+| `C` | Toggle clipboard (off by default) |
+| `S` | Stop the session |
+| `Esc` | Close the panel |
+
+Start the local service for a session:
+
+```bash
+systemctl --user start aether-remote
+aether-remote pair                 # mint a code and inspect the welcome
+curl -s http://127.0.0.1:7443/health
+```
+
+The service binds loopback only. Input is scancodes and relative motion; there is
+no command channel. Clipboard starts off and every toggle is audited.
+
+![Remote-session overlay](/img/smithay-remote.png)
+
 ## Task manager
 
 Open from the palette: `Ctrl+Alt+Space` (Simple) or `Super+Space`, type **task**,
@@ -241,8 +272,8 @@ palette's **New terminal** action does the same thing.
 ## Recovery and layer rules
 
 - `Esc` closes exactly one overlay. It never closes two layers at once.
-- `Super+Space`, `Super+E`, `Super+C` and `Super+A` replace each other; the last
-  one wins.
+- `Super+Space`, `Super+E`, `Super+C`, `Super+A` and `Super+R` replace each
+  other; the last one wins.
 - Clicking outside an overlay closes it.
 - A client that hangs can be closed with `Super+Q`; the shell stays responsive.
 - If an overlay seems stuck, press `Esc` twice: first the overlay, then nothing.

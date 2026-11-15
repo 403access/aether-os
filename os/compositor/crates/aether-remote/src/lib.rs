@@ -23,6 +23,7 @@ pub mod encode;
 pub mod input;
 pub mod ladder;
 pub mod pipeline;
+pub mod serve;
 pub mod session;
 pub mod signaling;
 pub mod stats;
@@ -44,6 +45,7 @@ pub use ladder::{latency_badge, select_codec, select_tier, ClientCaps, Tier};
 pub use pipeline::{
     CpuFrameReader, FrameReader, Pipeline, PipelineConfig, PipelineError, PipelineEvent,
 };
+pub use serve::{serve, ServeConfig};
 pub use session::{
     AuditChain, PairingCode, PairingError, PairingRegistry, RemoteSession, SessionError,
     SessionPolicy, SessionState, SessionToken, REMOTE_HOST_SCOPE,

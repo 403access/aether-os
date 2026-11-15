@@ -18,7 +18,7 @@ A decision that is reversed gets a new ADR; records are not rewritten.
 | [0004](/adr/0004-isolation-without-pku) | Process/microVM isolation, no PKU | Accepted |
 | [0005](/adr/0005-shared-memory-ipc) | Shared-memory SPSC IPC | Accepted |
 | [0006](/adr/0006-web-stack-bun-typescript-react) | Bun + TypeScript + React for web surfaces | Accepted |
-| [0007](/adr/0007-remote-display-webrtc-webcodecs) | WebRTC + WebCodecs remote display | Proposed (P7) |
+| [0007](/adr/0007-remote-display-webrtc-webcodecs) | WebRTC + WebCodecs remote display | Accepted (P7) |
 | [0008](/adr/0008-single-pages-deployment) | One Pages artifact for site + docs | Accepted |
 | [0009](/adr/0009-water-design-system) | Adopt the Water design system and reference explorer | Accepted |
 | [0010](/adr/0010-compositor-crate-split) | Split the compositor core into reusable crates | Accepted |

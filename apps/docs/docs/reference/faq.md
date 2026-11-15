@@ -80,9 +80,14 @@ the transport and the capability model, not the model.
 
 ## Can I access the desktop from a browser?
 
-That is P7 and not implemented. The intended pipeline is DMA-BUF → hardware encode →
-WebRTC → WebCodecs, with a documented fallback ladder. The current repo has no
-streaming code; claiming otherwise would violate the evidence rule.
+The P7 pipeline exists: DMA-BUF capture descriptors, a real low-latency H.264
+software encoder, str0m WebRTC transport, pairing/DTLS signaling, a virtual-seat
+input channel and a WebCodecs/JPEG browser client. `aether-remote serve` is a
+local-only signaling and media host, and `Super+R` opens the session overlay. What
+is not done is binding the compositor’s exported DMA-BUFs and measuring
+glass-to-glass on the 7700K; those remain labelled budgets. See
+[remote display](/architecture/remote-display) and
+[claims and evidence](/reference/claims-and-evidence).
 
 ## Why XFS?
 

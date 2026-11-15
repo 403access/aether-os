@@ -24,6 +24,7 @@ surfaces share the same repository and version number.
 | `bun run os:test` | Rust compositor-core tests |
 | `nix build .#iso` | Minimal live installer ISO (x86_64) |
 | `nix build .#live-iso` | Full Aether desktop live ISO (x86_64) |
+| `nix build .#aether-remote` | Remote-display host CLI (`serve`, `pair`, `bench`) |
 | `./scripts/vm-build.sh` | Development VM image (aarch64, separate target) |
 | `./scripts/vm-run.sh` | Boot the VM with QEMU/HVF |
 | `./scripts/clean.sh` | Remove generated state; `--all` includes dependencies |

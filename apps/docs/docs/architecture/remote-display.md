@@ -28,7 +28,7 @@ compositor (DMA-BUF)
    → str0m (WebRTC SRTP)
    → browser
    → WebCodecs VideoDecoder
-   → WebGL/WebGPU canvas
+   → canvas (2D now; WebGL/WebGPU optional)
 ```
 
 Input returns over a WebRTC data channel, is validated as scancodes/relative motion,

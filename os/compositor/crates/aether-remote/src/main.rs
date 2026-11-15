@@ -14,8 +14,10 @@ use aether_remote::encode::{
     H264Encoder,
 };
 use aether_remote::ladder::ClientCaps;
+use aether_remote::pipeline::{Pipeline, PipelineConfig};
 use aether_remote::session::{PairingRegistry, SessionPolicy, DEFAULT_PAIRING_TTL_MS};
 use aether_remote::signaling::{accept_hello, ClientHello, SignalMessage};
+use aether_remote::transport::LoopbackTransport;
 use aether_remote::transport::{Datagram, WebRtcConfig, WebRtcEvent, WebRtcHost};
 use serde_json::json;
 use std::net::{Ipv4Addr, SocketAddr};
@@ -48,6 +50,12 @@ fn main() {
                 std::process::exit(1);
             }
         }
+        Some("bench") => {
+            if let Err(error) = bench(&args) {
+                eprintln!("aether-remote: {error}");
+                std::process::exit(1);
+            }
+        }
         Some("--help" | "-h" | "help") => usage(),
         Some(other) => {
             eprintln!("aether-remote: unknown command {other}");
@@ -66,6 +74,7 @@ fn usage() {
          \x20 encode [--width N] [--height N] [--frames N] [--ndjson PATH]  encode synthetic frames\n\
          \x20 pair [--json PATH]                                           mint a one-shot pairing code and welcome\n\
          \x20 webrtc [--json PATH]                                         negotiate and drive a loopback str0m session\n\
+         \x20 bench [--width N] [--height N] [--frames N] [--ndjson PATH]    capture→encode→transport with latency ledger\n\
          \x20 help                                                           this message"
     );
 }
@@ -146,6 +155,99 @@ fn capture(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
         println!("{text}");
     }
     println!("capture: {}", auditor.summary());
+    Ok(())
+}
+
+fn bench(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
+    let width: u32 = number(args, "--width", 320);
+    let height: u32 = number(args, "--height", 180);
+    let frames: usize = number(args, "--frames", 120);
+    let fps: u32 = number(args, "--fps", 60);
+    let bitrate: u32 = number(args, "--bitrate", 4_000);
+    let config = PipelineConfig {
+        encoder: EncoderConfig::low_latency(width, height, fps)
+            .with_kind(aether_remote::encode::EncoderKind::Software)
+            .with_bitrate(bitrate),
+        tier: aether_remote::ladder::Tier::WebRtc,
+        target_fps: fps,
+    };
+    let mut pipeline = Pipeline::new(config, LoopbackTransport::new())?;
+    let mut source = SyntheticSource::new(width, height, fps);
+    let interval = Duration::from_micros(1_000_000 / u64::from(fps.max(1)));
+    let start = Instant::now();
+    let mut records = Vec::with_capacity(frames);
+    let mut previous_us = 0u64;
+    for index in 0..frames {
+        let target = interval * index as u32;
+        let elapsed = start.elapsed();
+        if target > elapsed {
+            std::thread::sleep(target - elapsed);
+        }
+        let now_us = start.elapsed().as_micros() as u64;
+        let frame = loop {
+            match source.next_frame(now_us) {
+                Some(frame) => break frame,
+                None => std::thread::sleep(Duration::from_millis(1)),
+            }
+        };
+        let event = pipeline.push_capture(&frame, now_us)?;
+        let sent = pipeline.tick(now_us);
+        // Stand in for a client that keeps up with the stream.
+        pipeline.transport_mut().deliver(now_us + 1_000);
+        let wall_us = now_us.saturating_sub(previous_us);
+        previous_us = now_us;
+        if let aether_remote::pipeline::PipelineEvent::Encoded {
+            sequence,
+            bytes,
+            keyframe,
+            encode_us,
+        } = event
+        {
+            records.push(json!({
+                "sequence": sequence,
+                "sent": sent.is_some(),
+                "bytes": bytes,
+                "keyframe": keyframe,
+                "encode_us": encode_us,
+                "wall_interval_us": wall_us,
+                "captured_at_us": frame.captured_at_us,
+            }));
+        }
+    }
+    let report = pipeline.report();
+    let summary = json!({
+        "report": report,
+        "frame_interval_target_us": 1_000_000 / u64::from(fps.max(1)),
+        "note": "synthetic source + software H.264; the glass-to-glass gate needs the target capture path",
+    });
+    let ndjson = records
+        .iter()
+        .map(|record| serde_json::to_string(record).unwrap_or_default())
+        .collect::<Vec<_>>()
+        .join("\n");
+    let ndjson = format!(
+        "{ndjson}\n{{\"summary\":{}}}\n",
+        serde_json::to_string(&summary)?
+    );
+    if let Some(path) = flag(args, "--ndjson") {
+        let path = PathBuf::from(path);
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::write(&path, ndjson)?;
+        println!("wrote {}", path.display());
+    } else {
+        print!("{ndjson}");
+    }
+    println!("bench: {}", report.summary_line());
+    if !report.interval_budget_ok {
+        return Err(format!(
+            "frame interval p99 {} us exceeds the 1.5x budget ({} us)",
+            report.interval_us_p99.unwrap_or(0),
+            report.target_interval_us * 3 / 2
+        )
+        .into());
+    }
     Ok(())
 }
 

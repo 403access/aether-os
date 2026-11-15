@@ -22,8 +22,10 @@ pub mod capture;
 pub mod encode;
 pub mod input;
 pub mod ladder;
+pub mod pipeline;
 pub mod session;
 pub mod signaling;
+pub mod stats;
 pub mod transport;
 pub mod wire;
 
@@ -39,11 +41,15 @@ pub use input::{
     MAX_SCANCODE,
 };
 pub use ladder::{latency_badge, select_codec, select_tier, ClientCaps, Tier};
+pub use pipeline::{
+    CpuFrameReader, FrameReader, Pipeline, PipelineConfig, PipelineError, PipelineEvent,
+};
 pub use session::{
     AuditChain, PairingCode, PairingError, PairingRegistry, RemoteSession, SessionError,
     SessionPolicy, SessionState, SessionToken, REMOTE_HOST_SCOPE,
 };
 pub use signaling::{accept_hello, ClientHello, ServerWelcome, SignalMessage};
+pub use stats::{FrameLedger, LatencyStats, SessionReport, GLASS_TO_GLASS_BUDGET_MS};
 pub use transport::{
     Datagram, LoopbackTransport, Transport, TransportStats, WebRtcConfig, WebRtcEvent, WebRtcHost,
     WebRtcPoll,

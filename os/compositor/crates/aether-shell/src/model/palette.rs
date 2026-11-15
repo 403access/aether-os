@@ -55,6 +55,7 @@ pub enum PaletteAction {
     OpenAudio,
     OpenThemes,
     OpenShortcuts,
+    OpenSandboxes,
     OpenFile(usize),
     Close,
 }

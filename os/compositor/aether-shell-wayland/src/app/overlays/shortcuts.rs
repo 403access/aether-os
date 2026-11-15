@@ -14,6 +14,7 @@ impl App {
             self.shell.close_audio();
             self.shell.close_themes();
             self.shell.close_remote();
+            self.close_sandboxes();
             self.shortcuts_open = true;
             println!(
                 "aether-shell: shortcuts overlay opened ({} bindings)",

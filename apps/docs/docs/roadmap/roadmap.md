@@ -171,7 +171,8 @@ suite proves microphone denial. Live input peaks are a P5 supervisor wiring item
 Deliverables:
 
 - ✅ `aether-sandbox`: kernel-enforced process tier (Landlock, seccomp, UID,
-  rlimits, optional cgroup v2), packaged and tested on Linux.
+  rlimits, optional cgroup v2), packaged and tested on Linux; plus the
+  `Super+B` Agent sandboxes monitor (registry, CPU/RSS, stop, logs, stale prune).
 - ⏳ `aetherd`: supervisor wiring, planner integration, admission control,
   capability issuance and audit.
 - ✅ `aether-mcp` + `aether-chat`: audited system tool surface over the shell

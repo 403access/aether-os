@@ -42,6 +42,7 @@ The in-shell cheat sheet (`Super+/` or `Ctrl+Alt+/`) shows the active profile.
 | Explorer | `Ctrl+Alt+E` | `Super+E` |
 | Chat | `Ctrl+Alt+C` | `Super+C` |
 | Audio routes | `Ctrl+Alt+A` | `Super+A` |
+| Agent sandboxes | `Ctrl+Alt+B` | `Super+B` |
 | Themes | `Ctrl+Alt+T` | `Super+T` |
 | Remote session | `Ctrl+Alt+R` | `Super+R` |
 | Shortcut cheat sheet | `Ctrl+Alt+/` | `Super+/` |
@@ -69,6 +70,7 @@ The top-centre dock is the mouse-friendly mirror of the global shortcuts:
 | Files | `Super+E` |
 | Chat | `Super+C` |
 | Audio | `Super+A` |
+| Agents | `Super+B` |
 | Remote | `Super+R` |
 | Shortcuts | `Super+/` |
 
@@ -89,6 +91,7 @@ parentheses. Pointer actions are identical in both profiles.
 | `Ctrl+Alt+E` (`Super+E`) | Toggle the full-output explorer |
 | `Ctrl+Alt+C` (`Super+C`) | Toggle the streaming chat drawer |
 | `Ctrl+Alt+A` (`Super+A`) | Toggle the audio overlay |
+| `Ctrl+Alt+B` (`Super+B`) | Toggle the agent-sandbox monitor |
 | `Ctrl+Alt+T` (`Super+T`) | Toggle the Themes app |
 | `Ctrl+Alt+R` (`Super+R`) | Toggle the remote-session overlay |
 | `Ctrl+Alt+/` (`Super+/`) | Toggle the shortcut cheat sheet |
@@ -155,9 +158,9 @@ master/stack ratio or divider drag.
 The palette is also the fastest way to reach a window: type part of its title,
 press `Enter`, and Aether focuses it and switches to its workspace. Installed
 applications come from XDG `.desktop` entries; Aether's own surfaces are indexed
-as applications too — **Files**, **Chat**, **Audio**, **Themes**, **Keyboard
-shortcuts** and **Task manager**. A **Aether Terminal** desktop entry is installed
-on the target and live images.
+as applications too — **Files**, **Chat**, **Audio**, **Agents**, **Themes**,
+**Keyboard shortcuts** and **Task manager**. A **Aether Terminal** desktop entry
+is installed on the target and live images.
 
 ## Explorer
 
@@ -184,8 +187,10 @@ status bar keeps the selected path and live system facts in view.
 | `PgUp` / `PgDn` | Scroll the transcript |
 | `Esc` | Close |
 
-The drawer displays streamed markdown today; the composer is present but outbound
-messages are P5 host wiring, so this manual does not claim they are sendable yet.
+The drawer displays streamed markdown and tool-call traces. `aether-chat` owns the
+model loop; set `AETHER_CHAT_ENDPOINT` in `~/.config/aether/chat.env` to a local
+OpenAI-compatible endpoint. Without one, the first prompt reports the missing
+configuration instead of failing silently.
 
 Markdown is parsed incrementally. Headings, lists, bold, inline code and fenced
 code blocks are supported; only visible rows enter the render plan.
@@ -212,6 +217,35 @@ aether-audio list
 aether-audio switch 43
 aether-audio preset voice
 aether-audio apps
+```
+
+## Agent sandboxes
+
+`Super+B` opens the agent-sandbox monitor. It reads the runtime registry written
+by `aether-sandbox run`, so a sandboxed process appears without a supervisor.
+
+| Input | Action |
+| --- | --- |
+| `Up` / `Down` | Move selection |
+| `PgUp` / `PgDn` | Page |
+| `K` | Send `SIGTERM` to the selected sandbox |
+| `Shift+K` | Send `SIGKILL` |
+| `L` or `Enter` | Open the sandbox log (`--log PATH`) |
+| `R` | Refresh immediately |
+| `C` | Prune stale records |
+| `Esc` | Close |
+
+Each row shows the label, id, trust, tier, PID, CPU and RSS. The detail pane shows
+the enforcement (`landlock-seccomp`), UID, limits, capabilities, read/write paths,
+warnings and log path. A record whose PID is gone stays visible with a `stale`
+label until the CLI cleans it up or you press `C`.
+
+Start a sandbox from a terminal:
+
+```bash
+aether-sandbox run --id build --label "Build agent" \
+  --read ~/work --write ~/work/scratch --log ~/work/build.log \
+  -- /usr/bin/python3 ~/work/task.py
 ```
 
 ## Themes

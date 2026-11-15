@@ -148,6 +148,8 @@ dependencies = [
  "landlock",
  "libc",
  "seccompiler",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

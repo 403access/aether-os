@@ -459,6 +459,8 @@ WAYLAND_DISPLAY=aether-0 ./os/compositor/aether-shell-smithay/aether-terminal.sh
 ./os/compositor/aether-shell-smithay/smoke-index-live-xvfb.sh # live index update
 ./os/compositor/aether-shell-smithay/smoke-actions-xvfb.sh     # desktop action launcher
 ./os/compositor/aether-shell-smithay/smoke-agent-ipc-xvfb.sh   # live agent session IPC
+./os/compositor/aether-shell-smithay/smoke-sandboxes-xvfb.sh   # Super+B registry + stop
+./os/compositor/aether-shell-smithay/smoke-mcp-xvfb.sh         # chat tools + control socket
 ./os/compositor/aether-shell-smithay/smoke-dnd-xvfb.sh         # client drag and drop
 ```
 

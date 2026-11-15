@@ -11,6 +11,7 @@
 use std::path::PathBuf;
 
 pub mod cgroup;
+pub mod registry;
 
 #[cfg(target_os = "linux")]
 pub mod linux;
@@ -22,11 +23,31 @@ pub enum Trust {
     Hostile,
 }
 
+impl Trust {
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Trusted => "trusted",
+            Self::Untrusted => "untrusted",
+            Self::Hostile => "hostile",
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Tier {
     InProcess,
     ProcessLandlock,
     Microvm,
+}
+
+impl Tier {
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::InProcess => "in-process",
+            Self::ProcessLandlock => "process-landlock",
+            Self::Microvm => "microvm",
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -209,6 +230,48 @@ pub fn uid_for(id: &str) -> u32 {
         hash = hash.wrapping_mul(16_777_619);
     }
     4001 + (hash % 95)
+}
+
+/// Ask a sandboxed process to exit.
+#[cfg(target_os = "linux")]
+pub fn terminate(pid: u32) -> std::io::Result<()> {
+    signal(pid, libc::SIGTERM)
+}
+
+/// Force a sandboxed process to exit.
+#[cfg(target_os = "linux")]
+pub fn force_stop(pid: u32) -> std::io::Result<()> {
+    signal(pid, libc::SIGKILL)
+}
+
+/// Send a signal to a sandboxed process. Linux-only.
+#[cfg(target_os = "linux")]
+pub fn signal(pid: u32, signal: i32) -> std::io::Result<()> {
+    if pid == 0 {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "refusing to signal pid 0",
+        ));
+    }
+    // SAFETY: `kill` only reads the two integers passed to it.
+    if unsafe { libc::kill(pid as libc::pid_t, signal) } == 0 {
+        Ok(())
+    } else {
+        Err(std::io::Error::last_os_error())
+    }
+}
+
+#[cfg(not(target_os = "linux"))]
+pub fn terminate(_pid: u32) -> std::io::Result<()> {
+    Err(std::io::Error::new(
+        std::io::ErrorKind::Unsupported,
+        "signalling sandboxes requires Linux",
+    ))
+}
+
+#[cfg(not(target_os = "linux"))]
+pub fn force_stop(_pid: u32) -> std::io::Result<()> {
+    terminate(0)
 }
 
 #[derive(Debug)]

@@ -36,6 +36,7 @@ impl App {
             Shortcut::ToggleThemes => self.toggle_themes(),
             Shortcut::ToggleRemote => self.toggle_remote(),
             Shortcut::ToggleShortcuts => self.toggle_shortcuts(),
+            Shortcut::ToggleSandboxes => self.toggle_sandboxes(),
             Shortcut::NewTerminal => {
                 self.spawn_terminal();
                 println!("aether-shell: shortcut new terminal");
@@ -140,6 +141,12 @@ impl App {
                     shortcut = true;
                     FilterResult::Intercept(())
                 } else if state.shortcuts_open {
+                    FilterResult::Intercept(())
+                } else if state.sandbox_panel_open() {
+                    if pressed {
+                        state.handle_sandbox_key(sym);
+                        state.mark_sandbox_damage();
+                    }
                     FilterResult::Intercept(())
                 } else if state.task_manager_open() {
                     if pressed {

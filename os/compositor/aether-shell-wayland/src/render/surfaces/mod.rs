@@ -5,6 +5,7 @@ mod chat;
 mod explorer;
 mod palette;
 mod remote;
+mod sandboxes;
 mod shortcuts;
 mod status;
 mod task_manager;

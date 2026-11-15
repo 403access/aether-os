@@ -194,6 +194,7 @@ impl App {
                 || self.shell.audio_open()
                 || self.shell.themes_open()
                 || self.shortcuts_open
+                || self.sandbox_panel_open()
                 || self.task_manager_open();
             if let Some(action) = self.top_shortcut_at(point) {
                 self.pointer_captured = true;
@@ -208,6 +209,21 @@ impl App {
                     self.close_shortcuts();
                 }
                 self.mark_shortcuts_damage();
+                self.cursor = cursor_for(self);
+                self.mark_cursor_damage(self.pointer_pos);
+                self.end_input(started);
+                return;
+            }
+            if self.sandbox_panel_open() {
+                if self.sandbox_close_rect().contains(point) {
+                    self.close_sandboxes();
+                } else if let Some(index) = self.sandbox_row_at(point) {
+                    let visible = self.sandbox_visible_rows();
+                    if let Some(state) = self.sandboxes.as_mut() {
+                        state.select(index, visible);
+                    }
+                }
+                self.mark_sandbox_damage();
                 self.cursor = cursor_for(self);
                 self.mark_cursor_damage(self.pointer_pos);
                 self.end_input(started);
@@ -453,6 +469,21 @@ impl App {
     /// Pointer axis (scroll) event.
     pub fn pointer_axis(&mut self, horizontal: f64, vertical: f64, source: AxisSource, time: u32) {
         let started = self.begin_input();
+        if self.sandbox_panel_open() {
+            let point = AetherPoint::new(
+                self.pointer_pos.x.round() as i32,
+                self.pointer_pos.y.round() as i32,
+            );
+            if self.sandbox_list_rect().contains(point) && vertical != 0.0 {
+                let visible = self.sandbox_visible_rows();
+                if let Some(state) = self.sandboxes.as_mut() {
+                    state.move_selection(if vertical > 0.0 { 1 } else { -1 }, visible);
+                }
+                self.mark_sandbox_damage();
+                self.end_input(started);
+                return;
+            }
+        }
         if self.shell.chat_open() {
             let point = AetherPoint::new(
                 self.pointer_pos.x.round() as i32,

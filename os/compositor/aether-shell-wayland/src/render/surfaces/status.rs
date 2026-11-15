@@ -19,17 +19,22 @@ impl App {
         let themes_here = ctx.flags.themes;
         let remote_here = ctx.flags.remote;
         let shortcuts_here = ctx.flags.shortcuts;
+        let sandboxes_here = ctx.flags.sandboxes;
         let mut labels: Vec<(String, i32, i32, u32, [u8; 4])> = Vec::new();
         let mut panels: Vec<(Arc<MemoryRenderBuffer>, i32, i32)> = Vec::new();
         let mut display_icons: Vec<(String, u32, [u8; 4], i32, i32)> = Vec::new();
 
-        if !task_here && !explorer_here && self.shell.fullscreen_window_on(chrome_output).is_none()
+        if !task_here
+            && !sandboxes_here
+            && !explorer_here
+            && self.shell.fullscreen_window_on(chrome_output).is_none()
         {
             if !chat_here
                 && !audio_here
                 && !themes_here
                 && !remote_here
                 && !shortcuts_here
+                && !sandboxes_here
                 && self.shell.overlay().is_none()
             {
                 let bar =
@@ -71,7 +76,7 @@ impl App {
                     }
                 }
             }
-            if self.status_visible() && !chat_here {
+            if self.status_visible() && !chat_here && !sandboxes_here {
                 let bounds = self.shell.output_bounds(chrome_output);
                 let text = self.status().label();
                 let width = self.text_width(&text, 0) as i32 + 42;

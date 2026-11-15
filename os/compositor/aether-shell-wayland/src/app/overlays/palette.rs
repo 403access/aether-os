@@ -10,6 +10,7 @@ impl App {
         if self.shell.overlay().is_none() {
             self.shortcuts_open = false;
             self.close_task_manager();
+            self.close_sandboxes();
             self.shell.close_audio();
             self.shell.close_remote();
             self.shell.close_explorer();
@@ -89,6 +90,10 @@ impl App {
             PaletteAction::OpenShortcuts => {
                 self.shell.close_overlay();
                 self.toggle_shortcuts();
+            }
+            PaletteAction::OpenSandboxes => {
+                self.shell.close_overlay();
+                self.toggle_sandboxes();
             }
             PaletteAction::OpenFile(index) => {
                 self.shell.close_overlay();

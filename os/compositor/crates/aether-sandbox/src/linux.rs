@@ -44,8 +44,29 @@ pub fn landlock_supported() -> bool {
 
 /// Spawn an agent with filesystem, syscall, identity and resource limits.
 pub fn spawn(plan: &SandboxPlan, program: &Path, args: &[String]) -> io::Result<Child> {
+    spawn_with_log(plan, program, args, None)
+}
+
+/// Spawn an agent and append its output to a log file when one is given.
+pub fn spawn_with_log(
+    plan: &SandboxPlan,
+    program: &Path,
+    args: &[String],
+    log: Option<&Path>,
+) -> io::Result<Child> {
     ensure_plan(plan)?;
     let mut command = base_command(plan, program, args)?;
+    if let Some(log) = log {
+        if let Some(parent) = log.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        let stdout = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(log)?;
+        let stderr = stdout.try_clone()?;
+        command.stdout(stdout).stderr(stderr);
+    }
     command.spawn()
 }
 

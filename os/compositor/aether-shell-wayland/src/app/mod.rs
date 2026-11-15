@@ -65,6 +65,7 @@ use self::chat_demo::ChatDemo;
 use self::control::ControlServer;
 use self::index_worker::IndexWorker;
 use self::input::KeyProfile;
+use self::overlays::sandboxes::SandboxPanelState;
 use self::overlays::task_manager::TaskManagerState;
 use self::status::StatusSnapshot;
 
@@ -151,6 +152,8 @@ pub struct App {
     control: Option<ControlServer>,
     pub(crate) shortcuts_open: bool,
     pub(crate) task_manager: Option<TaskManagerState>,
+    pub(crate) sandboxes: Option<SandboxPanelState>,
+    pub(crate) sandbox_last: std::time::Instant,
     task_monitor: SystemMonitor,
     task_last: std::time::Instant,
     pub(crate) key_profile: KeyProfile,
@@ -257,6 +260,8 @@ impl App {
             control: None,
             shortcuts_open: false,
             task_manager: None,
+            sandboxes: None,
+            sandbox_last: std::time::Instant::now(),
             task_monitor: SystemMonitor::default(),
             task_last: std::time::Instant::now(),
             key_profile: KeyProfile::from_env(),
@@ -362,6 +367,7 @@ impl App {
         self.poll_index_results();
         self.poll_chat_demo();
         self.poll_chat_bridge();
+        self.poll_sandboxes();
         self.pump_control();
         if self.agent_sessions.poll() {
             self.refresh_launchers();

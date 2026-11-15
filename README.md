@@ -56,7 +56,7 @@ display path are implemented; their target gates are budgets until run on the
 | DRM session | ✅ native backend on tty7, cage + winit fallback | `os/nixos/services.nix` |
 | Shell surfaces | ✅ palette/explorer/chat/status/audio/remote/themes, 10k palette p95 1.11 ms, explorer scroll p95 0.004 ms | `os/compositor` |
 | Audio | ✅ PipeWire/WirePlumber + Bluetooth policy, overlay, presets, per-app moves, mic capability gate; target latency/xrun gates pending | `os/compositor/crates/aether-audio`, `os/nixos/services.nix` |
-| Agent sandbox | ✅ Landlock + seccomp + per-agent UID + rlimits + optional cgroup v2; supervisor/red-team still P5 | `os/compositor/crates/aether-sandbox` |
+| Agent sandbox | ✅ Landlock + seccomp + per-agent UID + rlimits + optional cgroup v2; `Super+B` registry monitor with stop/log/prune; supervisor/red-team still P5 | `os/compositor/crates/aether-sandbox` |
 | System MCP + chat tools | ✅ 13 audited tools, shell control socket, model loop, scripted mode | `os/compositor/crates/aether-mcp`, `aether-chat` |
 | Installer + full live ISO | ✅ `.#iso` and `.#live-iso` (x86_64; live ISO requires an x86_64 builder) | `os/nixos/installer.nix`, `os/live` |
 | System index daemon | ✅ inotify, socket queries, event ring (6 tests) | `os/index/aether-index` |

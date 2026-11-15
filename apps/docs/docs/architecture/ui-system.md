@@ -21,9 +21,10 @@ not a widget toolkit with a plugin ecosystem.
 | Audio overlay | shell scene graph | keyboard + pointer | on demand |
 | Themes app | shell scene graph | keyboard + pointer | on demand |
 | Task manager | shell scene graph | keyboard + pointer | on demand |
+| Agent sandboxes | shell scene graph | keyboard + pointer | on demand |
 
 The palette merges three application sources: XDG `.desktop` entries, Aether's
-own surface commands (Files, Chat, Audio, Themes, Keyboard shortcuts, Task
+own surface commands (Files, Chat, Audio, Agents, Themes, Keyboard shortcuts, Task
 manager) and external launcher manifests.
 | Explorer | shell layer or native client | keyboard-first list | session |
 | Browser | WebKitGTK buffer | web event loop | tab |

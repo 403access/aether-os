@@ -1,3 +1,21 @@
+## v0.1.0-alpha.72
+
+- Add the **Agent sandboxes** surface (`Super+B`, palette **Agents**, top-dock
+  **Agents**): registry rows with label, id, trust, tier, PID, UID, CPU/RSS and
+  running/stale status; a detail pane with enforcement, limits, capabilities,
+  read/write paths, warnings and log path.
+- `aether-sandbox run` now publishes a record to `/run/aether/sandboxes`
+  (override `AETHER_SANDBOX_REGISTRY`), with new `--id`, `--label`, `--trust`,
+  `--capability`, `--log` and `--no-record` options. Records are removed on
+  exit; stale records are prunable from the UI. A per-sandbox Unix socket lets
+  the shell stop a child running under a reserved UID.
+- Stop (`K`), force-stop (`Shift+K`), open log (`L`/`Enter`), refresh (`R`) and
+  prune (`C`) actions; records are advisory and a missing PID is never shown as
+  running.
+- Verification: 4 registry tests, 3 panel-state tests, shortcut/topbar/palette
+  tests, clippy `-D warnings`, and a headless Xvfb screenshot run with two live
+  sandboxes plus a stale record.
+
 ## v0.1.0-alpha.71
 
 - Add `aether-mcp`, a stdio MCP server for the running system: 13 audited tools

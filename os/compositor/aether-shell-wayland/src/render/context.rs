@@ -19,6 +19,7 @@ pub(crate) struct SurfaceFlags {
     pub shortcuts: bool,
     pub task: bool,
     pub themes: bool,
+    pub sandboxes: bool,
 }
 
 /// Values computed once per output before the sections run.

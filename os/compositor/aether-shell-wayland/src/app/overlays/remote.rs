@@ -14,6 +14,7 @@ impl App {
         }
         self.shortcuts_open = false;
         self.close_task_manager();
+        self.close_sandboxes();
         self.shell.close_overlay();
         self.shell.close_explorer();
         self.shell.close_chat();

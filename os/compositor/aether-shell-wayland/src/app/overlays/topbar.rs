@@ -22,6 +22,7 @@ impl App {
             && !self.shell.themes_open()
             && !self.shell.remote_open()
             && !self.shortcuts_open
+            && !self.sandbox_panel_open()
             && self.shell.overlay().is_none()
     }
 
@@ -57,6 +58,10 @@ impl App {
             TopAction::Audio => {
                 println!("aether-shell: top shortcut audio");
                 self.toggle_audio();
+            }
+            TopAction::Agents => {
+                println!("aether-shell: top shortcut agents");
+                self.toggle_sandboxes();
             }
             TopAction::Shortcuts => {
                 println!("aether-shell: top shortcut keys");

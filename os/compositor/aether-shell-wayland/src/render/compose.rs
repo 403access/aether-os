@@ -45,6 +45,7 @@ impl App {
         chunk.merge(self.compose_audio(&ctx));
         chunk.merge(self.compose_remote(&ctx));
         chunk.merge(self.compose_task_manager(&ctx));
+        chunk.merge(self.compose_sandboxes(&ctx));
         chunk.merge(self.compose_explorer(&ctx));
         chunk.merge(self.compose_status_chrome(&ctx));
 
@@ -161,6 +162,7 @@ impl App {
         let remote = self.shell.remote_open() && (output.is_none() || output == Some(primary));
         let shortcuts = self.shortcuts_open && (output.is_none() || output == Some(primary));
         let task = self.task_manager_open() && (output.is_none() || output == Some(primary));
+        let sandboxes = self.sandbox_panel_open() && (output.is_none() || output == Some(primary));
 
         FrameContext {
             output,
@@ -187,6 +189,7 @@ impl App {
                 shortcuts,
                 task,
                 themes,
+                sandboxes,
             },
         }
     }

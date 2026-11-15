@@ -105,7 +105,8 @@ The process tier is implemented in `os/compositor/crates/aether-sandbox`:
 ```bash
 aether-sandbox check
 aether-sandbox plan --read /work/aether --write /work/aether/scratch
-aether-sandbox run --read /work/aether --write /work/aether/scratch \
+aether-sandbox run --id build --label "Build agent" \
+  --read /work/aether --write /work/aether/scratch --log /work/aether/build.log \
   -- /usr/bin/python3 /work/aether/agent.py
 ```
 
@@ -129,6 +130,24 @@ passes a writable cgroup root.
 The implementation is packaged as `.#aether-sandbox` on the target and live
 images. Linux integration tests prove an allowed file is readable, an
 unallowlisted secret is denied, and an out-of-scratch write is denied.
+
+### Agent sandboxes surface
+
+`aether-sandbox run` writes one record per child to `/run/aether/sandboxes`
+(shared root registry; override: `AETHER_SANDBOX_REGISTRY`) before it waits, and
+removes it on exit. A per-sandbox Unix socket lets the unprivileged shell request
+a stop even though the child runs under a reserved UID. `Super+B` renders that registry with the live
+process table: label, id, trust, tier, PID, UID, CPU/RSS, enforcement, limits,
+capabilities, read/write paths, warnings and log path. `K` stops the selected
+sandbox, `Shift+K` force-stops it, `L` opens its log, and `C` prunes records left
+by a killed launcher. A record is advisory; a missing PID is shown as `stale`,
+never silently treated as running.
+
+The registry is not a supervisor. It records what the CLI actually started; the
+future `aetherd` remains responsible for admission, capability issuance and
+cross-agent audit.
+
+![Agent sandboxes surface with two running agents and a stale record](/img/smithay-agent-sandboxes.png)
 
 ## The planner
 

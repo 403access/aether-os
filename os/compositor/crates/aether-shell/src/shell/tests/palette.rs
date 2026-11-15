@@ -21,6 +21,7 @@ fn palette_filters_workspaces_and_close() {
             "Files",
             "Chat",
             "Audio",
+            "Agents",
             "Themes",
             "Keyboard shortcuts",
             "Task manager",
@@ -165,6 +166,7 @@ fn palette_lists_application_launchers() {
             "Files",
             "Chat",
             "Audio",
+            "Agents",
             "Themes",
             "Keyboard shortcuts",
             "Task manager",
@@ -227,7 +229,7 @@ fn palette_rows_slide_with_selection() {
     }
     shell.open_overlay();
 
-    assert_eq!(shell.palette_entries().len(), 14);
+    assert_eq!(shell.palette_entries().len(), 15);
     assert_eq!(shell.palette_visible_start(), 0);
     let first = shell.palette_row_rect(0).expect("row 0");
     assert_eq!(first.x, 70);
@@ -249,7 +251,7 @@ fn palette_rows_slide_with_selection() {
     );
     assert!(shell.palette_select(7));
     assert_eq!(shell.palette_selected(), 7);
-    assert!(!shell.palette_select(14));
+    assert!(!shell.palette_select(15));
 }
 
 #[test]
@@ -260,7 +262,7 @@ fn palette_selection_wraps_and_activates() {
 
     assert_eq!(shell.palette_selected(), 0);
     assert!(shell.palette_move_selection(-1));
-    assert_eq!(shell.palette_selected(), 9);
+    assert_eq!(shell.palette_selected(), 10);
     assert_eq!(shell.palette_activate(), Some(PaletteAction::Close));
 
     assert!(shell.palette_move_selection(1));

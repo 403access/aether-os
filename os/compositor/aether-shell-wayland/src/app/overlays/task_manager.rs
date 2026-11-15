@@ -131,6 +131,7 @@ impl App {
         let space: Keysym = keysyms::KEY_space.into();
         if keysym == escape {
             self.close_task_manager();
+            self.close_sandboxes();
             return;
         }
         let visible = self.task_visible_rows();

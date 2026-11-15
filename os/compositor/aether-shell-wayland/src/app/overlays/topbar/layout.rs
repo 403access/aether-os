@@ -11,16 +11,18 @@ pub enum TopAction {
     Files,
     Chat,
     Audio,
+    Agents,
     Shortcuts,
 }
 
 impl TopAction {
-    pub const ALL: [Self; 6] = [
+    pub const ALL: [Self; 7] = [
         Self::Palette,
         Self::Terminal,
         Self::Files,
         Self::Chat,
         Self::Audio,
+        Self::Agents,
         Self::Shortcuts,
     ];
 
@@ -31,6 +33,7 @@ impl TopAction {
             Self::Files => "Files",
             Self::Chat => "Chat",
             Self::Audio => "Audio",
+            Self::Agents => "Agents",
             Self::Shortcuts => "Shortcuts",
         }
     }
@@ -42,6 +45,7 @@ impl TopAction {
             Self::Files => "folder",
             Self::Chat => "chat",
             Self::Audio => "audio",
+            Self::Agents => "agents",
             Self::Shortcuts => "keyboard",
         }
     }
@@ -107,7 +111,7 @@ mod tests {
         let bounds = Rect::new(0, 0, 1280, 800);
         let bar = layout(bounds);
         assert!(!bar.compact);
-        assert_eq!(bar.items.len(), 6);
+        assert_eq!(bar.items.len(), 7);
         let center = bar.rect.x + bar.rect.width as i32 / 2;
         assert!((center - 640).abs() <= 2);
         let (action, rect) = bar.items[0];
@@ -120,6 +124,6 @@ mod tests {
     fn narrow_outputs_use_icons_only() {
         let bar = layout(Rect::new(0, 0, 800, 600));
         assert!(bar.compact);
-        assert!(bar.rect.width < 300);
+        assert!(bar.rect.width < 340);
     }
 }

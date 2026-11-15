@@ -18,6 +18,7 @@ impl App {
         }
         self.shortcuts_open = false;
         self.close_task_manager();
+        self.close_sandboxes();
         self.shell.open_themes();
         let settings = *self.shell.theme_settings();
         println!(

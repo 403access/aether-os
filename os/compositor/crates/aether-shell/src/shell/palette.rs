@@ -120,6 +120,11 @@ impl Shell {
                 ("Chat", "Aether chat", PaletteAction::OpenChat),
                 ("Audio", "Aether audio routes", PaletteAction::OpenAudio),
                 (
+                    "Agents",
+                    "Sandboxed agents · isolation",
+                    PaletteAction::OpenSandboxes,
+                ),
+                (
                     "Themes",
                     "Theme · Water settings",
                     PaletteAction::OpenThemes,

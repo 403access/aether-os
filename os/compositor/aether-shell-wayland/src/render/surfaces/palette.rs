@@ -150,6 +150,7 @@ impl App {
                         PaletteAction::OpenAudio => "audio",
                         PaletteAction::OpenThemes => "palette",
                         PaletteAction::OpenShortcuts => "keyboard",
+                        PaletteAction::OpenSandboxes => "agents",
                         PaletteAction::OpenFile(_) => "file",
                         PaletteAction::Close => "close",
                     };

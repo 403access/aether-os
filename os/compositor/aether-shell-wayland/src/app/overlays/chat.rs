@@ -1,8 +1,9 @@
 //! Chat drawer: token streaming, scrolling and demo polling.
 
+use aether_protocol::chat::ChatEvent;
 use smithay::input::keyboard::{keysyms, xkb, Keysym};
 
-use super::super::{chat_bridge::ChatEvent, App};
+use super::super::App;
 
 impl App {
     pub(crate) fn toggle_chat(&mut self) {

@@ -1,7 +1,9 @@
 //! `aether-sandbox` CLI: inspect support, print a plan, or run one command in
 //! the kernel sandbox.
 
-use std::path::{Path, PathBuf};
+#[cfg(target_os = "linux")]
+use std::path::Path;
+use std::path::PathBuf;
 use std::process::ExitCode;
 
 use aether_sandbox::{plan, AgentSpec, Trust};

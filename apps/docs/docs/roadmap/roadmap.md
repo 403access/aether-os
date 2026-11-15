@@ -18,7 +18,7 @@ P3 Shell surfaces   ██████████░░  gate pending
 P4 Audio            ██████████░░  code-complete, gate pending
 P5 Agents & chat    ░░░░░░░░░░░░
 P6 Applications     ░░░░░░░░░░░░
-P7 Remote display   ██░░░░░░░░░░  in progress
+P7 Remote display   ██████████░░  code-complete, gate pending
 P8 Hardening        ░░░░░░░░░░░░
 ```
 

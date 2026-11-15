@@ -179,7 +179,7 @@ depth exceeds 1. Evidence:
 
 **Why.** None of the three gate numbers can be produced today.
 
-**Touch.** `aether-shell-wayland/src/app.rs` (input timestamps), `render.rs`
+**Touch.** `aether-shell-wayland/src/app/input/mod.rs` (input timestamps), `render.rs`
 (damage committed), `aether-shell-drm/src/main.rs` (present, flip complete, queue
 depth), `aether-pacing` (`PacingReport` serialisation).
 
@@ -208,7 +208,7 @@ same refresh, and a sub-120 Hz output logs an explicit gate shortfall.
 carry refresh and nothing asserts that the pacer and the advertised Wayland mode
 agree. The winit host still hardcodes 1280×800@60.
 
-**Touch.** `aether-shell-wayland/src/app.rs` (`OutputInfo`), `aether-shell-drm/src/main.rs`
+**Touch.** `aether-shell-wayland/src/app/outputs.rs` (`OutputInfo`), `aether-shell-drm/src/main.rs`
 (`add_output`), `aether-shell-smithay/src/client.rs` (host output).
 
 **Do.**
@@ -358,7 +358,7 @@ add under V3.
 every palette keystroke, with 250 ms socket timeouts (`app.rs:834`). A slow or hung
 index service stalls input and directly violates the *input→damage* gate.
 
-**Touch.** `aether-shell-wayland/src/app.rs` (query path), `apps/indexer-service`
+**Touch.** `aether-shell-wayland/src/app/launcher.rs` (query path), `apps/indexer-service`
 (protocol unchanged), new worker module.
 
 **Do.**

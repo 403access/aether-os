@@ -12,8 +12,8 @@
   and borders, and rebuild the backdrop from mode, background, caustics and speed.
   The app previews drips, click ripples, waves and caustics.
 - Add the Themes app to the palette and shortcut table, and document the settings
-  and storage path. Verification: 18 new `aether-shell` tests; `aether-shell` and
-  the Wayland lib are `clippy -D warnings` clean.
+  and storage path. Verification: 21 new `aether-shell` tests; `aether-shell`
+  and the Wayland lib are `clippy -D warnings` clean.
 
 ## v0.1.0-alpha.69
 

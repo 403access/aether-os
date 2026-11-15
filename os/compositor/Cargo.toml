@@ -15,6 +15,7 @@ members = [
   "crates/aether-sandbox",
   "crates/aether-system",
   "crates/aether-preview",
+  "crates/aether-remote",
 ]
 resolver = "2"
 
@@ -38,6 +39,7 @@ aether-cursor = { path = "crates/aether-cursor" }
 aether-audio = { path = "crates/aether-audio" }
 aether-sandbox = { path = "crates/aether-sandbox" }
 aether-system = { path = "crates/aether-system" }
+aether-remote = { path = "crates/aether-remote" }
 
 [profile.release]
 lto = "thin"

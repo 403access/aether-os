@@ -1,0 +1,24 @@
+[package]
+name = "aether-remote"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Remote display pipeline: capture, low-latency encode, WebRTC transport and browser client protocol"
+
+[lib]
+name = "aether_remote"
+path = "src/lib.rs"
+
+[[bin]]
+name = "aether-remote"
+path = "src/main.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+base64 = "0.22"
+rand = "0.9"
+rusty_h264-common = "0.17"
+rusty_h264-encoder = "0.17"
+str0m = { version = "0.25", default-features = false, features = ["rust-crypto"] }

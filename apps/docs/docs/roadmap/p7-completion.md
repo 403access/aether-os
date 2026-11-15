@@ -37,7 +37,7 @@ run happens on the 7700K. Nothing below presents a dev-host number as the gate.
 | P7-T6 | Browser client `@aether/remote`: capability probe, tier selection, WebCodecs/canvas adapter, input batching, stats | Capability matrix selects the right tier; client state machine survives fallback and reconnect; input batches coalesce motion | `packages/remote` tests + `artifacts/p7/client.json` |
 | P7-T7 | Web viewer surface and screenshots | The viewer shows pairing, tier, latency and the recording indicator; Playwright covers pairing + streaming states | `e2e/remote.spec.ts`, `remote-viewer.png` |
 | P7-T8 | Compositor integration: remote overlay, status chip, `Super+R`, preview renderer | Overlay opens/closes, actions cycle input/clipboard, status reports the active session; preview captures both states | `aether-shell` tests, `artifacts/smithay/remote.png`, `remote-idle.png` |
-| P7-T9 | NixOS service, firewall and docs verification | Config evaluates; service is opt-in and local-only; claims/roadmap/README/CHANGELOG agree | `nix flake check --no-build` log, docs build |
+| P7-T9 | NixOS service, firewall and docs verification | Package/service written; service is opt-in and binds loopback only; claims/roadmap/README/CHANGELOG agree | `flake.nix`, `os/nixos/services.nix`, docs build; `nix flake check --no-build` runs on a Linux host with Nix (not available here) |
 
 ## Sequencing
 
@@ -60,6 +60,7 @@ session in the shell; T9 packages and reconciles.
 | `aether-remote` tests | 42 passed |
 | str0m loopback handshake | passed: peers connect, input channel opens, `aether-input` echoes, video write accepted |
 | `packages/remote` tests | 10 passed |
+| Browser client report | `scripts/remote-client-report.ts` → `artifacts/p7/client.json` |
 | Web viewer e2e | 2 passed (`e2e/remote.spec.ts`); 17 Playwright specs total |
 | Shell remote-overlay tests | 3 passed (58 shell tests total) |
 | Preview remote renderer | 1 test + `artifacts/shell/remote.png`, `remote-idle.png` |
@@ -68,6 +69,7 @@ session in the shell; T9 packages and reconciles.
 | `bun run verify` | passed |
 | `aether-remote serve` signaling smoke | `/health` + hello → welcome + SDP offer; status document published (`scripts/remote-smoke.sh`) |
 | Wayland backend compile | `cargo check` passed; tests need Linux `libxkbcommon` |
+| Nix evaluation | **not run here** (no Nix/x86_64 host); package and service are evaluated in CI/Linux |
 | Glass-to-glass < 40 ms on target | **budget**; harness committed, target run pending |
 | No CPU pixel copies on target | **budget**; audit + DMA-BUF descriptor committed, compositor import pending |
 | p99 frame interval < 1.5× target | **budget**; dev-host synthetic p99 19.4–20.5 ms at 60 fps (budget 25 ms), target run pending |
@@ -98,4 +100,4 @@ M3; the target is the i7-7700K.
 | P7-T6 | ✅ `ab88628` | browser client, capability probe, WebCodecs/JPEG sinks |
 | P7-T7 | ✅ `b67656c` | marketing viewer, e2e, screenshots |
 | P7-T8 | ✅ `5096ff6` | shell overlay, `Super+R`, status chip, preview screenshots |
-| P7-T9 | ✅ | Nix package/service, docs and claims reconciliation (this commit) |
+| P7-T9 | ✅ | Nix package/service, docs and claims reconciliation; Linux `nix flake check` still required |

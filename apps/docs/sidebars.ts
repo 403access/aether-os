@@ -60,6 +60,7 @@ const sidebars: SidebarsConfig = {
         "roadmap/p2-completion",
         "roadmap/p3-completion",
         "roadmap/p4-completion",
+        "roadmap/p7-completion",
         "roadmap/risks",
         "roadmap/design-system-and-explorer",
       ],

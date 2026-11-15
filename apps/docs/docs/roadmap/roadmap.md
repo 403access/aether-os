@@ -18,7 +18,7 @@ P3 Shell surfaces   ██████████░░  gate pending
 P4 Audio            ██████████░░  code-complete, gate pending
 P5 Agents & chat    ░░░░░░░░░░░░
 P6 Applications     ░░░░░░░░░░░░
-P7 Remote display   ░░░░░░░░░░░░
+P7 Remote display   ██░░░░░░░░░░  in progress
 P8 Hardening        ░░░░░░░░░░░░
 ```
 
@@ -202,20 +202,33 @@ unreadable from a `file://` page.
 
 **Dependencies.** P2, P3. **Risk:** WebKit integration, GPU decode on HD 630.
 
-## P7 — Remote display
+## P7 — Remote display · in progress
 
 **Goal.** The desktop in a browser tab at interactive latency.
 
 Deliverables:
 
-- DMA-BUF capture → VA-API encode → str0m → WebCodecs canvas.
-- Virtual seat input over a data channel.
-- Signaling service, pairing code, DTLS.
-- Fallback ladder (WebSocket + fMP4, JPEG tiles).
-- AF_XDP only if measurement justifies it.
+- ✅ DMA-BUF capture model, zero-copy audit and a real low-latency H.264 encoder
+  with a DMA-BUF → VA-API/NVENC → software ladder.
+- ✅ str0m WebRTC transport, DTLS fingerprints, one-shot pairing codes, session
+  tokens and an audited signaling exchange.
+- ✅ Virtual-seat input over a data channel: scancodes only, coalesced motion and
+  a rate limit.
+- ✅ `@aether/remote` browser client: WebCodecs decode, canvas sink, tier
+  selection and a WebSocket/JPEG fallback packet model.
+- ✅ Compositor remote overlay (`Super+R`), recording indicator and status chip.
+- ✅ Opt-in NixOS service with local-only listeners and VA-API packages.
+- ⏳ Bind capture to the compositor's exported DMA-BUFs and run the glass-to-glass
+  measurement on the 7700K.
+- ⏳ AF_XDP only if the measurement shows the kernel stack dominates.
 
 **Gate.** Glass-to-glass < 40 ms LAN; no CPU pixel copies; p99 frame interval
 < 1.5× target.
+
+**Status.** Code-complete except the target capture binding and measurement. The
+transport, encoder, client and fallback model are tested on the dev host; the
+gate numbers remain **budgets**. Execution plan and ledger:
+[P7 completion](/roadmap/p7-completion).
 
 **Dependencies.** P2, P6 (for real workloads). **Risk:** encoder/driver matrix,
 WebCodecs support differences.

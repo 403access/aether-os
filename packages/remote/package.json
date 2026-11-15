@@ -1,0 +1,16 @@
+{
+  "name": "@aether/remote",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "type": "module",
+  "description": "Browser-side remote display client: WebCodecs decode, input batching, tier fallback and latency stats.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@aether/protocol": "workspace:*"
+  }
+}

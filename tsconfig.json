@@ -25,7 +25,8 @@
       "@aether/agents": ["packages/agents/src/index.ts"],
       "@aether/palette": ["packages/palette/src/index.ts"],
       "@aether/ui": ["packages/ui/src/index.ts"],
-      "@aether/bench": ["packages/bench/src/index.ts"]
+      "@aether/bench": ["packages/bench/src/index.ts"],
+      "@aether/remote": ["packages/remote/src/index.ts"]
     }
   },
   "include": [

@@ -20,6 +20,9 @@
 
 pub mod capture;
 pub mod encode;
+pub mod ladder;
+pub mod session;
+pub mod signaling;
 
 pub use capture::{
     CaptureFrame, CaptureSource, CopyAuditor, DamageRect, DmaBufFrame, FramePayload, PixelFormat,
@@ -28,3 +31,9 @@ pub use encode::{
     default_preferences, select_encoder, Codec, EncodedFrame, EncoderCaps, EncoderConfig,
     EncoderKind, H264Encoder, RateController,
 };
+pub use ladder::{latency_badge, select_codec, select_tier, ClientCaps, Tier};
+pub use session::{
+    AuditChain, PairingCode, PairingError, PairingRegistry, RemoteSession, SessionError,
+    SessionPolicy, SessionState, SessionToken, REMOTE_HOST_SCOPE,
+};
+pub use signaling::{accept_hello, ClientHello, ServerWelcome, SignalMessage};

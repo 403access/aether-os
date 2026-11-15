@@ -10,8 +10,12 @@ use aether_remote::capture::{
     SyntheticSource,
 };
 use aether_remote::encode::{
-    default_preferences, select_encoder, EncoderCaps, EncoderConfig, EncoderKind, H264Encoder,
+    default_preferences, select_encoder, Codec, EncoderCaps, EncoderConfig, EncoderKind,
+    H264Encoder,
 };
+use aether_remote::ladder::ClientCaps;
+use aether_remote::session::{PairingRegistry, SessionPolicy, DEFAULT_PAIRING_TTL_MS};
+use aether_remote::signaling::{accept_hello, ClientHello, SignalMessage};
 use serde_json::json;
 
 fn main() {
@@ -25,6 +29,12 @@ fn main() {
         }
         Some("encode") => {
             if let Err(error) = encode(&args) {
+                eprintln!("aether-remote: {error}");
+                std::process::exit(1);
+            }
+        }
+        Some("pair") => {
+            if let Err(error) = pair(&args) {
                 eprintln!("aether-remote: {error}");
                 std::process::exit(1);
             }
@@ -45,6 +55,7 @@ fn usage() {
          commands:\n\
          \x20 capture [--width N] [--height N] [--frames N] [--json PATH]  exercise the capture model\n\
          \x20 encode [--width N] [--height N] [--frames N] [--ndjson PATH]  encode synthetic frames\n\
+         \x20 pair [--json PATH]                                           mint a one-shot pairing code and welcome\n\
          \x20 help                                                           this message"
     );
 }
@@ -125,6 +136,63 @@ fn capture(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
         println!("{text}");
     }
     println!("capture: {}", auditor.summary());
+    Ok(())
+}
+
+fn pair(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
+    let now_ms = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)?
+        .as_millis() as u64;
+    let mut registry = PairingRegistry::new(DEFAULT_PAIRING_TTL_MS);
+    let code = registry.issue(now_ms);
+    let hello = ClientHello::new(code.display(), ClientCaps::modern());
+    let fingerprint = {
+        let mut rtc = str0m::Rtc::new(std::time::Instant::now());
+        rtc.direct_api().local_dtls_fingerprint().to_string()
+    };
+    let (session, welcome) = accept_hello(
+        &mut registry,
+        now_ms,
+        &hello,
+        &[Codec::H264],
+        &fingerprint,
+        SessionPolicy::default(),
+    )?;
+    let summary = json!({
+        "pairing_code": code.display(),
+        "expires_in_ms": code.expires_at_ms.saturating_sub(now_ms),
+        "session": {
+            "id": session.id,
+            "tier": welcome.tier,
+            "codec": welcome.codec,
+            "expires_at_ms": welcome.expires_at_ms,
+            "dtls_fingerprint": welcome.dtls_fingerprint,
+            "policy": welcome.policy,
+            "token_prefix": &welcome.token[..8],
+        },
+        "hello": SignalMessage::Hello(hello),
+        "welcome": SignalMessage::Welcome(welcome),
+        "audit": session.audit,
+        "audit_valid": session.audit.verify(),
+    });
+    let text = serde_json::to_string_pretty(&summary)?;
+    if let Some(path) = flag(args, "--json") {
+        let path = PathBuf::from(path);
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::write(&path, format!("{text}\n"))?;
+        println!("wrote {}", path.display());
+    } else {
+        println!("{text}");
+    }
+    println!(
+        "pair: {}  tier={}  codec={}  session={}",
+        code.display(),
+        session.tier.short(),
+        session.codec.label(),
+        session.id
+    );
     Ok(())
 }
 

@@ -19,7 +19,12 @@
 #![forbid(unsafe_code)]
 
 pub mod capture;
+pub mod encode;
 
 pub use capture::{
     CaptureFrame, CaptureSource, CopyAuditor, DamageRect, DmaBufFrame, FramePayload, PixelFormat,
+};
+pub use encode::{
+    default_preferences, select_encoder, Codec, EncodedFrame, EncoderCaps, EncoderConfig,
+    EncoderKind, H264Encoder, RateController,
 };

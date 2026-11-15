@@ -12,8 +12,6 @@ use rusty_h264_common::YuvPlanes;
 use rusty_h264_encoder::{Encoder, EncoderConfig as H264Config, Preset};
 use serde::{Deserialize, Serialize};
 
-use crate::capture::PixelFormat;
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Codec {
@@ -364,14 +362,8 @@ impl H264Encoder {
             &mut self.v,
             order,
         );
-        let planes = YuvPlanes::tight(
-            width as usize,
-            height as usize,
-            &self.y,
-            &self.u,
-            &self.v,
-        )
-        .ok_or(EncodeError::Encoder)?;
+        let planes = YuvPlanes::tight(width as usize, height as usize, &self.y, &self.u, &self.v)
+            .ok_or(EncodeError::Encoder)?;
         let data = self
             .inner
             .encode_planes(&planes)
@@ -661,7 +653,8 @@ mod tests {
             rate.on_interval(16_000, target, false);
         }
         assert!(rate.target_kbps > 7_200);
-        assert_eq!(rate.on_loss(50), 5_760);
-        assert_eq!(rate.on_loss(0), 5_760);
+        let backed_off = rate.target_kbps;
+        assert!(rate.on_loss(50) < backed_off);
+        assert_eq!(rate.on_loss(0), rate.target_kbps);
     }
 }

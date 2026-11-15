@@ -9,6 +9,9 @@ use aether_remote::capture::{
     CaptureFrame, CaptureSource, CopyAuditor, DmaBufFrame, FramePayload, PixelFormat,
     SyntheticSource,
 };
+use aether_remote::encode::{
+    default_preferences, select_encoder, EncoderCaps, EncoderConfig, EncoderKind, H264Encoder,
+};
 use serde_json::json;
 
 fn main() {
@@ -16,6 +19,12 @@ fn main() {
     match args.first().map(String::as_str) {
         Some("capture") | None => {
             if let Err(error) = capture(&args) {
+                eprintln!("aether-remote: {error}");
+                std::process::exit(1);
+            }
+        }
+        Some("encode") => {
+            if let Err(error) = encode(&args) {
                 eprintln!("aether-remote: {error}");
                 std::process::exit(1);
             }
@@ -35,6 +44,7 @@ fn usage() {
          \n\
          commands:\n\
          \x20 capture [--width N] [--height N] [--frames N] [--json PATH]  exercise the capture model\n\
+         \x20 encode [--width N] [--height N] [--frames N] [--ndjson PATH]  encode synthetic frames\n\
          \x20 help                                                           this message"
     );
 }
@@ -115,5 +125,102 @@ fn capture(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
         println!("{text}");
     }
     println!("capture: {}", auditor.summary());
+    Ok(())
+}
+
+fn encode(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
+    let width: u32 = number(args, "--width", 320);
+    let height: u32 = number(args, "--height", 180);
+    let frames: usize = number(args, "--frames", 30);
+    let fps: u32 = number(args, "--fps", 60);
+    let bitrate: u32 = number(args, "--bitrate", 4_000);
+
+    let caps = EncoderCaps::software_only();
+    let (kind, codec) = select_encoder(
+        &caps,
+        &default_preferences(aether_remote::encode::Codec::H264),
+    )
+    .ok_or("no encoder available")?;
+    let config = EncoderConfig::low_latency(width, height, fps)
+        .with_kind(kind)
+        .with_bitrate(bitrate);
+    let mut encoder = H264Encoder::new(config)?;
+    let mut source = SyntheticSource::new(width, height, fps);
+    let mut auditor = CopyAuditor::default();
+    let mut records = Vec::new();
+    let mut now_us = 0u64;
+    let interval = 1_000_000 / u64::from(fps.max(1));
+    let mut encoded = 0usize;
+    let mut total_bytes = 0u64;
+    let mut max_encode_us = 0u64;
+    let mut keyframes = 0usize;
+    while encoded < frames {
+        let Some(frame) = source.next_frame(now_us) else {
+            now_us += interval / 4;
+            continue;
+        };
+        auditor.record(&frame);
+        let FramePayload::Cpu(cpu) = &frame.payload else {
+            continue;
+        };
+        let encoded_frame = encoder.encode(&aether_remote::encode::BgraFrame::new(
+            frame.width,
+            frame.height,
+            cpu.stride,
+            &cpu.data,
+        ))?;
+        let bytes = encoded_frame.bytes() as u64;
+        total_bytes += bytes;
+        max_encode_us = max_encode_us.max(encoded_frame.encode_us);
+        if encoded_frame.keyframe {
+            keyframes += 1;
+        }
+        records.push(json!({
+            "sequence": encoded_frame.sequence,
+            "pts_us": frame.captured_at_us,
+            "bytes": bytes,
+            "keyframe": encoded_frame.keyframe,
+            "annex_b": encoded_frame.is_annex_b(),
+            "encode_us": encoded_frame.encode_us,
+            "codec": encoded_frame.codec.label(),
+            "kind": encoded_frame.kind.label(),
+        }));
+        encoded += 1;
+        now_us += interval;
+    }
+    let summary = json!({
+        "width": width,
+        "height": height,
+        "fps": fps,
+        "frames": encoded,
+        "keyframes": keyframes,
+        "total_bytes": total_bytes,
+        "max_encode_us": max_encode_us,
+        "contract": encoder.config().low_latency_contract(),
+        "capture": auditor,
+        "software": kind == EncoderKind::Software,
+    });
+    let ndjson = records
+        .iter()
+        .map(|record| serde_json::to_string(record).unwrap_or_default())
+        .collect::<Vec<_>>()
+        .join("\n");
+    let ndjson = format!(
+        "{ndjson}\n{{\"summary\":{}}}\n",
+        serde_json::to_string(&summary)?
+    );
+    if let Some(path) = flag(args, "--ndjson") {
+        let path = PathBuf::from(path);
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::write(&path, ndjson)?;
+        println!("wrote {}", path.display());
+    } else {
+        print!("{ndjson}");
+    }
+    println!(
+        "encode: {kind:?}/{codec:?} {frames} frames, {total_bytes} bytes, max {max_encode_us} us"
+    );
     Ok(())
 }

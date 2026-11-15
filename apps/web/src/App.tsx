@@ -6,6 +6,7 @@ import { Screenshots } from "./sections/Screenshots";
 import { PaletteDemo } from "./sections/PaletteDemo";
 import { Architecture, Isolation } from "./sections/Architecture";
 import { ExplorerDemo, Performance } from "./sections/Workspace";
+import { Remote } from "./sections/Remote";
 import { DesignSystem, Roadmap } from "./sections/Roadmap";
 
 export function App() {
@@ -79,6 +80,7 @@ export function App() {
           <a href="#isolation">Isolation</a>
           <a href="#palette">Palette</a>
           <a href="#explorer">Explorer</a>
+          <a href="#remote">Remote</a>
           <a href="#roadmap">Roadmap</a>
         </div>
 
@@ -99,6 +101,7 @@ export function App() {
         <Architecture />
         <Isolation />
         <ExplorerDemo />
+        <Remote />
         <Performance />
         <Roadmap />
         <DesignSystem />

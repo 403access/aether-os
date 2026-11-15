@@ -51,6 +51,15 @@ const SHOTS: Shot[] = [
     alt: "Aether audio overlay listing analog, USB and Bluetooth outputs and inputs with an input level meter.",
   },
   {
+    id: "remote",
+    file: "screenshots/remote.png",
+    title: "Remote display",
+    shortcut: "Super+R",
+    caption:
+      "The same shell in a browser tab: WebRTC transport, WebCodecs decode and a virtual seat that accepts scancodes only. The pairing code is one-shot and the recording indicator is always visible.",
+    alt: "Aether remote viewer in a browser showing the desktop, a live HUD and a recording indicator.",
+  },
+  {
     id: "shortcuts",
     file: "screenshots/shortcuts.png",
     title: "Keymap cheatsheet",

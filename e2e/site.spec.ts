@@ -93,7 +93,7 @@ test.describe("marketing site", () => {
     await page.goto("/#screenshots");
 
     const shots = page.locator(".shot__image");
-    await expect(shots).toHaveCount(5);
+    await expect(shots).toHaveCount(6);
     for (const shot of await shots.all()) {
       await shot.scrollIntoViewIfNeeded();
       expect(await shot.evaluate((img) => (img as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);

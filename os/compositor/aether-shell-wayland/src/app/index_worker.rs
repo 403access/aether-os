@@ -4,14 +4,13 @@
 //! keystrokes, talks to the index socket off-thread and returns tagged results;
 //! stale generations are discarded by the caller.
 
-use std::io::{BufRead, BufReader, Write};
-use std::os::unix::net::UnixStream;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, Receiver};
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::{Duration, Instant};
 
+use aether_protocol::index::{self, IndexRequest};
 use aether_shell::PaletteFile;
 
 const DEBOUNCE: Duration = Duration::from_millis(30);
@@ -132,46 +131,30 @@ pub fn should_apply(generation: u64, current: u64) -> bool {
     generation == current
 }
 
-fn query_index(socket: &PathBuf, query: &str, limit: usize) -> Option<Vec<PaletteFile>> {
+fn query_index(socket: &Path, query: &str, limit: usize) -> Option<Vec<PaletteFile>> {
     let started = Instant::now();
-    let mut stream = UnixStream::connect(socket).ok()?;
-    let _ = stream.set_read_timeout(Some(SOCKET_TIMEOUT));
-    let _ = stream.set_write_timeout(Some(SOCKET_TIMEOUT));
-    let request = serde_json::json!({ "query": query, "limit": limit });
-    writeln!(stream, "{request}").ok()?;
-    let mut reader = BufReader::new(stream);
-    let mut line = String::new();
-    if reader.read_line(&mut line).is_err() {
-        eprintln!(
-            "aether-shell: index query failed after {}µs",
-            started.elapsed().as_micros()
-        );
-        return None;
+    let request = IndexRequest::new(query, limit);
+    match index::query(socket, &request, SOCKET_TIMEOUT) {
+        Ok(response) => Some(
+            response
+                .results
+                .into_iter()
+                .take(limit)
+                .map(|hit| PaletteFile {
+                    name: hit.title,
+                    detail: hit.subtitle,
+                    path: hit.path,
+                })
+                .collect(),
+        ),
+        Err(error) => {
+            eprintln!(
+                "aether-shell: index query failed after {}µs: {error}",
+                started.elapsed().as_micros()
+            );
+            None
+        }
     }
-    let value = serde_json::from_str::<serde_json::Value>(&line).ok()?;
-    Some(
-        value
-            .get("results")
-            .and_then(|results| results.as_array())
-            .map(|results| {
-                results
-                    .iter()
-                    .filter_map(|result| {
-                        Some(PaletteFile {
-                            name: result.get("title")?.as_str()?.to_string(),
-                            detail: result
-                                .get("subtitle")
-                                .and_then(|value| value.as_str())
-                                .unwrap_or("indexed file")
-                                .to_string(),
-                            path: result.get("path")?.as_str()?.to_string(),
-                        })
-                    })
-                    .take(limit)
-                    .collect()
-            })
-            .unwrap_or_default(),
-    )
 }
 
 #[cfg(test)]

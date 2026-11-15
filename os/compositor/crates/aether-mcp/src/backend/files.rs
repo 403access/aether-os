@@ -1,14 +1,14 @@
 //! File search: prefer the Aether index daemon, fall back to a bounded walk.
 
-use std::io::{BufRead, BufReader, Write};
-use std::os::unix::net::UnixStream;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
+use aether_protocol::index::{self, IndexHit, IndexRequest};
 use serde_json::{json, Value};
 
 const WALK_DEPTH: usize = 6;
 const WALK_ENTRIES: usize = 40_000;
+const INDEX_TIMEOUT: Duration = Duration::from_secs(2);
 
 pub fn search(
     index: Option<&Path>,
@@ -46,26 +46,11 @@ pub fn search(
     }))
 }
 
-fn query_index(socket: &Path, query: &str, limit: usize) -> Result<Vec<Value>, String> {
-    let stream =
-        UnixStream::connect(socket).map_err(|error| format!("{}: {error}", socket.display()))?;
-    stream
-        .set_read_timeout(Some(Duration::from_secs(2)))
-        .map_err(|error| error.to_string())?;
-    let mut writer = stream.try_clone().map_err(|error| error.to_string())?;
-    writeln!(writer, "{}", json!({"query": query, "limit": limit}))
-        .map_err(|error| error.to_string())?;
-    let mut line = String::new();
-    BufReader::new(stream)
-        .read_line(&mut line)
-        .map_err(|error| error.to_string())?;
-    let response: Value = serde_json::from_str(line.trim()).map_err(|error| error.to_string())?;
-    let results = response
-        .get("results")
-        .and_then(Value::as_array)
-        .cloned()
-        .unwrap_or_default();
-    Ok(results)
+fn query_index(socket: &Path, query: &str, limit: usize) -> Result<Vec<IndexHit>, String> {
+    let request = IndexRequest::new(query, limit);
+    index::query(socket, &request, INDEX_TIMEOUT)
+        .map(|response| response.results)
+        .map_err(|error| format!("{}: {error}", socket.display()))
 }
 
 fn walk(

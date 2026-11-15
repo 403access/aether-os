@@ -4,7 +4,7 @@ use aether_text::text_width;
 
 mod sample;
 
-pub(crate) use sample::{read_cpu, CpuTimes};
+pub(crate) use aether_system::{cpu_times as read_cpu, CpuTimes};
 pub use sample::{StatusSnapshot, SAMPLE_INTERVAL};
 
 use super::App;

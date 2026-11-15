@@ -59,6 +59,7 @@ version = "0.1.0"
 name = "aether-chat"
 version = "0.1.0"
 dependencies = [
+ "aether-protocol",
  "serde_json",
 ]
 
@@ -108,6 +109,7 @@ name = "aether-mcp"
 version = "0.1.0"
 dependencies = [
  "aether-desktop",
+ "aether-protocol",
  "serde_json",
 ]
 
@@ -125,6 +127,14 @@ dependencies = [
  "aether-shell",
  "aether-text",
  "png",
+]
+
+[[package]]
+name = "aether-protocol"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

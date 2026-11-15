@@ -1,6 +1,7 @@
 [workspace]
 members = [
   "crates/aether-geometry",
+  "crates/aether-protocol",
   "crates/aether-damage",
   "crates/aether-layout",
   "crates/aether-pacing",
@@ -30,6 +31,7 @@ rust-version = "1.85"
 
 [workspace.dependencies]
 aether-geometry = { path = "crates/aether-geometry" }
+aether-protocol = { path = "crates/aether-protocol" }
 aether-damage = { path = "crates/aether-damage" }
 aether-layout = { path = "crates/aether-layout" }
 aether-pacing = { path = "crates/aether-pacing" }

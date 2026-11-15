@@ -55,6 +55,14 @@ name = "aether-pacing"
 version = "0.1.0"
 
 [[package]]
+name = "aether-protocol"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "aether-sandbox"
 version = "0.1.0"
 dependencies = [
@@ -111,6 +119,7 @@ dependencies = [
  "aether-files",
  "aether-geometry",
  "aether-layout",
+ "aether-protocol",
  "aether-sandbox",
  "aether-scene",
  "aether-shell",

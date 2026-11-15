@@ -126,10 +126,11 @@ impl SystemSnapshot {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default)]
-struct CpuTimes {
-    total: u64,
-    idle: u64,
+/// Aggregate CPU counters from `/proc/stat`, in kernel jiffies.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct CpuTimes {
+    pub total: u64,
+    pub idle: u64,
 }
 
 #[derive(Default)]
@@ -267,23 +268,52 @@ fn read_cpu() -> (CpuTimes, Vec<CpuTimes>) {
         if !line.starts_with("cpu") {
             continue;
         }
-        let mut fields = line.split_whitespace();
-        let label = fields.next().unwrap_or_default();
-        let values: Vec<u64> = fields.filter_map(|value| value.parse().ok()).collect();
-        if values.len() < 5 {
+        let Some(time) = parse_cpu_line(line) else {
             continue;
-        }
-        let time = CpuTimes {
-            total: values.iter().sum(),
-            idle: values[3] + values[4],
         };
-        if label == "cpu" {
+        if line.split_whitespace().next() == Some("cpu") {
             total = time;
         } else {
             cores.push(time);
         }
     }
     (total, cores)
+}
+
+fn parse_cpu_line(line: &str) -> Option<CpuTimes> {
+    let mut fields = line.split_whitespace();
+    fields.next()?;
+    let values: Vec<u64> = fields.filter_map(|value| value.parse().ok()).collect();
+    if values.len() < 5 {
+        return None;
+    }
+    Some(CpuTimes {
+        total: values.iter().sum(),
+        idle: values[3] + values[4],
+    })
+}
+
+/// Read the aggregate `/proc/stat` counters without sampling processes.
+///
+/// Interactive surfaces (the status bar, small overlays) use this instead of
+/// [`SystemMonitor`] so one refresh does not walk all of `/proc`.
+pub fn cpu_times() -> Option<CpuTimes> {
+    let text = std::fs::read_to_string("/proc/stat").ok()?;
+    let line = text.lines().find(|line| line.starts_with("cpu "))?;
+    parse_cpu_line(line)
+}
+
+/// Busy CPU percentage between two samples.
+pub fn cpu_percent(previous: Option<CpuTimes>, current: CpuTimes) -> u8 {
+    let Some(previous) = previous else {
+        return 0;
+    };
+    let total = current.total.saturating_sub(previous.total);
+    if total == 0 {
+        return 0;
+    }
+    let busy = total.saturating_sub(current.idle.saturating_sub(previous.idle));
+    ((busy.saturating_mul(100) / total).min(100)) as u8
 }
 
 fn read_users() -> HashMap<u32, String> {
@@ -437,6 +467,10 @@ fn aggregate_users(processes: &[Process]) -> Vec<UserUsage> {
 
 fn read_memory() -> Memory {
     let text = std::fs::read_to_string("/proc/meminfo").unwrap_or_default();
+    parse_memory(&text)
+}
+
+fn parse_memory(text: &str) -> Memory {
     let mut memory = Memory::default();
     for line in text.lines() {
         let Some((key, value)) = line.split_once(':') else {
@@ -456,6 +490,20 @@ fn read_memory() -> Memory {
         }
     }
     memory
+}
+
+/// Read `/proc/meminfo`, or `None` when `/proc` is unavailable.
+pub fn memory_info() -> Option<Memory> {
+    let text = std::fs::read_to_string("/proc/meminfo").ok()?;
+    Some(parse_memory(&text))
+}
+
+/// Used and total memory in mebibytes for compact status labels.
+pub fn memory_usage_mb() -> Option<(u64, u64)> {
+    let memory = memory_info()?;
+    let total = memory.total_kb / 1024;
+    let used = memory.total_kb.saturating_sub(memory.available_kb) / 1024;
+    Some((used, total))
 }
 
 fn read_network(elapsed: f64, previous: &HashMap<String, (u64, u64)>) -> Vec<NetworkInterface> {

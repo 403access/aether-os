@@ -5,17 +5,7 @@ use serde_json::{json, Value};
 use crate::mcp::McpClient;
 use crate::model::{Model, ToolCall};
 
-#[derive(Clone, Debug, PartialEq)]
-pub enum Event {
-    Token(String),
-    Tool {
-        name: String,
-        status: String,
-        detail: String,
-    },
-    Done,
-    Error(String),
-}
+pub use aether_protocol::chat::ChatEvent as Event;
 
 pub struct Agent {
     model: Box<dyn Model>,

@@ -6,6 +6,8 @@
 use std::process::Command;
 use std::time::Duration;
 
+use aether_system::{cpu_percent, cpu_times, memory_usage_mb, CpuTimes};
+
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct StatusSnapshot {
     pub agents: usize,
@@ -16,61 +18,6 @@ pub struct StatusSnapshot {
     /// Active remote-session summary; empty when no session exists.
     pub remote: String,
     pub frame_ms: f32,
-}
-
-#[derive(Clone, Copy, Debug)]
-pub struct CpuTimes {
-    pub idle: u64,
-    pub total: u64,
-}
-
-pub fn read_cpu() -> Option<CpuTimes> {
-    let stat = std::fs::read_to_string("/proc/stat").ok()?;
-    let line = stat.lines().find(|line| line.starts_with("cpu "))?;
-    let mut fields = line
-        .split_whitespace()
-        .skip(1)
-        .map(|value| value.parse::<u64>().ok());
-    let mut values = [0u64; 8];
-    for (index, value) in values.iter_mut().enumerate() {
-        *value = fields.next().flatten()?;
-        if index == 7 {
-            break;
-        }
-    }
-    let idle = values[3] + values[4];
-    Some(CpuTimes {
-        idle,
-        total: values.iter().sum(),
-    })
-}
-
-pub fn cpu_percent(previous: Option<CpuTimes>, current: CpuTimes) -> u8 {
-    let Some(previous) = previous else {
-        return 0;
-    };
-    let total = current.total.saturating_sub(previous.total);
-    if total == 0 {
-        return 0;
-    }
-    let busy = total.saturating_sub(current.idle.saturating_sub(previous.idle));
-    ((busy.saturating_mul(100) / total).min(100)) as u8
-}
-
-pub fn read_memory() -> Option<(u64, u64)> {
-    let info = std::fs::read_to_string("/proc/meminfo").ok()?;
-    let mut total = None;
-    let mut available = None;
-    for line in info.lines() {
-        if let Some(value) = line.strip_prefix("MemTotal:") {
-            total = value.split_whitespace().next()?.parse::<u64>().ok();
-        } else if let Some(value) = line.strip_prefix("MemAvailable:") {
-            available = value.split_whitespace().next()?.parse::<u64>().ok();
-        }
-    }
-    let total = total? / 1024;
-    let available = available.unwrap_or(0) / 1024;
-    Some((total.saturating_sub(available), total))
 }
 
 pub fn read_audio() -> String {
@@ -99,8 +46,8 @@ pub fn read_audio() -> String {
 
 impl StatusSnapshot {
     pub fn sample(previous: Option<CpuTimes>, agents: usize, frame_ms: f32) -> Self {
-        let current = read_cpu();
-        let (used, total) = read_memory().unwrap_or((0, 0));
+        let current = cpu_times();
+        let (used, total) = memory_usage_mb().unwrap_or((0, 0));
         Self {
             agents,
             cpu_percent: current.map(|now| cpu_percent(previous, now)).unwrap_or(0),

@@ -19,25 +19,13 @@ use std::io::{Read, Write};
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::PathBuf;
 
-use serde_json::{json, Value};
+use aether_protocol::chat::{self, ChatEvent};
 
 pub(crate) struct ChatBridge {
     listener: Option<UnixListener>,
     client: Option<UnixStream>,
     buffer: String,
     path: Option<PathBuf>,
-}
-
-#[derive(Debug, PartialEq)]
-pub(crate) enum ChatEvent {
-    Token(String),
-    Tool {
-        name: String,
-        status: String,
-        detail: String,
-    },
-    Done,
-    Error(String),
 }
 
 impl ChatBridge {
@@ -131,7 +119,7 @@ impl ChatBridge {
         let Some(client) = self.client.as_mut() else {
             return false;
         };
-        let line = json!({"type": "prompt", "prompt": prompt}).to_string();
+        let line = chat::prompt_line(prompt);
         match client.write_all(format!("{line}\n").as_bytes()) {
             Ok(()) => client.flush().is_ok(),
             Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => false,
@@ -153,45 +141,7 @@ impl Drop for ChatBridge {
 }
 
 fn parse_event(line: &str) -> Option<ChatEvent> {
-    if line.is_empty() {
-        return None;
-    }
-    let value: Value = serde_json::from_str(line).ok()?;
-    match value.get("type").and_then(Value::as_str)? {
-        "token" => Some(ChatEvent::Token(
-            value
-                .get("text")
-                .and_then(Value::as_str)
-                .unwrap_or_default()
-                .to_string(),
-        )),
-        "tool" => Some(ChatEvent::Tool {
-            name: value
-                .get("name")
-                .and_then(Value::as_str)
-                .unwrap_or("tool")
-                .to_string(),
-            status: value
-                .get("status")
-                .and_then(Value::as_str)
-                .unwrap_or("start")
-                .to_string(),
-            detail: value
-                .get("detail")
-                .and_then(Value::as_str)
-                .unwrap_or_default()
-                .to_string(),
-        }),
-        "done" => Some(ChatEvent::Done),
-        "error" => Some(ChatEvent::Error(
-            value
-                .get("message")
-                .and_then(Value::as_str)
-                .unwrap_or("chat backend error")
-                .to_string(),
-        )),
-        _ => None,
-    }
+    ChatEvent::parse_line(line)
 }
 
 #[cfg(test)]

@@ -13,6 +13,7 @@ publish = false
 [dependencies]
 smithay = { version = "0.7", default-features = false, features = ["wayland_frontend", "renderer_gl"] }
 aether-geometry = { path = "../crates/aether-geometry" }
+aether-protocol = { path = "../crates/aether-protocol" }
 aether-layout = { path = "../crates/aether-layout" }
 aether-shell = { path = "../crates/aether-shell" }
 aether-scene = { path = "../crates/aether-scene" }

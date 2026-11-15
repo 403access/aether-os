@@ -18,6 +18,7 @@ use std::path::PathBuf;
 use std::sync::mpsc::{self, Receiver, TryRecvError};
 use std::thread;
 
+use aether_protocol::control::{error_response, success_response, ControlRequest};
 use aether_shell::PaletteLauncher;
 use serde_json::{json, Value};
 
@@ -111,20 +112,10 @@ impl App {
             }
         }
         for mut call in calls {
-            let id = call.request.get("id").cloned().unwrap_or(Value::Null);
-            let method = call
-                .request
-                .get("method")
-                .and_then(Value::as_str)
-                .unwrap_or_default()
-                .to_string();
-            let params = call
-                .request
-                .get("params")
-                .cloned()
-                .unwrap_or_else(|| json!({}));
-            let response = match self.handle_control(&method, &params) {
-                Ok(result) => json!({"jsonrpc": "2.0", "id": id, "result": result}),
+            let request = ControlRequest::from_value(call.request);
+            let id = request.id.clone();
+            let response = match self.handle_control(&request.method, &request.params) {
+                Ok(result) => success_response(id, result),
                 Err(error) => error_response(id, -32000, &error),
             };
             let _ = writeln!(call.stream, "{response}");
@@ -327,14 +318,6 @@ fn param_u64(params: &Value, key: &str) -> Result<u64, String> {
         .get(key)
         .and_then(Value::as_u64)
         .ok_or_else(|| format!("missing numeric {key}"))
-}
-
-fn error_response(id: Value, code: i64, message: &str) -> Value {
-    json!({
-        "jsonrpc": "2.0",
-        "id": id,
-        "error": {"code": code, "message": message},
-    })
 }
 
 #[cfg(test)]

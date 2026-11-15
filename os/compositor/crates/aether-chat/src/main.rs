@@ -14,8 +14,9 @@ use std::os::unix::net::UnixStream;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use serde_json::{json, Value};
+use serde_json::Value;
 
+use aether_protocol::chat::parse_prompt_line;
 use agent::{Agent, Event};
 use mcp::McpClient;
 use model::{Model, OpenAiModel, ScriptModel};
@@ -55,7 +56,7 @@ fn main() {
         let mut stdout = std::io::stdout();
         for line in stdin.lock().lines() {
             let Ok(line) = line else { break };
-            if let Some(prompt) = prompt_text(&line) {
+            if let Some(prompt) = parse_prompt_line(&line) {
                 run_prompt(&mut agent, &prompt, &mut stdout);
             }
         }
@@ -171,7 +172,7 @@ fn serve_socket(path: &Path, agent: &mut Agent) {
                 };
                 for line in BufReader::new(stream).lines() {
                     let Ok(line) = line else { break };
-                    if let Some(prompt) = prompt_text(&line) {
+                    if let Some(prompt) = parse_prompt_line(&line) {
                         run_prompt(agent, &prompt, &mut writer);
                     }
                 }
@@ -184,44 +185,13 @@ fn serve_socket(path: &Path, agent: &mut Agent) {
 
 fn run_prompt(agent: &mut Agent, prompt: &str, writer: &mut impl Write) {
     let mut emit = |event: Event| {
-        let value = event_json(event);
-        let _ = writeln!(writer, "{value}");
+        let _ = writeln!(writer, "{}", event.to_line());
         let _ = writer.flush();
     };
     if let Err(error) = agent.prompt(prompt, &mut emit) {
         eprintln!("aether-chat: {error}");
     }
     agent.trim_history();
-}
-
-fn event_json(event: Event) -> Value {
-    match event {
-        Event::Token(text) => json!({"type": "token", "text": text}),
-        Event::Tool {
-            name,
-            status,
-            detail,
-        } => json!({"type": "tool", "name": name, "status": status, "detail": detail}),
-        Event::Done => json!({"type": "done"}),
-        Event::Error(message) => json!({"type": "error", "message": message}),
-    }
-}
-
-fn prompt_text(line: &str) -> Option<String> {
-    let trimmed = line.trim();
-    if trimmed.is_empty() {
-        return None;
-    }
-    if let Ok(value) = serde_json::from_str::<Value>(trimmed) {
-        if value.get("type").and_then(Value::as_str) == Some("prompt") {
-            return value
-                .get("prompt")
-                .and_then(Value::as_str)
-                .map(str::to_string);
-        }
-        return None;
-    }
-    Some(trimmed.to_string())
 }
 
 fn mcp_binary() -> PathBuf {

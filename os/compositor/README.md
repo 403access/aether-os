@@ -12,6 +12,7 @@ that depends on this workspace; it must not leak into these crates.
 
 ```text
 aether-geometry      Point, Size, Rect                         (no deps)
+aether-protocol      newline-JSON chat/index/control protocols    (serde)
 aether-damage        Region, merging, clipping                  (geometry)
 aether-layout        master/stack tiling                        (geometry)
 aether-pacing        FramePacer, deadlines, missed frames       (no deps)
@@ -36,6 +37,7 @@ Dependency direction is one-way. There are no cycles and no optional GPU code.
 | Crate | Use it when |
 | --- | --- |
 | `aether-geometry` | You only need rectangles and points |
+| `aether-protocol` | You need the shell/service wire message shapes |
 | `aether-damage` | You track dirty regions for partial redraw |
 | `aether-layout` | You place windows/tiles without a compositor |
 | `aether-pacing` | You need a frame deadline scheduler |

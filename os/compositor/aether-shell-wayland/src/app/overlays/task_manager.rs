@@ -3,7 +3,9 @@
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect};
 use smithay::input::keyboard::{keysyms, Keysym};
 
-use crate::task::{TaskManagerState, TaskTab};
+mod state;
+
+pub(crate) use state::{TaskManagerState, TaskTab};
 
 use super::super::App;
 

@@ -33,7 +33,7 @@ use smithay::wayland::shell::xdg::{
 use smithay::wayland::shm::{ShmHandler, ShmState};
 use smithay::wayland::text_input::TextInputSeat;
 
-use crate::damage::buffer_damage_to_logical;
+use super::damage::buffer_damage_to_logical;
 
 use super::input::{cursor_for, pointer_shape};
 use super::App;

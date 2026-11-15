@@ -3,7 +3,7 @@
 use smithay::backend::input::{KeyState, Keycode};
 use smithay::input::keyboard::{keysyms, FilterResult, KeyboardHandle, Keysym, ModifiersState};
 
-use crate::keymap::{lookup_profile, Shortcut};
+use super::keymap::{lookup_profile, Shortcut};
 
 use super::{cursor_for, App};
 

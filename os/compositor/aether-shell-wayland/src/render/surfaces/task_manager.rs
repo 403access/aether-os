@@ -87,7 +87,10 @@ impl App {
             ));
             // Tabs.
             let tabs_x = bounds.x + width / 2 - 180;
-            for (index, tab_item) in crate::task::TaskTab::ALL.into_iter().enumerate() {
+            for (index, tab_item) in crate::app::overlays::task_manager::TaskTab::ALL
+                .into_iter()
+                .enumerate()
+            {
                 let tab_rect = AetherRect::new(tabs_x + index as i32 * 116, bounds.y + 15, 110, 32);
                 if tab_item == tab {
                     if let Some(buffer) = self.chrome_round(110, 32, 8, tokens.accent(38)) {
@@ -123,12 +126,14 @@ impl App {
             ));
             labels.push((tab.label().into(), pane.x + 46, pane.y + 12, 3, tokens.text));
             let subtitle = match tab {
-                crate::task::TaskTab::Processes => format!(
+                crate::app::overlays::task_manager::TaskTab::Processes => format!(
                     "{} processes · {} threads · {:.0}% cpu",
                     snapshot.process_count, snapshot.thread_count, snapshot.cpu_percent
                 ),
-                crate::task::TaskTab::Users => format!("{} users", users.len()),
-                crate::task::TaskTab::Resources => format!(
+                crate::app::overlays::task_manager::TaskTab::Users => {
+                    format!("{} users", users.len())
+                }
+                crate::app::overlays::task_manager::TaskTab::Resources => format!(
                     "{} cores · {:.1} load",
                     snapshot.cores.len(),
                     snapshot.load[0]
@@ -150,7 +155,7 @@ impl App {
                 tokens.surface_a(190).map(|value| value as f32 / 255.0),
             ));
             match tab {
-                crate::task::TaskTab::Processes => {
+                crate::app::overlays::task_manager::TaskTab::Processes => {
                     labels.push(("PID".into(), pane.x + 16, header_y + 9, 0, tokens.dim));
                     labels.push(("USER".into(), pane.x + 82, header_y + 9, 0, tokens.dim));
                     labels.push(("CPU".into(), pane.x + 190, header_y + 9, 0, tokens.dim));
@@ -158,7 +163,7 @@ impl App {
                     labels.push(("STATE".into(), pane.x + 320, header_y + 9, 0, tokens.dim));
                     labels.push(("COMMAND".into(), pane.x + 386, header_y + 9, 0, tokens.dim));
                 }
-                crate::task::TaskTab::Users => {
+                crate::app::overlays::task_manager::TaskTab::Users => {
                     labels.push(("UID".into(), pane.x + 16, header_y + 9, 0, tokens.dim));
                     labels.push(("USER".into(), pane.x + 90, header_y + 9, 0, tokens.dim));
                     labels.push((
@@ -172,10 +177,10 @@ impl App {
                     labels.push(("CPU".into(), pane.x + 460, header_y + 9, 0, tokens.dim));
                     labels.push(("MEM".into(), pane.x + 540, header_y + 9, 0, tokens.dim));
                 }
-                crate::task::TaskTab::Resources => {}
+                crate::app::overlays::task_manager::TaskTab::Resources => {}
             }
             match tab {
-                crate::task::TaskTab::Processes => {
+                crate::app::overlays::task_manager::TaskTab::Processes => {
                     let row_rects: Vec<AetherRect> = (0..visible)
                         .map(|index| self.task_row_rect(index))
                         .collect();
@@ -264,7 +269,7 @@ impl App {
                         }
                     }
                 }
-                crate::task::TaskTab::Users => {
+                crate::app::overlays::task_manager::TaskTab::Users => {
                     let row_rects: Vec<AetherRect> = (0..visible)
                         .map(|index| self.task_row_rect(index))
                         .collect();
@@ -313,7 +318,7 @@ impl App {
                         ));
                     }
                 }
-                crate::task::TaskTab::Resources => {
+                crate::app::overlays::task_manager::TaskTab::Resources => {
                     let content_y = pane.y + 68;
                     let card_w = (pane.width as i32 - 44) / 2;
                     let card_h = (pane.height as i32 - 68 - 56) / 2;

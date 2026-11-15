@@ -5,6 +5,10 @@
 //! its output. `full_damage` short-circuits the rectangle list and requests a
 //! complete clear of the affected output.
 
+mod convert;
+
+pub(crate) use convert::buffer_damage_to_logical;
+
 use aether_geometry::Rect as AetherRect;
 use aether_shell::OutputId;
 use smithay::utils::{Logical, Physical, Point as SPoint, Rectangle, Size as SSize};

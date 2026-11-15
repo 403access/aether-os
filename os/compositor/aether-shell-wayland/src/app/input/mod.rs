@@ -6,6 +6,7 @@
 
 mod cursor;
 mod keyboard;
+pub(crate) mod keymap;
 mod pointer;
 
 use aether_cursor::CursorShape;
@@ -17,6 +18,7 @@ use smithay::utils::{Logical, Point as SPoint};
 use super::App;
 
 pub(crate) use cursor::{cursor_for, pointer_shape};
+pub(crate) use keymap::KeyProfile;
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) enum ResizeCorner {

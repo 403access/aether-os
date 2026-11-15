@@ -21,4 +21,5 @@ mod element;
 mod helpers;
 mod surfaces;
 
+pub(crate) use chrome::BackgroundStyle;
 pub use element::{AetherRenderElement, ComposedFrame, BACKGROUND};

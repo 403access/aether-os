@@ -188,7 +188,7 @@ impl App {
         let settings = ctx.settings;
         let width = ctx.width;
         let height = ctx.height;
-        let background_style = crate::chrome::BackgroundStyle {
+        let background_style = super::chrome::BackgroundStyle {
             mode: settings.mode,
             background: settings.background,
             tone: settings.tone,

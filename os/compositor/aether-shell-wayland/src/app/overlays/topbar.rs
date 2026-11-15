@@ -3,13 +3,15 @@
 use aether_geometry::Point as AetherPoint;
 use aether_shell::OutputId;
 
-use crate::topbar::{self, TopAction};
+mod layout;
+
+pub(crate) use layout::{hit, layout, TopAction, TopBar};
 
 use super::super::App;
 
 impl App {
-    pub(crate) fn top_bar(&self, output: OutputId) -> topbar::TopBar {
-        topbar::layout(self.shell.output_bounds(output))
+    pub(crate) fn top_bar(&self, output: OutputId) -> TopBar {
+        layout(self.shell.output_bounds(output))
     }
 
     pub(crate) fn top_bar_visible(&self, output: OutputId) -> bool {
@@ -31,7 +33,7 @@ impl App {
         if !self.top_bar_visible(output) {
             return None;
         }
-        topbar::hit(&self.top_bar(output), point.x, point.y)
+        hit(&self.top_bar(output), point.x, point.y)
     }
 
     pub(crate) fn activate_top_shortcut(&mut self, action: TopAction) {

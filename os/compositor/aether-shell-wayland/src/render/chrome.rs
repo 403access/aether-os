@@ -6,6 +6,10 @@ use smithay::backend::renderer::element::memory::MemoryRenderBuffer;
 
 use crate::app::App;
 
+pub(crate) mod primitives;
+
+pub(crate) use primitives::BackgroundStyle;
+
 impl App {
     pub(crate) fn chrome_icon(
         &mut self,
@@ -18,8 +22,8 @@ impl App {
             return Some(buffer.clone());
         }
         let hex = format!("#{:02x}{:02x}{:02x}", color[0], color[1], color[2]);
-        let markup = crate::chrome::icon_svg(name, &hex)?;
-        let buffer = Arc::new(crate::chrome::svg(&markup, size)?);
+        let markup = primitives::icon_svg(name, &hex)?;
+        let buffer = Arc::new(primitives::svg(&markup, size)?);
         self.chrome_icons.insert(key, buffer.clone());
         Some(buffer)
     }
@@ -36,7 +40,7 @@ impl App {
         if let Some(buffer) = self.chrome_panels.get(&key) {
             return Some(buffer.clone());
         }
-        let buffer = Arc::new(crate::chrome::panel(
+        let buffer = Arc::new(primitives::panel(
             width,
             height,
             radius as f32,
@@ -58,12 +62,7 @@ impl App {
         if let Some(buffer) = self.chrome_tops.get(&key) {
             return Some(buffer.clone());
         }
-        let buffer = Arc::new(crate::chrome::rounded_top(
-            width,
-            height,
-            radius as f32,
-            fill,
-        )?);
+        let buffer = Arc::new(primitives::rounded_top(width, height, radius as f32, fill)?);
         self.chrome_tops.insert(key, buffer.clone());
         Some(buffer)
     }
@@ -79,7 +78,7 @@ impl App {
         if let Some(buffer) = self.chrome_rounds.get(&key) {
             return Some(buffer.clone());
         }
-        let buffer = Arc::new(crate::chrome::rounded(width, height, radius as f32, fill)?);
+        let buffer = Arc::new(primitives::rounded(width, height, radius as f32, fill)?);
         self.chrome_rounds.insert(key, buffer.clone());
         Some(buffer)
     }
@@ -88,12 +87,12 @@ impl App {
         &mut self,
         width: u32,
         height: u32,
-        style: crate::chrome::BackgroundStyle,
+        style: primitives::BackgroundStyle,
     ) -> Option<Arc<MemoryRenderBuffer>> {
         if let Some(buffer) = self.chrome_background.get(&(width, height, style)) {
             return Some(buffer.clone());
         }
-        let buffer = Arc::new(crate::chrome::background(width, height, style)?);
+        let buffer = Arc::new(primitives::background(width, height, style)?);
         self.chrome_background
             .insert((width, height, style), buffer.clone());
         Some(buffer)

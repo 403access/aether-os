@@ -32,7 +32,8 @@ impl App {
                 && !shortcuts_here
                 && self.shell.overlay().is_none()
             {
-                let bar = crate::topbar::layout(self.shell.output_bounds(chrome_output));
+                let bar =
+                    crate::app::overlays::topbar::layout(self.shell.output_bounds(chrome_output));
                 if let Some(buffer) =
                     self.chrome_round(bar.rect.width, bar.rect.height, 10, tokens.surface_a(225))
                 {

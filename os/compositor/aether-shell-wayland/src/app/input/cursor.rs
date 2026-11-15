@@ -4,7 +4,7 @@ use aether_cursor::CursorShape;
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect};
 use smithay::input::pointer::CursorIcon as PointerIcon;
 
-use crate::topbar;
+use crate::app::overlays::topbar;
 
 use super::{App, ResizeCorner};
 

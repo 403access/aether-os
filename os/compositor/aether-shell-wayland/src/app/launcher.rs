@@ -6,8 +6,8 @@
 
 use aether_shell::{parse_palette_query, PaletteFile, PaletteLauncher, PaletteMode};
 
-use crate::agents::parse_launchers;
-use crate::index_worker::should_apply;
+use super::agents::parse_launchers;
+use super::index_worker::should_apply;
 
 use super::App;
 

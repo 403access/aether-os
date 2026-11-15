@@ -5,17 +5,21 @@
 //! and a renderer; it does not know how pixels reach the display.
 //!
 //! The implementation is split by responsibility: protocol handlers live in
-//! [`handlers`], input routing in [`input`], overlay surfaces in [`overlays`],
-//! damage bookkeeping in [`damage`] and window/output policy in [`windows`]
-//! and [`outputs`].
+//! `handlers`, input routing and the keymap in `input`, overlay surfaces in
+//! `overlays`, workers and launchers in `agents`, `chat_demo`, `index_worker`
+//! and `launcher`, sampling in `status`, damage bookkeeping in `damage`, and
+//! window/output policy in `windows` and `outputs`.
 
+mod agents;
+mod chat_demo;
 mod damage;
 mod handlers;
+pub(crate) mod index_worker;
 mod input;
 mod launcher;
 mod outputs;
-mod overlays;
-mod status;
+pub(crate) mod overlays;
+pub(crate) mod status;
 mod windows;
 
 #[cfg(test)]
@@ -52,12 +56,12 @@ use smithay::wayland::shell::xdg::{ToplevelSurface, XdgShellState};
 use smithay::wayland::shm::ShmState;
 use smithay::wayland::text_input::TextInputManagerState;
 
-use crate::agents::AgentSessions;
-use crate::chat_demo::ChatDemo;
-use crate::index_worker::IndexWorker;
-use crate::keymap::KeyProfile;
-use crate::status::StatusSnapshot;
-use crate::task::TaskManagerState;
+use self::agents::AgentSessions;
+use self::chat_demo::ChatDemo;
+use self::index_worker::IndexWorker;
+use self::input::KeyProfile;
+use self::overlays::task_manager::TaskManagerState;
+use self::status::StatusSnapshot;
 
 use self::handlers::ClientState;
 use self::input::{WindowDrag, WindowResize};
@@ -112,7 +116,7 @@ pub struct App {
     pub(crate) chrome_rounds: HashMap<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_tops: HashMap<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_background:
-        HashMap<(u32, u32, crate::chrome::BackgroundStyle), Arc<MemoryRenderBuffer>>,
+        HashMap<(u32, u32, crate::render::BackgroundStyle), Arc<MemoryRenderBuffer>>,
     pub(crate) cursor_buffers: HashMap<CursorShape, CursorCacheEntry>,
     pub(crate) cursor_theme: Option<CursorTheme>,
     pub(crate) client_cursor: Option<CursorShape>,
@@ -123,7 +127,7 @@ pub struct App {
     index_worker: Option<IndexWorker>,
     agent_sessions: AgentSessions,
     status: StatusSnapshot,
-    status_cpu: Option<crate::status::CpuTimes>,
+    status_cpu: Option<status::CpuTimes>,
     chat_demo: Option<ChatDemo>,
     pub(crate) shortcuts_open: bool,
     pub(crate) task_manager: Option<TaskManagerState>,
@@ -260,7 +264,7 @@ impl App {
             state.index_worker = Some(IndexWorker::spawn(std::path::PathBuf::from(socket)));
         }
         state.status = StatusSnapshot::sample(None, state.agent_sessions.session_count(), 0.0);
-        state.status_cpu = crate::status::read_cpu();
+        state.status_cpu = status::read_cpu();
         state.status_last = std::time::Instant::now();
         if std::env::var_os("AETHER_CHAT_DEMO").is_some() {
             let _ = state.shell.open_chat();

@@ -2,7 +2,10 @@
 
 use aether_text::text_width;
 
-use crate::status::{StatusSnapshot, SAMPLE_INTERVAL};
+mod sample;
+
+pub(crate) use sample::{read_cpu, CpuTimes};
+pub use sample::{StatusSnapshot, SAMPLE_INTERVAL};
 
 use super::App;
 
@@ -67,7 +70,7 @@ impl App {
             self.frame_time_ms,
         );
         self.status.remote = self.shell.remote_status().unwrap_or_default();
-        self.status_cpu = crate::status::read_cpu();
+        self.status_cpu = read_cpu();
         self.status_last = std::time::Instant::now();
     }
 }

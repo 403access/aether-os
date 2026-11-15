@@ -3,22 +3,21 @@
 //! The winit development adapter and the native DRM backend both create one
 //! [`App`], register outputs, feed input events and draw the element list
 //! returned by [`App::compose`].
+//!
+//! Layout:
+//!
+//! - `app` — Wayland state, protocol handlers, input, overlays, workers and
+//!   app-level status/damage bookkeeping.
+//! - `render` — element wrapping, frame orchestration, chrome buffers and one
+//!   module per compositor-owned surface.
+//! - `stats` — newline-delimited frame statistics for the backends.
 
-mod agents;
 mod app;
-mod chat_demo;
-mod chrome;
-mod damage;
-mod index_worker;
-mod keymap;
 mod render;
 mod stats;
-mod status;
-mod task;
-mod topbar;
 
+pub use app::index_worker::{should_apply, IndexWorker};
+pub use app::status::{StatusSnapshot, SAMPLE_INTERVAL};
 pub use app::App;
-pub use index_worker::{should_apply, IndexWorker};
 pub use render::{AetherRenderElement, ComposedFrame, BACKGROUND};
 pub use stats::{append as append_stat, damage_area};
-pub use status::{StatusSnapshot, SAMPLE_INTERVAL};

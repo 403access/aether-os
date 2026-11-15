@@ -16,7 +16,10 @@ use aether_remote::encode::{
 use aether_remote::ladder::ClientCaps;
 use aether_remote::session::{PairingRegistry, SessionPolicy, DEFAULT_PAIRING_TTL_MS};
 use aether_remote::signaling::{accept_hello, ClientHello, SignalMessage};
+use aether_remote::transport::{Datagram, WebRtcConfig, WebRtcEvent, WebRtcHost};
 use serde_json::json;
+use std::net::{Ipv4Addr, SocketAddr};
+use std::time::{Duration, Instant};
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -39,6 +42,12 @@ fn main() {
                 std::process::exit(1);
             }
         }
+        Some("webrtc") => {
+            if let Err(error) = webrtc(&args) {
+                eprintln!("aether-remote: {error}");
+                std::process::exit(1);
+            }
+        }
         Some("--help" | "-h" | "help") => usage(),
         Some(other) => {
             eprintln!("aether-remote: unknown command {other}");
@@ -56,6 +65,7 @@ fn usage() {
          \x20 capture [--width N] [--height N] [--frames N] [--json PATH]  exercise the capture model\n\
          \x20 encode [--width N] [--height N] [--frames N] [--ndjson PATH]  encode synthetic frames\n\
          \x20 pair [--json PATH]                                           mint a one-shot pairing code and welcome\n\
+         \x20 webrtc [--json PATH]                                         negotiate and drive a loopback str0m session\n\
          \x20 help                                                           this message"
     );
 }
@@ -136,6 +146,144 @@ fn capture(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
         println!("{text}");
     }
     println!("capture: {}", auditor.summary());
+    Ok(())
+}
+
+fn webrtc(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
+    let start = Instant::now();
+    let mut host = WebRtcHost::new(start, WebRtcConfig::default())?;
+    let mut client = WebRtcHost::new(start, WebRtcConfig::default())?;
+    host.add_host_candidate(SocketAddr::from((Ipv4Addr::LOCALHOST, 43000)))?;
+    client.add_host_candidate(SocketAddr::from((Ipv4Addr::LOCALHOST, 44000)))?;
+    let offer = host.create_offer()?;
+    let answer = client.accept_offer(&offer)?;
+    host.accept_answer(&answer)?;
+
+    let mut now = start;
+    let mut host_queue: Vec<Datagram> = Vec::new();
+    let mut client_queue: Vec<Datagram> = Vec::new();
+    let mut events = Vec::new();
+    let mut datagrams = 0u64;
+    let mut channel_open = false;
+    let mut connected_at = None;
+    for _ in 0..600 {
+        now += Duration::from_millis(5);
+        if let Ok(poll) = host.poll(now) {
+            datagrams += poll.datagrams.len() as u64;
+            host_queue.extend(poll.datagrams);
+            events.extend(poll.events);
+        }
+        if let Ok(poll) = client.poll(now) {
+            datagrams += poll.datagrams.len() as u64;
+            client_queue.extend(poll.datagrams);
+            events.extend(poll.events);
+        }
+        for datagram in host_queue.drain(..) {
+            if let Ok(poll) = client.handle_datagram(
+                now,
+                datagram.source,
+                datagram.destination,
+                &datagram.contents,
+            ) {
+                datagrams += poll.datagrams.len() as u64;
+                client_queue.extend(poll.datagrams);
+                events.extend(poll.events);
+            }
+        }
+        for datagram in client_queue.drain(..) {
+            if let Ok(poll) = host.handle_datagram(
+                now,
+                datagram.source,
+                datagram.destination,
+                &datagram.contents,
+            ) {
+                datagrams += poll.datagrams.len() as u64;
+                host_queue.extend(poll.datagrams);
+                events.extend(poll.events);
+            }
+        }
+        if host.is_connected() && connected_at.is_none() {
+            connected_at = Some(start.elapsed().as_millis() as u64);
+        }
+        channel_open |= events
+            .iter()
+            .any(|event| matches!(event, WebRtcEvent::ChannelOpen(_)));
+        if host.is_connected() && channel_open {
+            break;
+        }
+    }
+    let connected = host.is_connected() && client.is_connected();
+    let mut received = Vec::new();
+    let wrote_input = host.write_input(b"aether-input").unwrap_or(false);
+    for _ in 0..40 {
+        now += Duration::from_millis(5);
+        if let Ok(poll) = host.poll(now) {
+            host_queue.extend(poll.datagrams);
+        }
+        if let Ok(poll) = client.poll(now) {
+            client_queue.extend(poll.datagrams);
+        }
+        for datagram in host_queue.drain(..) {
+            if let Ok(poll) = client.handle_datagram(
+                now,
+                datagram.source,
+                datagram.destination,
+                &datagram.contents,
+            ) {
+                client_queue.extend(poll.datagrams);
+                for event in poll.events {
+                    if let WebRtcEvent::Input(data) = event {
+                        received.push(String::from_utf8_lossy(&data).to_string());
+                    }
+                }
+            }
+        }
+        for datagram in client_queue.drain(..) {
+            if let Ok(poll) = host.handle_datagram(
+                now,
+                datagram.source,
+                datagram.destination,
+                &datagram.contents,
+            ) {
+                host_queue.extend(poll.datagrams);
+            }
+        }
+    }
+    let wrote_video = host
+        .write_video(now, 16_667, &[0, 0, 0, 1, 9])
+        .unwrap_or(false);
+    let summary = json!({
+        "connected": connected,
+        "connected_after_ms": connected_at,
+        "host_fingerprint": host.fingerprint(),
+        "client_fingerprint": client.fingerprint(),
+        "channel_open": channel_open,
+        "input_written": wrote_input,
+        "input_echo": received,
+        "video_written": wrote_video,
+        "datagrams": datagrams,
+        "offer_bytes": offer.len(),
+        "answer_bytes": answer.len(),
+        "note": "loopback peers; no UDP socket or browser is involved",
+    });
+    let text = serde_json::to_string_pretty(&summary)?;
+    if let Some(path) = flag(args, "--json") {
+        let path = PathBuf::from(path);
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::write(&path, format!("{text}\n"))?;
+        println!("wrote {}", path.display());
+    } else {
+        println!("{text}");
+    }
+    println!(
+        "webrtc: connected={connected} channel={channel_open} input={:?} datagrams={datagrams}",
+        received
+    );
+    if !connected || !channel_open || !wrote_video {
+        return Err("str0m loopback did not complete".into());
+    }
     Ok(())
 }
 

@@ -217,7 +217,8 @@ Deliverables:
 - ✅ `@aether/remote` browser client: WebCodecs decode, canvas sink, tier
   selection and a WebSocket/JPEG fallback packet model.
 - ✅ Compositor remote overlay (`Super+R`), recording indicator and status chip.
-- ✅ Opt-in NixOS service with local-only listeners and VA-API packages.
+- ✅ Opt-in NixOS service with local-only listeners and VA-API packages (Linux
+  evaluation pending; no Nix on the development host).
 - ⏳ Bind capture to the compositor's exported DMA-BUFs and run the glass-to-glass
   measurement on the 7700K.
 - ⏳ AF_XDP only if the measurement shows the kernel stack dominates.

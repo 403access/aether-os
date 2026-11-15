@@ -242,7 +242,7 @@ fn uptime_secs() -> u64 {
     {
         if let Ok(text) = std::fs::read_to_string("/proc/uptime") {
             if let Some(first) = text.split_whitespace().next() {
-                if let Some(seconds) = first.parse::<f64>().ok() {
+                if let Ok(seconds) = first.parse::<f64>() {
                     return seconds as u64;
                 }
             }

@@ -35,7 +35,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     let mut shell = Shell::new(
         viewport,
         LayoutConfig {
-                        gap: 10,
+            gap: 10,
             outer_gap: 16,
         },
         120,

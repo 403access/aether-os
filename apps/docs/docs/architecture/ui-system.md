@@ -19,11 +19,12 @@ not a widget toolkit with a plugin ecosystem.
 | Command palette | shell scene graph | modal keyboard | on demand |
 | Chat drawer | shell scene graph | text + shortcuts | session or on demand |
 | Audio overlay | shell scene graph | keyboard + pointer | on demand |
+| Themes app | shell scene graph | keyboard + pointer | on demand |
 | Task manager | shell scene graph | keyboard + pointer | on demand |
 
 The palette merges three application sources: XDG `.desktop` entries, Aether's
-own surface commands (Files, Chat, Audio, Keyboard shortcuts, Task manager) and
-external launcher manifests.
+own surface commands (Files, Chat, Audio, Themes, Keyboard shortcuts, Task
+manager) and external launcher manifests.
 | Explorer | shell layer or native client | keyboard-first list | session |
 | Browser | WebKitGTK buffer | web event loop | tab |
 | Media | libmpv buffer | media keys + pointer | file/session |
@@ -45,7 +46,14 @@ system. It provides:
 
 The complete token set lives in `packages/design-system/tokens.css`. The React
 implementation lives in `packages/ui`; the compositor maps the same tokens to its
-scene-graph styles. See [design system](/design/design-system).
+scene-graph styles. The compositor also derives a runtime palette from the active
+theme mode and Water tone, so chrome, selection fills and status colours follow
+Light, Dark and Water consistently. See [design system](/design/design-system).
+
+The **Themes** app (`Super+T`) edits the same settings as the reference Water
+panel: mode, effects, cursor drips, click ripples, caustic shimmer, row motion,
+flow speed, drip energy, background, tone and glass. Changes apply immediately and
+persist to `$XDG_CONFIG_HOME/aether/themes.json`.
 
 ## Composition rules
 
@@ -96,6 +104,7 @@ Super map remains available. **Standard** exposes Super only.
 | `Ctrl+Alt+E` → `Super+E` | Explorer |
 | `Ctrl+Alt+C` → `Super+C` | Chat |
 | `Ctrl+Alt+A` → `Super+A` | Audio overlay |
+| `Ctrl+Alt+T` → `Super+T` | Themes app |
 | `Ctrl+Alt+/` → `Super+/` | Shortcut cheat sheet |
 | `Ctrl+Alt+Tab` → `Super+Tab` | Focus next (MRU) |
 | `Ctrl+Alt+Shift+Tab` → `Super+Shift+Tab` | Focus previous (MRU) |

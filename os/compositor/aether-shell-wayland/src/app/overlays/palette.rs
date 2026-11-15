@@ -82,6 +82,10 @@ impl App {
                 self.shell.close_overlay();
                 self.toggle_audio();
             }
+            PaletteAction::OpenThemes => {
+                self.shell.close_overlay();
+                self.toggle_themes();
+            }
             PaletteAction::OpenShortcuts => {
                 self.shell.close_overlay();
                 self.toggle_shortcuts();

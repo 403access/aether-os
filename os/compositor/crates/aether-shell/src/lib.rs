@@ -20,6 +20,7 @@
 pub mod audio;
 pub mod design;
 pub mod remote;
+pub mod theme;
 
 use std::collections::HashMap;
 
@@ -40,6 +41,16 @@ pub enum PaletteMode {
     Agent,
     File,
     Setting,
+}
+
+/// Theme row group offset: one gap after each section label.
+fn theme_row_group(index: usize) -> i32 {
+    match index {
+        0 => 0,
+        1..=5 => 1,
+        6..=7 => 2,
+        _ => 3,
+    }
 }
 
 /// Parse `>run`, `@agent`, `/file` or `~setting`; otherwise `All`.
@@ -154,6 +165,7 @@ pub enum PaletteAction {
     OpenExplorer,
     OpenChat,
     OpenAudio,
+    OpenThemes,
     OpenShortcuts,
     OpenFile(usize),
     Close,
@@ -328,6 +340,8 @@ pub struct Shell {
     chat: Option<ChatState>,
     audio: Option<audio::AudioLayer>,
     remote: Option<remote::RemoteLayer>,
+    theme: theme::ThemeSettings,
+    themes: Option<theme::ThemeLayer>,
     launchers: Vec<PaletteLauncher>,
     files: Vec<PaletteFile>,
     files_prefiltered: bool,
@@ -367,6 +381,8 @@ impl Shell {
             chat: None,
             audio: None,
             remote: None,
+            theme: theme::ThemeSettings::default(),
+            themes: None,
             launchers: Vec::new(),
             files: Vec::new(),
             files_prefiltered: false,
@@ -1024,6 +1040,7 @@ impl Shell {
     /// Open the overlay centred in `output` and reset the query.
     pub fn open_overlay_on(&mut self, output: OutputId) -> Option<SurfaceId> {
         self.close_remote();
+        self.close_themes();
         self.palette = PaletteState::default();
         self.overlay_output = Some(output);
         let bounds = self.output_bounds(output);
@@ -1131,6 +1148,7 @@ impl Shell {
 
     pub fn open_chat(&mut self) -> Option<()> {
         self.close_remote();
+        self.close_themes();
         if self.chat.is_none() {
             self.chat = Some(ChatState::default());
         }
@@ -1219,6 +1237,7 @@ impl Shell {
         self.close_explorer();
         self.close_chat();
         self.close_remote();
+        self.close_themes();
         self.audio = Some(audio::AudioLayer::new(snapshot));
         Some(())
     }
@@ -1357,6 +1376,7 @@ impl Shell {
         self.close_explorer();
         self.close_chat();
         self.close_audio();
+        self.close_themes();
         self.remote = Some(layer);
         Some(())
     }
@@ -1436,6 +1456,200 @@ impl Shell {
         self.remote.as_ref().and_then(|layer| layer.status_label())
     }
 
+    /// Active theme settings. Persisted by the backend on every change.
+    pub fn theme_settings(&self) -> &theme::ThemeSettings {
+        &self.theme
+    }
+
+    pub fn theme_tokens(&self) -> theme::ThemeTokens {
+        self.theme.tokens()
+    }
+
+    pub fn theme_accent(&self) -> [u8; 3] {
+        self.theme.accent_rgb()
+    }
+
+    pub fn set_theme_settings(&mut self, settings: theme::ThemeSettings) {
+        self.theme = settings;
+        if let Some(layer) = self.themes.as_mut() {
+            layer.set_settings(settings);
+        }
+    }
+
+    /// Open the Themes app with the current settings.
+    pub fn open_themes(&mut self) -> Option<()> {
+        self.close_overlay();
+        self.close_explorer();
+        self.close_chat();
+        self.close_audio();
+        self.close_remote();
+        self.themes = Some(theme::ThemeLayer::new(self.theme));
+        Some(())
+    }
+
+    pub fn close_themes(&mut self) {
+        self.themes = None;
+    }
+
+    pub fn themes_open(&self) -> bool {
+        self.themes.is_some()
+    }
+
+    pub fn theme_layer(&self) -> Option<&theme::ThemeLayer> {
+        self.themes.as_ref()
+    }
+
+    pub fn theme_layer_mut(&mut self) -> Option<&mut theme::ThemeLayer> {
+        self.themes.as_mut()
+    }
+
+    pub fn theme_rect(&self) -> Rect {
+        let bounds = self
+            .primary_output()
+            .map(|output| output.rect)
+            .unwrap_or_else(|| Rect::from_size(self.viewport));
+        let width = design::THEME_PANEL_WIDTH
+            .min(bounds.width.saturating_sub(32))
+            .max(1);
+        let height = design::THEME_PANEL_HEIGHT
+            .min(bounds.height.saturating_sub(32))
+            .max(1);
+        Rect::new(
+            bounds.x + (bounds.width.saturating_sub(width) / 2) as i32,
+            bounds.y + (bounds.height.saturating_sub(height) / 2) as i32,
+            width,
+            height,
+        )
+    }
+
+    pub fn theme_status_rect(&self) -> Rect {
+        let rect = self.theme_rect();
+        Rect::new(
+            rect.x + 14,
+            rect.y + design::THEME_STATUS_TOP,
+            rect.width.saturating_sub(28),
+            design::THEME_STATUS_HEIGHT,
+        )
+    }
+
+    pub fn theme_preview_rect(&self) -> Rect {
+        let rect = self.theme_rect();
+        Rect::new(
+            rect.x + 14,
+            rect.y + design::THEME_PREVIEW_TOP,
+            rect.width.saturating_sub(28),
+            design::THEME_PREVIEW_HEIGHT,
+        )
+    }
+
+    pub fn theme_row_rect(&self, index: usize) -> Option<Rect> {
+        if index >= theme::ThemeField::ALL.len() {
+            return None;
+        }
+        let rect = self.theme_rect();
+        let group = theme_row_group(index);
+        Some(Rect::new(
+            rect.x + 14,
+            rect.y
+                + design::THEME_ROWS_TOP
+                + index as i32 * design::THEME_ROW_SPACING
+                + group * design::THEME_GROUP_GAP,
+            rect.width.saturating_sub(28),
+            design::THEME_ROW_HEIGHT,
+        ))
+    }
+
+    pub fn theme_row_at(&self, point: Point) -> Option<usize> {
+        (0..theme::ThemeField::ALL.len()).find(|index| {
+            self.theme_row_rect(*index)
+                .is_some_and(|rect| rect.contains(point))
+        })
+    }
+
+    pub fn theme_close_rect(&self) -> Rect {
+        let rect = self.theme_rect();
+        Rect::new(rect.x + rect.width as i32 - 40, rect.y + 18, 24, 24)
+    }
+
+    pub fn theme_close_at(&self, point: Point) -> bool {
+        self.theme_close_rect().contains(point)
+    }
+
+    /// "Use Water" button inside the status strip.
+    pub fn theme_action_rect(&self) -> Rect {
+        let rect = self.theme_rect();
+        Rect::new(
+            rect.x + rect.width as i32 - 104,
+            rect.y + design::THEME_STATUS_TOP + 7,
+            90,
+            24,
+        )
+    }
+
+    pub fn theme_action_at(&self, point: Point) -> bool {
+        !self.theme.is_water() && self.theme_action_rect().contains(point)
+    }
+
+    pub fn theme_reset_rect(&self) -> Rect {
+        let rect = self.theme_rect();
+        Rect::new(
+            rect.x + 14,
+            rect.y + rect.height as i32 - 38,
+            196,
+            design::THEME_FOOTER_HEIGHT,
+        )
+    }
+
+    pub fn theme_reset_at(&self, point: Point) -> bool {
+        self.theme_reset_rect().contains(point)
+    }
+
+    pub fn theme_move_selection(&mut self, delta: isize) -> bool {
+        self.themes
+            .as_mut()
+            .is_some_and(|layer| layer.move_selection(delta))
+    }
+
+    pub fn theme_select(&mut self, index: usize) -> bool {
+        self.themes
+            .as_mut()
+            .is_some_and(|layer| layer.select(index))
+    }
+
+    pub fn theme_activate(&mut self) -> Option<theme::ThemeAction> {
+        let action = self.themes.as_mut().and_then(|layer| layer.activate());
+        self.sync_open_theme();
+        action
+    }
+
+    pub fn theme_adjust(&mut self, delta: i32) -> Option<theme::ThemeAction> {
+        let action = self.themes.as_mut().and_then(|layer| layer.adjust(delta));
+        self.sync_open_theme();
+        action
+    }
+
+    pub fn theme_reset(&mut self) -> theme::ThemeAction {
+        let action = self
+            .themes
+            .as_mut()
+            .map(theme::ThemeLayer::reset)
+            .unwrap_or(theme::ThemeAction::Reset);
+        self.sync_open_theme();
+        action
+    }
+
+    pub fn theme_use_water(&mut self) -> Option<theme::ThemeAction> {
+        let action = self.themes.as_mut().and_then(|layer| layer.use_water());
+        self.sync_open_theme();
+        action
+    }
+
+    fn sync_open_theme(&mut self) {
+        if let Some(layer) = self.themes.as_ref() {
+            self.theme = *layer.settings();
+        }
+    }
+
     /// Explorer panel rect, centred in the primary output.
     pub fn explorer_rect(&self) -> Rect {
         self.primary_output()
@@ -1460,6 +1674,7 @@ impl Shell {
 
     pub fn open_explorer(&mut self) -> Option<()> {
         self.close_remote();
+        self.close_themes();
         if self.explorer.is_none() {
             self.explorer = Some(ExplorerState::default());
         }
@@ -1733,6 +1948,11 @@ impl Shell {
                 ("Chat", "Aether chat", PaletteAction::OpenChat),
                 ("Audio", "Aether audio routes", PaletteAction::OpenAudio),
                 (
+                    "Themes",
+                    "Theme · Water settings",
+                    PaletteAction::OpenThemes,
+                ),
+                (
                     "Keyboard shortcuts",
                     "Aether shortcut reference",
                     PaletteAction::OpenShortcuts,
@@ -1750,6 +1970,17 @@ impl Shell {
                         },
                     ));
                 }
+            }
+        }
+
+        if mode == PaletteMode::Setting {
+            let themes = PaletteEntry {
+                title: "Themes".to_string(),
+                detail: "Theme · Water settings".to_string(),
+                action: PaletteAction::OpenThemes,
+            };
+            if let Some(score) = palette_score(&query, &themes.title) {
+                scored.push((score, command_offset, themes));
             }
         }
 
@@ -3381,6 +3612,7 @@ mod tests {
                 "Files",
                 "Chat",
                 "Audio",
+                "Themes",
                 "Keyboard shortcuts",
                 "Task manager",
                 "Close palette"
@@ -3534,6 +3766,7 @@ mod tests {
                 "Files",
                 "Chat",
                 "Audio",
+                "Themes",
                 "Keyboard shortcuts",
                 "Task manager",
                 "Close palette"
@@ -3595,7 +3828,7 @@ mod tests {
         }
         shell.open_overlay();
 
-        assert_eq!(shell.palette_entries().len(), 13);
+        assert_eq!(shell.palette_entries().len(), 14);
         assert_eq!(shell.palette_visible_start(), 0);
         let first = shell.palette_row_rect(0).expect("row 0");
         assert_eq!(first.x, 70);
@@ -3617,7 +3850,7 @@ mod tests {
         );
         assert!(shell.palette_select(7));
         assert_eq!(shell.palette_selected(), 7);
-        assert!(!shell.palette_select(13));
+        assert!(!shell.palette_select(14));
     }
 
     #[test]
@@ -3628,7 +3861,7 @@ mod tests {
 
         assert_eq!(shell.palette_selected(), 0);
         assert!(shell.palette_move_selection(-1));
-        assert_eq!(shell.palette_selected(), 8);
+        assert_eq!(shell.palette_selected(), 9);
         assert_eq!(shell.palette_activate(), Some(PaletteAction::Close));
 
         assert!(shell.palette_move_selection(1));
@@ -4066,5 +4299,168 @@ mod remote_overlay_tests {
         shell.open_remote(remote::RemoteLayer::demo()).unwrap();
         shell.open_overlay();
         assert!(!shell.remote_open());
+    }
+}
+
+#[cfg(test)]
+mod themes_app_tests {
+    use super::*;
+
+    fn shell() -> Shell {
+        Shell::new(Size::new(1440, 900), LayoutConfig::default(), 120)
+    }
+
+    #[test]
+    fn opens_centred_with_every_reference_row_hittable() {
+        let mut shell = shell();
+        shell.open_themes().unwrap();
+        assert!(shell.themes_open());
+        let rect = shell.theme_rect();
+        assert_eq!(rect.width, design::THEME_PANEL_WIDTH);
+        assert_eq!(rect.height, design::THEME_PANEL_HEIGHT);
+        assert_eq!(rect.x, (1440 - rect.width as i32) / 2);
+        assert_eq!(theme::ThemeField::ALL.len(), 11);
+        for index in 0..theme::ThemeField::ALL.len() {
+            let row = shell.theme_row_rect(index).unwrap();
+            let center = Point::new(row.x + row.width as i32 / 2, row.y + row.height as i32 / 2);
+            assert_eq!(shell.theme_row_at(center), Some(index));
+        }
+        assert_eq!(shell.theme_row_at(Point::new(rect.x + 2, rect.y + 2)), None);
+        assert!(!shell.theme_select(11));
+    }
+
+    #[test]
+    fn switches_toggle_and_selections_cycle() {
+        let mut shell = shell();
+        shell.open_themes().unwrap();
+        assert!(shell.theme_select(1));
+        assert_eq!(shell.theme_activate(), Some(theme::ThemeAction::Changed));
+        assert!(!shell.theme_settings().effects);
+        assert!(!shell.theme_layer().unwrap().settings().effects);
+
+        assert!(shell.theme_select(6));
+        assert_eq!(shell.theme_adjust(1), Some(theme::ThemeAction::Changed));
+        assert_eq!(shell.theme_settings().speed, theme::WaterSpeed::Rapid);
+        assert_eq!(
+            shell.theme_settings().intensity,
+            theme::WaterIntensity::Subtle
+        );
+
+        assert!(shell.theme_select(10));
+        assert!(shell.theme_activate().is_some());
+        assert!(!shell.theme_settings().glass);
+    }
+
+    #[test]
+    fn reset_and_use_water_update_the_active_theme() {
+        let mut shell = shell();
+        shell.open_themes().unwrap();
+        shell.theme_select(0);
+        shell.theme_adjust(1);
+        shell.theme_select(10);
+        shell.theme_activate();
+        assert_ne!(shell.theme_settings().mode, theme::ThemeMode::Water);
+        assert!(!shell.theme_settings().glass);
+        assert_eq!(
+            shell.theme_use_water(),
+            Some(theme::ThemeAction::ActivateWater)
+        );
+        assert!(shell.theme_settings().is_water());
+        assert!(!shell.theme_settings().glass);
+        assert_eq!(shell.theme_reset(), theme::ThemeAction::Reset);
+        assert_eq!(shell.theme_settings(), &theme::ThemeSettings::default());
+    }
+
+    #[test]
+    fn status_action_and_footer_are_hit_testable() {
+        let mut shell = shell();
+        shell.open_themes().unwrap();
+        assert!(!shell.theme_action_at(Point::new(
+            shell.theme_action_rect().x,
+            shell.theme_action_rect().y
+        )));
+        let mut settings = *shell.theme_settings();
+        settings.mode = theme::ThemeMode::Dark;
+        shell.set_theme_settings(settings);
+        let action = shell.theme_action_rect();
+        let center = Point::new(action.x + 4, action.y + 4);
+        assert!(shell.theme_action_at(center));
+        assert_eq!(
+            shell.theme_use_water(),
+            Some(theme::ThemeAction::ActivateWater)
+        );
+        let reset = shell.theme_reset_rect();
+        assert!(shell.theme_reset_at(Point::new(
+            reset.x + reset.width as i32 - 2,
+            reset.y + reset.height as i32 - 2
+        )));
+        let close = shell.theme_close_rect();
+        assert!(shell.theme_close_at(Point::new(
+            close.x + close.width as i32 / 2,
+            close.y + close.height as i32 / 2
+        )));
+    }
+
+    #[test]
+    fn opening_another_surface_closes_themes() {
+        let mut shell = shell();
+        shell.open_themes().unwrap();
+        shell.open_explorer().unwrap();
+        assert!(!shell.themes_open());
+        shell.open_themes().unwrap();
+        shell.open_chat().unwrap();
+        assert!(!shell.themes_open());
+        shell.open_themes().unwrap();
+        shell.open_remote(remote::RemoteLayer::demo()).unwrap();
+        assert!(!shell.themes_open());
+        shell.open_themes().unwrap();
+        shell.open_overlay();
+        assert!(!shell.themes_open());
+    }
+
+    #[test]
+    fn layout_keeps_every_group_and_the_footer_inside_the_panel() {
+        let shell = shell();
+        let panel = shell.theme_rect();
+        let status = shell.theme_status_rect();
+        let preview = shell.theme_preview_rect();
+        assert!(panel.contains(Point::new(status.x + 1, status.y + 1)));
+        assert!(preview.y > status.y + status.height as i32);
+        let first = shell.theme_row_rect(0).unwrap();
+        assert!(first.y > preview.y + preview.height as i32);
+        let last = shell
+            .theme_row_rect(theme::ThemeField::ALL.len() - 1)
+            .unwrap();
+        let reset = shell.theme_reset_rect();
+        assert!(reset.y > last.y + last.height as i32);
+        assert!(reset.y + reset.height as i32 <= panel.y + panel.height as i32);
+        for index in 1..theme::ThemeField::ALL.len() {
+            let previous = shell.theme_row_rect(index - 1).unwrap();
+            let row = shell.theme_row_rect(index).unwrap();
+            assert!(row.y >= previous.y + previous.height as i32);
+        }
+    }
+
+    #[test]
+    fn palette_lists_the_themes_app() {
+        let mut shell = shell();
+        let entry = shell
+            .palette_entries()
+            .into_iter()
+            .find(|entry| entry.title == "Themes")
+            .expect("themes entry");
+        assert_eq!(entry.action, PaletteAction::OpenThemes);
+        assert_eq!(entry.detail, "Theme · Water settings");
+
+        assert!(shell.palette_push_char('~'));
+        assert!(shell.palette_push_char('t'));
+        assert!(shell.palette_push_char('h'));
+        assert!(shell.palette_push_char('e'));
+        assert!(shell.palette_push_char('m'));
+        assert!(shell.palette_push_char('e'));
+        assert!(shell.palette_push_char('s'));
+        let entries = shell.palette_entries();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].action, PaletteAction::OpenThemes);
     }
 }

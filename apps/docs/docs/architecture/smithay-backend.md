@@ -303,14 +303,15 @@ drag and both toggles with `xdotool` and asserts each transition.*
 | `Super+Return` / `Ctrl+Alt+Return` | Spawn a terminal |
 | `Super+E` / `Ctrl+Alt+E` | Toggle the file explorer |
 | `Super+C` | Toggle the streaming chat drawer |
-| `Super+A` | Toggle the audio overlay |
+| `Super+A` / `Ctrl+Alt+A` | Toggle the audio overlay |
+| `Super+T` / `Ctrl+Alt+T` | Toggle the Themes app |
 | `Super+/` | Toggle the shortcut cheat sheet |
 | `Super+Tab` / `Super+Shift+Tab` | Cycle MRU focus (forward/back) |
 | `Super+J` / `Super+K` | Focus next / previous |
 | `Esc` | Close the overlay |
 | *Typing* | Filter palette entries while the overlay is open |
-| `Up/Down` | Move the palette/explorer/audio selection |
-| `Enter` | Run the selected palette entry or route |
+| `Up/Down` | Move the palette/explorer/audio/themes selection |
+| `Enter` | Run the selected palette entry, route, or theme switch |
 | `P` | Cycle audio latency presets |
 | `Backspace` | Delete a query character |
 | *Click row* | Activate a palette result |

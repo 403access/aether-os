@@ -11,6 +11,7 @@ impl App {
     pub(crate) fn open_task_manager(&mut self) {
         self.shortcuts_open = false;
         self.shell.close_audio();
+        self.shell.close_themes();
         self.shell.close_remote();
         self.shell.close_explorer();
         self.shell.close_chat();
@@ -107,9 +108,7 @@ impl App {
     }
 
     pub fn task_refresh_in(&self) -> Option<std::time::Duration> {
-        if self.task_manager.is_none() {
-            return None;
-        }
+        self.task_manager.as_ref()?;
         Some(
             std::time::Duration::from_secs(1)
                 .saturating_sub(self.task_last.elapsed())

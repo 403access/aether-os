@@ -17,6 +17,7 @@ impl App {
             && !self.shell.explorer_open()
             && !self.shell.chat_open()
             && !self.shell.audio_open()
+            && !self.shell.themes_open()
             && !self.shell.remote_open()
             && !self.shortcuts_open
             && self.shell.overlay().is_none()

@@ -33,6 +33,7 @@ impl App {
             Shortcut::ToggleExplorer => self.toggle_explorer(),
             Shortcut::ToggleChat => self.toggle_chat(),
             Shortcut::ToggleAudio => self.toggle_audio(),
+            Shortcut::ToggleThemes => self.toggle_themes(),
             Shortcut::ToggleRemote => self.toggle_remote(),
             Shortcut::ToggleShortcuts => self.toggle_shortcuts(),
             Shortcut::NewTerminal => {
@@ -124,6 +125,7 @@ impl App {
         let mut explorer_key = false;
         let mut chat_key_pressed = false;
         let mut audio_key = false;
+        let mut theme_key = false;
         let mut remote_key = false;
         keyboard.input::<(), _>(
             self,
@@ -163,6 +165,12 @@ impl App {
                         audio_key = true;
                     }
                     FilterResult::Intercept(())
+                } else if state.shell.themes_open() {
+                    if pressed {
+                        state.handle_theme_key(sym);
+                        theme_key = true;
+                    }
+                    FilterResult::Intercept(())
                 } else if state.shell.remote_open() {
                     if pressed {
                         state.handle_remote_key(sym);
@@ -195,6 +203,8 @@ impl App {
             self.mark_chat_damage();
         } else if audio_key {
             self.mark_audio_damage();
+        } else if theme_key {
+            self.mark_theme_damage();
         } else if remote_key {
             self.mark_remote_damage();
         } else if self.shortcuts_open {

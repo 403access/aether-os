@@ -11,4 +11,5 @@ pub(crate) mod palette;
 pub(crate) mod remote;
 pub(crate) mod shortcuts;
 pub(crate) mod task_manager;
+pub(crate) mod themes;
 pub(crate) mod topbar;

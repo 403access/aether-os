@@ -68,6 +68,8 @@ dependencies = [
  "aether-layout",
  "aether-pacing",
  "aether-scene",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

@@ -54,7 +54,7 @@ display path are implemented; their target gates are budgets until run on the
 | Native DRM backend (Linux-only) | ✅ libseat + KMS page-flips, libinput, udev hotplug, per-output workspaces, cage fallback | `os/compositor/aether-shell-drm` |
 | Target preflight | ✅ UEFI/KMS/input/memory checks with fixtures | `scripts/target-check.sh` |
 | DRM session | ✅ native backend on tty7, cage + winit fallback | `os/nixos/services.nix` |
-| Shell surfaces | ✅ palette/explorer/chat/status/audio/remote, 10k palette p95 1.11 ms, explorer scroll p95 0.004 ms | `os/compositor` |
+| Shell surfaces | ✅ palette/explorer/chat/status/audio/remote/themes, 10k palette p95 1.11 ms, explorer scroll p95 0.004 ms | `os/compositor` |
 | Audio | ✅ PipeWire/WirePlumber + Bluetooth policy, overlay, presets, per-app moves, mic capability gate; target latency/xrun gates pending | `os/compositor/crates/aether-audio`, `os/nixos/services.nix` |
 | Agent sandbox | ✅ Landlock + seccomp + per-agent UID + rlimits + optional cgroup v2; supervisor/red-team still P5 | `os/compositor/crates/aether-sandbox` |
 | Installer + full live ISO | ✅ `.#iso` and `.#live-iso` (x86_64; live ISO requires an x86_64 builder) | `os/nixos/installer.nix`, `os/live` |

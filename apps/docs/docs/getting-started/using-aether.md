@@ -33,7 +33,7 @@ AETHER_KEY_PROFILE=standard ./os/compositor/aether-shell-smithay/target/debug/ae
 
 The in-shell cheat sheet (`Super+/` or `Ctrl+Alt+/`) shows the active profile.
 
-## The ten commands to learn first
+## The commands to learn first
 
 | Action | Simple (default) | Standard |
 | --- | --- | --- |
@@ -42,6 +42,7 @@ The in-shell cheat sheet (`Super+/` or `Ctrl+Alt+/`) shows the active profile.
 | Explorer | `Ctrl+Alt+E` | `Super+E` |
 | Chat | `Ctrl+Alt+C` | `Super+C` |
 | Audio routes | `Ctrl+Alt+A` | `Super+A` |
+| Themes | `Ctrl+Alt+T` | `Super+T` |
 | Remote session | `Ctrl+Alt+R` | `Super+R` |
 | Shortcut cheat sheet | `Ctrl+Alt+/` | `Super+/` |
 | Focus next window | `Ctrl+Alt+Tab` | `Super+Tab` |
@@ -72,7 +73,7 @@ The top-centre dock is the mouse-friendly mirror of the global shortcuts:
 | Shortcuts | `Super+/` |
 
 Click any button. The dock hides while a surface is open so it never competes
-with the palette, explorer, chat or audio overlay.
+with the palette, explorer, chat, audio or Themes surfaces.
 
 ## Global shortcuts
 
@@ -88,12 +89,13 @@ parentheses. Pointer actions are identical in both profiles.
 | `Ctrl+Alt+E` (`Super+E`) | Toggle the full-output explorer |
 | `Ctrl+Alt+C` (`Super+C`) | Toggle the streaming chat drawer |
 | `Ctrl+Alt+A` (`Super+A`) | Toggle the audio overlay |
+| `Ctrl+Alt+T` (`Super+T`) | Toggle the Themes app |
 | `Ctrl+Alt+R` (`Super+R`) | Toggle the remote-session overlay |
 | `Ctrl+Alt+/` (`Super+/`) | Toggle the shortcut cheat sheet |
 | `Esc` | Close the open overlay, one layer at a time |
 
-Opening one surface closes the others. The palette, explorer, chat and audio
-layers are mutually exclusive; there is never a hidden modal stealing keys.
+Opening one surface closes the others. The palette, explorer, chat, audio and
+Themes layers are mutually exclusive; there is never a hidden modal stealing keys.
 
 ### Windows
 
@@ -153,9 +155,9 @@ master/stack ratio or divider drag.
 The palette is also the fastest way to reach a window: type part of its title,
 press `Enter`, and Aether focuses it and switches to its workspace. Installed
 applications come from XDG `.desktop` entries; Aether's own surfaces are indexed
-as applications too — **Files**, **Chat**, **Audio**, **Keyboard shortcuts** and
-**Task manager**. A **Aether Terminal** desktop entry is installed on the target
-and live images.
+as applications too — **Files**, **Chat**, **Audio**, **Themes**, **Keyboard
+shortcuts** and **Task manager**. A **Aether Terminal** desktop entry is installed
+on the target and live images.
 
 ## Explorer
 
@@ -211,6 +213,39 @@ aether-audio switch 43
 aether-audio preset voice
 aether-audio apps
 ```
+
+## Themes
+
+`Super+T` opens the Themes app. It exposes the same settings as the reference
+explorer's Water panel and saves each change to disk.
+
+| Input | Action |
+| --- | --- |
+| `Up` / `Down` | Move through settings |
+| `Left` / `Right` | Change the selected mode, tone, background or speed |
+| `Enter` / `Space` | Toggle a switch or advance a selection |
+| `W` | Use the Water theme |
+| `R` | Reset water settings |
+| `Esc` | Close |
+
+| Group | Settings |
+| --- | --- |
+| Theme | System, Light, Dark, Water |
+| Effects | Water effects, cursor drips, click ripples, caustic shimmer, animated row highlights |
+| Current | Flow speed, drip energy |
+| Look | Background, Water tone, glass surfaces |
+
+`System` follows the session default, which is Water. Tone changes the accent
+current and caustic colour used by the chrome. Mode
+changes the workspace backdrop and the derived chrome palette; glass controls
+panel fill and borders; caustics, background style and flow speed shape the
+backdrop. The preview band mirrors cursor drips, click ripples, caustics,
+background style, tone and drip energy. Animated row highlights remain a stored
+Water preference for surfaces that animate hover state; static chrome does not.
+
+Settings are saved on this device at `$XDG_CONFIG_HOME/aether/themes.json`
+(falling back to `~/.config/aether/themes.json`). Set `AETHER_THEME_CONFIG` to
+override the path.
 
 ## Remote display
 
@@ -272,8 +307,8 @@ palette's **New terminal** action does the same thing.
 ## Recovery and layer rules
 
 - `Esc` closes exactly one overlay. It never closes two layers at once.
-- `Super+Space`, `Super+E`, `Super+C`, `Super+A` and `Super+R` replace each
-  other; the last one wins.
+- `Super+Space`, `Super+E`, `Super+C`, `Super+A`, `Super+T` and `Super+R`
+  replace each other; the last one wins.
 - Clicking outside an overlay closes it.
 - A client that hangs can be closed with `Super+Q`; the shell stays responsive.
 - If an overlay seems stuck, press `Esc` twice: first the overlay, then nothing.

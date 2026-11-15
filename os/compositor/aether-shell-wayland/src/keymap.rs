@@ -8,6 +8,7 @@ pub enum Shortcut {
     ToggleExplorer,
     ToggleChat,
     ToggleAudio,
+    ToggleThemes,
     ToggleRemote,
     ToggleShortcuts,
     NewTerminal,
@@ -105,6 +106,11 @@ pub const STANDARD_SHORTCUTS: &[ShortcutEntry] = &[
     ShortcutEntry {
         chord: "Super+A",
         action: "Audio routes",
+        group: "Surfaces",
+    },
+    ShortcutEntry {
+        chord: "Super+T",
+        action: "Themes",
         group: "Surfaces",
     },
     ShortcutEntry {
@@ -228,6 +234,11 @@ pub const SIMPLE_SHORTCUTS: &[ShortcutEntry] = &[
     ShortcutEntry {
         chord: "Ctrl+Alt+A",
         action: "Audio routes",
+        group: "Surfaces",
+    },
+    ShortcutEntry {
+        chord: "Ctrl+Alt+T",
+        action: "Themes",
         group: "Surfaces",
     },
     ShortcutEntry {
@@ -374,6 +385,8 @@ pub fn lookup_profile(
             Some(Shortcut::ToggleChat)
         } else if keysym == keysyms::KEY_a.into() {
             Some(Shortcut::ToggleAudio)
+        } else if keysym == keysyms::KEY_t.into() {
+            Some(Shortcut::ToggleThemes)
         } else if keysym == keysyms::KEY_r.into() {
             Some(Shortcut::ToggleRemote)
         } else if keysym == keysyms::KEY_j.into() {
@@ -438,6 +451,7 @@ pub fn lookup(logo: bool, shift: bool, alt: bool, keysym: Keysym) -> Option<Shor
     let previous_window: Keysym = keysyms::KEY_k.into();
     let chat: Keysym = keysyms::KEY_c.into();
     let audio: Keysym = keysyms::KEY_a.into();
+    let themes: Keysym = keysyms::KEY_t.into();
     let remote: Keysym = keysyms::KEY_r.into();
     let close: Keysym = keysyms::KEY_q.into();
     let maximize: Keysym = keysyms::KEY_m.into();
@@ -451,6 +465,7 @@ pub fn lookup(logo: bool, shift: bool, alt: bool, keysym: Keysym) -> Option<Shor
         _ if keysym == previous_window => Shortcut::FocusPrevious,
         _ if keysym == chat => Shortcut::ToggleChat,
         _ if keysym == audio => Shortcut::ToggleAudio,
+        _ if keysym == themes => Shortcut::ToggleThemes,
         _ if keysym == remote => Shortcut::ToggleRemote,
         _ if keysym == close => Shortcut::CloseWindow,
         _ if keysym == maximize => Shortcut::Maximize,
@@ -528,6 +543,10 @@ mod tests {
         assert_eq!(
             lookup(true, false, false, key(keysyms::KEY_a)),
             Some(Shortcut::ToggleAudio)
+        );
+        assert_eq!(
+            lookup(true, false, false, key(keysyms::KEY_t)),
+            Some(Shortcut::ToggleThemes)
         );
         assert_eq!(
             lookup(true, false, false, key(keysyms::KEY_Return)),

@@ -10,6 +10,7 @@ use std::sync::Arc;
 
 use aether_cursor::render as render_cursor;
 use aether_geometry::Rect as AetherRect;
+use aether_shell::theme::{ThemeField, ThemeMode};
 use aether_shell::{
     OutputId, PaletteAction, WindowId, PALETTE_CONTENT_TOP, PALETTE_ROW_HEIGHT,
     PALETTE_ROW_SPACING, PALETTE_VISIBLE_ROWS, WORKSPACE_INDICATOR_BAR_HEIGHT,
@@ -38,15 +39,6 @@ use crate::app::{App, CursorCacheEntry};
 
 /// Default Aether background colour.
 pub const BACKGROUND: Color32F = Color32F::new(0.011_764_7, 0.098_039_2, 0.133_333_3, 1.0);
-
-fn design_color(hex: u32, alpha: f32) -> [f32; 4] {
-    [
-        ((hex >> 16) & 0xff) as f32 / 255.0,
-        ((hex >> 8) & 0xff) as f32 / 255.0,
-        (hex & 0xff) as f32 / 255.0,
-        alpha,
-    ]
-}
 
 /// One composited element. `DrmCompositor` and the winit draw loop both need a
 /// single concrete element type, so surface, solid and memory elements are
@@ -298,13 +290,18 @@ impl App {
         Some(buffer)
     }
 
-    fn chrome_background(&mut self, width: u32, height: u32) -> Option<Arc<MemoryRenderBuffer>> {
-        if let Some(buffer) = self.chrome_background.get(&(width, height)) {
+    fn chrome_background(
+        &mut self,
+        width: u32,
+        height: u32,
+        style: crate::chrome::BackgroundStyle,
+    ) -> Option<Arc<MemoryRenderBuffer>> {
+        if let Some(buffer) = self.chrome_background.get(&(width, height, style)) {
             return Some(buffer.clone());
         }
-        let buffer = Arc::new(crate::chrome::background(width, height)?);
+        let buffer = Arc::new(crate::chrome::background(width, height, style)?);
         self.chrome_background
-            .insert((width, height), buffer.clone());
+            .insert((width, height, style), buffer.clone());
         Some(buffer)
     }
 
@@ -315,6 +312,27 @@ impl App {
         output: Option<OutputId>,
     ) -> ComposedFrame {
         self.poll_status();
+        let tokens = self.shell.theme_tokens();
+        let settings = *self.shell.theme_settings();
+        let panel_fill = if settings.glass {
+            tokens.panel
+        } else {
+            tokens.panel_opaque()
+        };
+        let panel_fill_soft = if settings.glass {
+            tokens.panel_soft
+        } else {
+            tokens.panel_soft_opaque()
+        };
+        let panel_border = settings.glass.then(|| tokens.border(34));
+        let panel_border_soft = settings.glass.then(|| tokens.border(30));
+        let accent_rgb = self.shell.theme_accent();
+        let accent_f = [
+            accent_rgb[0] as f32 / 255.0,
+            accent_rgb[1] as f32 / 255.0,
+            accent_rgb[2] as f32 / 255.0,
+            1.0,
+        ];
         let mut elements: Vec<AetherRenderElement> = Vec::new();
         // DRM compositors are output-sized; translate extended-desktop
         // coordinates into the output's local space. Winit (None) keeps the
@@ -335,7 +353,15 @@ impl App {
                 let viewport = self.shell.viewport();
                 (viewport.width.max(1), viewport.height.max(1))
             });
-        if let Some(background) = self.chrome_background(width, height) {
+        let background_style = crate::chrome::BackgroundStyle {
+            mode: settings.mode,
+            background: settings.background,
+            tone: settings.tone,
+            caustics: settings.caustics,
+            effects: settings.effects,
+            speed: settings.speed,
+        };
+        if let Some(background) = self.chrome_background(width, height, background_style) {
             if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
                 renderer,
                 (0.0, 0.0),
@@ -410,6 +436,7 @@ impl App {
             self.shell.explorer_open() && (output.is_none() || output == Some(primary));
         let chat_here = self.shell.chat_open() && (output.is_none() || output == Some(primary));
         let audio_here = self.shell.audio_open() && (output.is_none() || output == Some(primary));
+        let themes_here = self.shell.themes_open() && (output.is_none() || output == Some(primary));
         let remote_here = self.shell.remote_open() && (output.is_none() || output == Some(primary));
         let shortcuts_here = self.shortcuts_open && (output.is_none() || output == Some(primary));
         let task_here = self.task_manager_open() && (output.is_none() || output == Some(primary));
@@ -425,13 +452,9 @@ impl App {
                 if let Some(rect) = self.shell.overlay_rect() {
                     let width = rect.width as i32;
                     let height = rect.height as i32;
-                    if let Some(buffer) = self.chrome_panel(
-                        rect.width,
-                        rect.height,
-                        14,
-                        [7, 39, 51, 250],
-                        Some([127, 230, 255, 34]),
-                    ) {
+                    if let Some(buffer) =
+                        self.chrome_panel(rect.width, rect.height, 14, panel_fill, panel_border)
+                    {
                         panels.push((buffer, rect.x - 18, rect.y - 18));
                     }
                     // Search header.
@@ -439,14 +462,14 @@ impl App {
                         rect.width.saturating_sub(2),
                         58.min(rect.height),
                         13,
-                        [9, 49, 63, 255],
+                        tokens.header,
                     ) {
                         panels.push((buffer, rect.x + 1, rect.y + 1));
                     }
                     display_icons.push((
                         "search".into(),
                         18,
-                        [56, 214, 255, 255],
+                        tokens.accent(255),
                         rect.x + 18,
                         rect.y + 20,
                     ));
@@ -457,7 +480,7 @@ impl App {
                             rect.x + 46,
                             rect.y + 18,
                             1,
-                            [107, 169, 182, 255],
+                            tokens.dim,
                         ));
                     } else {
                         labels.push((
@@ -465,17 +488,17 @@ impl App {
                             rect.x + 46,
                             rect.y + 18,
                             1,
-                            [233, 251, 255, 255],
+                            tokens.text,
                         ));
                     }
                     let esc = AetherRect::new(rect.x + width - 54, rect.y + 17, 36, 22);
-                    if let Some(buffer) = self.chrome_round(36, 22, 6, [3, 25, 34, 255]) {
+                    if let Some(buffer) = self.chrome_round(36, 22, 6, tokens.base) {
                         panels.push((buffer, esc.x, esc.y));
                     }
-                    labels.push(("esc".into(), esc.x + 10, esc.y + 5, 0, [107, 169, 182, 255]));
+                    labels.push(("esc".into(), esc.x + 10, esc.y + 5, 0, tokens.dim));
                     chrome.push((
                         AetherRect::new(rect.x + 1, rect.y + 58, rect.width.saturating_sub(2), 1),
-                        [127, 230, 255, 22].map(|value| value as f32 / 255.0),
+                        tokens.border(22).map(|value| value as f32 / 255.0),
                     ));
 
                     let entries = self.shell.palette_entries();
@@ -486,14 +509,14 @@ impl App {
                             rect.x + width / 2 - 66,
                             rect.y + 96,
                             1,
-                            [165, 219, 229, 255],
+                            tokens.soft,
                         ));
                         labels.push((
                             "Try a different query, or a prefix such as > or /".into(),
                             rect.x + width / 2 - 148,
                             rect.y + 118,
                             0,
-                            [107, 169, 182, 255],
+                            tokens.dim,
                         ));
                     }
                     let start = self.shell.palette_visible_start();
@@ -518,7 +541,7 @@ impl App {
                                 row_rect.width,
                                 row_rect.height,
                                 8,
-                                [56, 214, 255, 46],
+                                tokens.accent(46),
                             ) {
                                 panels.push((buffer, row_rect.x, row_rect.y));
                             }
@@ -526,14 +549,14 @@ impl App {
                                 3,
                                 row_rect.height.saturating_sub(16),
                                 2,
-                                [56, 214, 255, 255],
+                                tokens.accent(255),
                             ) {
                                 panels.push((buffer, row_rect.x, row_rect.y + 8));
                             }
                         }
                         // Icon tile.
                         let tile = AetherRect::new(row_rect.x + 10, row_rect.y + 7, 26, 26);
-                        if let Some(buffer) = self.chrome_round(26, 26, 7, [3, 25, 34, 210]) {
+                        if let Some(buffer) = self.chrome_round(26, 26, 7, tokens.tile) {
                             panels.push((buffer, tile.x, tile.y));
                         }
                         let icon = match entry.action {
@@ -552,6 +575,7 @@ impl App {
                             PaletteAction::OpenExplorer => "folder",
                             PaletteAction::OpenChat => "chat",
                             PaletteAction::OpenAudio => "audio",
+                            PaletteAction::OpenThemes => "palette",
                             PaletteAction::OpenShortcuts => "keyboard",
                             PaletteAction::OpenFile(_) => "file",
                             PaletteAction::Close => "close",
@@ -563,9 +587,9 @@ impl App {
                                 tag.into(),
                                 16,
                                 if active {
-                                    [56, 214, 255, 255]
+                                    tokens.accent(255)
                                 } else {
-                                    [165, 219, 229, 255]
+                                    tokens.soft
                                 },
                                 tile.x + 5,
                                 tile.y + 5,
@@ -577,9 +601,9 @@ impl App {
                             row_rect.y + 11,
                             1,
                             if active {
-                                [233, 251, 255, 255]
+                                tokens.text
                             } else {
-                                [217, 247, 255, 255]
+                                tokens.text_soft
                             },
                         ));
                         labels.push((
@@ -589,7 +613,7 @@ impl App {
                                 - 12,
                             row_rect.y + 12,
                             0,
-                            [107, 169, 182, 255],
+                            tokens.dim,
                         ));
                     }
 
@@ -606,17 +630,14 @@ impl App {
                             true,
                         ));
                         let label_x = cx + key_width as i32 + 5;
-                        labels.push((label.into(), label_x, footer_y + 8, 0, [107, 169, 182, 255]));
+                        labels.push((label.into(), label_x, footer_y + 8, 0, tokens.dim));
                         cx = label_x + self.text_width(label, 0) as i32 + 16;
                     }
                     for (key_rect, text, is_key) in caps {
                         if is_key {
-                            if let Some(buffer) = self.chrome_round(
-                                key_rect.width,
-                                key_rect.height,
-                                5,
-                                [3, 25, 34, 255],
-                            ) {
+                            if let Some(buffer) =
+                                self.chrome_round(key_rect.width, key_rect.height, 5, tokens.base)
+                            {
                                 panels.push((buffer, key_rect.x, key_rect.y));
                             }
                             labels.push((
@@ -626,7 +647,7 @@ impl App {
                                         / 2,
                                 key_rect.y + 5,
                                 0,
-                                [165, 219, 229, 255],
+                                tokens.soft,
                             ));
                         }
                     }
@@ -635,7 +656,7 @@ impl App {
                         rect.x + width - 210,
                         footer_y + 8,
                         0,
-                        [107, 169, 182, 255],
+                        tokens.dim,
                     ));
                 }
             }
@@ -648,62 +669,50 @@ impl App {
                     rect.width,
                     rect.height,
                     14,
-                    [7, 39, 51, 244],
-                    Some([127, 230, 255, 30]),
+                    panel_fill_soft,
+                    panel_border_soft,
                 ) {
                     panels.push((buffer, rect.x - 18, rect.y - 18));
                 }
                 // Header band.
                 if let Some(buffer) =
-                    self.chrome_round_top(rect.width.saturating_sub(2), 58, 13, [9, 49, 63, 255])
+                    self.chrome_round_top(rect.width.saturating_sub(2), 58, 13, tokens.header)
                 {
                     panels.push((buffer, rect.x + 1, rect.y + 1));
                 }
-                if let Some(buffer) = self.chrome_round(28, 28, 8, [56, 214, 255, 42]) {
+                if let Some(buffer) = self.chrome_round(28, 28, 8, tokens.accent(42)) {
                     panels.push((buffer, rect.x + 14, rect.y + 15));
                 }
                 display_icons.push((
                     "chat".into(),
                     17,
-                    [56, 214, 255, 255],
+                    tokens.accent(255),
                     rect.x + 20,
                     rect.y + 21,
                 ));
-                labels.push((
-                    "Aether".into(),
-                    rect.x + 52,
-                    rect.y + 13,
-                    2,
-                    [233, 251, 255, 255],
-                ));
+                labels.push(("Aether".into(), rect.x + 52, rect.y + 13, 2, tokens.text));
                 labels.push((
                     "Streaming markdown".into(),
                     rect.x + 52,
                     rect.y + 35,
                     0,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                 ));
                 // Live status pill.
                 let pill_w = 86;
                 let pill =
                     AetherRect::new(rect.x + width - pill_w - 14, rect.y + 18, pill_w as u32, 22);
-                if let Some(buffer) = self.chrome_round(pill_w as u32, 22, 11, [67, 214, 138, 28]) {
+                if let Some(buffer) = self.chrome_round(pill_w as u32, 22, 11, tokens.green_a(28)) {
                     panels.push((buffer, pill.x, pill.y));
                 }
-                if let Some(buffer) = self.chrome_round(6, 6, 3, [67, 214, 138, 255]) {
+                if let Some(buffer) = self.chrome_round(6, 6, 3, tokens.green) {
                     panels.push((buffer, pill.x + 10, pill.y + 8));
                 }
-                labels.push((
-                    "live".into(),
-                    pill.x + 22,
-                    pill.y + 5,
-                    0,
-                    [126, 235, 178, 255],
-                ));
+                labels.push(("live".into(), pill.x + 22, pill.y + 5, 0, tokens.green));
                 display_icons.push((
                     "close".into(),
                     14,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                     rect.x + width - 30,
                     rect.y + 22,
                 ));
@@ -716,11 +725,11 @@ impl App {
                     rect.height.saturating_sub(70 + 76),
                 );
                 if let Some(buffer) =
-                    self.chrome_round(bubble.width, bubble.height, 10, [5, 37, 48, 255])
+                    self.chrome_round(bubble.width, bubble.height, 10, tokens.surface)
                 {
                     panels.push((buffer, bubble.x, bubble.y));
                 }
-                if let Some(buffer) = self.chrome_round(3, 18, 2, [56, 214, 255, 160]) {
+                if let Some(buffer) = self.chrome_round(3, 18, 2, tokens.accent(160)) {
                     panels.push((buffer, bubble.x + 1, bubble.y + 16));
                 }
                 let mut y = bubble.y + 14;
@@ -745,7 +754,7 @@ impl App {
                             bubble.width.saturating_sub(20),
                             row_height as u32,
                             5,
-                            [3, 25, 34, 210],
+                            tokens.tile,
                         ) {
                             panels.push((buffer, bubble.x + 10, y - 2));
                         }
@@ -753,9 +762,9 @@ impl App {
                     let mut x = text_left + line.indent;
                     for span in &line.spans {
                         let color = match span.kind {
-                            aether_shell::ChatSpanKind::Text => [220, 240, 245, 255],
-                            aether_shell::ChatSpanKind::Bold => [255, 255, 255, 255],
-                            aether_shell::ChatSpanKind::Code => [120, 230, 180, 255],
+                            aether_shell::ChatSpanKind::Text => tokens.text,
+                            aether_shell::ChatSpanKind::Bold => tokens.strong,
+                            aether_shell::ChatSpanKind::Code => tokens.green,
                         };
                         let mut scale = if line.code { 1 } else { line.scale };
                         if span.kind == aether_shell::ChatSpanKind::Bold {
@@ -776,7 +785,7 @@ impl App {
                     4,
                     bubble.height.saturating_sub(20),
                 );
-                if let Some(buffer) = self.chrome_round(4, track.height, 2, [3, 25, 34, 255]) {
+                if let Some(buffer) = self.chrome_round(4, track.height, 2, tokens.base) {
                     panels.push((buffer, track.x, track.y));
                 }
                 let lines = self.shell.chat_line_count().max(1);
@@ -785,7 +794,7 @@ impl App {
                     .clamp(12.0, track.height as f32) as u32;
                 let offset =
                     ((self.shell.chat_scroll() as f32 / lines as f32) * track.height as f32) as i32;
-                if let Some(buffer) = self.chrome_round(4, thumb, 2, [56, 214, 255, 190]) {
+                if let Some(buffer) = self.chrome_round(4, thumb, 2, tokens.accent(190)) {
                     panels.push((
                         buffer,
                         track.x,
@@ -797,7 +806,7 @@ impl App {
                 let composer_y = rect.y + height - 58;
                 let composer =
                     AetherRect::new(rect.x + 14, composer_y, rect.width.saturating_sub(28), 38);
-                if let Some(buffer) = self.chrome_round(composer.width, 38, 10, [3, 25, 34, 255]) {
+                if let Some(buffer) = self.chrome_round(composer.width, 38, 10, tokens.base) {
                     panels.push((buffer, composer.x, composer.y));
                 }
                 labels.push((
@@ -805,9 +814,9 @@ impl App {
                     composer.x + 14,
                     composer.y + 10,
                     1,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                 ));
-                if let Some(buffer) = self.chrome_round(26, 26, 8, [56, 214, 255, 44]) {
+                if let Some(buffer) = self.chrome_round(26, 26, 8, tokens.accent(44)) {
                     panels.push((
                         buffer,
                         composer.x + composer.width as i32 - 34,
@@ -817,7 +826,7 @@ impl App {
                 display_icons.push((
                     "arrow".into(),
                     14,
-                    [56, 214, 255, 255],
+                    tokens.accent(255),
                     composer.x + composer.width as i32 - 28,
                     composer.y + 12,
                 ));
@@ -826,7 +835,7 @@ impl App {
                     rect.x + width - 176,
                     composer_y - 16,
                     0,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                 ));
             }
 
@@ -834,24 +843,20 @@ impl App {
                 let rect = self.shortcuts_rect();
                 let width = rect.width as i32;
                 let height = rect.height as i32;
-                if let Some(buffer) = self.chrome_panel(
-                    rect.width,
-                    rect.height,
-                    14,
-                    [7, 39, 51, 250],
-                    Some([127, 230, 255, 34]),
-                ) {
+                if let Some(buffer) =
+                    self.chrome_panel(rect.width, rect.height, 14, panel_fill, panel_border)
+                {
                     panels.push((buffer, rect.x - 18, rect.y - 18));
                 }
                 if let Some(buffer) =
-                    self.chrome_round_top(rect.width.saturating_sub(2), 58, 13, [9, 49, 63, 255])
+                    self.chrome_round_top(rect.width.saturating_sub(2), 58, 13, tokens.header)
                 {
                     panels.push((buffer, rect.x + 1, rect.y + 1));
                 }
                 display_icons.push((
                     "command".into(),
                     20,
-                    [56, 214, 255, 255],
+                    tokens.accent(255),
                     rect.x + 18,
                     rect.y + 18,
                 ));
@@ -860,18 +865,18 @@ impl App {
                     rect.x + 50,
                     rect.y + 12,
                     2,
-                    [233, 251, 255, 255],
+                    tokens.text,
                 ));
                 labels.push((
                     self.key_profile.description().into(),
                     rect.x + 50,
                     rect.y + 35,
                     0,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                 ));
                 let key = self.key_profile.cheat_sheet_chord();
                 let key_w = self.text_width(key, 0) as i32 + 22;
-                if let Some(buffer) = self.chrome_round(key_w as u32, 22, 6, [3, 25, 34, 255]) {
+                if let Some(buffer) = self.chrome_round(key_w as u32, 22, 6, tokens.base) {
                     panels.push((buffer, rect.x + width - key_w - 14, rect.y + 18));
                 }
                 labels.push((
@@ -879,7 +884,7 @@ impl App {
                     rect.x + width - key_w - 3,
                     rect.y + 23,
                     0,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                 ));
 
                 let entries = self.key_profile.entries();
@@ -891,22 +896,16 @@ impl App {
                     for entry in *slice {
                         if entry.group != group {
                             group = entry.group;
-                            labels.push((
-                                group.to_uppercase(),
-                                column_x,
-                                y,
-                                0,
-                                [56, 214, 255, 200],
-                            ));
+                            labels.push((group.to_uppercase(), column_x, y, 0, tokens.accent(200)));
                             y += 20;
                         }
-                        labels.push((entry.chord.into(), column_x, y + 5, 0, [165, 219, 229, 255]));
+                        labels.push((entry.chord.into(), column_x, y + 5, 0, tokens.soft));
                         labels.push((
                             entry.action.into(),
                             column_x + 140,
                             y + 3,
                             0,
-                            [217, 247, 255, 255],
+                            tokens.text_soft,
                         ));
                         y += 28;
                     }
@@ -916,7 +915,332 @@ impl App {
                     rect.x + 18,
                     rect.y + height - 22,
                     0,
-                    [107, 169, 182, 255],
+                    tokens.dim,
+                ));
+            }
+
+            if themes_here {
+                let rect = self.shell.theme_rect();
+                let width = rect.width as i32;
+                let settings = *self.shell.theme_settings();
+                let selected = self
+                    .shell
+                    .theme_layer()
+                    .map(|layer| layer.selected())
+                    .unwrap_or(0);
+                let accent = settings.accent_rgb();
+                let accent4 = |alpha: u8| [accent[0], accent[1], accent[2], alpha];
+                let light = tokens.is_light();
+
+                if let Some(buffer) =
+                    self.chrome_panel(rect.width, rect.height, 14, panel_fill, panel_border)
+                {
+                    panels.push((buffer, rect.x - 18, rect.y - 18));
+                }
+                if let Some(buffer) =
+                    self.chrome_round_top(rect.width.saturating_sub(2), 58, 13, tokens.header)
+                {
+                    panels.push((buffer, rect.x + 1, rect.y + 1));
+                }
+                display_icons.push(("palette".into(), 20, accent4(255), rect.x + 18, rect.y + 18));
+                labels.push(("Themes".into(), rect.x + 50, rect.y + 12, 2, tokens.text));
+                labels.push((
+                    format!(
+                        "{} · {} · {}",
+                        settings.mode.label(),
+                        settings.tone.label(),
+                        if settings.effects {
+                            "effects on"
+                        } else {
+                            "effects off"
+                        }
+                    ),
+                    rect.x + 50,
+                    rect.y + 35,
+                    0,
+                    tokens.dim,
+                ));
+                let key = "Super+T";
+                let key_w = self.text_width(key, 0) as i32 + 22;
+                if let Some(buffer) = self.chrome_round(key_w as u32, 22, 6, tokens.base) {
+                    panels.push((buffer, rect.x + width - key_w - 48, rect.y + 18));
+                }
+                labels.push((
+                    key.into(),
+                    rect.x + width - key_w - 37,
+                    rect.y + 23,
+                    0,
+                    tokens.dim,
+                ));
+                display_icons.push((
+                    "close".into(),
+                    14,
+                    tokens.dim,
+                    rect.x + width - 34,
+                    rect.y + 22,
+                ));
+
+                let status = self.shell.theme_status_rect();
+                let paused = !settings.is_water() || !settings.effects;
+                let status_fill = if paused {
+                    tokens.surface_a(226)
+                } else {
+                    accent4(24)
+                };
+                if let Some(buffer) = self.chrome_round(status.width, status.height, 9, status_fill)
+                {
+                    panels.push((buffer, status.x, status.y));
+                }
+                if let Some(buffer) =
+                    self.chrome_round(7, 7, 3, if paused { tokens.dim } else { accent4(255) })
+                {
+                    panels.push((buffer, status.x + 12, status.y + 15));
+                }
+                labels.push((
+                    settings.status_text().into(),
+                    status.x + 26,
+                    status.y + 10,
+                    0,
+                    if paused {
+                        tokens.soft
+                    } else {
+                        tokens.text_soft
+                    },
+                ));
+                if !settings.is_water() {
+                    let action = self.shell.theme_action_rect();
+                    if let Some(buffer) =
+                        self.chrome_round(action.width, action.height, 11, accent4(42))
+                    {
+                        panels.push((buffer, action.x, action.y));
+                    }
+                    labels.push((
+                        "Use Water".into(),
+                        action.x
+                            + (action.width as i32 - self.text_width("Use Water", 0) as i32) / 2,
+                        action.y + 6,
+                        0,
+                        tokens.text,
+                    ));
+                }
+
+                // Live preview: background, caustic wash, waves and rings all
+                // respond to the same values as the reference Water canvas.
+                let preview = self.shell.theme_preview_rect();
+                let preview_base = if light {
+                    [232, 246, 250, 255]
+                } else if settings.mode.effective() == ThemeMode::Dark {
+                    [5, 22, 31, 255]
+                } else {
+                    [4, 32, 43, 255]
+                };
+                if let Some(buffer) =
+                    self.chrome_round(preview.width, preview.height, 8, preview_base)
+                {
+                    panels.push((buffer, preview.x, preview.y));
+                }
+                if settings.effects && settings.caustics {
+                    for index in 0..3 {
+                        let size = 42 + index as u32 * 26;
+                        let cx = preview.x + 26 + index * 54;
+                        let cy = preview.y + 18 + index * 8;
+                        if let Some(buffer) = self.chrome_round(
+                            size,
+                            size,
+                            size / 2,
+                            accent4(if light { 14 } else { 18 }),
+                        ) {
+                            panels.push((buffer, cx - size as i32 / 2, cy - size as i32 / 2));
+                        }
+                    }
+                }
+                if settings.effects
+                    && settings.background == aether_shell::theme::WaterBackground::Sea
+                {
+                    for band in 0..settings.speed.wave_count() {
+                        let alpha = (if light { 54 } else { 46 }) - band as u8 * 8;
+                        if let Some(buffer) = self.chrome_round(
+                            preview.width.saturating_sub(24),
+                            2,
+                            1,
+                            accent4(alpha),
+                        ) {
+                            panels.push((
+                                buffer,
+                                preview.x + 12,
+                                preview.y + 12 + band as i32 * 10,
+                            ));
+                        }
+                    }
+                }
+                if settings.effects && settings.drips {
+                    let level = settings.intensity.level();
+                    for (index, base_alpha) in [18u8, 34, 56].into_iter().enumerate() {
+                        let size = 26 + level * 4 + (2 - index as u32) * 4;
+                        let alpha = base_alpha + level as u8 * 4;
+                        if let Some(buffer) =
+                            self.chrome_round(size, size, size / 2, accent4(alpha))
+                        {
+                            panels.push((
+                                buffer,
+                                preview.x + preview.width as i32 - 62 - size as i32 / 2,
+                                preview.y + 26 - size as i32 / 2,
+                            ));
+                        }
+                    }
+                }
+                if settings.effects && settings.click_ripples {
+                    let size = 38 + settings.intensity.level() * 4;
+                    if let Some(buffer) = self.chrome_round(
+                        size,
+                        size,
+                        size / 2,
+                        accent4(if light { 26 } else { 36 }),
+                    ) {
+                        panels.push((
+                            buffer,
+                            preview.x + preview.width as i32 - 152,
+                            preview.y + 4,
+                        ));
+                    }
+                }
+                labels.push((
+                    "PREVIEW".into(),
+                    preview.x + 10,
+                    preview.y + 6,
+                    0,
+                    accent4(190),
+                ));
+                labels.push((
+                    format!(
+                        "{} · {} · {}",
+                        settings.background.label(),
+                        settings.speed.label(),
+                        settings.intensity.label()
+                    ),
+                    preview.x + 10,
+                    preview.y + 33,
+                    0,
+                    tokens.text_soft,
+                ));
+                if !settings.effects {
+                    labels.push((
+                        "Effects off · calm and still".into(),
+                        preview.x + preview.width as i32
+                            - self.text_width("Effects off · calm and still", 0) as i32
+                            - 10,
+                        preview.y + 20,
+                        0,
+                        tokens.dim,
+                    ));
+                }
+
+                let mut group = "";
+                for (index, field) in ThemeField::ALL.iter().enumerate() {
+                    let Some(row) = self.shell.theme_row_rect(index) else {
+                        continue;
+                    };
+                    if field.group() != group {
+                        group = field.group();
+                        labels.push((group.to_uppercase(), row.x, row.y - 16, 0, accent4(190)));
+                    }
+                    let active = index == selected;
+                    if active {
+                        if let Some(buffer) = self.chrome_round(
+                            row.width,
+                            row.height,
+                            7,
+                            accent4(if light { 26 } else { 46 }),
+                        ) {
+                            panels.push((buffer, row.x, row.y));
+                        }
+                        if let Some(buffer) =
+                            self.chrome_round(3, row.height.saturating_sub(10), 2, accent4(255))
+                        {
+                            panels.push((buffer, row.x, row.y + 5));
+                        }
+                    }
+                    labels.push((
+                        field.title().into(),
+                        row.x + 12,
+                        row.y + 4,
+                        1,
+                        if active { tokens.text } else { tokens.soft },
+                    ));
+                    labels.push((field.hint().into(), row.x + 12, row.y + 19, 0, tokens.dim));
+                    if field.is_switch() {
+                        let on = field.is_on(&settings);
+                        let track_w = 34u32;
+                        let track_h = 18u32;
+                        let tx = row.x + row.width as i32 - track_w as i32 - 10;
+                        let ty = row.y + (row.height as i32 - track_h as i32) / 2;
+                        if let Some(buffer) = self.chrome_round(
+                            track_w,
+                            track_h,
+                            9,
+                            if on { accent4(72) } else { tokens.base_a(190) },
+                        ) {
+                            panels.push((buffer, tx, ty));
+                        }
+                        if let Some(buffer) =
+                            self.chrome_round(12, 12, 6, if on { accent4(255) } else { tokens.dim })
+                        {
+                            panels.push((buffer, if on { tx + 19 } else { tx + 3 }, ty + 3));
+                        }
+                    } else {
+                        let value = field.value(&settings);
+                        let text_w = self.text_width(&value, 0) as i32;
+                        let pill_w = (text_w + 34).max(78) as u32;
+                        let px = row.x + row.width as i32 - pill_w as i32 - 10;
+                        let py = row.y + 5;
+                        if let Some(buffer) = self.chrome_round(
+                            pill_w,
+                            22,
+                            6,
+                            if active { accent4(40) } else { tokens.tile },
+                        ) {
+                            panels.push((buffer, px, py));
+                        }
+                        if *field == ThemeField::Tone {
+                            if let Some(buffer) = self.chrome_round(8, 8, 4, accent4(255)) {
+                                panels.push((buffer, px - 14, py + 7));
+                            }
+                        }
+                        labels.push((
+                            value,
+                            px + 9,
+                            py + 5,
+                            0,
+                            if active { tokens.text } else { tokens.soft },
+                        ));
+                        display_icons.push((
+                            "chevron".into(),
+                            10,
+                            if active { accent4(255) } else { tokens.dim },
+                            px + pill_w as i32 - 16,
+                            py + 6,
+                        ));
+                    }
+                }
+
+                let reset = self.shell.theme_reset_rect();
+                if let Some(buffer) = self.chrome_round(reset.width, reset.height, 7, tokens.tile) {
+                    panels.push((buffer, reset.x, reset.y));
+                }
+                labels.push((
+                    "Reset water settings".into(),
+                    reset.x + 12,
+                    reset.y + 8,
+                    0,
+                    tokens.text_soft,
+                ));
+                let hint = "Saved on this device · ↑↓ select · ←→ change";
+                labels.push((
+                    hint.into(),
+                    rect.x + width - self.text_width(hint, 0) as i32 - 14,
+                    reset.y + 8,
+                    0,
+                    tokens.dim,
                 ));
             }
 
@@ -945,34 +1269,24 @@ impl App {
                     .audio_layer()
                     .map(|layer| layer.output_count())
                     .unwrap_or(0);
-                if let Some(buffer) = self.chrome_panel(
-                    rect.width,
-                    rect.height,
-                    14,
-                    [7, 39, 51, 250],
-                    Some([127, 230, 255, 34]),
-                ) {
+                if let Some(buffer) =
+                    self.chrome_panel(rect.width, rect.height, 14, panel_fill, panel_border)
+                {
                     panels.push((buffer, rect.x - 18, rect.y - 18));
                 }
                 if let Some(buffer) =
-                    self.chrome_round_top(rect.width.saturating_sub(2), 58, 13, [9, 49, 63, 255])
+                    self.chrome_round_top(rect.width.saturating_sub(2), 58, 13, tokens.header)
                 {
                     panels.push((buffer, rect.x + 1, rect.y + 1));
                 }
                 display_icons.push((
                     "audio".into(),
                     20,
-                    [56, 214, 255, 255],
+                    tokens.accent(255),
                     rect.x + 18,
                     rect.y + 18,
                 ));
-                labels.push((
-                    "Audio".into(),
-                    rect.x + 50,
-                    rect.y + 12,
-                    2,
-                    [233, 251, 255, 255],
-                ));
+                labels.push(("Audio".into(), rect.x + 50, rect.y + 12, 2, tokens.text));
                 let subtitle = if xruns > 0 {
                     format!("PipeWire · 48 kHz · {xruns} xruns")
                 } else {
@@ -983,15 +1297,11 @@ impl App {
                     rect.x + 50,
                     rect.y + 35,
                     0,
-                    if xruns > 0 {
-                        [232, 197, 71, 255]
-                    } else {
-                        [107, 169, 182, 255]
-                    },
+                    if xruns > 0 { tokens.amber } else { tokens.dim },
                 ));
                 let key = "Super+A";
                 let key_w = self.text_width(key, 0) as i32 + 22;
-                if let Some(buffer) = self.chrome_round(key_w as u32, 22, 6, [3, 25, 34, 255]) {
+                if let Some(buffer) = self.chrome_round(key_w as u32, 22, 6, tokens.base) {
                     panels.push((buffer, rect.x + width - key_w - 14, rect.y + 18));
                 }
                 labels.push((
@@ -999,15 +1309,9 @@ impl App {
                     rect.x + width - key_w - 3,
                     rect.y + 23,
                     0,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                 ));
-                labels.push((
-                    "OUTPUT".into(),
-                    rect.x + 18,
-                    rect.y + 72,
-                    0,
-                    [107, 169, 182, 255],
-                ));
+                labels.push(("OUTPUT".into(), rect.x + 18, rect.y + 72, 0, tokens.dim));
                 if outputs > 0 {
                     if let Some(first_input) = self.shell.audio_route_rect(outputs) {
                         labels.push((
@@ -1015,7 +1319,7 @@ impl App {
                             rect.x + 18,
                             first_input.y - 22,
                             0,
-                            [107, 169, 182, 255],
+                            tokens.dim,
                         ));
                     }
                 }
@@ -1028,25 +1332,22 @@ impl App {
                     };
                     let active = index == selected;
                     if active {
-                        if let Some(buffer) = self.chrome_round(
-                            row_rect.width,
-                            row_rect.height,
-                            8,
-                            [56, 214, 255, 46],
-                        ) {
+                        if let Some(buffer) =
+                            self.chrome_round(row_rect.width, row_rect.height, 8, tokens.accent(46))
+                        {
                             panels.push((buffer, row_rect.x, row_rect.y));
                         }
                         if let Some(buffer) = self.chrome_round(
                             3,
                             row_rect.height.saturating_sub(14),
                             2,
-                            [56, 214, 255, 255],
+                            tokens.accent(255),
                         ) {
                             panels.push((buffer, row_rect.x, row_rect.y + 7));
                         }
                     }
                     let tile = AetherRect::new(row_rect.x + 10, row_rect.y + 7, 28, 26);
-                    if let Some(buffer) = self.chrome_round(28, 26, 7, [3, 25, 34, 210]) {
+                    if let Some(buffer) = self.chrome_round(28, 26, 7, tokens.tile) {
                         panels.push((buffer, tile.x, tile.y));
                     }
                     display_icons.push((
@@ -1057,9 +1358,9 @@ impl App {
                         },
                         16,
                         if active {
-                            [56, 214, 255, 255]
+                            tokens.accent(255)
                         } else {
-                            [165, 219, 229, 255]
+                            tokens.soft
                         },
                         tile.x + 6,
                         tile.y + 5,
@@ -1070,9 +1371,9 @@ impl App {
                         row_rect.y + 6,
                         1,
                         if active {
-                            [233, 251, 255, 255]
+                            tokens.text
                         } else {
-                            [217, 247, 255, 255]
+                            tokens.text_soft
                         },
                     ));
                     let mut detail = format!("{} · {}", route.transport.label(), route.profile);
@@ -1080,13 +1381,7 @@ impl App {
                         detail.push_str(" · ");
                         detail.push_str(codec);
                     }
-                    labels.push((
-                        detail,
-                        row_rect.x + 48,
-                        row_rect.y + 22,
-                        0,
-                        [107, 169, 182, 255],
-                    ));
+                    labels.push((detail, row_rect.x + 48, row_rect.y + 22, 0, tokens.dim));
                     if route.default {
                         let pill_w = 64u32;
                         let pill = AetherRect::new(
@@ -1095,7 +1390,7 @@ impl App {
                             pill_w,
                             20,
                         );
-                        if let Some(buffer) = self.chrome_round(pill_w, 20, 6, [56, 214, 255, 36]) {
+                        if let Some(buffer) = self.chrome_round(pill_w, 20, 6, tokens.accent(36)) {
                             panels.push((buffer, pill.x, pill.y));
                         }
                         labels.push((
@@ -1103,7 +1398,7 @@ impl App {
                             pill.x + 9,
                             pill.y + 5,
                             0,
-                            [56, 214, 255, 255],
+                            tokens.accent(255),
                         ));
                     }
                 }
@@ -1113,7 +1408,7 @@ impl App {
                     rect.x + 18,
                     rect.y + height - 118,
                     0,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                 ));
                 for bar in 0..14 {
                     let level = ((bar * 37 + 53) % 11 + 3) as u32;
@@ -1133,12 +1428,12 @@ impl App {
                     rect.x + width - 86,
                     rect.y + height - 118,
                     0,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                 ));
                 display_icons.push((
                     "mic".into(),
                     14,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                     rect.x + width - 106,
                     rect.y + height - 122,
                 ));
@@ -1153,9 +1448,9 @@ impl App {
                         chip.height,
                         8,
                         if active {
-                            [56, 214, 255, 46]
+                            tokens.accent(46)
                         } else {
-                            [3, 25, 34, 210]
+                            tokens.tile
                         },
                     ) {
                         panels.push((buffer, chip.x, chip.y));
@@ -1169,18 +1464,14 @@ impl App {
                         chip.x + 12,
                         chip.y + 7,
                         1,
-                        if active {
-                            [233, 251, 255, 255]
-                        } else {
-                            [165, 219, 229, 255]
-                        },
+                        if active { tokens.text } else { tokens.soft },
                     ));
                     labels.push((
                         format!("{} frames", option.quantum()),
                         chip.x + chip.width as i32 - 68,
                         chip.y + 9,
                         0,
-                        [107, 169, 182, 255],
+                        tokens.dim,
                     ));
                 }
                 labels.push((
@@ -1188,7 +1479,7 @@ impl App {
                     rect.x + 16,
                     rect.y + height - 22,
                     0,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                 ));
             }
 
@@ -1197,24 +1488,20 @@ impl App {
                 let width = rect.width as i32;
                 let height = rect.height as i32;
                 let layer = self.shell.remote_layer().cloned();
-                if let Some(buffer) = self.chrome_panel(
-                    rect.width,
-                    rect.height,
-                    14,
-                    [7, 39, 51, 250],
-                    Some([127, 230, 255, 34]),
-                ) {
+                if let Some(buffer) =
+                    self.chrome_panel(rect.width, rect.height, 14, panel_fill, panel_border)
+                {
                     panels.push((buffer, rect.x - 18, rect.y - 18));
                 }
                 if let Some(buffer) =
-                    self.chrome_round_top(rect.width.saturating_sub(2), 58, 13, [9, 49, 63, 255])
+                    self.chrome_round_top(rect.width.saturating_sub(2), 58, 13, tokens.header)
                 {
                     panels.push((buffer, rect.x + 1, rect.y + 1));
                 }
                 display_icons.push((
                     "remote".into(),
                     20,
-                    [56, 214, 255, 255],
+                    tokens.accent(255),
                     rect.x + 18,
                     rect.y + 18,
                 ));
@@ -1223,7 +1510,7 @@ impl App {
                     rect.x + 50,
                     rect.y + 12,
                     2,
-                    [233, 251, 255, 255],
+                    tokens.text,
                 ));
                 if let Some(layer) = &layer {
                     labels.push((
@@ -1238,16 +1525,16 @@ impl App {
                         rect.y + 35,
                         0,
                         if layer.state() == aether_shell::remote::RemoteState::Streaming {
-                            [107, 169, 182, 255]
+                            tokens.dim
                         } else {
-                            [232, 197, 71, 255]
+                            tokens.amber
                         },
                     ));
                     if layer.recording() {
-                        if let Some(buffer) = self.chrome_round(54, 22, 6, [60, 18, 24, 245]) {
+                        if let Some(buffer) = self.chrome_round(54, 22, 6, tokens.red_bg) {
                             panels.push((buffer, rect.x + width - 68, rect.y + 18));
                         }
-                        if let Some(buffer) = self.chrome_round(7, 7, 4, [255, 90, 90, 255]) {
+                        if let Some(buffer) = self.chrome_round(7, 7, 4, tokens.red) {
                             panels.push((buffer, rect.x + width - 58, rect.y + 25));
                         }
                         labels.push((
@@ -1255,12 +1542,12 @@ impl App {
                             rect.x + width - 46,
                             rect.y + 23,
                             0,
-                            [255, 215, 215, 255],
+                            tokens.red_soft,
                         ));
                     }
                     // Pairing block.
                     if let Some(buffer) =
-                        self.chrome_round(rect.width.saturating_sub(36), 78, 10, [3, 25, 34, 230])
+                        self.chrome_round(rect.width.saturating_sub(36), 78, 10, tokens.base_a(230))
                     {
                         panels.push((buffer, rect.x + 18, rect.y + 72));
                     }
@@ -1269,14 +1556,14 @@ impl App {
                         rect.x + 32,
                         rect.y + 84,
                         0,
-                        [107, 169, 182, 255],
+                        tokens.dim,
                     ));
                     labels.push((
                         layer.pairing_code().into(),
                         rect.x + 32,
                         rect.y + 100,
                         2,
-                        [56, 214, 255, 255],
+                        tokens.accent(255),
                     ));
                     labels.push((
                         format!(
@@ -1292,7 +1579,7 @@ impl App {
                         rect.x + 32,
                         rect.y + 130,
                         0,
-                        [165, 219, 229, 255],
+                        tokens.soft,
                     ));
                     // Session facts.
                     let facts_y = rect.y + 166;
@@ -1329,12 +1616,12 @@ impl App {
                         let x = rect.x + 18 + (index as i32 % 2) * column;
                         let y = facts_y + (index as i32 / 2) * 42;
                         if let Some(buffer) =
-                            self.chrome_round((column - 8) as u32, 34, 8, [9, 49, 63, 210])
+                            self.chrome_round((column - 8) as u32, 34, 8, tokens.header_a(210))
                         {
                             panels.push((buffer, x, y));
                         }
-                        labels.push(((*name).into(), x + 10, y + 5, 0, [107, 169, 182, 255]));
-                        labels.push((value.clone(), x + 10, y + 18, 1, [233, 251, 255, 255]));
+                        labels.push(((*name).into(), x + 10, y + 5, 0, tokens.dim));
+                        labels.push((value.clone(), x + 10, y + 18, 1, tokens.text));
                     }
                     // Audited actions.
                     let selected = layer.selected();
@@ -1348,9 +1635,9 @@ impl App {
                             row.height,
                             8,
                             if active {
-                                [56, 214, 255, 46]
+                                tokens.accent(46)
                             } else {
-                                [9, 49, 63, 190]
+                                tokens.header_a(190)
                             },
                         ) {
                             panels.push((buffer, row.x, row.y));
@@ -1360,7 +1647,7 @@ impl App {
                                 3,
                                 row.height.saturating_sub(14),
                                 2,
-                                [56, 214, 255, 255],
+                                tokens.accent(255),
                             ) {
                                 panels.push((buffer, row.x, row.y + 7));
                             }
@@ -1372,11 +1659,7 @@ impl App {
                             row.x + 14,
                             row.y + 11,
                             1,
-                            if active {
-                                [233, 251, 255, 255]
-                            } else {
-                                [165, 219, 229, 255]
-                            },
+                            if active { tokens.text } else { tokens.soft },
                         ));
                         if index == 0 {
                             labels.push((
@@ -1384,7 +1667,7 @@ impl App {
                                 row.x + row.width as i32 - 140,
                                 row.y + 12,
                                 0,
-                                [107, 169, 182, 255],
+                                tokens.dim,
                             ));
                         }
                     }
@@ -1393,7 +1676,7 @@ impl App {
                         rect.x + 18,
                         rect.y + height - 20,
                         0,
-                        [107, 169, 182, 255],
+                        tokens.dim,
                     ));
                 }
             }
@@ -1424,12 +1707,12 @@ impl App {
                 };
                 let visible = self.task_visible_rows();
                 if let Some(buffer) =
-                    self.chrome_round(bounds.width.max(1), 62, 0, [5, 37, 48, 236])
+                    self.chrome_round(bounds.width.max(1), 62, 0, tokens.surface_a(236))
                 {
                     panels.push((buffer, bounds.x, bounds.y));
                 }
                 if let Some(buffer) =
-                    self.chrome_round(bounds.width.max(1), 36, 0, [5, 37, 48, 242])
+                    self.chrome_round(bounds.width.max(1), 36, 0, tokens.surface_a(242))
                 {
                     panels.push((buffer, bounds.x, bounds.y + height - 36));
                 }
@@ -1437,15 +1720,15 @@ impl App {
                     pane.width,
                     pane.height,
                     12,
-                    [7, 39, 51, 246],
-                    Some([127, 230, 255, 30]),
+                    panel_fill_soft,
+                    panel_border_soft,
                 ) {
                     panels.push((buffer, pane.x - 18, pane.y - 18));
                 }
                 display_icons.push((
                     "cpu".into(),
                     28,
-                    [56, 214, 255, 255],
+                    tokens.accent(255),
                     bounds.x + 18,
                     bounds.y + 17,
                 ));
@@ -1454,14 +1737,14 @@ impl App {
                     bounds.x + 56,
                     bounds.y + 12,
                     2,
-                    [233, 251, 255, 255],
+                    tokens.text,
                 ));
                 labels.push((
                     "Live /proc · 1 s refresh".into(),
                     bounds.x + 56,
                     bounds.y + 35,
                     0,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                 ));
                 // Tabs.
                 let tabs_x = bounds.x + width / 2 - 180;
@@ -1469,7 +1752,7 @@ impl App {
                     let tab_rect =
                         AetherRect::new(tabs_x + index as i32 * 116, bounds.y + 15, 110, 32);
                     if tab_item == tab {
-                        if let Some(buffer) = self.chrome_round(110, 32, 8, [56, 214, 255, 38]) {
+                        if let Some(buffer) = self.chrome_round(110, 32, 8, tokens.accent(38)) {
                             panels.push((buffer, tab_rect.x, tab_rect.y));
                         }
                     }
@@ -1479,16 +1762,16 @@ impl App {
                         tab_rect.y + 9,
                         1,
                         if tab_item == tab {
-                            [233, 251, 255, 255]
+                            tokens.text
                         } else {
-                            [165, 219, 229, 255]
+                            tokens.soft
                         },
                     ));
                 }
                 display_icons.push((
                     "close".into(),
                     16,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                     self.task_close_rect().x,
                     self.task_close_rect().y + 4,
                 ));
@@ -1496,17 +1779,11 @@ impl App {
                 display_icons.push((
                     "chart".into(),
                     20,
-                    [56, 214, 255, 255],
+                    tokens.accent(255),
                     pane.x + 16,
                     pane.y + 14,
                 ));
-                labels.push((
-                    tab.label().into(),
-                    pane.x + 46,
-                    pane.y + 12,
-                    3,
-                    [233, 251, 255, 255],
-                ));
+                labels.push((tab.label().into(), pane.x + 46, pane.y + 12, 3, tokens.text));
                 let subtitle = match tab {
                     crate::task::TaskTab::Processes => format!(
                         "{} processes · {} threads · {:.0}% cpu",
@@ -1519,109 +1796,43 @@ impl App {
                         snapshot.load[0]
                     ),
                 };
-                labels.push((subtitle, pane.x + 46, pane.y + 34, 0, [107, 169, 182, 255]));
+                labels.push((subtitle, pane.x + 46, pane.y + 34, 0, tokens.dim));
                 let count = format!("{} tasks", snapshot.process_count);
                 labels.push((
                     count.clone(),
                     pane.x + pane.width as i32 - self.text_width(&count, 0) as i32 - 16,
                     pane.y + 20,
                     0,
-                    [165, 219, 229, 255],
+                    tokens.soft,
                 ));
                 // Column headers / divider.
                 let header_y = pane.y + 56;
                 chrome.push((
                     AetherRect::new(pane.x + 1, header_y, pane.width.saturating_sub(2), 30),
-                    design_color(0x052530, 190.0 / 255.0),
+                    tokens.surface_a(190).map(|value| value as f32 / 255.0),
                 ));
                 match tab {
                     crate::task::TaskTab::Processes => {
-                        labels.push((
-                            "PID".into(),
-                            pane.x + 16,
-                            header_y + 9,
-                            0,
-                            [107, 169, 182, 255],
-                        ));
-                        labels.push((
-                            "USER".into(),
-                            pane.x + 82,
-                            header_y + 9,
-                            0,
-                            [107, 169, 182, 255],
-                        ));
-                        labels.push((
-                            "CPU".into(),
-                            pane.x + 190,
-                            header_y + 9,
-                            0,
-                            [107, 169, 182, 255],
-                        ));
-                        labels.push((
-                            "MEM".into(),
-                            pane.x + 250,
-                            header_y + 9,
-                            0,
-                            [107, 169, 182, 255],
-                        ));
-                        labels.push((
-                            "STATE".into(),
-                            pane.x + 320,
-                            header_y + 9,
-                            0,
-                            [107, 169, 182, 255],
-                        ));
-                        labels.push((
-                            "COMMAND".into(),
-                            pane.x + 386,
-                            header_y + 9,
-                            0,
-                            [107, 169, 182, 255],
-                        ));
+                        labels.push(("PID".into(), pane.x + 16, header_y + 9, 0, tokens.dim));
+                        labels.push(("USER".into(), pane.x + 82, header_y + 9, 0, tokens.dim));
+                        labels.push(("CPU".into(), pane.x + 190, header_y + 9, 0, tokens.dim));
+                        labels.push(("MEM".into(), pane.x + 250, header_y + 9, 0, tokens.dim));
+                        labels.push(("STATE".into(), pane.x + 320, header_y + 9, 0, tokens.dim));
+                        labels.push(("COMMAND".into(), pane.x + 386, header_y + 9, 0, tokens.dim));
                     }
                     crate::task::TaskTab::Users => {
-                        labels.push((
-                            "UID".into(),
-                            pane.x + 16,
-                            header_y + 9,
-                            0,
-                            [107, 169, 182, 255],
-                        ));
-                        labels.push((
-                            "USER".into(),
-                            pane.x + 90,
-                            header_y + 9,
-                            0,
-                            [107, 169, 182, 255],
-                        ));
+                        labels.push(("UID".into(), pane.x + 16, header_y + 9, 0, tokens.dim));
+                        labels.push(("USER".into(), pane.x + 90, header_y + 9, 0, tokens.dim));
                         labels.push((
                             "PROCESSES".into(),
                             pane.x + 230,
                             header_y + 9,
                             0,
-                            [107, 169, 182, 255],
+                            tokens.dim,
                         ));
-                        labels.push((
-                            "THREADS".into(),
-                            pane.x + 350,
-                            header_y + 9,
-                            0,
-                            [107, 169, 182, 255],
-                        ));
-                        labels.push((
-                            "CPU".into(),
-                            pane.x + 460,
-                            header_y + 9,
-                            0,
-                            [107, 169, 182, 255],
-                        ));
-                        labels.push((
-                            "MEM".into(),
-                            pane.x + 540,
-                            header_y + 9,
-                            0,
-                            [107, 169, 182, 255],
-                        ));
+                        labels.push(("THREADS".into(), pane.x + 350, header_y + 9, 0, tokens.dim));
+                        labels.push(("CPU".into(), pane.x + 460, header_y + 9, 0, tokens.dim));
+                        labels.push(("MEM".into(), pane.x + 540, header_y + 9, 0, tokens.dim));
                     }
                     crate::task::TaskTab::Resources => {}
                 }
@@ -1641,7 +1852,7 @@ impl App {
                             let active = index == selected;
                             if active {
                                 if let Some(buffer) =
-                                    self.chrome_round(row.width, row.height, 7, [56, 214, 255, 46])
+                                    self.chrome_round(row.width, row.height, 7, tokens.accent(46))
                                 {
                                     panels.push((buffer, row.x, row.y));
                                 }
@@ -1649,7 +1860,7 @@ impl App {
                                     3,
                                     row.height.saturating_sub(10),
                                     2,
-                                    [56, 214, 255, 255],
+                                    tokens.accent(255),
                                 ) {
                                     panels.push((buffer, row.x, row.y + 5));
                                 }
@@ -1667,14 +1878,14 @@ impl App {
                                 row.x + 12,
                                 row.y + 7,
                                 0,
-                                [107, 169, 182, 255],
+                                tokens.dim,
                             ));
                             labels.push((
                                 process.user.clone(),
                                 row.x + 66,
                                 row.y + 7,
                                 0,
-                                [165, 219, 229, 255],
+                                tokens.soft,
                             ));
                             labels.push((
                                 format!("{:.1}%", process.cpu_percent),
@@ -1682,11 +1893,11 @@ impl App {
                                 row.y + 7,
                                 0,
                                 if process.cpu_percent >= 50.0 {
-                                    [232, 197, 71, 255]
+                                    tokens.amber
                                 } else if process.cpu_percent >= 10.0 {
-                                    [56, 214, 255, 255]
+                                    tokens.accent(255)
                                 } else {
-                                    [165, 219, 229, 255]
+                                    tokens.soft
                                 },
                             ));
                             labels.push((
@@ -1694,17 +1905,17 @@ impl App {
                                 row.x + 234,
                                 row.y + 7,
                                 0,
-                                [165, 219, 229, 255],
+                                tokens.soft,
                             ));
                             labels.push((
                                 process.state.clone(),
                                 row.x + 304,
                                 row.y + 7,
                                 0,
-                                [107, 169, 182, 255],
+                                tokens.dim,
                             ));
                             let command = truncate(&process.command, 70);
-                            labels.push((command, row.x + 370, row.y + 7, 0, [217, 247, 255, 255]));
+                            labels.push((command, row.x + 370, row.y + 7, 0, tokens.text_soft));
                         }
                         if process_rows.len() > visible {
                             let track = AetherRect::new(
@@ -1713,8 +1924,7 @@ impl App {
                                 4,
                                 (visible * 28) as u32,
                             );
-                            if let Some(buffer) =
-                                self.chrome_round(4, track.height, 2, [3, 25, 34, 255])
+                            if let Some(buffer) = self.chrome_round(4, track.height, 2, tokens.base)
                             {
                                 panels.push((buffer, track.x, track.y));
                             }
@@ -1725,8 +1935,7 @@ impl App {
                             let offset = ((scroll as f32 / process_rows.len() as f32)
                                 * track.height as f32)
                                 as i32;
-                            if let Some(buffer) =
-                                self.chrome_round(4, thumb, 2, [56, 214, 255, 190])
+                            if let Some(buffer) = self.chrome_round(4, thumb, 2, tokens.accent(190))
                             {
                                 panels.push((buffer, track.x, track.y + offset));
                             }
@@ -1748,42 +1957,42 @@ impl App {
                                 row.x + 12,
                                 row.y + 7,
                                 0,
-                                [107, 169, 182, 255],
+                                tokens.dim,
                             ));
                             labels.push((
                                 user.name.clone(),
                                 row.x + 74,
                                 row.y + 7,
                                 0,
-                                [217, 247, 255, 255],
+                                tokens.text_soft,
                             ));
                             labels.push((
                                 user.processes.to_string(),
                                 row.x + 214,
                                 row.y + 7,
                                 0,
-                                [165, 219, 229, 255],
+                                tokens.soft,
                             ));
                             labels.push((
                                 user.threads.to_string(),
                                 row.x + 334,
                                 row.y + 7,
                                 0,
-                                [165, 219, 229, 255],
+                                tokens.soft,
                             ));
                             labels.push((
                                 format!("{:.1}%", user.cpu_percent),
                                 row.x + 444,
                                 row.y + 7,
                                 0,
-                                [56, 214, 255, 255],
+                                tokens.accent(255),
                             ));
                             labels.push((
                                 format!("{:.0}M", user.rss_kb as f64 / 1024.0),
                                 row.x + 524,
                                 row.y + 7,
                                 0,
-                                [165, 219, 229, 255],
+                                tokens.soft,
                             ));
                         }
                     }
@@ -1798,12 +2007,15 @@ impl App {
                             (pane.x + 28 + card_w, content_y + card_h + 12, "DISK"),
                         ];
                         for (x, y, name) in cards {
-                            if let Some(buffer) =
-                                self.chrome_round(card_w as u32, card_h as u32, 8, [5, 37, 48, 220])
-                            {
+                            if let Some(buffer) = self.chrome_round(
+                                card_w as u32,
+                                card_h as u32,
+                                8,
+                                tokens.surface_a(220),
+                            ) {
                                 panels.push((buffer, x, y));
                             }
-                            labels.push((name.into(), x + 12, y + 10, 0, [107, 169, 182, 255]));
+                            labels.push((name.into(), x + 12, y + 10, 0, tokens.dim));
                         }
                         // CPU card.
                         let cpu_x = pane.x + 28;
@@ -1813,25 +2025,19 @@ impl App {
                             cpu_x,
                             cpu_y - 2,
                             3,
-                            [233, 251, 255, 255],
+                            tokens.text,
                         ));
                         for (index, core) in snapshot.cores.iter().take(8).enumerate() {
                             let bar_x = cpu_x + (index as i32 % 2) * (card_w / 2 - 8);
                             let bar_y = cpu_y + 28 + (index as i32 / 2) * 22;
-                            labels.push((
-                                format!("cpu{index}"),
-                                bar_x,
-                                bar_y,
-                                0,
-                                [107, 169, 182, 255],
-                            ));
-                            if let Some(buffer) = self.chrome_round(64, 6, 3, [3, 25, 34, 255]) {
+                            labels.push((format!("cpu{index}"), bar_x, bar_y, 0, tokens.dim));
+                            if let Some(buffer) = self.chrome_round(64, 6, 3, tokens.base) {
                                 panels.push((buffer, bar_x + 38, bar_y + 2));
                             }
                             let fill = ((core.usage / 100.0) * 64.0) as u32;
                             if fill > 0 {
                                 if let Some(buffer) =
-                                    self.chrome_round(fill, 6, 3, [56, 214, 255, 220])
+                                    self.chrome_round(fill, 6, 3, tokens.accent(220))
                                 {
                                     panels.push((buffer, bar_x + 38, bar_y + 2));
                                 }
@@ -1853,10 +2059,10 @@ impl App {
                             mem_x,
                             mem_y,
                             1,
-                            [233, 251, 255, 255],
+                            tokens.text,
                         ));
                         let mem_bar = card_w as u32 - 24;
-                        if let Some(buffer) = self.chrome_round(mem_bar, 8, 4, [3, 25, 34, 255]) {
+                        if let Some(buffer) = self.chrome_round(mem_bar, 8, 4, tokens.base) {
                             panels.push((buffer, mem_x, mem_y + 24));
                         }
                         let mem_fill = if snapshot.memory.total_kb > 0 {
@@ -1867,7 +2073,7 @@ impl App {
                         };
                         if mem_fill > 0 {
                             if let Some(buffer) =
-                                self.chrome_round(mem_fill, 8, 4, [56, 214, 255, 220])
+                                self.chrome_round(mem_fill, 8, 4, tokens.accent(220))
                             {
                                 panels.push((buffer, mem_x, mem_y + 24));
                             }
@@ -1883,7 +2089,7 @@ impl App {
                             mem_x,
                             mem_y + 40,
                             0,
-                            [107, 169, 182, 255],
+                            tokens.dim,
                         ));
                         // Network card.
                         let net_x = pane.x + 28;
@@ -1899,7 +2105,7 @@ impl App {
                                 net_x,
                                 net_y + index as i32 * 20,
                                 0,
-                                [165, 219, 229, 255],
+                                tokens.soft,
                             ));
                         }
                         // Disk card.
@@ -1916,7 +2122,7 @@ impl App {
                                 disk_x,
                                 disk_y + index as i32 * 20,
                                 0,
-                                [165, 219, 229, 255],
+                                tokens.soft,
                             ));
                         }
                         labels.push((
@@ -1927,7 +2133,7 @@ impl App {
                             disk_x,
                             disk_y + 112,
                             0,
-                            [107, 169, 182, 255],
+                            tokens.dim,
                         ));
                     }
                 }
@@ -1935,7 +2141,7 @@ impl App {
                 let footer_y = pane.y + pane.height as i32 - 30;
                 chrome.push((
                     AetherRect::new(pane.x + 1, footer_y, pane.width.saturating_sub(2), 29),
-                    design_color(0x052530, 190.0 / 255.0),
+                    tokens.surface_a(190).map(|value| value as f32 / 255.0),
                 ));
                 if let Some((_, process)) = process_rows.get(selected) {
                     labels.push((
@@ -1943,7 +2149,7 @@ impl App {
                         pane.x + 16,
                         footer_y + 9,
                         0,
-                        [165, 219, 229, 255],
+                        tokens.soft,
                     ));
                 }
                 labels.push((
@@ -1951,7 +2157,7 @@ impl App {
                     pane.x + pane.width as i32 - 430,
                     footer_y + 9,
                     0,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                 ));
                 let status_y = bounds.y + height - 36;
                 labels.push((
@@ -1966,7 +2172,7 @@ impl App {
                     bounds.x + 16,
                     status_y + 12,
                     0,
-                    [165, 219, 229, 255],
+                    tokens.soft,
                 ));
                 labels.push((
                     format!(
@@ -1978,7 +2184,7 @@ impl App {
                     bounds.x + width - 180,
                     status_y + 12,
                     0,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                 ));
             }
 
@@ -1989,12 +2195,12 @@ impl App {
                 let height = bounds.height as i32;
                 // App bar and status bar.
                 if let Some(buffer) =
-                    self.chrome_round(bounds.width.max(1), 62, 0, [5, 37, 48, 236])
+                    self.chrome_round(bounds.width.max(1), 62, 0, tokens.surface_a(236))
                 {
                     panels.push((buffer, bounds.x, bounds.y));
                 }
                 if let Some(buffer) =
-                    self.chrome_round(bounds.width.max(1), 36, 0, [5, 37, 48, 242])
+                    self.chrome_round(bounds.width.max(1), 36, 0, tokens.surface_a(242))
                 {
                     panels.push((buffer, bounds.x, bounds.y + height - 36));
                 }
@@ -2003,8 +2209,8 @@ impl App {
                     pane.width,
                     pane.height,
                     12,
-                    [7, 39, 51, 246],
-                    Some([127, 230, 255, 30]),
+                    panel_fill_soft,
+                    panel_border_soft,
                 ) {
                     panels.push((buffer, pane.x - 18, pane.y - 18));
                 }
@@ -2012,7 +2218,7 @@ impl App {
                 display_icons.push((
                     "explorer".into(),
                     28,
-                    [56, 214, 255, 255],
+                    tokens.accent(255),
                     bounds.x + 18,
                     bounds.y + 17,
                 ));
@@ -2021,85 +2227,55 @@ impl App {
                     bounds.x + 56,
                     bounds.y + 12,
                     2,
-                    [233, 251, 255, 255],
+                    tokens.text,
                 ));
                 labels.push((
                     "Files · indexed system".into(),
                     bounds.x + 56,
                     bounds.y + 35,
                     0,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                 ));
                 // Center tabs.
                 let tab_x = bounds.x + width / 2 - 150;
                 let tab_active = AetherRect::new(tab_x, bounds.y + 15, 92, 32);
-                if let Some(buffer) = self.chrome_round(92, 32, 8, [56, 214, 255, 38]) {
+                if let Some(buffer) = self.chrome_round(92, 32, 8, tokens.accent(38)) {
                     panels.push((buffer, tab_active.x, tab_active.y));
                 }
-                labels.push((
-                    "Files".into(),
-                    tab_x + 26,
-                    bounds.y + 22,
-                    1,
-                    [233, 251, 255, 255],
-                ));
-                labels.push((
-                    "Palette".into(),
-                    tab_x + 120,
-                    bounds.y + 22,
-                    1,
-                    [165, 219, 229, 255],
-                ));
-                labels.push((
-                    "Chat".into(),
-                    tab_x + 215,
-                    bounds.y + 22,
-                    1,
-                    [165, 219, 229, 255],
-                ));
+                labels.push(("Files".into(), tab_x + 26, bounds.y + 22, 1, tokens.text));
+                labels.push(("Palette".into(), tab_x + 120, bounds.y + 22, 1, tokens.soft));
+                labels.push(("Chat".into(), tab_x + 215, bounds.y + 22, 1, tokens.soft));
                 // Search affordance.
                 let search = AetherRect::new(bounds.x + width - 250, bounds.y + 15, 232, 32);
-                if let Some(buffer) = self.chrome_round(232, 32, 8, [3, 25, 34, 255]) {
+                if let Some(buffer) = self.chrome_round(232, 32, 8, tokens.base) {
                     panels.push((buffer, search.x, search.y));
                 }
-                display_icons.push((
-                    "search".into(),
-                    16,
-                    [107, 169, 182, 255],
-                    search.x + 10,
-                    search.y + 8,
-                ));
+                display_icons.push(("search".into(), 16, tokens.dim, search.x + 10, search.y + 8));
                 labels.push((
                     "Search files".into(),
                     search.x + 32,
                     search.y + 9,
                     0,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                 ));
                 labels.push((
                     "Super+K".into(),
                     search.x + 176,
                     search.y + 9,
                     0,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                 ));
                 // Pane header.
                 let pane_icon = pane.x + 16;
                 let pane_y = pane.y + 14;
-                display_icons.push(("folder".into(), 22, [56, 214, 255, 255], pane_icon, pane_y));
-                labels.push((
-                    "Files".into(),
-                    pane.x + 48,
-                    pane.y + 14,
-                    3,
-                    [233, 251, 255, 255],
-                ));
+                display_icons.push(("folder".into(), 22, tokens.accent(255), pane_icon, pane_y));
+                labels.push(("Files".into(), pane.x + 48, pane.y + 14, 3, tokens.text));
                 labels.push((
                     "All indexed roots".into(),
                     pane.x + 48,
                     pane.y + 34,
                     0,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                 ));
                 let count = format!("{} files", self.shell.explorer_match_count());
                 labels.push((
@@ -2107,12 +2283,12 @@ impl App {
                     pane.x + pane.width as i32 - self.text_width(&count, 0) as i32 - 50,
                     pane.y + 20,
                     0,
-                    [165, 219, 229, 255],
+                    tokens.soft,
                 ));
                 display_icons.push((
                     "close".into(),
                     16,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                     pane.x + pane.width as i32 - 32,
                     pane.y + 20,
                 ));
@@ -2120,29 +2296,17 @@ impl App {
                 let columns_y = pane.y + 56;
                 chrome.push((
                     AetherRect::new(pane.x + 1, columns_y, pane.width.saturating_sub(2), 30),
-                    design_color(0x052530, 190.0 / 255.0),
+                    tokens.surface_a(190).map(|value| value as f32 / 255.0),
                 ));
                 let type_x = pane.x + (pane.width as f32 * 0.62) as i32;
-                labels.push((
-                    "NAME".into(),
-                    pane.x + 16,
-                    columns_y + 9,
-                    0,
-                    [107, 169, 182, 255],
-                ));
-                labels.push((
-                    "TYPE".into(),
-                    type_x,
-                    columns_y + 9,
-                    0,
-                    [107, 169, 182, 255],
-                ));
+                labels.push(("NAME".into(), pane.x + 16, columns_y + 9, 0, tokens.dim));
+                labels.push(("TYPE".into(), type_x, columns_y + 9, 0, tokens.dim));
                 labels.push((
                     "LOCATION".into(),
                     pane.x + pane.width as i32 - self.text_width("LOCATION", 0) as i32 - 16,
                     columns_y + 9,
                     0,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                 ));
                 // Rows.
                 let rows: Vec<aether_shell::PaletteFile> = self
@@ -2165,12 +2329,9 @@ impl App {
                         (row_height - 2) as u32,
                     );
                     if index == selected {
-                        if let Some(buffer) = self.chrome_round(
-                            row_rect.width,
-                            row_rect.height,
-                            7,
-                            [56, 214, 255, 56],
-                        ) {
+                        if let Some(buffer) =
+                            self.chrome_round(row_rect.width, row_rect.height, 7, tokens.accent(56))
+                        {
                             panels.push((buffer, row_rect.x, row_rect.y));
                         }
                         chrome.push((
@@ -2180,7 +2341,7 @@ impl App {
                                 3,
                                 row_rect.height.saturating_sub(8),
                             ),
-                            design_color(aether_shell::design::ACCENT, 1.0),
+                            accent_f,
                         ));
                     }
                     let extension = file
@@ -2196,12 +2357,12 @@ impl App {
                         row_rect.y + 8,
                         1,
                         if index == selected {
-                            [233, 251, 255, 255]
+                            tokens.text
                         } else {
-                            [217, 247, 255, 255]
+                            tokens.text_soft
                         },
                     ));
-                    labels.push((extension, type_x, row_rect.y + 9, 0, [165, 219, 229, 255]));
+                    labels.push((extension, type_x, row_rect.y + 9, 0, tokens.soft));
                     let location = truncate(&file.detail, 34);
                     labels.push((
                         location,
@@ -2210,14 +2371,14 @@ impl App {
                             - 16,
                         row_rect.y + 9,
                         0,
-                        [107, 169, 182, 255],
+                        tokens.dim,
                     ));
                 }
                 // Pane footer.
                 let footer_y = pane.y + pane.height as i32 - 30;
                 chrome.push((
                     AetherRect::new(pane.x + 1, footer_y, pane.width.saturating_sub(2), 29),
-                    design_color(0x052530, 190.0 / 255.0),
+                    tokens.surface_a(190).map(|value| value as f32 / 255.0),
                 ));
                 labels.push((
                     format!(
@@ -2228,7 +2389,7 @@ impl App {
                     pane.x + 16,
                     footer_y + 9,
                     0,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                 ));
                 let hint = "Enter open   Esc close   PgUp/PgDn page";
                 labels.push((
@@ -2236,7 +2397,7 @@ impl App {
                     pane.x + pane.width as i32 - self.text_width(hint, 0) as i32 - 16,
                     footer_y + 9,
                     0,
-                    [107, 169, 182, 255],
+                    tokens.dim,
                 ));
                 // Status bar.
                 let status_y = bounds.y + height - 36;
@@ -2247,14 +2408,14 @@ impl App {
                         bounds.x + 16,
                         status_y + 12,
                         1,
-                        [233, 251, 255, 255],
+                        tokens.text,
                     ));
                     labels.push((
                         truncate(&file.path, 60),
                         bounds.x + 16 + self.text_width(&file.name, 1) as i32 + 10,
                         status_y + 13,
                         0,
-                        [107, 169, 182, 255],
+                        tokens.dim,
                     ));
                 } else {
                     labels.push((
@@ -2262,7 +2423,7 @@ impl App {
                         bounds.x + 16,
                         status_y + 12,
                         1,
-                        [107, 169, 182, 255],
+                        tokens.dim,
                     ));
                 }
                 let status = self.status().clone();
@@ -2280,20 +2441,8 @@ impl App {
                 for (icon, text) in badges.iter().rev() {
                     let tw = self.text_width(text, 0) as i32;
                     sx -= tw + 22;
-                    display_icons.push((
-                        (*icon).into(),
-                        14,
-                        [107, 169, 182, 255],
-                        sx,
-                        status_y + 11,
-                    ));
-                    labels.push((
-                        text.clone(),
-                        sx + 18,
-                        status_y + 12,
-                        0,
-                        [165, 219, 229, 255],
-                    ));
+                    display_icons.push(((*icon).into(), 14, tokens.dim, sx, status_y + 11));
+                    labels.push((text.clone(), sx + 18, status_y + 12, 0, tokens.soft));
                     sx -= 14;
                 }
             }
@@ -2304,19 +2453,23 @@ impl App {
             {
                 if !chat_here
                     && !audio_here
+                    && !themes_here
                     && !remote_here
                     && !shortcuts_here
                     && self.shell.overlay().is_none()
                 {
                     let bar = crate::topbar::layout(self.shell.output_bounds(chrome_output));
-                    if let Some(buffer) =
-                        self.chrome_round(bar.rect.width, bar.rect.height, 10, [5, 37, 48, 225])
-                    {
+                    if let Some(buffer) = self.chrome_round(
+                        bar.rect.width,
+                        bar.rect.height,
+                        10,
+                        tokens.surface_a(225),
+                    ) {
                         panels.push((buffer, bar.rect.x, bar.rect.y));
                     }
                     for (action, item) in &bar.items {
                         if let Some(buffer) =
-                            self.chrome_round(item.width, item.height, 6, [3, 25, 34, 220])
+                            self.chrome_round(item.width, item.height, 6, tokens.base_a(220))
                         {
                             panels.push((buffer, item.x, item.y));
                         }
@@ -2324,7 +2477,7 @@ impl App {
                             display_icons.push((
                                 action.icon().into(),
                                 16,
-                                [165, 219, 229, 255],
+                                tokens.soft,
                                 item.x + (item.width as i32 - 16) / 2,
                                 item.y + 6,
                             ));
@@ -2332,7 +2485,7 @@ impl App {
                             display_icons.push((
                                 action.icon().into(),
                                 15,
-                                [56, 214, 255, 255],
+                                tokens.accent(255),
                                 item.x + 9,
                                 item.y + 7,
                             ));
@@ -2341,7 +2494,7 @@ impl App {
                                 item.x + 29,
                                 item.y + 8,
                                 0,
-                                [217, 247, 255, 255],
+                                tokens.text_soft,
                             ));
                         }
                     }
@@ -2351,14 +2504,15 @@ impl App {
                     let text = self.status().label();
                     let width = self.text_width(&text, 0) as i32 + 42;
                     let x = bounds.x + bounds.width as i32 - width - 12;
-                    if let Some(buffer) = self.chrome_round(width as u32, 26, 13, [5, 37, 48, 226])
+                    if let Some(buffer) =
+                        self.chrome_round(width as u32, 26, 13, tokens.surface_a(226))
                     {
                         panels.push((buffer, x, bounds.y + 10));
                     }
-                    if let Some(buffer) = self.chrome_round(6, 6, 3, [67, 214, 138, 255]) {
+                    if let Some(buffer) = self.chrome_round(6, 6, 3, tokens.green) {
                         panels.push((buffer, x + 12, bounds.y + 20));
                     }
-                    labels.push((text, x + 24, bounds.y + 15, 0, [179, 235, 250, 255]));
+                    labels.push((text, x + 24, bounds.y + 15, 0, tokens.text_soft));
                 }
                 let names = self.shell.workspace_names();
                 for workspace in 0..self.shell.workspace_count() {
@@ -2374,9 +2528,9 @@ impl App {
                         WORKSPACE_INDICATOR_BAR_HEIGHT,
                         3,
                         if active {
-                            [56, 214, 255, 255]
+                            tokens.accent(255)
                         } else {
-                            [56, 214, 255, 46]
+                            tokens.accent(46)
                         },
                     ) {
                         panels.push((buffer, chip.x, chip.y));
@@ -2388,9 +2542,9 @@ impl App {
                         chip.y + 12,
                         0,
                         if active {
-                            [56, 214, 255, 255]
+                            tokens.accent(255)
                         } else {
-                            [102, 158, 173, 255]
+                            tokens.dim
                         },
                     ));
                 }

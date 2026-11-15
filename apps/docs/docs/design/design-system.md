@@ -62,8 +62,25 @@ review across the marketing site, the docs, the UI kit and the reference explore
 | Ocean | `#38D6FF` | Default product theme |
 | Deep | `#48B7FF` | Quiet, archival, late night |
 
-Aether uses `dark` + `ocean` everywhere by default. The light theme exists and is
-tested, but is not the primary target.
+Aether uses `water` + `ocean` in the compositor and `dark` + `ocean` on the web
+surfaces by default. The light theme exists and is tested, but is not the primary
+target.
+
+The compositor's **Themes** app (`Super+T`) edits the same state as the reference
+Water settings panel:
+
+| Group | Settings |
+| --- | --- |
+| Theme | System, Light, Dark, Water |
+| Effects | Water effects, drips, click ripples, caustics, animated row highlights |
+| Current | Flow speed (calm/flowing/rapid), drip energy (subtle/balanced/lively) |
+| Look | Background (still/sea), Water tone (lagoon/ocean/deep), glass surfaces |
+
+The app derives the runtime chrome palette from mode and tone, applies glass to
+panel fills and borders, and rebuilds the backdrop from background style, caustics
+and speed. Every change is written to
+`$XDG_CONFIG_HOME/aether/themes.json` (`AETHER_THEME_CONFIG` overrides the path);
+the JSON keys match the reference app's `clickRipples` / `rowMotion` shape.
 
 ## Components
 

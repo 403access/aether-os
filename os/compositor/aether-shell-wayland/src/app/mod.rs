@@ -111,7 +111,8 @@ pub struct App {
     pub(crate) chrome_panels: HashMap<PanelCacheKey, Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_rounds: HashMap<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_tops: HashMap<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
-    pub(crate) chrome_background: HashMap<(u32, u32), Arc<MemoryRenderBuffer>>,
+    pub(crate) chrome_background:
+        HashMap<(u32, u32, crate::chrome::BackgroundStyle), Arc<MemoryRenderBuffer>>,
     pub(crate) cursor_buffers: HashMap<CursorShape, CursorCacheEntry>,
     pub(crate) cursor_theme: Option<CursorTheme>,
     pub(crate) client_cursor: Option<CursorShape>,
@@ -242,6 +243,15 @@ impl App {
             input_method_popups: Vec::new(),
             last_input_to_damage_ns: 0,
         };
+
+        let theme = aether_shell::theme::ThemeSettings::load();
+        println!(
+            "aether-shell: theme {} · {} · {}",
+            theme.mode.label(),
+            theme.tone.label(),
+            theme.background.label()
+        );
+        state.shell.set_theme_settings(theme);
 
         state.agent_sessions = AgentSessions::bind(
             std::env::var_os("AETHER_AGENT_SOCKET").map(std::path::PathBuf::from),

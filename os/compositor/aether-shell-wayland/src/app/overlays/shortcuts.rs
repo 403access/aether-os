@@ -12,6 +12,7 @@ impl App {
             self.shell.close_explorer();
             self.shell.close_chat();
             self.shell.close_audio();
+            self.shell.close_themes();
             self.shell.close_remote();
             self.shortcuts_open = true;
             println!(

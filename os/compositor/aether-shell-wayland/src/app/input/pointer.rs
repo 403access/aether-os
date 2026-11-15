@@ -2,6 +2,7 @@
 
 use aether_geometry::Point as AetherPoint;
 use aether_shell::audio::AudioAction;
+use aether_shell::theme::ThemeField;
 use aether_shell::{SnapZone, WindowId, MIN_FLOATING_HEIGHT, MIN_FLOATING_WIDTH};
 use smithay::backend::input::{AxisSource, ButtonState, MouseButton};
 use smithay::input::pointer::{AxisFrame, ButtonEvent, MotionEvent};
@@ -191,6 +192,7 @@ impl App {
                 || self.shell.explorer_open()
                 || self.shell.chat_open()
                 || self.shell.audio_open()
+                || self.shell.themes_open()
                 || self.shortcuts_open
                 || self.task_manager_open();
             if let Some(action) = self.top_shortcut_at(point) {
@@ -221,6 +223,34 @@ impl App {
                     }
                 }
                 self.mark_task_damage();
+                self.cursor = cursor_for(self);
+                self.mark_cursor_damage(self.pointer_pos);
+                self.end_input(started);
+                return;
+            }
+            if self.shell.themes_open() {
+                if self.shell.theme_close_at(point) {
+                    self.shell.close_themes();
+                    self.mark_full_damage();
+                } else if self.shell.theme_reset_at(point) {
+                    let action = self.shell.theme_reset();
+                    self.apply_theme_action(Some(action));
+                } else if self.shell.theme_action_at(point) {
+                    let action = self.shell.theme_use_water();
+                    self.apply_theme_action(action);
+                } else if let Some(index) = self.shell.theme_row_at(point) {
+                    self.shell.theme_select(index);
+                    let action = if ThemeField::ALL[index].is_switch() {
+                        self.shell.theme_activate()
+                    } else {
+                        self.shell.theme_adjust(1)
+                    };
+                    self.apply_theme_action(action);
+                } else if !self.shell.theme_rect().contains(point) {
+                    self.shell.close_themes();
+                    self.mark_full_damage();
+                }
+                self.mark_theme_damage();
                 self.cursor = cursor_for(self);
                 self.mark_cursor_damage(self.pointer_pos);
                 self.end_input(started);

@@ -1,3 +1,20 @@
+## v0.1.0-alpha.70
+
+- Add the compositor **Themes** app (`Super+T`, `Ctrl+Alt+T` in the Simple
+  profile): theme mode, the five Water effect switches, flow speed, drip energy,
+  background, tone and glass. The panel mirrors the reference explorer's Water
+  settings, including status copy, `Use Water`, reset and arrow-key controls.
+- Persist theme state to `$XDG_CONFIG_HOME/aether/themes.json` with the reference
+  app's `clickRipples` / `rowMotion` fields; `AETHER_THEME_CONFIG` overrides the
+  path. Theme changes apply immediately.
+- Derive compositor chrome tokens from theme mode and tone (Water, Dark and Light
+  palettes, light-mode accent variants), honour the glass switch in panel fills
+  and borders, and rebuild the backdrop from mode, background, caustics and speed.
+  The app previews drips, click ripples, waves and caustics.
+- Add the Themes app to the palette and shortcut table, and document the settings
+  and storage path. Verification: 18 new `aether-shell` tests; `aether-shell` and
+  the Wayland lib are `clippy -D warnings` clean.
+
 ## v0.1.0-alpha.69
 
 - Add P7 remote display: `aether-remote` (DMA-BUF capture descriptors + copy

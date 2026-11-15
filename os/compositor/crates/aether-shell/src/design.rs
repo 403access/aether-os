@@ -28,3 +28,17 @@ pub const REMOTE_PANEL_HEIGHT: u32 = 420;
 pub const REMOTE_ROW_HEIGHT: u32 = 38;
 pub const REMOTE_ROW_SPACING: i32 = 44;
 pub const REMOTE_ROWS_TOP: i32 = 244;
+
+/// Themes app geometry (660 x 688). Eleven rows mirror the reference Water
+/// settings panel, grouped as Theme / Effects / Current / Look.
+pub const THEME_PANEL_WIDTH: u32 = 660;
+pub const THEME_PANEL_HEIGHT: u32 = 688;
+pub const THEME_ROW_HEIGHT: u32 = 32;
+pub const THEME_ROW_SPACING: i32 = 35;
+pub const THEME_ROWS_TOP: i32 = 190;
+pub const THEME_GROUP_GAP: i32 = 20;
+pub const THEME_STATUS_TOP: i32 = 70;
+pub const THEME_STATUS_HEIGHT: u32 = 38;
+pub const THEME_PREVIEW_TOP: i32 = 116;
+pub const THEME_PREVIEW_HEIGHT: u32 = 52;
+pub const THEME_FOOTER_HEIGHT: u32 = 30;

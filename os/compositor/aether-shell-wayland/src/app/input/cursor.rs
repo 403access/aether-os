@@ -55,6 +55,16 @@ pub(crate) fn cursor_for(state: &App) -> CursorShape {
     if state.shortcuts_open {
         return CursorShape::Arrow;
     }
+    if state.shell.themes_open() {
+        if state.shell.theme_row_at(point).is_some()
+            || state.shell.theme_action_at(point)
+            || state.shell.theme_reset_at(point)
+            || state.shell.theme_close_at(point)
+        {
+            return CursorShape::Pointer;
+        }
+        return CursorShape::Arrow;
+    }
     if state.shell.audio_open() {
         if state.shell.audio_rect().contains(point) {
             if state.shell.audio_route_at(point).is_some()

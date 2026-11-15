@@ -194,6 +194,25 @@
           };
         };
 
+        aether-mcp = final.rustPlatform.buildRustPackage {
+          pname = "aether-mcp";
+          version = "0.1.0";
+          src = sceneSource;
+          cargoLock.lockFile = ./os/compositor/Cargo.lock;
+          cargoBuildFlags = ["-p" "aether-mcp" "-p" "aether-chat"];
+          doCheck = false;
+          installPhase = ''
+            mkdir -p $out/bin
+            install -Dm755 "$(find target -path '*/release/aether-mcp' -type f | head -1)" $out/bin/aether-mcp
+            install -Dm755 "$(find target -path '*/release/aether-chat' -type f | head -1)" $out/bin/aether-chat
+          '';
+          meta = with final.lib; {
+            description = "Aether system MCP server and chat backend";
+            license = licenses.mit;
+            platforms = ["x86_64-linux" "aarch64-linux"];
+          };
+        };
+
         aether-shell-smithay = final.rustPlatform.buildRustPackage {
           pname = "aether-shell-smithay";
           version = "0.1.0";
@@ -260,6 +279,9 @@
           export XDG_RUNTIME_DIR="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
           export AETHER_FONT="''${AETHER_FONT:-${final.inter}/share/fonts/truetype/InterVariable.ttf}"
           export AETHER_TERMINAL="''${AETHER_TERMINAL:-aether-terminal}"
+          export AETHER_CONTROL_SOCKET="''${AETHER_CONTROL_SOCKET:-$XDG_RUNTIME_DIR/aether-control.sock}"
+          export AETHER_CHAT_SOCKET="''${AETHER_CHAT_SOCKET:-$XDG_RUNTIME_DIR/aether-chat.sock}"
+          export AETHER_INDEX_SOCKET="''${AETHER_INDEX_SOCKET:-$XDG_RUNTIME_DIR/aether-index.sock}"
           export LD_LIBRARY_PATH="${final.lib.makeLibraryPath [ final.libGL final.mesa final.libgbm ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
           export LIBGL_DRIVERS_PATH="${final.mesa}/lib/dri"
           export GBM_BACKENDS_PATH="${final.mesa}/lib/gbm"

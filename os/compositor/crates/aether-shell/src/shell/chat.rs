@@ -67,6 +67,7 @@ impl Shell {
         let Some(chat) = self.chat.as_mut() else {
             return;
         };
+        let was_at_bottom = chat.scroll + chat.visible >= chat.lines.len();
         chat.pending.push_str(token);
         while let Some(newline) = chat.pending.find('\n') {
             let line: String = chat.pending.drain(..=newline).collect();
@@ -74,7 +75,7 @@ impl Shell {
             chat_materialize(chat, line);
         }
         let max_scroll = chat.lines.len().saturating_sub(chat.visible);
-        if chat.scroll + chat.visible >= chat.lines.len().saturating_sub(chat.visible) {
+        if was_at_bottom {
             chat.scroll = max_scroll;
         }
     }
@@ -83,9 +84,13 @@ impl Shell {
         let Some(chat) = self.chat.as_mut() else {
             return;
         };
+        let was_at_bottom = chat.scroll + chat.visible >= chat.lines.len();
         if !chat.pending.is_empty() {
             let line = std::mem::take(&mut chat.pending);
             chat_materialize(chat, &line);
+            if was_at_bottom {
+                chat.scroll = chat.lines.len().saturating_sub(chat.visible);
+            }
         }
     }
 
@@ -104,5 +109,117 @@ impl Shell {
             .map(|chat| chat.visible as isize)
             .unwrap_or(1);
         self.chat_scroll_by(direction * page);
+    }
+
+    /// Current composer text. Empty when the drawer is closed.
+    pub fn chat_input(&self) -> &str {
+        self.chat
+            .as_ref()
+            .map(|chat| chat.input.as_str())
+            .unwrap_or("")
+    }
+
+    /// Append a printable character to the composer.
+    pub fn chat_push_char(&mut self, character: char) -> bool {
+        let Some(chat) = self.chat.as_mut() else {
+            return false;
+        };
+        if chat.input.chars().count() >= 512 {
+            return false;
+        }
+        chat.input.push(character);
+        true
+    }
+
+    /// Remove the last character from the composer.
+    pub fn chat_backspace(&mut self) -> bool {
+        let Some(chat) = self.chat.as_mut() else {
+            return false;
+        };
+        chat.input.pop().is_some()
+    }
+
+    /// Take the composer text if it is non-empty, leaving the composer empty.
+    pub fn chat_take_input(&mut self) -> Option<String> {
+        let chat = self.chat.as_mut()?;
+        let prompt = chat.input.trim().to_string();
+        chat.input.clear();
+        if prompt.is_empty() {
+            None
+        } else {
+            Some(prompt)
+        }
+    }
+
+    /// Append a user-authored line to the transcript.
+    pub fn chat_push_user_line(&mut self, prompt: &str) {
+        if !self.chat_open() {
+            let _ = self.open_chat();
+        }
+        self.chat_push_token(&format!("> {prompt}\n"));
+        self.chat_finish_stream();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use aether_geometry::Size;
+    use aether_layout::LayoutConfig;
+
+    use super::*;
+
+    fn shell() -> Shell {
+        let mut shell = Shell::new(Size::new(1280, 800), LayoutConfig::default(), 120);
+        let _ = shell.open_chat();
+        shell
+    }
+
+    #[test]
+    fn composer_takes_trimmed_input_and_clears() {
+        let mut shell = shell();
+        for character in "  list windows  ".chars() {
+            shell.chat_push_char(character);
+        }
+        assert_eq!(shell.chat_input(), "  list windows  ");
+        assert_eq!(shell.chat_take_input().as_deref(), Some("list windows"));
+        assert_eq!(shell.chat_input(), "");
+        assert_eq!(shell.chat_take_input(), None);
+    }
+
+    #[test]
+    fn composer_backspace_removes_one_character() {
+        let mut shell = shell();
+        shell.chat_push_char('a');
+        shell.chat_push_char('b');
+        assert!(shell.chat_backspace());
+        assert_eq!(shell.chat_input(), "a");
+        assert!(shell.chat_backspace());
+        assert_eq!(shell.chat_input(), "");
+        assert!(!shell.chat_backspace());
+    }
+
+    #[test]
+    fn streaming_pins_the_view_to_the_bottom() {
+        let mut shell = shell();
+        for index in 0..200 {
+            shell.chat_push_token(&format!("line {index}\n"));
+        }
+        assert!(shell.chat_scroll() > 0);
+        assert_eq!(
+            shell.chat_scroll() + shell.chat_visible_rows(),
+            shell.chat_line_count()
+        );
+    }
+
+    #[test]
+    fn user_lines_mark_the_prompt() {
+        let mut shell = shell();
+        shell.chat_push_user_line("status?");
+        let text: String = shell
+            .visible_chat_lines()
+            .iter()
+            .flat_map(|line| line.spans.iter().map(|span| span.text.clone()))
+            .collect();
+        assert!(text.contains("status?"));
     }
 }

@@ -52,6 +52,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "aether-chat"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+]
+
+[[package]]
 name = "aether-compositor"
 version = "0.1.0"
 dependencies = [
@@ -90,6 +97,14 @@ name = "aether-layout"
 version = "0.1.0"
 dependencies = [
  "aether-geometry",
+]
+
+[[package]]
+name = "aether-mcp"
+version = "0.1.0"
+dependencies = [
+ "aether-desktop",
+ "serde_json",
 ]
 
 [[package]]

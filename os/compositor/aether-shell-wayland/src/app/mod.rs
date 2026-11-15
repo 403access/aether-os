@@ -11,7 +11,9 @@
 //! window/output policy in `windows` and `outputs`.
 
 mod agents;
+mod chat_bridge;
 mod chat_demo;
+mod control;
 mod damage;
 mod handlers;
 pub(crate) mod index_worker;
@@ -57,7 +59,9 @@ use smithay::wayland::shm::ShmState;
 use smithay::wayland::text_input::TextInputManagerState;
 
 use self::agents::AgentSessions;
+use self::chat_bridge::ChatBridge;
 use self::chat_demo::ChatDemo;
+use self::control::ControlServer;
 use self::index_worker::IndexWorker;
 use self::input::KeyProfile;
 use self::overlays::task_manager::TaskManagerState;
@@ -129,6 +133,8 @@ pub struct App {
     status: StatusSnapshot,
     status_cpu: Option<status::CpuTimes>,
     chat_demo: Option<ChatDemo>,
+    chat_bridge: ChatBridge,
+    control: Option<ControlServer>,
     pub(crate) shortcuts_open: bool,
     pub(crate) task_manager: Option<TaskManagerState>,
     task_monitor: SystemMonitor,
@@ -233,6 +239,8 @@ impl App {
             status: StatusSnapshot::default(),
             status_cpu: None,
             chat_demo: None,
+            chat_bridge: ChatBridge::bind(None),
+            control: None,
             shortcuts_open: false,
             task_manager: None,
             task_monitor: SystemMonitor::default(),
@@ -259,6 +267,11 @@ impl App {
 
         state.agent_sessions = AgentSessions::bind(
             std::env::var_os("AETHER_AGENT_SOCKET").map(std::path::PathBuf::from),
+        );
+        state.chat_bridge =
+            ChatBridge::bind(std::env::var_os("AETHER_CHAT_SOCKET").map(std::path::PathBuf::from));
+        state.control = ControlServer::bind(
+            std::env::var_os("AETHER_CONTROL_SOCKET").map(std::path::PathBuf::from),
         );
         if let Some(socket) = state.index_socket.clone() {
             state.index_worker = Some(IndexWorker::spawn(std::path::PathBuf::from(socket)));
@@ -334,6 +347,8 @@ impl App {
         display.flush_clients()?;
         self.poll_index_results();
         self.poll_chat_demo();
+        self.poll_chat_bridge();
+        self.pump_control();
         if self.agent_sessions.poll() {
             self.refresh_launchers();
             println!(

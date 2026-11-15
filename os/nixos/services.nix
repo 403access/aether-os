@@ -150,6 +150,29 @@
     wantedBy = [];
   };
 
+  # Chat backend: the built-in chat drawer talks to this process, which owns
+  # the model loop and the Aether MCP client. No model ships with the OS; set
+  # AETHER_CHAT_ENDPOINT in ~/.config/aether/chat.env to point at a local
+  # OpenAI-compatible endpoint. Without it the drawer reports the missing
+  # configuration instead of failing silently.
+  systemd.user.services.aether-chat = {
+    description = "Aether chat backend (model loop + MCP client)";
+    wantedBy = ["default.target"];
+    partOf = ["graphical-session.target"];
+    after = ["graphical-session.target"];
+    serviceConfig = {
+      ExecStart = "${pkgs.aether-mcp}/bin/aether-chat";
+      Environment = [
+        "AETHER_CHAT_SOCKET=%t/aether-chat.sock"
+        "AETHER_MCP_BIN=${pkgs.aether-mcp}/bin/aether-mcp"
+        "AETHER_CHAT_MODEL=deepseek-chat"
+      ];
+      EnvironmentFile = "-%h/.config/aether/chat.env";
+      Restart = "on-failure";
+      RestartSec = 2;
+    };
+  };
+
   # Keep clipboard data after the source client exits. wlr-data-control is
   # advertised by the compositor; the helper re-owns the selection.
   systemd.user.services.aether-clip-persist = {

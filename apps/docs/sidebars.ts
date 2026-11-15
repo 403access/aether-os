@@ -44,6 +44,7 @@ const sidebars: SidebarsConfig = {
         "architecture/collaboration",
         "architecture/audio",
         "architecture/task-manager",
+        "architecture/system-mcp",
         "architecture/browser",
         "architecture/media",
         "architecture/files-and-storage",

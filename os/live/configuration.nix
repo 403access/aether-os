@@ -71,6 +71,7 @@
     aether-index
     aether-applications
     aether-audio
+    aether-mcp
     aether-sandbox
     aether-shell-drm
     aether-shell-smithay

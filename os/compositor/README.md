@@ -22,6 +22,8 @@ aether-desktop       XDG .desktop discovery + icons/Exec         (std)
 aether-files         bounded filename index for the palette      (std)
 aether-cursor        software cursor bitmaps                     (std)
 aether-preview       software renderer + PNG preview            (shell, text)
+aether-mcp           system MCP server over stdio               (desktop, json)
+aether-chat          model loop + MCP client for the drawer     (json)
 aether-compositor    facade + prelude + demo binary             (core crates)
 
 aether-shell-smithay  Linux-only Smithay/winit backend (standalone crate,
@@ -69,6 +71,24 @@ cargo run -p aether-preview --bin aether-shell-preview
 ```
 
 The last command writes `artifacts/shell/frame.png` and `damage.png`.
+
+## System MCP
+
+`aether-mcp` exposes the running system to MCP clients over stdio. It reads
+`AETHER_CONTROL_SOCKET` (compositor windows/workspaces/actions) and
+`AETHER_INDEX_SOCKET` (file search), and falls back to host probes when a socket
+is absent.
+
+```bash
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | cargo run -q -p aether-mcp
+cargo run -q -p aether-chat -- --stdio --mcp target/debug/aether-mcp \
+  --script artifacts/chat-script.json
+```
+
+The chat backend uses an OpenAI-compatible endpoint from
+`AETHER_CHAT_ENDPOINT`, or a deterministic script from `AETHER_CHAT_SCRIPT`.
+See [System MCP](../../apps/docs/docs/architecture/system-mcp.md) and
+`aether-shell-smithay/smoke-mcp-xvfb.sh` for the full control + chat smoke.
 
 The Nix package installs the demo as `aether-scene`:
 

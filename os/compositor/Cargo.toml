@@ -16,6 +16,8 @@ members = [
   "crates/aether-system",
   "crates/aether-preview",
   "crates/aether-remote",
+  "crates/aether-mcp",
+  "crates/aether-chat",
 ]
 resolver = "2"
 

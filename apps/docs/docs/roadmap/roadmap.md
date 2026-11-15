@@ -174,8 +174,10 @@ Deliverables:
   rlimits, optional cgroup v2), packaged and tested on Linux.
 - ⏳ `aetherd`: supervisor wiring, planner integration, admission control,
   capability issuance and audit.
+- ✅ `aether-mcp` + `aether-chat`: audited system tool surface over the shell
+  control socket, model loop with tool-call traces and a scripted test mode.
 - Landlock + seccomp profiles per language runtime.
-- Chat UI with tool-call traces and cancellation.
+- Chat cancellation (tool-call traces are landed).
 - Red-team suite: six agents attempting cross-reads and escapes.
 
 **Gate.** Six concurrent agents; zero cross-agent reads in the suite; audit chain

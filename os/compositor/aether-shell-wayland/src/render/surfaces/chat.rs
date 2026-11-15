@@ -165,11 +165,19 @@ impl App {
                 panels.push((buffer, composer.x, composer.y));
             }
             labels.push((
-                "Message Aether…".into(),
+                if self.shell.chat_input().is_empty() {
+                    "Message Aether…".into()
+                } else {
+                    self.shell.chat_input().to_string()
+                },
                 composer.x + 14,
                 composer.y + 10,
                 1,
-                tokens.dim,
+                if self.shell.chat_input().is_empty() {
+                    tokens.dim
+                } else {
+                    tokens.text
+                },
             ));
             if let Some(buffer) = self.chrome_round(26, 26, 8, tokens.accent(44)) {
                 panels.push((

@@ -1,3 +1,22 @@
+## v0.1.0-alpha.71
+
+- Add `aether-mcp`, a stdio MCP server for the running system: 13 audited tools
+  covering status, processes, indexed files, applications, windows, workspaces,
+  audio, notifications and shell actions. Read tools are unrestricted; window
+  close requires `confirm: true`; every call lands in a rotating JSONL audit log.
+- Add the shell control socket (`AETHER_CONTROL_SOCKET`): a listener thread
+  queues requests and the compositor executes them with a per-frame budget, so
+  clients cannot stall presentation.
+- Make the chat drawer promptable: the composer accepts text, Enter sends, and
+  tool-call traces render inline. `aether-chat` owns the model loop and MCP
+  client, connects to `AETHER_CHAT_SOCKET`, and speaks an OpenAI-compatible
+  endpoint (`http://` or `unix:`) or a deterministic script.
+- Package `aether-mcp`/`aether-chat`, export the session sockets, add the user
+  service and document the trust boundary in `architecture/system-mcp`.
+- Verification: 22 new Rust tests (MCP protocol, stdio, chat loop, composer,
+  audit), `clippy -D warnings` for both crates, and a headless Xvfb smoke that
+  drives the chat drawer and the confirmation gate end to end.
+
 ## v0.1.0-alpha.70
 
 - Add the compositor **Themes** app (`Super+T`, `Ctrl+Alt+T` in the Simple

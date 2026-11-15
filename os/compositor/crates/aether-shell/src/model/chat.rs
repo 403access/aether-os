@@ -31,6 +31,7 @@ pub struct ChatState {
     pub(crate) visible: usize,
     pub(crate) code_block: bool,
     pub(crate) width: usize,
+    pub(crate) input: String,
 }
 
 impl Default for ChatState {
@@ -42,6 +43,7 @@ impl Default for ChatState {
             visible: 20,
             code_block: false,
             width: 44,
+            input: String::new(),
         }
     }
 }

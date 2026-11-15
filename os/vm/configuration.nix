@@ -76,6 +76,7 @@
     git
     aether-applications
     aether-audio
+    aether-mcp
     aether-sandbox
     aether-shell-drm
     aether-terminal
@@ -108,6 +109,23 @@
         "AETHER_INDEX_LIMIT=5000"
       ];
       Restart = "on-failure";
+    };
+  };
+
+  # Chat backend for the VM: same process contract as the reference install.
+  systemd.user.services.aether-chat = {
+    description = "Aether chat backend (model loop + MCP client)";
+    wantedBy = ["default.target"];
+    serviceConfig = {
+      ExecStart = "${pkgs.aether-mcp}/bin/aether-chat";
+      Environment = [
+        "AETHER_CHAT_SOCKET=%t/aether-chat.sock"
+        "AETHER_MCP_BIN=${pkgs.aether-mcp}/bin/aether-mcp"
+        "AETHER_CHAT_MODEL=deepseek-chat"
+      ];
+      EnvironmentFile = "-%h/.config/aether/chat.env";
+      Restart = "on-failure";
+      RestartSec = 2;
     };
   };
 
@@ -207,6 +225,9 @@
       export XDG_RUNTIME_DIR=/run/user/$(id -u)
       export AETHER_FONT="${pkgs.inter}/share/fonts/truetype/InterVariable.ttf"
       export AETHER_TERMINAL="aether-terminal"
+      export AETHER_CONTROL_SOCKET="$XDG_RUNTIME_DIR/aether-control.sock"
+      export AETHER_CHAT_SOCKET="$XDG_RUNTIME_DIR/aether-chat.sock"
+      export AETHER_INDEX_SOCKET="$XDG_RUNTIME_DIR/aether-index.sock"
       export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath [ pkgs.libGL pkgs.mesa pkgs.libgbm ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
       export LIBGL_DRIVERS_PATH="${pkgs.mesa}/lib/dri"
       export GBM_BACKENDS_PATH="${pkgs.mesa}/lib/gbm"

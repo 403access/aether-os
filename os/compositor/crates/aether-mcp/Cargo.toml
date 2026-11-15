@@ -1,0 +1,18 @@
+[package]
+name = "aether-mcp"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Model Context Protocol server for inspecting and controlling Aether OS"
+
+[lib]
+name = "aether_mcp"
+path = "src/lib.rs"
+
+[[bin]]
+name = "aether-mcp"
+path = "src/main.rs"
+
+[dependencies]
+serde_json = "1"
+aether-desktop = { path = "../aether-desktop" }

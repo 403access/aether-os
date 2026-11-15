@@ -110,7 +110,9 @@ impl DmaBufFrame {
                 got: self.planes.len(),
             });
         }
-        if self.format.is_planar() && (self.width % 2 != 0 || self.height % 2 != 0) {
+        if self.format.is_planar()
+            && (!self.width.is_multiple_of(2) || !self.height.is_multiple_of(2))
+        {
             return Err(CaptureError::OddPlanarDimensions);
         }
         let row_bytes = self.width * self.format.bytes_per_pixel();
@@ -376,7 +378,7 @@ impl SyntheticSource {
             let v = y as f32 / height as f32;
             for x in 0..width {
                 let u = x as f32 / width as f32;
-                let wave = ((u * 6.0 + phase * 6.283).sin() * 0.5 + 0.5) * 0.25;
+                let wave = ((u * 6.0 + phase * std::f32::consts::TAU).sin() * 0.5 + 0.5) * 0.25;
                 let index = (y * width + x) * 4;
                 self.cache[index] = ((8.0 + 24.0 * v + 40.0 * wave) as u8).max(4);
                 self.cache[index + 1] = ((24.0 + 78.0 * (1.0 - v) + 26.0 * wave) as u8).max(4);

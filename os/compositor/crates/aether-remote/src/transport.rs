@@ -153,15 +153,9 @@ pub struct WebRtcPoll {
     pub timeout: Option<Instant>,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct WebRtcConfig {
     pub ice_lite: bool,
-}
-
-impl Default for WebRtcConfig {
-    fn default() -> Self {
-        Self { ice_lite: false }
-    }
 }
 
 /// One side of a str0m session. The host offers video and the `input` data

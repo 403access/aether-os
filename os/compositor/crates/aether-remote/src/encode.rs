@@ -187,7 +187,7 @@ impl EncoderConfig {
         if self.width == 0 || self.height == 0 {
             return Err(EncodeError::Empty);
         }
-        if self.width % 2 != 0 || self.height % 2 != 0 {
+        if !self.width.is_multiple_of(2) || !self.height.is_multiple_of(2) {
             return Err(EncodeError::OddDimensions);
         }
         if self.width > 16_384 || self.height > 16_384 {
@@ -429,6 +429,7 @@ impl ChannelOrder {
 
 /// BT.601 full-range conversion with 2×2 chroma subsampling. The channel order
 /// is explicit so a BGRA compositor buffer never gets the wrong chroma.
+#[allow(clippy::too_many_arguments)]
 fn rgba_to_i420(
     data: &[u8],
     stride: usize,

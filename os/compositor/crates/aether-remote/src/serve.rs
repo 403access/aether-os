@@ -147,25 +147,22 @@ pub fn serve(config: ServeConfig) -> Result<(), Box<dyn std::error::Error>> {
                 Ok((length, source)) => {
                     if let Some(rtc) = state.rtc.as_mut() {
                         let now = Instant::now();
-                        match rtc.handle_datagram(now, source, udp_addr, &buf[..length]) {
-                            Ok(poll) => {
-                                for datagram in poll.datagrams {
-                                    let _ =
-                                        socket.send_to(&datagram.contents, datagram.destination);
-                                }
-                                for event in poll.events {
-                                    match event {
-                                        crate::transport::WebRtcEvent::Input(data) => {
-                                            handle_input(&mut state, &data);
-                                        }
-                                        crate::transport::WebRtcEvent::ChannelOpen(_) => {
-                                            state.input_channel = true;
-                                        }
-                                        _ => {}
+                        if let Ok(poll) = rtc.handle_datagram(now, source, udp_addr, &buf[..length])
+                        {
+                            for datagram in poll.datagrams {
+                                let _ = socket.send_to(&datagram.contents, datagram.destination);
+                            }
+                            for event in poll.events {
+                                match event {
+                                    crate::transport::WebRtcEvent::Input(data) => {
+                                        handle_input(&mut state, &data);
                                     }
+                                    crate::transport::WebRtcEvent::ChannelOpen(_) => {
+                                        state.input_channel = true;
+                                    }
+                                    _ => {}
                                 }
                             }
-                            Err(_) => {}
                         }
                     }
                 }

@@ -126,8 +126,8 @@ executable by default.
 | Concern | Code |
 | --- | --- |
 | Web pane component | `packages/ui/src/Explorer.tsx` |
-| Compositor explorer layer | `os/compositor/aether-shell-wayland/src/render.rs` |
-| Compositor geometry | `os/compositor/crates/aether-shell/src/lib.rs` (`explorer_*`) |
+| Compositor explorer layer | `os/compositor/aether-shell-wayland/src/render/surfaces/explorer.rs` |
+| Compositor geometry | `os/compositor/crates/aether-shell/src/shell/explorer.rs` (`explorer_*`) |
 | Fixture data (demo) | `apps/web/src/data.ts` |
 | Selection/open/search tests | `packages/ui/src/ui.test.tsx` |
 | Real filesystem semantics | `apps/docs/docs/architecture/files-and-storage.md` |

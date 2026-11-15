@@ -69,8 +69,8 @@ const SHOTS: Shot[] = [
     shortcut: "Super+C",
     category: "overlays",
     caption:
-      "A chat drawer that renders markdown tokens as they arrive — headings, lists and code — bounded per frame rather than per token.",
-    alt: "Aether chat drawer showing streaming markdown with a code block and message input.",
+      "A chat drawer that streams markdown and renders MCP tool-call traces inline. Work is bounded per frame rather than per token, and the composer stays one keystroke away.",
+    alt: "Aether chat drawer showing a streamed reply with an aether_system tool-call trace over a terminal.",
   },
   {
     id: "audio",
@@ -81,6 +81,16 @@ const SHOTS: Shot[] = [
     caption:
       "Every output, input and latency preset is a first-class object. Switch routes with the keyboard and watch the input meter move.",
     alt: "Aether audio overlay listing analog, USB and Bluetooth outputs and inputs with an input level meter.",
+  },
+  {
+    id: "themes",
+    file: "screenshots/themes.png",
+    title: "Themes app",
+    shortcut: "Super+T",
+    category: "overlays",
+    caption:
+      "Theme mode, the five Water effect switches, flow speed, drip energy, background, tone and glass surfaces in one panel. Changes reach the compositor immediately and persist on the device.",
+    alt: "Aether Themes app listing theme mode, Water effect switches, flow speed, drip energy, background, water tone and glass surfaces.",
   },
   {
     id: "remote",

@@ -93,7 +93,7 @@ test.describe("marketing site", () => {
     await page.goto("/#screenshots");
 
     const shots = page.locator(".shot__image");
-    await expect(shots).toHaveCount(6);
+    await expect(shots).toHaveCount(7);
     for (const shot of await shots.all()) {
       await shot.scrollIntoViewIfNeeded();
       expect(await shot.evaluate((img) => (img as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
@@ -111,12 +111,12 @@ test.describe("marketing site", () => {
     await page.goto("/#screenshots");
 
     const filters = page.getByRole("group", { name: "Filter captures" });
-    await filters.getByRole("button", { name: "Windows 2" }).click();
+    await filters.getByRole("button", { name: /^Windows/ }).click();
     await expect(page.locator(".shot__image")).toHaveCount(3);
     await expect(page.getByRole("button", { name: "Open screenshot: Streaming chat" })).toHaveCount(0);
 
-    await filters.getByRole("button", { name: "All 5" }).click();
-    await expect(page.locator(".shot__image")).toHaveCount(6);
+    await filters.getByRole("button", { name: /^All/ }).click();
+    await expect(page.locator(".shot__image")).toHaveCount(7);
 
     await page.getByRole("button", { name: "Open screenshot: Command palette" }).click();
     const lightbox = page.locator(".lightbox");

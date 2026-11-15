@@ -33,7 +33,7 @@ network service.
 uname -a
 cat /sys/kernel/security/lsm
 findmnt -o TARGET,SOURCE,FSTYPE,OPTIONS
-free -m
+free -m                 # or ./scripts/memory-report.sh from a repo clone
 systemd-analyze
 vainfo
 aplay -l
@@ -51,7 +51,7 @@ Expected:
 | `/home` | xfs |
 | `/scratch` | ext4, `commit=60` |
 | `/var/index` | tmpfs, 2 GiB |
-| `free -m` | record it; this replaces the idle-RAM budget |
+| `free -m`, or `./scripts/memory-report.sh` | record machine and attributed footprints; see [memory footprint](/architecture/memory-footprint) |
 | `systemd-analyze` | record userspace boot time; target < 1.5 s |
 | `vainfo` | VA-API opens the iHD driver (HD 630) |
 | `aplay -l` | at least one analog HDA device |
@@ -180,7 +180,7 @@ Write the output of these into `docs/measurements/` (create it) or a note:
 ```bash
 date -Is
 uname -a
-free -m
+free -m                 # or ./scripts/memory-report.sh from a repo clone
 systemd-analyze
 ```
 

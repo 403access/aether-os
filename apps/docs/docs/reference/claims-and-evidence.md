@@ -26,7 +26,10 @@ source. Everything else is a target or an aspiration.
 
 | Claim | Label | Evidence |
 | --- | --- | --- |
-| 130–200 MB idle RAM | **Budget** | Installer and VM exist; no measured target idle footprint yet; P1 measures |
+| 130–200 MB idle RAM | **Budget** | Installer and VM exist; harness committed (`scripts/memory-report.sh`); no measured target idle footprint yet; P1 measures |
+| Attributed session footprint ≤ 200 MB | **Budget** | Σ PSS + resident DRM of session processes, 60 s after boot and after a fixed workload; definition in [memory footprint](/architecture/memory-footprint) |
+| Idle growth ≤ 1 MB / 10 min | **Budget** | Two harness samples with no input; retention is covered by the post-workload attributed run |
+| 11.4 MiB shell core + one 1920×1200 software frame | **Measured (dev host)** | `cd os/compositor && cargo build --release -p aether-preview`; `/usr/bin/time -l` maximum RSS 12,009,472 B; includes the 8.8 MiB canvas |
 | 110–150 MB with all optimisations | **Speculative** | MicroVM/PGO combination not built |
 | 10–20 MB saved by shared-memory IPC | **Speculative** | Ring measured; whole-system saving not |
 | GNOME idles 1.2–2.5 GB | **Speculative** | Depends on distro/session; not measured here |

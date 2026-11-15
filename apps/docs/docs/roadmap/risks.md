@@ -29,6 +29,7 @@ a new failure mode.
 | R13 | Single maintainer bus factor | High | High | Documentation-first; reproducible builds; ADRs; tested core | all |
 | R14 | Supply-chain compromise in a dependency | Low | High | Pinned inputs, minimal deps, no postinstall scripts, sandboxed agents | all |
 | R15 | MicroVM complexity consumes the performance budget | Medium | Medium | Defer to P8; measure VM tax before shipping | P8 |
+| R16 | Unbounded text/chrome caches grow idle RSS after ordinary use | High | High | Bound and byte-account caches; `memory-report.sh` gate after a fixed workload | P2/P3 |
 
 ## Assumption failures
 

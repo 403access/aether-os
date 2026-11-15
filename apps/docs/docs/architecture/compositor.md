@@ -282,4 +282,7 @@ implemented and tested now so the integration has a stable foundation.
 | Input → damage commit | < 2 ms |
 | Shell cold start | < 300 ms |
 
-Measurements replace these budgets in P2.
+Measurements replace these budgets in P2. The shell RSS figure is process memory
+only; compositor scan-out and texture buffers are kernel GEM objects. Compare
+against the system budget with the attributed measurement in
+[memory footprint](/architecture/memory-footprint).

@@ -26,7 +26,9 @@ demands it.
 
 | Metric | Budget | Measurement | Status |
 | --- | --- | --- | --- |
-| Idle RAM | ≤ 200 MB | 60 s after boot, `smem` | target |
+| Idle RAM, attributed | ≤ 200 MB | Σ PSS + resident DRM of session processes, 60 s after boot | target |
+| Idle RAM, machine | reported | `MemTotal - MemAvailable`, same run | target |
+| Idle RAM growth | ≤ 1 MB / 10 min | two harness samples with no input | target |
 | Idle CPU | < 0.5% | 60 s mean + p95 | target |
 | Frame time | 8.3 ms @ 120 Hz | compositor trace | target |
 | Input → paint | < 16 ms | evdev → damage commit | target |
@@ -76,6 +78,36 @@ Two real bugs found by this harness during v0.1:
    23%.
 
 Both are documented in commit messages and are examples of why the baseline exists.
+
+## Memory measurement
+
+`scripts/memory-report.sh` is the memory counterpart of the benchmark harness. It
+needs no packages beyond `awk` and `/proc`:
+
+```bash
+./scripts/memory-report.sh                            # 60 s idle window
+./scripts/memory-report.sh --seconds 600 --gate attributed --check
+./scripts/memory-report.sh --json artifacts/perf/memory/idle.json
+```
+
+It samples twice and reports the growth in between, because the interesting number
+is not the fresh-boot footprint; it is how much of a session's working set is
+still resident after the user stops. Two surfaces are reported:
+
+- **Attributed**: Σ PSS + resident DRM (`fdinfo`) for the shell, index, audio, IME
+  and session processes. This is the engineering budget.
+- **Machine**: `MemTotal - MemAvailable`. This is the literal footprint and
+  includes the kernel and system services.
+
+PSS is required because RSS double-counts shared pages. Resident DRM is required
+because compositor scan-out and texture buffers are kernel GEM objects that never
+appear in a process's `smaps_rollup`; a PSS-only report undercounts a 1080p
+session by ~16 MiB. The full rationale and the findings are in
+[memory footprint](/architecture/memory-footprint).
+
+Rules for the memory harness mirror the latency rules: record the machine and
+process set, measure after use as well as at boot, keep the raw JSON, and never
+compare across hosts.
 
 ## Compiler tuning
 

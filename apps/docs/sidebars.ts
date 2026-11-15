@@ -49,6 +49,7 @@ const sidebars: SidebarsConfig = {
         "architecture/files-and-storage",
         "architecture/remote-display",
         "architecture/performance-engineering",
+        "architecture/memory-footprint",
       ],
     },
     {
@@ -61,6 +62,7 @@ const sidebars: SidebarsConfig = {
         "roadmap/p3-completion",
         "roadmap/p4-completion",
         "roadmap/p7-completion",
+        "roadmap/memory-scenarios",
         "roadmap/risks",
         "roadmap/design-system-and-explorer",
       ],

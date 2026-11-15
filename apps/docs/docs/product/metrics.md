@@ -16,7 +16,7 @@ gates**, not as a dashboard in someone else's cloud.
 | --- | --- | --- | --- |
 | Time to first result | < 120 ms from `⌘K` to painted results | Input timestamp → damage commit, 1k warm queries | Shell |
 | Frame stability | p99 < 8.3 ms at 120 Hz | Compositor frame trace, 10-minute idle + load | Compositor |
-| Idle footprint | ≤ 200 MB RAM, < 0.5% CPU | `smem`/`procps` snapshot 60 s after boot | Platform |
+| Idle footprint | ≤ 200 MB RAM, < 0.5% CPU | `scripts/memory-report.sh`: Σ PSS + resident DRM (or machine used), 60 s after boot and after a fixed workload | Platform |
 | Isolation incidents | 0 in red-team suite | Capability fuzz + cross-agent read attempts | aetherd |
 
 The first three are **speed**. The fourth is the reason the system exists: a fast
@@ -61,6 +61,11 @@ The last three are P3 compositor measurements on the same development host; the
 
 These are **reference-host measurements**, not promises about the target machine.
 They exist to catch regressions and to keep the optimisation work honest.
+
+Idle footprint is **not** in that table: no target run exists yet. The harness is
+`scripts/memory-report.sh`, and the difference between "attributed" and "machine"
+is defined in [memory footprint](/architecture/memory-footprint). Until the 7700K
+run is recorded, 200 MB stays a budget.
 
 ## What is deliberately not measured
 

@@ -107,6 +107,25 @@ test.describe("marketing site", () => {
     await expect(lightbox).toHaveCount(0);
   });
 
+  test("filters the gallery and steps through captures in the lightbox", async ({ page }) => {
+    await page.goto("/#screenshots");
+
+    const filters = page.getByRole("group", { name: "Filter captures" });
+    await filters.getByRole("button", { name: "Windows 2" }).click();
+    await expect(page.locator(".shot__image")).toHaveCount(3);
+    await expect(page.getByRole("button", { name: "Open screenshot: Streaming chat" })).toHaveCount(0);
+
+    await filters.getByRole("button", { name: "All 5" }).click();
+    await expect(page.locator(".shot__image")).toHaveCount(6);
+
+    await page.getByRole("button", { name: "Open screenshot: Command palette" }).click();
+    const lightbox = page.locator(".lightbox");
+    await expect(lightbox.locator(".lightbox__count")).toContainText("01");
+    await page.keyboard.press("ArrowRight");
+    await expect(lightbox.locator(".lightbox__count")).toContainText("02");
+    await expect(lightbox.locator(".lightbox__title")).toContainText("Indexed explorer");
+  });
+
   test("roadmap CTA opens the docs roadmap", async ({ page }) => {
     await page.goto("/#roadmap");
     await page

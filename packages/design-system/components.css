@@ -567,6 +567,7 @@
 }
 
 .ds-segment[aria-selected="true"],
+.ds-segment[aria-pressed="true"],
 .ds-segment.is-active {
   background: var(--ds-surface-solid);
   color: var(--ds-text);

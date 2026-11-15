@@ -19,6 +19,7 @@ aether-damage     damage regions, merging, clipping
 aether-layout     equal-column tiling
 aether-pacing     frame deadlines
 aether-scene      surfaces, z-order, hit testing
+aether-cache      byte-bounded LRU for chrome buffers
 aether-compositor facade + prelude + demo binary
 ```
 

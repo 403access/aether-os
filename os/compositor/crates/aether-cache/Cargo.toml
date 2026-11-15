@@ -1,0 +1,8 @@
+[package]
+name = "aether-cache"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Byte-bounded LRU cache for Aether's compositor chrome"
+
+[dependencies]

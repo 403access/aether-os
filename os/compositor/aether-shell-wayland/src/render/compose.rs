@@ -56,8 +56,20 @@ impl App {
         elements.reverse();
         if std::env::var_os("AETHER_TEXT_STATS").is_some() {
             println!(
-                "aether-shell: text rasterizations={} output={:?}",
-                self.text_rasterizations, output
+                "aether-shell: text rasterizations={} cache_bytes={} cache_entries={} cache_evictions={} output={:?}",
+                self.text_rasterizations,
+                self.text_cache.bytes(),
+                self.text_cache.len(),
+                self.text_cache.evictions(),
+                output
+            );
+            println!(
+                "aether-shell: chrome cache bytes icons={} panels={} rounds={} tops={} backgrounds={}",
+                self.chrome_icons.bytes(),
+                self.chrome_panels.bytes(),
+                self.chrome_rounds.bytes(),
+                self.chrome_tops.bytes(),
+                self.chrome_background.bytes()
             );
         }
         let damage = self
@@ -343,43 +355,52 @@ impl App {
         }
 
         // Text labels. Cache by content/scale/colour so static chrome does not
-        // rasterize and upload the same bitmap every frame.
-        let mut rasterized = false;
+        // rasterize and upload the same bitmap every frame. The cache is
+        // byte-bounded: a changing status line or a scrolling explorer must not
+        // retain every label it has ever drawn.
         for (text, x, y, scale, color) in labels {
             let base_scale = *scale & 0xff;
             let bold = *scale >= 2 || (*scale & 0x100) != 0;
             let key = (text.clone(), *scale, *color, bold);
-            let buffer = self.text_cache.entry(key).or_insert_with(|| {
-                rasterized = true;
+            let mut uncached = None;
+            if !self.text_cache.contains(&key) {
                 let bitmap = match self.font.as_ref() {
                     Some(font) => {
                         font.render(text, crate::app::App::text_px(base_scale), *color, bold)
                     }
                     None => TextBitmap::render(text, base_scale.max(1), *color),
                 };
-                MemoryRenderBuffer::from_slice(
+                let bytes = bitmap.pixels().len() + text.len() + 64;
+                let buffer = MemoryRenderBuffer::from_slice(
                     bitmap.pixels(),
                     Fourcc::Abgr8888,
                     (bitmap.width() as i32, bitmap.height() as i32),
                     1,
                     Transform::Normal,
                     None,
-                )
-            });
-            if rasterized {
+                );
                 self.text_rasterizations += 1;
-                rasterized = false;
+                if bytes <= self.text_cache.budget() {
+                    self.text_cache.insert(key.clone(), buffer, bytes);
+                } else {
+                    // An oversized label is still drawn this frame; it simply
+                    // is not retained. Dropping the element would be a visual
+                    // bug, not a saving.
+                    uncached = Some(buffer);
+                }
             }
-            if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
-                renderer,
-                ((*x - offset.0) as f64, (*y - offset.1) as f64),
-                buffer,
-                None,
-                None,
-                None,
-                Kind::Unspecified,
-            ) {
-                elements.push(AetherRenderElement::from(element));
+            if let Some(buffer) = self.text_cache.get(&key).or(uncached.as_ref()) {
+                if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
+                    renderer,
+                    ((*x - offset.0) as f64, (*y - offset.1) as f64),
+                    buffer,
+                    None,
+                    None,
+                    None,
+                    Kind::Unspecified,
+                ) {
+                    elements.push(AetherRenderElement::from(element));
+                }
             }
         }
     }

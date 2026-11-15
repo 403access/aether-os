@@ -16,6 +16,7 @@ aether-damage        Region, merging, clipping                  (geometry)
 aether-layout        master/stack tiling                        (geometry)
 aether-pacing        FramePacer, deadlines, missed frames       (no deps)
 aether-scene         Surface, Layer, Scene, hit testing          (geometry, damage)
+aether-cache         byte-bounded LRU for chrome buffers          (std)
 aether-shell         windows, workspaces, focus, FramePlan      (all core crates)
 aether-text          8x8 bitmap text -> RGBA buffer              (font8x8)
 aether-desktop       XDG .desktop discovery + icons/Exec         (std)
@@ -39,6 +40,7 @@ Dependency direction is one-way. There are no cycles and no optional GPU code.
 | `aether-layout` | You place windows/tiles without a compositor |
 | `aether-pacing` | You need a frame deadline scheduler |
 | `aether-scene` | You model surfaces, z-order and hit testing |
+| `aether-cache` | You need a byte-bounded buffer cache |
 | `aether-shell` | You need windows, workspaces, focus or frame plans |
 | `aether-text` | You need cropped bitmap text as RGBA pixels |
 | `aether-desktop` | You need to discover/parse launchable XDG apps and PNG icons |

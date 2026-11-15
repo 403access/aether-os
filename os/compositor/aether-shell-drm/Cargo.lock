@@ -17,6 +17,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "aether-cache"
+version = "0.1.0"
+
+[[package]]
 name = "aether-cursor"
 version = "0.1.0"
 
@@ -89,6 +93,7 @@ name = "aether-shell-wayland"
 version = "0.1.0"
 dependencies = [
  "aether-audio",
+ "aether-cache",
  "aether-cursor",
  "aether-desktop",
  "aether-files",

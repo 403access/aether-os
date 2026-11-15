@@ -83,8 +83,12 @@ conversation. That is the point; hiding it behind `free -m` is worse.
 
 ## S1 — Bounded, byte-accounted caches
 
+**Status.** Core implemented: `crates/aether-cache` provides `BudgetCache`, and
+the text, icon, panel, round and top caches use it. Remaining from this scenario:
+the pinned working set and the idle trim (S6).
+
 **Why.** F1 and F2 are the only findings that make a *quieter* session heavier.
-The current caches are keyed by content and geometry and never evict. A user who
+The caches were keyed by content and geometry and never evicted. A user who
 watches one hour of windowed video (status bar visible) can add hundreds of
 megabytes (audit, "Growth arithmetic") without touching the keyboard.
 
@@ -157,10 +161,13 @@ and no frame-time regression against the P2 baseline.
 
 ## S3 — One background per output, not per style
 
+**Status.** Implemented: the cache is keyed by output size and replaces the
+buffer when the style changes; the byte budget evicts resize history.
+
 **Why.** A full-output background is 7.9 MiB at 1080p (CPU) and another 7.9 MiB as
-a GPU texture. The cache key includes every theme field, so cycling modes, tones,
-backgrounds, caustics, effects and speeds accumulates one full-screen pair per
-combination visited.
+a GPU texture. The cache key used to include every theme field, so cycling modes,
+tones, backgrounds, caustics, effects and speeds accumulated one full-screen pair
+per combination visited.
 
 **How.**
 
@@ -320,6 +327,10 @@ wake-to-first-present time and do not reset while a frame is in flight.
 stays within the input→paint budget.
 
 ## S9 — Observability: make cache bytes visible
+
+**Status.** Partial: `AETHER_TEXT_STATS=1` now prints text cache bytes, entries,
+evictions and per-class chrome bytes. The task-manager panel and the benchmark
+JSON fields are still open.
 
 **Why.** A memory regression is invisible until someone runs an external harness.
 The task manager already shows per-process RSS; the shell knows its own cache

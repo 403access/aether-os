@@ -52,6 +52,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "aether-cache"
+version = "0.1.0"
+
+[[package]]
 name = "aether-chat"
 version = "0.1.0"
 dependencies = [

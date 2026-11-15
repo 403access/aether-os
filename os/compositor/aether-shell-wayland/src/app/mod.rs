@@ -32,6 +32,7 @@ use std::error::Error;
 use std::sync::Arc;
 
 use aether_audio::SystemAudio;
+use aether_cache::BudgetCache;
 use aether_cursor::{CursorShape, CursorTheme};
 use aether_geometry::Size as AetherSize;
 use aether_layout::LayoutConfig;
@@ -81,6 +82,19 @@ pub(crate) struct CursorCacheEntry {
 /// Cache key for rasterized rounded panels: size, radius, fill and border.
 pub(crate) type PanelCacheKey = (u32, u32, u32, [u8; 4], Option<[u8; 4]>);
 
+/// Byte budgets for compositor chrome buffers, in CPU-side RGBA bytes. GPU
+/// textures mirror these allocations, so the effective cost is roughly twice
+/// the budget. Values are sized to hold the live overlay set with headroom
+/// while refusing to retain history from earlier interactions.
+const TEXT_CACHE_BYTES: usize = 8 * 1024 * 1024;
+const ICON_CACHE_BYTES: usize = 1024 * 1024;
+const PANEL_CACHE_BYTES: usize = 6 * 1024 * 1024;
+const ROUND_CACHE_BYTES: usize = 2 * 1024 * 1024;
+const TOP_CACHE_BYTES: usize = 1024 * 1024;
+/// Backgrounds are one per active output size. The budget covers two QHD
+/// outputs (or one 4K plus a secondary) and evicts resize history.
+const BACKGROUND_CACHE_BYTES: usize = 48 * 1024 * 1024;
+
 pub struct App {
     display_handle: DisplayHandle,
     compositor_state: CompositorState,
@@ -112,15 +126,15 @@ pub struct App {
     full_damage: bool,
     damage: Vec<Rectangle<i32, Physical>>,
     pub(crate) icons: HashMap<String, MemoryRenderBuffer>,
-    pub(crate) text_cache: HashMap<(String, u32, [u8; 4], bool), MemoryRenderBuffer>,
+    pub(crate) text_cache: BudgetCache<(String, u32, [u8; 4], bool), MemoryRenderBuffer>,
     pub(crate) text_rasterizations: u64,
     pub(crate) font: Option<FontRenderer>,
-    pub(crate) chrome_icons: HashMap<(String, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
-    pub(crate) chrome_panels: HashMap<PanelCacheKey, Arc<MemoryRenderBuffer>>,
-    pub(crate) chrome_rounds: HashMap<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
-    pub(crate) chrome_tops: HashMap<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
+    pub(crate) chrome_icons: BudgetCache<(String, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
+    pub(crate) chrome_panels: BudgetCache<PanelCacheKey, Arc<MemoryRenderBuffer>>,
+    pub(crate) chrome_rounds: BudgetCache<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
+    pub(crate) chrome_tops: BudgetCache<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_background:
-        HashMap<(u32, u32, crate::render::BackgroundStyle), Arc<MemoryRenderBuffer>>,
+        BudgetCache<(u32, u32), (crate::render::BackgroundStyle, Arc<MemoryRenderBuffer>)>,
     pub(crate) cursor_buffers: HashMap<CursorShape, CursorCacheEntry>,
     pub(crate) cursor_theme: Option<CursorTheme>,
     pub(crate) client_cursor: Option<CursorShape>,
@@ -219,14 +233,14 @@ impl App {
             full_damage: true,
             damage: Vec::new(),
             icons: HashMap::new(),
-            text_cache: HashMap::new(),
+            text_cache: BudgetCache::new(TEXT_CACHE_BYTES),
             text_rasterizations: 0,
             font: FontRenderer::discover(),
-            chrome_icons: HashMap::new(),
-            chrome_panels: HashMap::new(),
-            chrome_rounds: HashMap::new(),
-            chrome_tops: HashMap::new(),
-            chrome_background: HashMap::new(),
+            chrome_icons: BudgetCache::new(ICON_CACHE_BYTES),
+            chrome_panels: BudgetCache::new(PANEL_CACHE_BYTES),
+            chrome_rounds: BudgetCache::new(ROUND_CACHE_BYTES),
+            chrome_tops: BudgetCache::new(TOP_CACHE_BYTES),
+            chrome_background: BudgetCache::new(BACKGROUND_CACHE_BYTES),
             cursor_buffers: HashMap::new(),
             cursor_theme: Some(CursorTheme::discover()),
             client_cursor: None,

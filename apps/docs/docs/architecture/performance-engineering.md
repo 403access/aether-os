@@ -105,6 +105,11 @@ appear in a process's `smaps_rollup`; a PSS-only report undercounts a 1080p
 session by ~16 MiB. The full rationale and the findings are in
 [memory footprint](/architecture/memory-footprint).
 
+Chrome buffers are capped by `BudgetCache` (`crates/aether-cache`): 8 MiB for
+text, 10 MiB across icon/panel/round/top buffers, and one background per active
+output size. Set `AETHER_TEXT_STATS=1` to print the cache bytes, entry count and
+eviction count alongside the rasterization counter.
+
 Rules for the memory harness mirror the latency rules: record the machine and
 process set, measure after use as well as at boot, keep the raw JSON, and never
 compare across hosts.

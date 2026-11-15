@@ -34,11 +34,12 @@ pointer when the code moves.
 - **Idle time does not create memory; it keeps what use created.** The compositor
   blocks correctly with zero frames, but nothing evicts the labels and panels
   rendered before the user stopped.
-- **Two caches are unbounded.** Every unique text label and every geometry-keyed
-  chrome panel is retained forever, as a CPU bitmap and a GPU texture (F1, F2).
-- **The status bar is the multiplier.** While anything animates, it samples once
-  per second, produces a new label, a new pill and new cache entries — with no
-  keyboard input (F1).
+- **Two caches were unbounded.** Every unique text label and every geometry-keyed
+  chrome panel used to be retained forever, as a CPU bitmap and a GPU texture.
+  They are now byte-bounded LRUs (F1, F2).
+- **The status bar was the multiplier.** While anything animated, it sampled once
+  per second and produced a new label, a new pill and new cache entries — with no
+  keyboard input (F1). Bounding the caches makes that history collectable.
 - **The largest GPU item is invisible to PSS.** Two 1080p scan-out buffers are
   ~16 MiB of kernel GEM that `smem` does not see (F4).
 - **The index daemon is paid for but not connected** to the shell, so ~12–18 MiB
@@ -97,8 +98,8 @@ the union of:
 | --- | --- | --- | --- |
 | Shell binary + heap | Rust, font, cursor theme, Wayland state, scene | ~10–25 MiB | Unmeasured |
 | Scan-out swapchain | 2 buffers per output × mode × 4 B | 15.8 MiB at FHD; 28.1 MiB at QHD | Modelled |
-| Background bitmap | one full-output RGBA per cached style | +7.9 MiB per style (CPU) + 7.9 MiB (GPU) | Modelled |
-| Text / chrome caches | retained forever, see F1/F2 | 0 MiB on a fresh boot, unbounded after use | Modelled |
+| Background bitmap | one full-output RGBA per active output size, replaced on style change | +7.9 MiB per output (CPU) + 7.9 MiB (GPU) | Modelled |
+| Text / chrome caches | byte-bounded LRUs, see F1/F2 | 0 MiB on a fresh boot; ≤ ~20 MiB CPU after use | Modelled |
 | `aether-index` | 20k filename documents, inotify watches, 1 MiB ring file | ~12–18 MiB **while unused by the shell** (F5) | Modelled |
 | Shell file list | 2,000-file synchronous scan when the socket is not set | ~0.6–1 MiB | Modelled |
 | PipeWire + WirePlumber | realtime graph, device objects | ~15–30 MiB | Unmeasured |
@@ -121,18 +122,26 @@ Two consequences follow.
 
 ## Findings
 
-### F1 — The text cache is unbounded and grows with every changing label
+> **Status.** F1–F3 are addressed by the cache-budget change: `BudgetCache`
+> caps text at 8 MiB and icons/panels/rounds/tops at 1 + 6 + 2 + 1 MiB of CPU
+> bytes (GPU textures mirror them), and keeps one background per output size
+> under a 48 MiB ceiling. The findings below
+> record the unbounded state that motivated the budgets; they remain the review
+> checklist for new caches. S1's pinned set and idle trim are not implemented.
+
+### F1 — The text cache was unbounded and grew with every changing label
 
 `App.text_cache` is a `HashMap<(String, u32, [u8; 4], bool), MemoryRenderBuffer>`
 (`os/compositor/aether-shell-wayland/src/app/mod.rs`, field `App::text_cache`).
-Labels are inserted on miss and **never removed or evicted**
-(`os/compositor/aether-shell-wayland/src/render/compose.rs:352`). Each value owns
-the CPU RGBA bitmap *and* a cached GPU texture in Smithay's
+Labels were inserted on miss and **never removed or evicted**
+(`os/compositor/aether-shell-wayland/src/render/compose.rs`). Each value owns the
+CPU RGBA bitmap *and* a cached GPU texture in Smithay's
 `MemoryRenderBufferInner` (`textures: HashMap<ErasedContextId, …>`), so one entry
-costs roughly `width × height × 4` bytes twice.
+costs roughly `width × height × 4` bytes twice. The cache is now an 8 MiB
+`BudgetCache`: the live overlay set stays resident, history is evicted.
 
-The cache is keyed by the exact rendered string, which means every value that
-changes produces a new permanent entry:
+The cache is keyed by the exact rendered string, so every value that changes
+creates a new entry; the budget decides how long it survives:
 
 | Surface | What changes | Labels per change |
 | --- | --- | --- |
@@ -146,14 +155,16 @@ The status bar is the worst case because it is always visible and its text conta
 `frame_ms` and CPU/memory counters. While *something else* animates — video, a
 streaming chat, a client repainting — a frame is due every second, `poll_status`
 samples (`app/status.rs:54`), the label changes, and a new bitmap plus a new
-status-pill panel (keyed by width) are cached. **No user input is required.**
+status-pill panel (keyed by width) are created. **No user input is required.**
+They are now evictable like any other entry.
 
-### F2 — Chrome caches are unbounded and keyed by geometry
+### F2 — Chrome caches were unbounded and keyed by geometry
 
-`chrome_icons`, `chrome_panels`, `chrome_rounds`, `chrome_tops` and
-`chrome_background` are all plain `HashMap`s with no eviction
-(`os/compositor/aether-shell-wayland/src/render/chrome.rs:16-100`). Keys include
-width, height, radius, fill and border colour.
+`chrome_icons`, `chrome_panels`, `chrome_rounds` and `chrome_tops` were plain
+`HashMap`s with no eviction
+(`os/compositor/aether-shell-wayland/src/render/chrome.rs`). Keys include width,
+height, radius, fill and border colour. They are now byte-bounded per class
+(1/6/2/1 MiB).
 
 - Chat bubbles are cached by their content-derived height, so every distinct
   message length is a new panel bitmap.
@@ -162,14 +173,15 @@ width, height, radius, fill and border colour.
 - Theme changes alter every colour, so a full palette of panels is regenerated per
   theme.
 
-### F3 — The background cache stores a full-output bitmap per style
+### F3 — The background cache stored a full-output bitmap per style
 
-`chrome_background` keys on `(width, height, BackgroundStyle)`
+`chrome_background` used to key on `(width, height, BackgroundStyle)`
 (`app/mod.rs`, field `App::chrome_background`). `BackgroundStyle` is the
 cross-product of mode (4), background (2), tone (3), caustics (2), effects (2) and
-speed (3) — up to 288 distinct styles (`render/chrome/primitives.rs:12`). Only used
-styles are cached, but a user cycling themes can accumulate dozens of 7.9 MiB CPU
-buffers plus their GPU twins. Nothing evicts the previous style.
+speed (3) — up to 288 distinct styles (`render/chrome/primitives.rs:12`). A user
+cycling themes could accumulate dozens of 7.9 MiB CPU buffers plus their GPU
+twins. The cache is now keyed by output size and replaces the buffer when the
+style changes, so one style per active output is resident.
 
 ### F4 — GPU buffers are invisible to the current measurement story
 
@@ -337,6 +349,11 @@ Protocol:
 
 The harness also reports `Shmem`, `SReclaimable` and the scan-out/DRM resident
 bytes, because a PSS-only report would let F4 pass unnoticed.
+
+`AETHER_TEXT_STATS=1` now prints the text cache bytes, entries, evictions and the
+per-class chrome bytes next to the rasterization counter. Compare those with the
+harness: a flat process footprint and a flat cache byte count after the workload
+is the pass condition.
 
 ## What is already fine
 

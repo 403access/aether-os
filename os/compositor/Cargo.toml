@@ -5,6 +5,7 @@ members = [
   "crates/aether-layout",
   "crates/aether-pacing",
   "crates/aether-scene",
+  "crates/aether-cache",
   "crates/aether-compositor",
   "crates/aether-shell",
   "crates/aether-text",
@@ -33,6 +34,7 @@ aether-damage = { path = "crates/aether-damage" }
 aether-layout = { path = "crates/aether-layout" }
 aether-pacing = { path = "crates/aether-pacing" }
 aether-scene = { path = "crates/aether-scene" }
+aether-cache = { path = "crates/aether-cache" }
 aether-shell = { path = "crates/aether-shell" }
 aether-text = { path = "crates/aether-text" }
 aether-desktop = { path = "crates/aether-desktop" }

@@ -45,6 +45,9 @@ pointer when the code moves.
 - **The index daemon is wired** to the shell: the session exports its socket and
   the shell queries it. Its query path no longer case-folds every title per
   comparison, and the worker no longer wakes five times a second (F5, F8).
+- **The IME is opt-in.** fcitx5 is no longer enabled by default; the option is
+  `aether.inputMethod.enable` and the enabled delta still needs a target run
+  (F6).
 - **There was no gate.** `scripts/memory-report.sh` now measures attributed PSS +
   resident DRM, machine use, and idle growth.
 
@@ -104,17 +107,17 @@ the union of:
 | `aether-index` | 20k filename documents, inotify watches, 1 MiB ring file | ~12–18 MiB, now serving the palette (F5) | Modelled |
 | Shell file list | 2,000-file synchronous scan when the socket is not set | ~0.6–1 MiB | Modelled |
 | PipeWire + WirePlumber | realtime graph, device objects | ~15–30 MiB | Unmeasured |
-| IME (fcitx5) | enabled by default in `configuration.nix` | ~25–45 MiB with addons | Unmeasured |
+| IME (fcitx5) | opt-in via `aether.inputMethod.enable`; off by default | 0 MiB unless enabled; ~25–45 MiB when enabled | Unmeasured |
 | systemd, udev, D-Bus, NetworkManager, bluetoothd | base OS | ~60–110 MiB | Unmeasured |
 | journald runtime journal | tmpfs, `RuntimeMaxUse=128M` | cap 128 MiB; actual size unmeasured | Unmeasured |
 | Kernel, slab, driver state | kernel | ~50–100 MiB | Unmeasured |
-| **Session sum** (shell + index + audio + IME) | | **~60–120 MiB before caches** | Modelled |
+| **Session sum** (shell + index + audio) | | **~40–75 MiB before caches**; +25–45 with the IME | Modelled |
 
 Two consequences follow.
 
 1. **The shell has room, but not much.** A 30–50 MiB shell budget
    ([compositor](/architecture/compositor#performance-budget)) plus index and audio
-   is plausible. The IME and the base OS are not free.
+   is plausible. The base OS is not free; the IME is now opt-in.
 2. **The 200 MB budget only works as a session/attributed number.** Whole-machine
    `MemTotal - MemAvailable` on a minimal NixOS with journald, NetworkManager and
    PipeWire is unlikely to sit under 200 MiB before the shell starts. Either the
@@ -222,14 +225,15 @@ next step if queries become hotter. Nor is this the memory profile of the BM25
 index the documentation describes, which would be several times larger than this
 filename-only table. Fix the representation before that feature lands (S4).
 
-### F6 — The session process floor includes an IME nobody measured
+### F6 — The IME is opt-in but still unmeasured
 
-`i18n.inputMethod.enable = true; type = "fcitx5";`
-(`os/nixos/configuration.nix:62`) and `p11-kit`/D-Bus activation make fcitx5 part
-of the session. If it autostarts, it is the largest optional process in the
-session. There is no measurement of it and no opt-out path documented. PipeWire
-and WirePlumber are justified; a default IME is a UX assumption that deserves a
-number.
+The reference session used to enable fcitx5 unconditionally, with its addons and
+GTK/Qt IM modules loaded into every client that honoured them. It is now an
+option, `aether.inputMethod.enable`, default `false`
+(`os/nixos/input-method.nix`). Enabling it is modelled at 25–45 MiB for the daemon
+and addons plus per-client module overhead; that number needs a target run.
+PipeWire and WirePlumber remain justified; the IME is a policy choice, not a
+compositor dependency — the `text-input`/IME protocol works without it.
 
 ### F7 — There is no idle-memory gate, and the quoted tool is not installed
 
@@ -371,7 +375,8 @@ is the pass condition.
 
 1. Which processes are actually in the session at 60 s? (`systemctl --user
    list-units`, `ps -eo pid,user,rss,comm --sort=-rss`)
-2. Does fcitx5 autostart, and with which addons?
+2. How much does `aether.inputMethod.enable = true` add on this kernel, with which
+   addons? The floor run should show 0 while it stays off.
 3. How many scan-out buffers does i915 keep resident at 1080p and 1440p?
 4. What is the whole-machine footprint after boot on 6.6+ with this kernel
    fragment, and how much of it is the journald runtime journal?

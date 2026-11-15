@@ -30,6 +30,7 @@ a new failure mode.
 | R14 | Supply-chain compromise in a dependency | Low | High | Pinned inputs, minimal deps, no postinstall scripts, sandboxed agents | all |
 | R15 | MicroVM complexity consumes the performance budget | Medium | Medium | Defer to P8; measure VM tax before shipping | P8 |
 | R16 | Unbounded text/chrome caches grow idle RSS after ordinary use | High | High | Bound and byte-account caches; `memory-report.sh` gate after a fixed workload | P2/P3 |
+| R17 | Opt-in IME leaves an operator without CJK input after install | Low | Medium | One-line `aether.inputMethod.enable`; documented in first-boot with the measurement step | P1 |
 
 ## Assumption failures
 

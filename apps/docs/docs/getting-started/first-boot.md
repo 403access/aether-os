@@ -157,7 +157,13 @@ sudo nix-env --list-generations --profile /nix/var/nix/profiles/system
 | Keyboard layout | `console.keyMap`, or `loadkeys` for the session |
 | SSH (temporary) | `services.openssh.enable = true;` then rebuild |
 | Extra packages | `environment.systemPackages` |
+| Input method (CJK/IME) | `aether.inputMethod.enable = true;` then rebuild |
 | Disk scratch | `filesystem.nix` and `disko.nix` must agree |
+
+Input methods are **off by default**: fcitx5 plus addons is the largest optional
+process in the session. Enabling the option above installs and announces fcitx5;
+measure both states with `./scripts/memory-report.sh --gate attributed` and record
+the difference in the ledger.
 
 Do not edit `/etc/nixos` and expect it to survive a repo-based rebuild. Pick one
 source of truth: this repository.

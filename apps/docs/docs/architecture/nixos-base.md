@@ -40,6 +40,8 @@ os/nixos/
 ├── kernel.nix                # custom kernel package and cmdline
 ├── kernel/kestrel.config     # kernel config fragment
 ├── filesystem.nix            # XFS mount options, scratch ext4, tmpfs
+├── input-method.nix          # opt-in fcitx5 (off by default)
+├── input-method.nix          # opt-in fcitx5 (off by default)
 ├── disk.nix                  # the one disk device to install on
 ├── disko.nix                 # GPT layout used by the installer
 ├── installer.nix             # live ISO environment

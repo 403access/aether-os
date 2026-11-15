@@ -13,6 +13,7 @@
     ./hardware/kabylake-7700k.nix
     ./kernel.nix
     ./filesystem.nix
+    ./input-method.nix
     ./services.nix
     ./users.nix
   ];
@@ -59,10 +60,8 @@
 
   time.timeZone = "Europe/Berlin";
 
-  i18n.inputMethod = {
-    enable = true;
-    type = "fcitx5";
-  };
+  # Input methods are opt-in; set aether.inputMethod.enable = true in this
+  # file for CJK/IME input (see os/nixos/input-method.nix).
   console.font = "Lat2-Terminus16";
 
   environment = {

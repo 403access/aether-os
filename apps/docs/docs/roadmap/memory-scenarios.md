@@ -25,7 +25,7 @@ creates, and the measurement that proves it worked.
 | S2 | Glyph atlas + layout cache | Removes per-label bitmaps | 5–10× less text memory, fewer draws | L | medium |
 | S3 | One background per output | Stops full-screen style accumulation | saves 8–24 MiB per stale style | S | low |
 | S4 | Compact the file index | Wired and allocation-light queries | −30–50% index RSS before BM25 | M | low |
-| S5 | Measure and gate the process floor | Removes optional services | 25–45 MiB if the IME is opt-out | S | product |
+| S5 | Measure and gate the process floor | IME is opt-in by default | 0 MiB default; 25–45 MiB when enabled | S | product |
 | S6 | Idle reclamation (trim after use) | Returns freed memory | approaches boot footprint | M | medium |
 | S7 | zram safety valve (optional) | Prevents OOM instead of a leak | no steady-state saving | S | latency |
 | S8 | Release scan-out buffers on blank | Frees GPU memory while dark | 16–28 MiB at FHD/QHD | M | resume |
@@ -42,8 +42,8 @@ output when implemented.
    of megabytes to an otherwise idle session.
 3. **S3 + S9** — small changes that close the full-screen background case and make
    cache growth legible in the task manager.
-4. **S5** — a policy decision with a large fixed payoff. Do it before more
-   optimisation hides the floor.
+4. **S5** — the IME is opt-in now; measure the enabled delta on the target and
+   record the session floor.
 5. **S2** — do it only if S1's cap is still routinely hit, or when real shaping
    lands. The atlas is the right long-term design but a bigger change.
 6. **S4** — wiring and query allocation hygiene landed; finish the representation
@@ -231,30 +231,35 @@ on the existing bench. Record both in the claims table.
 
 ## S5 — Measure and gate the process floor
 
-**Why.** The session's fixed cost is not only the shell. fcitx5 is enabled by
-default, PipeWire/WirePlumber are required, and systemd/journald/udev/D-Bus/
-NetworkManager come with the base. Without numbers, the 200 MB budget is a guess
-about services the compositor does not own.
+**Status.** Implemented as an opt-in: `aether.inputMethod.enable` defaults to
+`false` in `os/nixos/input-method.nix`. Remaining: run the harness with it off and
+on and record the delta as the session floor.
+
+**Why.** The session's fixed cost is not only the shell. fcitx5 used to be
+enabled by default, PipeWire/WirePlumber are required, and systemd/journald/udev/
+D-Bus/NetworkManager come with the base. Without numbers, the 200 MB budget is a
+guess about services the compositor does not own.
 
 **How.**
 
-- Run the harness with the IME active and inactive; record both.
-- Make the IME opt-in for the reference machine, or document how to disable it and
-  what is lost. The compositor already implements `text-input`/IME protocol
-  support; it does not require fcitx5 specifically.
+- Keep the `text-input`/IME protocol support; it is independent of fcitx5.
+- For CJK/IME input, add `aether.inputMethod.enable = true;` to
+  `configuration.nix` and rebuild. One line, documented in the first-boot page.
+- Run the harness with the option off and on; record both. The off run is the
+  session floor.
 - Audit `systemd --user` units and D-Bus activation at 60 s; remove anything that
   is not part of the product (the repository already disables printing, avahi,
   fwupd, SSH).
 - Keep PipeWire and WirePlumber: audio is a commitment and the memory buys policy.
 
-**Expected impact.** 25–45 MiB if the IME is not started, and an honest floor
-number the rest of the budget can be planned against.
+**Expected impact.** 0 MiB by default; 25–45 MiB when an operator opts in, and an
+honest floor number the rest of the budget can be planned against.
 
 **Risk.** Product/UX: an operator who needs an IME must be able to enable it in
 one documented step. Do not silently remove input methods.
 
-**Gate.** The attributed footprint with each optional unit disabled; the
-difference is recorded in the ledger as the "session floor".
+**Gate.** The attributed footprint with the IME off and on; the difference is
+recorded in the ledger as the "session floor".
 
 ## S6 — Idle reclamation after use
 

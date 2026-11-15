@@ -70,7 +70,7 @@ session in the shell; T9 packages and reconciles.
 | Wayland backend compile | `cargo check` passed; tests need Linux `libxkbcommon` |
 | Glass-to-glass < 40 ms on target | **budget**; harness committed, target run pending |
 | No CPU pixel copies on target | **budget**; audit + DMA-BUF descriptor committed, compositor import pending |
-| p99 frame interval < 1.5× target | **budget**; dev-host synthetic p99 20.47 ms at 60 fps (budget 25 ms), target run pending |
+| p99 frame interval < 1.5× target | **budget**; dev-host synthetic p99 19.4–20.5 ms at 60 fps (budget 25 ms), target run pending |
 
 ### Dev-host measurements
 
@@ -79,8 +79,8 @@ M3; the target is the i7-7700K.
 
 | Observation | Value | Where |
 | --- | --- | --- |
-| Software H.264 encode, 320×180, release | p99 2.62 ms | `artifacts/p7/bench.ndjson` |
-| Synthetic pipeline interval, 60 fps | p99 20.47 ms (1.5× budget 25 ms) | `artifacts/p7/bench.ndjson` |
+| Software H.264 encode, 320×180, release | p99 2.2–2.6 ms across runs | `artifacts/p7/bench.ndjson` |
+| Synthetic pipeline interval, 60 fps | p99 19.4–20.5 ms (1.5× budget 25 ms) | `artifacts/p7/bench.ndjson` |
 | str0m DTLS/ICE loopback connect | 37 ms | `artifacts/p7/webrtc.json` |
 | DMA-BUF copy audit | 0 copied bytes, 1 descriptor | `artifacts/p7/capture.json` |
 | Pairing/session/welcome | audit chain verifies | `artifacts/p7/pair.json` |

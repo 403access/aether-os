@@ -91,8 +91,8 @@ source. Everything else is a target or an aspiration.
 
 | Claim | Label | Evidence |
 | --- | --- | --- |
-| Software H.264 encodes 320×180 at p99 2.62 ms | **Measured (dev host)** | `aether-remote bench`, `artifacts/p7/bench.ndjson`; not the target |
-| Synthetic pipeline interval p99 20.47 ms at 60 fps | **Measured (dev host)** | 1.5× budget is 25 ms; target run pending |
+| Software H.264 encodes 320×180 at p99 ≈2.2–2.6 ms | **Measured (dev host)** | `aether-remote bench`, `artifacts/p7/bench.ndjson`; not the target |
+| Synthetic pipeline interval p99 ≈19.4–20.5 ms at 60 fps | **Measured (dev host)** | 1.5× budget is 25 ms; target run pending |
 | DMA-BUF descriptor records zero copied bytes | **Measured (unit test)** | `aether-remote` capture tests + `artifacts/p7/capture.json` |
 | str0m loopback establishes DTLS and opens the input channel | **Measured (integration test)** | `aether-remote` transport test; input echoes; `artifacts/p7/webrtc.json` |
 | Pairing code is one-shot, expiring, and the audit chain verifies | **Measured (unit test)** | `aether-remote` session tests |

@@ -73,10 +73,10 @@ At 60 fps the frame interval is 16.7 ms; the target is 2–3 frames end to end. 
 | --- | --- | --- |
 | Rate control | CBR (or low-latency VBR) | Predictable pacing |
 | B-frames | 0 | No reordering delay |
-| GOP | Intra-refresh, no IDR | Eliminates keyframe spikes |
+| GOP | Periodic IDR (software path); intra-refresh on the target encoder | Bounded recovery; no hidden queue |
 | Lookahead | 0 | Latency |
 | Slice mode | One slice per frame | Parallel encode without frame delay |
-| Profile | H.264 high (compat), HEVC/AV1 (preferred) | Client capability negotiation |
+| Profile | H.264 Constrained Baseline (software fallback), high/HEVC/AV1 on hardware | Client capability negotiation |
 | Bitrate | 8–25 Mbps LAN, adaptive | Quality vs. congestion |
 
 Adaptive bitrate uses WebRTC’s congestion control; the encoder is re-configured, not

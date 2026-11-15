@@ -214,7 +214,9 @@ impl EncoderConfig {
             slice_mode: "one access unit per frame",
             rate_control: "CBR (adaptive)",
             gop: self.keyframe_interval,
-            intra_refresh: true,
+            // The software encoder emits periodic IDRs. Intra-refresh is a
+            // target-encoder feature, not a claim about this path.
+            intra_refresh: false,
         }
     }
 }
@@ -603,7 +605,7 @@ mod tests {
         assert_eq!(contract.bframes, 0);
         assert_eq!(contract.lookahead, 0);
         assert_eq!(contract.gop, 120);
-        assert!(contract.intra_refresh);
+        assert!(!contract.intra_refresh);
         let mut odd = config;
         odd.width = 1919;
         assert_eq!(odd.validate(), Err(EncodeError::OddDimensions));

@@ -21,3 +21,10 @@ pub const AUDIO_ROW_HEIGHT: u32 = 40;
 pub const AUDIO_ROW_SPACING: u32 = 46;
 pub const AUDIO_ROWS_TOP: i32 = 94;
 pub const AUDIO_SECTION_GAP: i32 = 28;
+
+/// Remote-session overlay geometry (620 x 420, three audited actions).
+pub const REMOTE_PANEL_WIDTH: u32 = 620;
+pub const REMOTE_PANEL_HEIGHT: u32 = 420;
+pub const REMOTE_ROW_HEIGHT: u32 = 38;
+pub const REMOTE_ROW_SPACING: i32 = 44;
+pub const REMOTE_ROWS_TOP: i32 = 244;

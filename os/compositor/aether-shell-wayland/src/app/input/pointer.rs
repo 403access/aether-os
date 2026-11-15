@@ -246,6 +246,20 @@ impl App {
                 self.end_input(started);
                 return;
             }
+            if self.shell.remote_open() {
+                if let Some(index) = self.shell.remote_action_at(point) {
+                    self.shell.remote_select(index);
+                    self.activate_remote();
+                } else if !self.shell.remote_rect().contains(point) {
+                    self.shell.close_remote();
+                    self.mark_full_damage();
+                }
+                self.mark_remote_damage();
+                self.cursor = cursor_for(self);
+                self.mark_cursor_damage(self.pointer_pos);
+                self.end_input(started);
+                return;
+            }
             if self.shell.chat_open() {
                 if self.shell.chat_rect().contains(point) {
                     self.mark_chat_damage();

@@ -268,6 +268,9 @@ pub fn icon_svg(name: &str, color: &str) -> Option<String> {
         "explorer" => {
             r#"<rect x="2.8" y="3.5" width="14.4" height="13" rx="2"/><path d="M2.8 7.5h14.4M8 7.5v9"/>"#
         }
+        "remote" => {
+            r#"<rect x="2.5" y="3.5" width="15" height="10" rx="2"/><path d="M7 16.5h6M10 13.5v3"/><path d="m15 8 2 2-2 2"/>"#
+        }
         _ => return None,
     };
     Some(format!(

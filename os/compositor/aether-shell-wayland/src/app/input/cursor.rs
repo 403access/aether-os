@@ -66,6 +66,12 @@ pub(crate) fn cursor_for(state: &App) -> CursorShape {
         }
         return CursorShape::Arrow;
     }
+    if state.shell.remote_open() {
+        if state.shell.remote_action_at(point).is_some() {
+            return CursorShape::Pointer;
+        }
+        return CursorShape::Arrow;
+    }
     if state.shell.chat_open() && state.shell.chat_rect().contains(point) {
         return CursorShape::Arrow;
     }

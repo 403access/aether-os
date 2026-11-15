@@ -12,6 +12,7 @@ use std::io::{self, BufWriter};
 use std::path::Path;
 
 use aether_geometry::{Rect, Size};
+use aether_shell::remote::RemoteLayer;
 use aether_shell::{FrameItem, FramePlan};
 use aether_text::TextBitmap;
 
@@ -221,6 +222,16 @@ fn lerp(from: u8, to: u8, t: f32) -> u8 {
 
 /// Render a shell frame to a canvas. `debug_damage` overlays the damage region.
 pub fn render(plan: &FramePlan, debug_damage: bool) -> Canvas {
+    render_with_remote(plan, None, debug_damage)
+}
+
+/// Render a shell frame plus the backend-owned remote overlay. The overlay lives
+/// outside the scene graph (like audio), so the caller passes it explicitly.
+pub fn render_with_remote(
+    plan: &FramePlan,
+    remote: Option<&RemoteLayer>,
+    debug_damage: bool,
+) -> Canvas {
     let mut canvas = Canvas::new(plan.viewport);
     canvas.background();
 
@@ -229,6 +240,10 @@ pub fn render(plan: &FramePlan, debug_damage: bool) -> Canvas {
             aether_scene::Layer::OVERLAY => draw_overlay(&mut canvas, item),
             _ => draw_window(&mut canvas, item),
         }
+    }
+
+    if let Some(layer) = remote {
+        draw_remote(&mut canvas, plan, layer);
     }
 
     draw_status(&mut canvas, plan);
@@ -320,6 +335,171 @@ fn draw_overlay(canvas: &mut Canvas, item: &FrameItem) {
     }
 }
 
+fn draw_remote(canvas: &mut Canvas, plan: &FramePlan, layer: &RemoteLayer) {
+    let width =
+        aether_shell::design::REMOTE_PANEL_WIDTH.min(plan.viewport.width.saturating_sub(32));
+    let height =
+        aether_shell::design::REMOTE_PANEL_HEIGHT.min(plan.viewport.height.saturating_sub(32));
+    let rect = Rect::new(
+        (plan.viewport.width.saturating_sub(width) / 2) as i32,
+        (plan.viewport.height.saturating_sub(height) / 2) as i32,
+        width,
+        height,
+    );
+    canvas.fill_rect(rect, OVERLAY);
+    canvas.stroke_rect(rect, ACCENT, 2);
+    canvas.fill_rect(
+        Rect::new(rect.x + 1, rect.y + 1, rect.width.saturating_sub(2), 56),
+        TITLE_BAR,
+    );
+    canvas.draw_text(rect.x + 20, rect.y + 14, "Remote display", 1, TEXT);
+    canvas.draw_text(
+        rect.x + 20,
+        rect.y + 34,
+        &format!(
+            "{} · {} · {} viewer{}",
+            layer.state().label(),
+            layer.tier(),
+            layer.viewers(),
+            if layer.viewers() == 1 { "" } else { "s" }
+        ),
+        1,
+        if layer.state() == aether_shell::remote::RemoteState::Streaming {
+            TEXT_DIM
+        } else {
+            [232, 197, 71, 255]
+        },
+    );
+    if layer.recording() {
+        canvas.fill_rect(
+            Rect::new(rect.x + rect.width as i32 - 72, rect.y + 18, 54, 22),
+            [60, 18, 24, 255],
+        );
+        canvas.fill_rect(
+            Rect::new(rect.x + rect.width as i32 - 64, rect.y + 25, 7, 7),
+            [255, 90, 90, 255],
+        );
+        canvas.draw_text(
+            rect.x + rect.width as i32 - 50,
+            rect.y + 23,
+            "REC",
+            1,
+            [255, 215, 215, 255],
+        );
+    }
+
+    canvas.fill_rect(
+        Rect::new(rect.x + 18, rect.y + 72, rect.width.saturating_sub(36), 78),
+        [3, 25, 34, 255],
+    );
+    canvas.draw_text(
+        rect.x + 32,
+        rect.y + 84,
+        "ONE-SHOT PAIRING CODE",
+        1,
+        TEXT_DIM,
+    );
+    canvas.draw_text(rect.x + 32, rect.y + 102, layer.pairing_code(), 2, ACCENT);
+    canvas.draw_text(
+        rect.x + 32,
+        rect.y + 132,
+        &format!(
+            "session {} · {} · {}",
+            layer.session_id(),
+            layer.codec(),
+            if layer.software() {
+                "software encode"
+            } else {
+                "hardware encode"
+            }
+        ),
+        1,
+        TEXT_DIM,
+    );
+
+    let facts = [
+        (
+            "LATENCY",
+            layer
+                .latency_ms()
+                .map(|value| format!("{value:.1} ms p99"))
+                .unwrap_or_else(|| "—".to_string()),
+        ),
+        (
+            "BITRATE",
+            if layer.bitrate_kbps() > 0 {
+                format!("{:.1} Mbps", layer.bitrate_kbps() as f32 / 1000.0)
+            } else {
+                "—".to_string()
+            },
+        ),
+        (
+            "INPUT",
+            if layer.input_enabled() { "on" } else { "off" }.to_string(),
+        ),
+        (
+            "CLIPBOARD",
+            if layer.clipboard_enabled() {
+                "on"
+            } else {
+                "off"
+            }
+            .to_string(),
+        ),
+    ];
+    let column = (rect.width.saturating_sub(36)) / 2;
+    for (index, (name, value)) in facts.iter().enumerate() {
+        let x = rect.x + 18 + (index as i32 % 2) * column as i32;
+        let y = rect.y + 166 + (index as i32 / 2) * 42;
+        canvas.fill_rect(
+            Rect::new(x, y, column.saturating_sub(8), 34),
+            [9, 49, 63, 255],
+        );
+        canvas.draw_text(x + 10, y + 6, name, 1, TEXT_DIM);
+        canvas.draw_text(x + 10, y + 18, value, 1, TEXT);
+    }
+
+    let selected = layer.selected();
+    for index in 0..aether_shell::remote::RemoteAction::ALL.len() {
+        let row = Rect::new(
+            rect.x + 18,
+            rect.y
+                + aether_shell::design::REMOTE_ROWS_TOP
+                + index as i32 * aether_shell::design::REMOTE_ROW_SPACING,
+            rect.width.saturating_sub(36),
+            aether_shell::design::REMOTE_ROW_HEIGHT,
+        );
+        let active = index == selected;
+        canvas.fill_rect(
+            row,
+            if active {
+                [20, 78, 94, 255]
+            } else {
+                [9, 49, 63, 255]
+            },
+        );
+        if active {
+            canvas.fill_rect(Rect::new(row.x, row.y + 7, 3, row.height - 14), ACCENT);
+        }
+        canvas.draw_text(
+            row.x + 14,
+            row.y + 12,
+            &layer
+                .action_label(index)
+                .unwrap_or_else(|| "Action".to_string()),
+            1,
+            if active { TEXT } else { [165, 219, 229, 255] },
+        );
+    }
+    canvas.draw_text(
+        rect.x + 18,
+        rect.y + height as i32 - 22,
+        "↑↓ select   Enter activate   I input   C clipboard   Esc close",
+        1,
+        TEXT_DIM,
+    );
+}
+
 fn draw_status(canvas: &mut Canvas, plan: &FramePlan) {
     let height = 30.min(plan.viewport.height);
     let y = plan.viewport.height as i32 - height as i32;
@@ -385,6 +565,37 @@ mod tests {
             .as_chunks::<4>()
             .0
             .contains(&[255, 255, 255, 255]));
+    }
+
+    #[test]
+    fn renders_the_remote_overlay() {
+        let mut shell = Shell::new(Size::new(800, 600), LayoutConfig::default(), 120);
+        shell.add_window(WindowSpec::new("terminal", "aether.terminal"));
+        shell
+            .open_remote(RemoteLayer::demo())
+            .expect("remote overlay");
+        let plan = shell.frame(0).expect("frame");
+        let rendered = render_with_remote(&plan, shell.remote_layer(), false);
+        assert_eq!((rendered.width(), rendered.height()), (800, 600));
+        // The panel uses the accent border and the REC chip.
+        let accent_pixels = rendered
+            .pixels()
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .filter(|pixel| **pixel == ACCENT)
+            .count();
+        assert!(accent_pixels > 100);
+        let red_pixels = rendered
+            .pixels()
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .filter(|pixel| **pixel == [255, 90, 90, 255])
+            .count();
+        assert!(red_pixels >= 20);
+        let idle = render_with_remote(&plan, Some(&RemoteLayer::waiting("K7QM-2H4P")), false);
+        assert_ne!(rendered.pixels(), idle.pixels());
     }
 
     #[test]

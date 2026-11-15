@@ -13,6 +13,8 @@ pub struct StatusSnapshot {
     pub mem_used_mb: u64,
     pub mem_total_mb: u64,
     pub audio: String,
+    /// Active remote-session summary; empty when no session exists.
+    pub remote: String,
     pub frame_ms: f32,
 }
 
@@ -105,20 +107,22 @@ impl StatusSnapshot {
             mem_used_mb: used,
             mem_total_mb: total,
             audio: read_audio(),
+            remote: String::new(),
             frame_ms,
         }
     }
 
     pub fn label(&self) -> String {
-        format!(
-            "{} agents  {}%  {}/{} MB  {}  {:.1} ms",
-            self.agents,
-            self.cpu_percent,
-            self.mem_used_mb,
-            self.mem_total_mb,
-            self.audio,
-            self.frame_ms
-        )
+        let mut label = format!(
+            "{} agents  {}%  {}/{} MB  {}",
+            self.agents, self.cpu_percent, self.mem_used_mb, self.mem_total_mb, self.audio
+        );
+        if !self.remote.is_empty() {
+            label.push_str("  ");
+            label.push_str(&self.remote);
+        }
+        label.push_str(&format!("  {:.1} ms", self.frame_ms));
+        label
     }
 }
 
@@ -160,9 +164,11 @@ mod tests {
             mem_used_mb: 512,
             mem_total_mb: 2048,
             audio: "audio 65%".into(),
+            remote: "remote 18.4 ms · 12.0 Mbps · H.264".into(),
             frame_ms: 8.3,
         };
         let label = status.label();
+        assert!(label.contains("remote 18.4 ms"));
         assert!(label.contains("2 agents"));
         assert!(label.contains("17%"));
         assert!(label.contains("512/2048 MB"));

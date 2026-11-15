@@ -19,6 +19,7 @@
 
 pub mod audio;
 pub mod design;
+pub mod remote;
 
 use std::collections::HashMap;
 
@@ -326,6 +327,7 @@ pub struct Shell {
     explorer: Option<ExplorerState>,
     chat: Option<ChatState>,
     audio: Option<audio::AudioLayer>,
+    remote: Option<remote::RemoteLayer>,
     launchers: Vec<PaletteLauncher>,
     files: Vec<PaletteFile>,
     files_prefiltered: bool,
@@ -364,6 +366,7 @@ impl Shell {
             explorer: None,
             chat: None,
             audio: None,
+            remote: None,
             launchers: Vec::new(),
             files: Vec::new(),
             files_prefiltered: false,
@@ -1020,6 +1023,7 @@ impl Shell {
 
     /// Open the overlay centred in `output` and reset the query.
     pub fn open_overlay_on(&mut self, output: OutputId) -> Option<SurfaceId> {
+        self.close_remote();
         self.palette = PaletteState::default();
         self.overlay_output = Some(output);
         let bounds = self.output_bounds(output);
@@ -1126,6 +1130,7 @@ impl Shell {
     }
 
     pub fn open_chat(&mut self) -> Option<()> {
+        self.close_remote();
         if self.chat.is_none() {
             self.chat = Some(ChatState::default());
         }
@@ -1213,6 +1218,7 @@ impl Shell {
         self.close_overlay();
         self.close_explorer();
         self.close_chat();
+        self.close_remote();
         self.audio = Some(audio::AudioLayer::new(snapshot));
         Some(())
     }
@@ -1344,6 +1350,92 @@ impl Shell {
         self.audio.as_mut().map(|layer| layer.set_preset(preset))
     }
 
+    /// Open the remote-session overlay. The backend supplies a waiting layer
+    /// from the session service, or the deterministic demo fixture.
+    pub fn open_remote(&mut self, layer: remote::RemoteLayer) -> Option<()> {
+        self.close_overlay();
+        self.close_explorer();
+        self.close_chat();
+        self.close_audio();
+        self.remote = Some(layer);
+        Some(())
+    }
+
+    pub fn close_remote(&mut self) {
+        self.remote = None;
+    }
+
+    pub fn remote_open(&self) -> bool {
+        self.remote.is_some()
+    }
+
+    pub fn remote_layer(&self) -> Option<&remote::RemoteLayer> {
+        self.remote.as_ref()
+    }
+
+    pub fn remote_layer_mut(&mut self) -> Option<&mut remote::RemoteLayer> {
+        self.remote.as_mut()
+    }
+
+    pub fn remote_rect(&self) -> Rect {
+        let bounds = self
+            .primary_output()
+            .map(|output| output.rect)
+            .unwrap_or_else(|| Rect::from_size(self.viewport));
+        let width = design::REMOTE_PANEL_WIDTH
+            .min(bounds.width.saturating_sub(32))
+            .max(1);
+        let height = design::REMOTE_PANEL_HEIGHT
+            .min(bounds.height.saturating_sub(32))
+            .max(1);
+        Rect::new(
+            bounds.x + (bounds.width.saturating_sub(width) / 2) as i32,
+            bounds.y + (bounds.height.saturating_sub(height) / 2) as i32,
+            width,
+            height,
+        )
+    }
+
+    pub fn remote_action_rect(&self, index: usize) -> Option<Rect> {
+        if index >= remote::RemoteAction::ALL.len() {
+            return None;
+        }
+        let rect = self.remote_rect();
+        Some(Rect::new(
+            rect.x + 18,
+            rect.y + design::REMOTE_ROWS_TOP + index as i32 * design::REMOTE_ROW_SPACING,
+            rect.width.saturating_sub(36),
+            design::REMOTE_ROW_HEIGHT,
+        ))
+    }
+
+    pub fn remote_action_at(&self, point: Point) -> Option<usize> {
+        (0..remote::RemoteAction::ALL.len()).find(|index| {
+            self.remote_action_rect(*index)
+                .is_some_and(|rect| rect.contains(point))
+        })
+    }
+
+    pub fn remote_move_selection(&mut self, delta: isize) -> bool {
+        self.remote
+            .as_mut()
+            .is_some_and(|layer| layer.move_selection(delta))
+    }
+
+    pub fn remote_select(&mut self, index: usize) -> bool {
+        self.remote
+            .as_mut()
+            .is_some_and(|layer| layer.select(index))
+    }
+
+    pub fn remote_activate(&mut self) -> Option<remote::RemoteAction> {
+        self.remote.as_mut().and_then(|layer| layer.activate())
+    }
+
+    pub fn remote_status(&self) -> Option<String> {
+        self.remote.as_ref().and_then(|layer| layer.status_label())
+    }
+
     /// Explorer panel rect, centred in the primary output.
     pub fn explorer_rect(&self) -> Rect {
         self.primary_output()
@@ -1367,6 +1459,7 @@ impl Shell {
     }
 
     pub fn open_explorer(&mut self) -> Option<()> {
+        self.close_remote();
         if self.explorer.is_none() {
             self.explorer = Some(ExplorerState::default());
         }
@@ -3901,5 +3994,77 @@ mod focus_stack_tests {
         assert!(shell.focus_window(b));
         shell.close_window(b);
         assert_eq!(shell.focus_mru(1), Some(a));
+    }
+}
+
+#[cfg(test)]
+mod remote_overlay_tests {
+    use super::*;
+
+    fn shell() -> Shell {
+        Shell::new(Size::new(1440, 900), LayoutConfig::default(), 120)
+    }
+
+    #[test]
+    fn opens_centred_and_actions_are_hit_testable() {
+        let mut shell = shell();
+        shell.open_remote(remote::RemoteLayer::demo()).unwrap();
+        assert!(shell.remote_open());
+        let rect = shell.remote_rect();
+        assert!(rect.width >= 600);
+        assert_eq!(rect.x, (1440 - rect.width as i32) / 2);
+        for index in 0..remote::RemoteAction::ALL.len() {
+            let action = shell.remote_action_rect(index).unwrap();
+            let center = Point::new(
+                action.x + action.width as i32 / 2,
+                action.y + action.height as i32 / 2,
+            );
+            assert_eq!(shell.remote_action_at(center), Some(index));
+        }
+        assert_eq!(shell.remote_action_at(Point::new(0, 0)), None);
+        assert!(!shell.remote_select(3));
+    }
+
+    #[test]
+    fn actions_toggle_and_stop() {
+        let mut shell = shell();
+        shell.open_remote(remote::RemoteLayer::demo()).unwrap();
+        assert!(shell.remote_move_selection(1));
+        assert_eq!(
+            shell.remote_activate(),
+            Some(remote::RemoteAction::ToggleInput)
+        );
+        assert!(!shell.remote_layer().unwrap().input_enabled());
+        assert!(shell.remote_move_selection(1));
+        assert_eq!(
+            shell.remote_activate(),
+            Some(remote::RemoteAction::ToggleClipboard)
+        );
+        assert!(shell.remote_layer().unwrap().clipboard_enabled());
+        assert!(shell.remote_status().unwrap().contains("18.4 ms"));
+        shell.remote_select(0);
+        assert_eq!(
+            shell.remote_activate(),
+            Some(remote::RemoteAction::StopSession)
+        );
+        assert!(shell.remote_status().is_none());
+        shell.close_remote();
+        assert!(!shell.remote_open());
+    }
+
+    #[test]
+    fn opening_another_overlay_closes_remote() {
+        let mut shell = shell();
+        shell
+            .open_remote(remote::RemoteLayer::waiting("K7QM-2H4P"))
+            .unwrap();
+        shell.open_explorer().unwrap();
+        assert!(!shell.remote_open());
+        shell.open_remote(remote::RemoteLayer::demo()).unwrap();
+        shell.open_chat().unwrap();
+        assert!(!shell.remote_open());
+        shell.open_remote(remote::RemoteLayer::demo()).unwrap();
+        shell.open_overlay();
+        assert!(!shell.remote_open());
     }
 }

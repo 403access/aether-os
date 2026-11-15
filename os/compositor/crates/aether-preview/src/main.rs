@@ -8,7 +8,8 @@ use std::path::PathBuf;
 
 use aether_geometry::{Rect, Size};
 use aether_layout::LayoutConfig;
-use aether_preview::render;
+use aether_preview::{render, render_with_remote};
+use aether_shell::remote::RemoteLayer;
 use aether_shell::{Shell, WindowSpec};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -55,10 +56,52 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         second.items.len(),
         second.damage.area()
     );
+    // Remote overlay: live session and the waiting-for-viewer state.
+    let mut remote_shell = demo_shell();
+    remote_shell
+        .open_remote(RemoteLayer::demo())
+        .ok_or("remote overlay did not open")?;
+    let remote_plan = remote_shell
+        .frame(0)
+        .ok_or("remote frame was not scheduled")?;
+    render_with_remote(&remote_plan, remote_shell.remote_layer(), false)
+        .save_png(&out.join("remote.png"))?;
+
+    let mut waiting_shell = demo_shell();
+    waiting_shell
+        .open_remote(RemoteLayer::waiting("K7QM-2H4P"))
+        .ok_or("remote overlay did not open")?;
+    let waiting_plan = waiting_shell
+        .frame(0)
+        .ok_or("remote frame was not scheduled")?;
+    render_with_remote(&waiting_plan, waiting_shell.remote_layer(), false)
+        .save_png(&out.join("remote-idle.png"))?;
+
     println!(
-        "wrote {}/frame.png and {}/damage.png",
-        out.display(),
+        "wrote {}/frame.png, damage.png, remote.png and remote-idle.png",
         out.display()
     );
     Ok(())
+}
+
+fn demo_shell() -> Shell {
+    let mut shell = Shell::new(
+        Size::new(1920, 1200),
+        LayoutConfig {
+            gap: 10,
+            outer_gap: 16,
+        },
+        120,
+    );
+    for (title, app_id, size) in [
+        ("compositor.rs", "aether.shell", Size::new(1000, 800)),
+        ("indexer.rs", "aether.index", Size::new(760, 600)),
+        ("Chat · DeepSeek", "aether.chat", Size::new(600, 700)),
+        ("Files", "aether.files", Size::new(700, 520)),
+    ] {
+        let mut spec = WindowSpec::new(title, app_id);
+        spec.preferred_size = size;
+        shell.add_window(spec);
+    }
+    shell
 }

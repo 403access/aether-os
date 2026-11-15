@@ -96,7 +96,9 @@ impl TaskManagerState {
     }
 
     pub fn selected_process(&self) -> Option<&Process> {
-        self.process_rows().get(self.selected).map(|(_, process)| *process)
+        self.process_rows()
+            .get(self.selected)
+            .map(|(_, process)| *process)
     }
 
     pub fn refresh(&mut self, snapshot: SystemSnapshot) {

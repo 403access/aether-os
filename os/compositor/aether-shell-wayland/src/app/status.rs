@@ -66,6 +66,7 @@ impl App {
             self.agent_sessions.session_count(),
             self.frame_time_ms,
         );
+        self.status.remote = self.shell.remote_status().unwrap_or_default();
         self.status_cpu = crate::status::read_cpu();
         self.status_last = std::time::Instant::now();
     }

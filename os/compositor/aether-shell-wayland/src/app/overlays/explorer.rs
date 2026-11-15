@@ -14,6 +14,7 @@ impl App {
             self.shell.close_overlay();
             self.shell.close_chat();
             self.shell.close_audio();
+            self.shell.close_remote();
             let _ = self.shell.open_explorer();
             if let Some(worker) = self.index_worker.as_mut() {
                 let generation = worker.request_explorer();

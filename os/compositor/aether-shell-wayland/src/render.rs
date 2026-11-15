@@ -410,6 +410,7 @@ impl App {
             self.shell.explorer_open() && (output.is_none() || output == Some(primary));
         let chat_here = self.shell.chat_open() && (output.is_none() || output == Some(primary));
         let audio_here = self.shell.audio_open() && (output.is_none() || output == Some(primary));
+        let remote_here = self.shell.remote_open() && (output.is_none() || output == Some(primary));
         let shortcuts_here = self.shortcuts_open && (output.is_none() || output == Some(primary));
         let task_here = self.task_manager_open() && (output.is_none() || output == Some(primary));
 
@@ -1191,16 +1192,219 @@ impl App {
                 ));
             }
 
+            if remote_here {
+                let rect = self.shell.remote_rect();
+                let width = rect.width as i32;
+                let height = rect.height as i32;
+                let layer = self.shell.remote_layer().cloned();
+                if let Some(buffer) = self.chrome_panel(
+                    rect.width,
+                    rect.height,
+                    14,
+                    [7, 39, 51, 250],
+                    Some([127, 230, 255, 34]),
+                ) {
+                    panels.push((buffer, rect.x - 18, rect.y - 18));
+                }
+                if let Some(buffer) =
+                    self.chrome_round_top(rect.width.saturating_sub(2), 58, 13, [9, 49, 63, 255])
+                {
+                    panels.push((buffer, rect.x + 1, rect.y + 1));
+                }
+                display_icons.push((
+                    "remote".into(),
+                    20,
+                    [56, 214, 255, 255],
+                    rect.x + 18,
+                    rect.y + 18,
+                ));
+                labels.push((
+                    "Remote display".into(),
+                    rect.x + 50,
+                    rect.y + 12,
+                    2,
+                    [233, 251, 255, 255],
+                ));
+                if let Some(layer) = &layer {
+                    labels.push((
+                        format!(
+                            "{} · {} · {} viewer{}",
+                            layer.state().label(),
+                            layer.tier(),
+                            layer.viewers(),
+                            if layer.viewers() == 1 { "" } else { "s" }
+                        ),
+                        rect.x + 50,
+                        rect.y + 35,
+                        0,
+                        if layer.state() == aether_shell::remote::RemoteState::Streaming {
+                            [107, 169, 182, 255]
+                        } else {
+                            [232, 197, 71, 255]
+                        },
+                    ));
+                    if layer.recording() {
+                        if let Some(buffer) = self.chrome_round(54, 22, 6, [60, 18, 24, 245]) {
+                            panels.push((buffer, rect.x + width - 68, rect.y + 18));
+                        }
+                        if let Some(buffer) = self.chrome_round(7, 7, 4, [255, 90, 90, 255]) {
+                            panels.push((buffer, rect.x + width - 58, rect.y + 25));
+                        }
+                        labels.push((
+                            "REC".into(),
+                            rect.x + width - 46,
+                            rect.y + 23,
+                            0,
+                            [255, 215, 215, 255],
+                        ));
+                    }
+                    // Pairing block.
+                    if let Some(buffer) =
+                        self.chrome_round(rect.width.saturating_sub(36), 78, 10, [3, 25, 34, 230])
+                    {
+                        panels.push((buffer, rect.x + 18, rect.y + 72));
+                    }
+                    labels.push((
+                        "ONE-SHOT PAIRING CODE".into(),
+                        rect.x + 32,
+                        rect.y + 84,
+                        0,
+                        [107, 169, 182, 255],
+                    ));
+                    labels.push((
+                        layer.pairing_code().into(),
+                        rect.x + 32,
+                        rect.y + 100,
+                        2,
+                        [56, 214, 255, 255],
+                    ));
+                    labels.push((
+                        format!(
+                            "session {} · {} · {}",
+                            layer.session_id(),
+                            layer.codec(),
+                            if layer.software() {
+                                "software encode"
+                            } else {
+                                "hardware encode"
+                            }
+                        ),
+                        rect.x + 32,
+                        rect.y + 130,
+                        0,
+                        [165, 219, 229, 255],
+                    ));
+                    // Session facts.
+                    let facts_y = rect.y + 166;
+                    let latency = layer
+                        .latency_ms()
+                        .map(|value| format!("{value:.1} ms p99"))
+                        .unwrap_or_else(|| "—".to_string());
+                    let facts = [
+                        ("LATENCY", latency),
+                        (
+                            "BITRATE",
+                            if layer.bitrate_kbps() > 0 {
+                                format!("{:.1} Mbps", layer.bitrate_kbps() as f32 / 1000.0)
+                            } else {
+                                "—".to_string()
+                            },
+                        ),
+                        (
+                            "INPUT",
+                            if layer.input_enabled() { "on" } else { "off" }.to_string(),
+                        ),
+                        (
+                            "CLIPBOARD",
+                            if layer.clipboard_enabled() {
+                                "on"
+                            } else {
+                                "off"
+                            }
+                            .to_string(),
+                        ),
+                    ];
+                    let column = (width - 36) / 2;
+                    for (index, (name, value)) in facts.iter().enumerate() {
+                        let x = rect.x + 18 + (index as i32 % 2) * column;
+                        let y = facts_y + (index as i32 / 2) * 42;
+                        if let Some(buffer) =
+                            self.chrome_round((column - 8) as u32, 34, 8, [9, 49, 63, 210])
+                        {
+                            panels.push((buffer, x, y));
+                        }
+                        labels.push(((*name).into(), x + 10, y + 5, 0, [107, 169, 182, 255]));
+                        labels.push((value.clone(), x + 10, y + 18, 1, [233, 251, 255, 255]));
+                    }
+                    // Audited actions.
+                    let selected = layer.selected();
+                    for index in 0..aether_shell::remote::RemoteAction::ALL.len() {
+                        let Some(row) = self.shell.remote_action_rect(index) else {
+                            continue;
+                        };
+                        let active = index == selected;
+                        if let Some(buffer) = self.chrome_round(
+                            row.width,
+                            row.height,
+                            8,
+                            if active {
+                                [56, 214, 255, 46]
+                            } else {
+                                [9, 49, 63, 190]
+                            },
+                        ) {
+                            panels.push((buffer, row.x, row.y));
+                        }
+                        if active {
+                            if let Some(buffer) = self.chrome_round(
+                                3,
+                                row.height.saturating_sub(14),
+                                2,
+                                [56, 214, 255, 255],
+                            ) {
+                                panels.push((buffer, row.x, row.y + 7));
+                            }
+                        }
+                        labels.push((
+                            layer
+                                .action_label(index)
+                                .unwrap_or_else(|| "Action".to_string()),
+                            row.x + 14,
+                            row.y + 11,
+                            1,
+                            if active {
+                                [233, 251, 255, 255]
+                            } else {
+                                [165, 219, 229, 255]
+                            },
+                        ));
+                        if index == 0 {
+                            labels.push((
+                                "ends the session".into(),
+                                row.x + row.width as i32 - 140,
+                                row.y + 12,
+                                0,
+                                [107, 169, 182, 255],
+                            ));
+                        }
+                    }
+                    labels.push((
+                        "↑↓ select   Enter activate   I input   C clipboard   Esc close".into(),
+                        rect.x + 18,
+                        rect.y + height - 20,
+                        0,
+                        [107, 169, 182, 255],
+                    ));
+                }
+            }
+
             if task_here {
                 let bounds = self.task_rect();
                 let pane = self.task_pane_rect();
                 let width = bounds.width as i32;
                 let height = bounds.height as i32;
                 let (tab, selected, scroll, snapshot, process_rows, users, collapsed) = {
-                    let state = self
-                        .task_manager
-                        .as_ref()
-                        .expect("task manager is open");
+                    let state = self.task_manager.as_ref().expect("task manager is open");
                     let snapshot = state.snapshot().clone();
                     let process_rows: Vec<(usize, aether_system::Process)> = state
                         .process_rows()
@@ -1224,12 +1428,9 @@ impl App {
                 {
                     panels.push((buffer, bounds.x, bounds.y));
                 }
-                if let Some(buffer) = self.chrome_round(
-                    bounds.width.max(1),
-                    36,
-                    0,
-                    [5, 37, 48, 242],
-                ) {
+                if let Some(buffer) =
+                    self.chrome_round(bounds.width.max(1), 36, 0, [5, 37, 48, 242])
+                {
                     panels.push((buffer, bounds.x, bounds.y + height - 36));
                 }
                 if let Some(buffer) = self.chrome_panel(
@@ -1265,7 +1466,8 @@ impl App {
                 // Tabs.
                 let tabs_x = bounds.x + width / 2 - 180;
                 for (index, tab_item) in crate::task::TaskTab::ALL.into_iter().enumerate() {
-                    let tab_rect = AetherRect::new(tabs_x + index as i32 * 116, bounds.y + 15, 110, 32);
+                    let tab_rect =
+                        AetherRect::new(tabs_x + index as i32 * 116, bounds.y + 15, 110, 32);
                     if tab_item == tab {
                         if let Some(buffer) = self.chrome_round(110, 32, 8, [56, 214, 255, 38]) {
                             panels.push((buffer, tab_rect.x, tab_rect.y));
@@ -1317,13 +1519,7 @@ impl App {
                         snapshot.load[0]
                     ),
                 };
-                labels.push((
-                    subtitle,
-                    pane.x + 46,
-                    pane.y + 34,
-                    0,
-                    [107, 169, 182, 255],
-                ));
+                labels.push((subtitle, pane.x + 46, pane.y + 34, 0, [107, 169, 182, 255]));
                 let count = format!("{} tasks", snapshot.process_count);
                 labels.push((
                     count.clone(),
@@ -1340,27 +1536,100 @@ impl App {
                 ));
                 match tab {
                     crate::task::TaskTab::Processes => {
-                        labels.push(("PID".into(), pane.x + 16, header_y + 9, 0, [107, 169, 182, 255]));
-                        labels.push(("USER".into(), pane.x + 82, header_y + 9, 0, [107, 169, 182, 255]));
-                        labels.push(("CPU".into(), pane.x + 190, header_y + 9, 0, [107, 169, 182, 255]));
-                        labels.push(("MEM".into(), pane.x + 250, header_y + 9, 0, [107, 169, 182, 255]));
-                        labels.push(("STATE".into(), pane.x + 320, header_y + 9, 0, [107, 169, 182, 255]));
-                        labels.push(("COMMAND".into(), pane.x + 386, header_y + 9, 0, [107, 169, 182, 255]));
+                        labels.push((
+                            "PID".into(),
+                            pane.x + 16,
+                            header_y + 9,
+                            0,
+                            [107, 169, 182, 255],
+                        ));
+                        labels.push((
+                            "USER".into(),
+                            pane.x + 82,
+                            header_y + 9,
+                            0,
+                            [107, 169, 182, 255],
+                        ));
+                        labels.push((
+                            "CPU".into(),
+                            pane.x + 190,
+                            header_y + 9,
+                            0,
+                            [107, 169, 182, 255],
+                        ));
+                        labels.push((
+                            "MEM".into(),
+                            pane.x + 250,
+                            header_y + 9,
+                            0,
+                            [107, 169, 182, 255],
+                        ));
+                        labels.push((
+                            "STATE".into(),
+                            pane.x + 320,
+                            header_y + 9,
+                            0,
+                            [107, 169, 182, 255],
+                        ));
+                        labels.push((
+                            "COMMAND".into(),
+                            pane.x + 386,
+                            header_y + 9,
+                            0,
+                            [107, 169, 182, 255],
+                        ));
                     }
                     crate::task::TaskTab::Users => {
-                        labels.push(("UID".into(), pane.x + 16, header_y + 9, 0, [107, 169, 182, 255]));
-                        labels.push(("USER".into(), pane.x + 90, header_y + 9, 0, [107, 169, 182, 255]));
-                        labels.push(("PROCESSES".into(), pane.x + 230, header_y + 9, 0, [107, 169, 182, 255]));
-                        labels.push(("THREADS".into(), pane.x + 350, header_y + 9, 0, [107, 169, 182, 255]));
-                        labels.push(("CPU".into(), pane.x + 460, header_y + 9, 0, [107, 169, 182, 255]));
-                        labels.push(("MEM".into(), pane.x + 540, header_y + 9, 0, [107, 169, 182, 255]));
+                        labels.push((
+                            "UID".into(),
+                            pane.x + 16,
+                            header_y + 9,
+                            0,
+                            [107, 169, 182, 255],
+                        ));
+                        labels.push((
+                            "USER".into(),
+                            pane.x + 90,
+                            header_y + 9,
+                            0,
+                            [107, 169, 182, 255],
+                        ));
+                        labels.push((
+                            "PROCESSES".into(),
+                            pane.x + 230,
+                            header_y + 9,
+                            0,
+                            [107, 169, 182, 255],
+                        ));
+                        labels.push((
+                            "THREADS".into(),
+                            pane.x + 350,
+                            header_y + 9,
+                            0,
+                            [107, 169, 182, 255],
+                        ));
+                        labels.push((
+                            "CPU".into(),
+                            pane.x + 460,
+                            header_y + 9,
+                            0,
+                            [107, 169, 182, 255],
+                        ));
+                        labels.push((
+                            "MEM".into(),
+                            pane.x + 540,
+                            header_y + 9,
+                            0,
+                            [107, 169, 182, 255],
+                        ));
                     }
                     crate::task::TaskTab::Resources => {}
                 }
                 match tab {
                     crate::task::TaskTab::Processes => {
-                        let row_rects: Vec<AetherRect> =
-                            (0..visible).map(|index| self.task_row_rect(index)).collect();
+                        let row_rects: Vec<AetherRect> = (0..visible)
+                            .map(|index| self.task_row_rect(index))
+                            .collect();
                         for offset in 0..visible {
                             let index = scroll + offset;
                             let Some((depth, process)) = process_rows.get(index) else {
@@ -1371,12 +1640,9 @@ impl App {
                             };
                             let active = index == selected;
                             if active {
-                                if let Some(buffer) = self.chrome_round(
-                                    row.width,
-                                    row.height,
-                                    7,
-                                    [56, 214, 255, 46],
-                                ) {
+                                if let Some(buffer) =
+                                    self.chrome_round(row.width, row.height, 7, [56, 214, 255, 46])
+                                {
                                     panels.push((buffer, row.x, row.y));
                                 }
                                 if let Some(buffer) = self.chrome_round(
@@ -1438,13 +1704,7 @@ impl App {
                                 [107, 169, 182, 255],
                             ));
                             let command = truncate(&process.command, 70);
-                            labels.push((
-                                command,
-                                row.x + 370,
-                                row.y + 7,
-                                0,
-                                [217, 247, 255, 255],
-                            ));
+                            labels.push((command, row.x + 370, row.y + 7, 0, [217, 247, 255, 255]));
                         }
                         if process_rows.len() > visible {
                             let track = AetherRect::new(
@@ -1463,7 +1723,8 @@ impl App {
                                 .clamp(12.0, track.height as f32)
                                 as u32;
                             let offset = ((scroll as f32 / process_rows.len() as f32)
-                                * track.height as f32) as i32;
+                                * track.height as f32)
+                                as i32;
                             if let Some(buffer) =
                                 self.chrome_round(4, thumb, 2, [56, 214, 255, 190])
                             {
@@ -1472,8 +1733,9 @@ impl App {
                         }
                     }
                     crate::task::TaskTab::Users => {
-                        let row_rects: Vec<AetherRect> =
-                            (0..visible).map(|index| self.task_row_rect(index)).collect();
+                        let row_rects: Vec<AetherRect> = (0..visible)
+                            .map(|index| self.task_row_rect(index))
+                            .collect();
                         for offset in 0..visible {
                             let Some(user) = users.get(offset) else {
                                 break;
@@ -1536,21 +1798,12 @@ impl App {
                             (pane.x + 28 + card_w, content_y + card_h + 12, "DISK"),
                         ];
                         for (x, y, name) in cards {
-                            if let Some(buffer) = self.chrome_round(
-                                card_w as u32,
-                                card_h as u32,
-                                8,
-                                [5, 37, 48, 220],
-                            ) {
+                            if let Some(buffer) =
+                                self.chrome_round(card_w as u32, card_h as u32, 8, [5, 37, 48, 220])
+                            {
                                 panels.push((buffer, x, y));
                             }
-                            labels.push((
-                                name.into(),
-                                x + 12,
-                                y + 10,
-                                0,
-                                [107, 169, 182, 255],
-                            ));
+                            labels.push((name.into(), x + 12, y + 10, 0, [107, 169, 182, 255]));
                         }
                         // CPU card.
                         let cpu_x = pane.x + 28;
@@ -1587,9 +1840,16 @@ impl App {
                         // Memory card.
                         let mem_x = pane.x + 28 + card_w;
                         let mem_y = content_y + 28;
-                        let used = snapshot.memory.total_kb.saturating_sub(snapshot.memory.available_kb);
+                        let used = snapshot
+                            .memory
+                            .total_kb
+                            .saturating_sub(snapshot.memory.available_kb);
                         labels.push((
-                            format!("{:.1} / {:.1} GB", used as f64 / 1_048_576.0, snapshot.memory.total_kb as f64 / 1_048_576.0),
+                            format!(
+                                "{:.1} / {:.1} GB",
+                                used as f64 / 1_048_576.0,
+                                snapshot.memory.total_kb as f64 / 1_048_576.0
+                            ),
                             mem_x,
                             mem_y,
                             1,
@@ -1600,17 +1860,26 @@ impl App {
                             panels.push((buffer, mem_x, mem_y + 24));
                         }
                         let mem_fill = if snapshot.memory.total_kb > 0 {
-                            ((used as f64 / snapshot.memory.total_kb as f64) * mem_bar as f64) as u32
+                            ((used as f64 / snapshot.memory.total_kb as f64) * mem_bar as f64)
+                                as u32
                         } else {
                             0
                         };
                         if mem_fill > 0 {
-                            if let Some(buffer) = self.chrome_round(mem_fill, 8, 4, [56, 214, 255, 220]) {
+                            if let Some(buffer) =
+                                self.chrome_round(mem_fill, 8, 4, [56, 214, 255, 220])
+                            {
                                 panels.push((buffer, mem_x, mem_y + 24));
                             }
                         }
                         labels.push((
-                            format!("swap {:.1} / {:.1} GB", (snapshot.memory.swap_total_kb - snapshot.memory.swap_free_kb) as f64 / 1_048_576.0, snapshot.memory.swap_total_kb as f64 / 1_048_576.0),
+                            format!(
+                                "swap {:.1} / {:.1} GB",
+                                (snapshot.memory.swap_total_kb - snapshot.memory.swap_free_kb)
+                                    as f64
+                                    / 1_048_576.0,
+                                snapshot.memory.swap_total_kb as f64 / 1_048_576.0
+                            ),
                             mem_x,
                             mem_y + 40,
                             0,
@@ -1621,7 +1890,12 @@ impl App {
                         let net_y = content_y + card_h + 40;
                         for (index, interface) in snapshot.network.iter().take(5).enumerate() {
                             labels.push((
-                                format!("{}  ↓ {}/s  ↑ {}/s", interface.name, format_rate(interface.rx_rate), format_rate(interface.tx_rate)),
+                                format!(
+                                    "{}  ↓ {}/s  ↑ {}/s",
+                                    interface.name,
+                                    format_rate(interface.rx_rate),
+                                    format_rate(interface.tx_rate)
+                                ),
                                 net_x,
                                 net_y + index as i32 * 20,
                                 0,
@@ -1633,7 +1907,12 @@ impl App {
                         let disk_y = content_y + card_h + 40;
                         for (index, disk) in snapshot.disks.iter().take(5).enumerate() {
                             labels.push((
-                                format!("{}  r {}/s  w {}/s", disk.name, format_rate(disk.read_rate), format_rate(disk.write_rate)),
+                                format!(
+                                    "{}  r {}/s  w {}/s",
+                                    disk.name,
+                                    format_rate(disk.read_rate),
+                                    format_rate(disk.write_rate)
+                                ),
                                 disk_x,
                                 disk_y + index as i32 * 20,
                                 0,
@@ -1641,7 +1920,10 @@ impl App {
                             ));
                         }
                         labels.push((
-                            format!("load {:.2} {:.2} {:.2}", snapshot.load[0], snapshot.load[1], snapshot.load[2]),
+                            format!(
+                                "load {:.2} {:.2} {:.2}",
+                                snapshot.load[0], snapshot.load[1], snapshot.load[2]
+                            ),
                             disk_x,
                             disk_y + 112,
                             0,
@@ -1687,7 +1969,12 @@ impl App {
                     [165, 219, 229, 255],
                 ));
                 labels.push((
-                    format!("mem {:.1}/{:.1} GB", (snapshot.memory.total_kb - snapshot.memory.available_kb) as f64 / 1_048_576.0, snapshot.memory.total_kb as f64 / 1_048_576.0),
+                    format!(
+                        "mem {:.1}/{:.1} GB",
+                        (snapshot.memory.total_kb - snapshot.memory.available_kb) as f64
+                            / 1_048_576.0,
+                        snapshot.memory.total_kb as f64 / 1_048_576.0
+                    ),
                     bounds.x + width - 180,
                     status_y + 12,
                     0,
@@ -2011,8 +2298,16 @@ impl App {
                 }
             }
 
-            if !task_here && !explorer_here && self.shell.fullscreen_window_on(chrome_output).is_none() {
-                if !chat_here && !audio_here && !shortcuts_here && self.shell.overlay().is_none() {
+            if !task_here
+                && !explorer_here
+                && self.shell.fullscreen_window_on(chrome_output).is_none()
+            {
+                if !chat_here
+                    && !audio_here
+                    && !remote_here
+                    && !shortcuts_here
+                    && self.shell.overlay().is_none()
+                {
                     let bar = crate::topbar::layout(self.shell.output_bounds(chrome_output));
                     if let Some(buffer) =
                         self.chrome_round(bar.rect.width, bar.rect.height, 10, [5, 37, 48, 225])

@@ -11,6 +11,7 @@ impl App {
     pub(crate) fn open_task_manager(&mut self) {
         self.shortcuts_open = false;
         self.shell.close_audio();
+        self.shell.close_remote();
         self.shell.close_explorer();
         self.shell.close_chat();
         let snapshot = self.task_monitor.sample();

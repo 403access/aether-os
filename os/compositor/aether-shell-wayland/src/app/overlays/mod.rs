@@ -8,6 +8,7 @@ pub(crate) mod audio;
 pub(crate) mod chat;
 pub(crate) mod explorer;
 pub(crate) mod palette;
+pub(crate) mod remote;
 pub(crate) mod shortcuts;
 pub(crate) mod task_manager;
 pub(crate) mod topbar;

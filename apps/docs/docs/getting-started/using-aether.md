@@ -339,7 +339,10 @@ Notes:
 - The pairing code is one-shot. Restart the host, or omit `--code` and copy the
   printed code, for another pairing.
 - The host still streams its synthetic 640×360 pattern; binding the compositor's
-  DMA-BUFs is the remaining P7 task.
+  DMA-BUFs is the remaining P7 task. The page reads the host's `/health` document
+  and shows a **synthetic test source** badge over the video, so the test pattern
+  is never mistaken for the desktop. A host that captures the compositor would
+  report `source: compositor` and the badge would read **live desktop**.
 
 The `#remote` panel on the marketing page is a demo of the same client state
 machine with synthetic frames; it does not connect to a host.

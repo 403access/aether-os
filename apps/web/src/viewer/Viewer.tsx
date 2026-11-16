@@ -46,6 +46,31 @@ function initialSignalUrl(): string {
 }
 
 /**
+ * The host publishes `/signal` and `/health` side by side. Derive the health
+ * URL so a non-default signal endpoint still resolves its own status document.
+ */
+function healthUrl(signalUrl: string): string {
+  try {
+    const parsed = new URL(signalUrl);
+    parsed.pathname = parsed.pathname.replace(/\/signal\/?$/, "/health");
+    return parsed.toString();
+  } catch {
+    return signalUrl.replace(/\/signal\/?$/, "/health");
+  }
+}
+
+/**
+ * `synthetic` is the host's moving test pattern; `compositor` will mean the
+ * frames come from the real desktop. The page must say which one is on screen.
+ */
+function sourceLabel(source: string | null): string {
+  if (source === null || source === "") return "source unknown";
+  if (source === "synthetic") return "synthetic test source";
+  if (source === "compositor") return "live desktop";
+  return source;
+}
+
+/**
  * The live page negotiates H.264 into a `<video>` element, so "can I decode"
  * is the media element's answer, not `VideoDecoder`'s. The host's tier ladder
  * uses the `webcodecs` flag as its "client can render video" bit.
@@ -134,6 +159,7 @@ export function Viewer() {
   const [stats, setStats] = useState<LiveStats>(EMPTY_STATS);
   const [inputEnabled, setInputEnabled] = useState(false);
   const [pointerLocked, setPointerLocked] = useState(false);
+  const [source, setSource] = useState<string | null>(null);
 
   const live = phase === "live";
 
@@ -207,6 +233,15 @@ export function Viewer() {
     setCodec("—");
     setChannelState("closed");
     setPhase("connecting");
+    setSource(null);
+    void fetch(healthUrl(url))
+      .then((response) => (response.ok ? response.json() : null))
+      .then((body: unknown) => {
+        if (body !== null && typeof body === "object" && "source" in body) {
+          setSource(String((body as { source: unknown }).source));
+        }
+      })
+      .catch(() => undefined);
 
     let transport!: HttpSignalTransport;
     const client = new RemoteClient({
@@ -366,7 +401,8 @@ export function Viewer() {
         <p className="viewer__lede">
           Pair with a local <code>aether-remote serve</code>. The page posts the hello,
           answers the str0m offer, renders the H.264 track and sends scancodes over the
-          input channel. Nothing leaves the loopback interface.
+          input channel. Nothing leaves the loopback interface. The host currently streams
+          a synthetic test pattern; the badge over the video names the source.
         </p>
       </header>
 
@@ -435,6 +471,12 @@ export function Viewer() {
           <span className={`viewer__rec ${live ? "viewer__rec--live" : ""}`}>
             {live ? "recording" : "ready"}
           </span>
+          <span
+            className={`viewer__source ${source === "synthetic" ? "viewer__source--synthetic" : ""}`}
+            data-testid="viewer-source"
+          >
+            {sourceLabel(source)}
+          </span>
           <span>{pointerLocked ? "pointer locked" : inputEnabled ? "input armed" : "input off"}</span>
         </div>
         <video
@@ -453,8 +495,7 @@ export function Viewer() {
               ? "Negotiating WebRTC…"
               : "No session. Start the host, enter its code and connect."}
           </p>
-        )}
-      </section>
+        )}      </section>
 
       <dl className="viewer__hud" data-testid="viewer-hud">
         <div>
@@ -488,6 +529,10 @@ export function Viewer() {
         <div>
           <dt>Input channel</dt>
           <dd>{channelState}</dd>
+        </div>
+        <div>
+          <dt>Source</dt>
+          <dd data-testid="viewer-hud-source">{sourceLabel(source)}</dd>
         </div>
       </dl>
 

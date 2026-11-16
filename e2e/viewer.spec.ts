@@ -154,6 +154,16 @@ async function stubSignaling(page: Page, code: string): Promise<void> {
   });
 }
 
+async function stubHealth(page: Page, source: string): Promise<void> {
+  await page.route("**/health", async (route) => {
+    await route.fulfill({
+      status: 200,
+      headers: { ...CORS, "content-type": "application/json" },
+      body: JSON.stringify({ ok: true, code: "K7QM-2H4P", source }),
+    });
+  });
+}
+
 test.describe("live viewer", () => {
   test("pairs, streams, updates the HUD, sends input and stops", async ({ page }) => {
     const errors: string[] = [];
@@ -163,6 +173,7 @@ test.describe("live viewer", () => {
     });
     await installPeerConnectionDouble(page);
     await stubSignaling(page, "K7QM2H4P");
+    await stubHealth(page, "synthetic");
 
     await page.goto("/viewer.html?code=K7QM2H4P");
     await expect(page.getByRole("heading", { name: "The desktop, in a tab." })).toBeVisible();
@@ -183,6 +194,12 @@ test.describe("live viewer", () => {
     await expect(hud).toContainText("h264");
     await expect(hud).toContainText("640×360", { timeout: 5_000 });
     await expect(hud).toContainText("240");
+    await expect(page.getByTestId("viewer-source")).toContainText(
+      "synthetic test source",
+    );
+    await expect(page.getByTestId("viewer-hud-source")).toContainText(
+      "synthetic test source",
+    );
     await expect(page.locator(".viewer__rec")).toContainText("recording");
 
     await page.getByLabel("Send input").check();
@@ -215,6 +232,7 @@ test.describe("live viewer", () => {
   test("shows the host's pairing error", async ({ page }) => {
     await installPeerConnectionDouble(page);
     await stubSignaling(page, "K7QM2H4P");
+    await stubHealth(page, "synthetic");
 
     await page.goto("/viewer.html?code=ZZZZZZZZ");
     await page.getByRole("button", { name: "Connect" }).click();

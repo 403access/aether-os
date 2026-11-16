@@ -94,6 +94,7 @@ roadmap doubles as the change ledger.
 | `feat(web): add the live remote viewer page` | Multi-page build, viewer UI/HUD/input, mocked e2e |
 | `test(remote): verify the live viewer end to end` | Opt-in live Playwright spec against the real host |
 | `docs(remote): document the browser live viewer` | Architecture, runbook, FAQ, claims, README, changelog |
+| `fix(remote): label the synthetic host source` | `/health` + status `source`, viewer badge/HUD, e2e assertions |
 
 ## Risks
 

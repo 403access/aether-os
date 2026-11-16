@@ -212,4 +212,7 @@ bun run dev:web
 Use system Chrome for the current H.264-only host; Playwright's bundled Chromium
 often omits the proprietary decoder. The code is one-shot, so restart the host (or
 omit `--code` and copy the printed code) for another pairing. The source is the
-synthetic 640×360 pattern until the compositor exports its DMA-BUFs.
+synthetic 640×360 pattern until the compositor exports its DMA-BUFs. The host
+reports which source is live (`synthetic` today, `compositor` once bound) in
+`/health` and in the status document, and the page derives the health URL from
+the signal URL and labels the video accordingly.

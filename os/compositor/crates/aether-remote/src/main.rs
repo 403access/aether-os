@@ -194,6 +194,7 @@ fn serve(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
         status_path: flag(args, "--status").map(PathBuf::from),
         code,
         run_for: seconds.map(Duration::from_secs),
+        source: "synthetic".to_string(),
     };
     aether_remote::serve::serve(config)?;
     Ok(())

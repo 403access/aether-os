@@ -1,3 +1,14 @@
+## v0.1.0-alpha.75
+
+- Label the host's frame source so the synthetic test pattern is never mistaken
+  for the desktop. `aether-remote serve` now publishes `source` in `/health` and
+  in the status document (currently `synthetic`; `compositor` is reserved for the
+  real capture binding). The live viewer derives the health URL from the signal
+  URL, shows a **synthetic test source** badge over the video and a **Source**
+  row in the HUD, and reads **live desktop** if a host reports `compositor`.
+- Verification: Rust `aether-remote` tests, mocked viewer e2e with a stubbed
+  `/health`, and the opt-in live spec.
+
 ## v0.1.0-alpha.74
 
 - Add the **live browser viewer** at `/viewer.html`. It pairs with a real

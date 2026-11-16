@@ -35,6 +35,9 @@ pub struct ServeConfig {
     pub status_path: Option<PathBuf>,
     pub code: Option<String>,
     pub run_for: Option<Duration>,
+    /// What the encoder is reading. `synthetic` is the test pattern; a future
+    /// compositor binding will report `compositor`.
+    pub source: String,
 }
 
 impl Default for ServeConfig {
@@ -49,6 +52,7 @@ impl Default for ServeConfig {
             status_path: None,
             code: None,
             run_for: None,
+            source: "synthetic".to_string(),
         }
     }
 }
@@ -295,6 +299,10 @@ fn handle_http(
     pairing: &crate::session::PairingCode,
 ) -> Result<(), Box<dyn std::error::Error>> {
     stream.set_read_timeout(Some(Duration::from_secs(2)))?;
+    // BSD/macOS `accept` inherits the listener's `O_NONBLOCK`, so a request that
+    // arrives in pieces would fail with `EAGAIN`. The listener stays
+    // non-blocking; each request is handled with a bounded blocking read.
+    stream.set_nonblocking(false)?;
     let mut buffer = Vec::new();
     let mut chunk = [0u8; 4096];
     loop {
@@ -351,6 +359,7 @@ fn respond(
             "code": pairing.display(),
             "session": state.session.as_ref().map(|session| session.id.clone()),
             "frames": state.frames,
+            "source": config.source,
         });
         return write_http(stream, 200, &serde_json::to_string(&body)?);
     }
@@ -516,6 +525,7 @@ fn write_status(
         "input": true,
         "clipboard": false,
         "software": true,
+        "source": config.source,
         "frames": state.frames,
         "udp": state.udp_addr.to_string(),
     });
@@ -559,5 +569,6 @@ mod tests {
         assert!(config.http_addr.ip().is_loopback());
         assert_eq!(config.fps, 30);
         assert_eq!(config.width, 640);
+        assert_eq!(config.source, "synthetic");
     }
 }

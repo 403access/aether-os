@@ -35,6 +35,9 @@ test.describe("live viewer against aether-remote", () => {
     await expect(page.getByTestId("viewer-hud")).toContainText("640×360", {
       timeout: 15_000,
     });
+    await expect(page.getByTestId("viewer-source")).toHaveText(
+      /synthetic test source|live desktop/,
+    );
     await expect(page.locator(".viewer__rec")).toContainText("recording");
 
     const video = await page

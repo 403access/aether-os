@@ -102,6 +102,7 @@ source. Everything else is a target or an aspiration.
 | Tier ladder selects WebRTC / WS-AU / JPEG / VNC | **Measured (unit test)** | `packages/remote` tests |
 | The host advertises the UDP port its socket bound, not `--udp :0` | **Measured (unit test)** | `aether-remote` serve/transport tests |
 | The browser live viewer pairs, answers and decodes 640×360 H.264 | **Measured (dev host, system Chrome)** | `e2e/viewer-live.spec.ts` with `AETHER_REMOTE_LIVE=1`; synthetic source |
+| The host reports its frame source, and the viewer labels the synthetic pattern | **Measured (unit test + e2e)** | `aether-remote` serve tests; `e2e/viewer.spec.ts` badge/HUD assertions |
 | Glass-to-glass < 40 ms on LAN | **Budget** | P7 gate; needs the reference machine capture path |
 | No CPU pixel copies on target | **Budget** | Audit + descriptors exist; compositor DMA-BUF import pending |
 | Input round trip < 20 ms on target | **Budget** | Loopback input channel tested; target timing pending |

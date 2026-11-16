@@ -198,7 +198,10 @@ code {
   inset: 0 0 auto;
   z-index: 1;
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
   padding: 0.55rem 0.8rem;
   background: linear-gradient(rgba(2, 13, 19, 0.75), transparent);
   color: var(--viewer-muted);
@@ -206,6 +209,18 @@ code {
   font-size: 0.72rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+.viewer__source {
+  color: var(--viewer-muted);
+}
+
+.viewer__source--synthetic {
+  padding: 0.05rem 0.55rem;
+  border: 1px solid rgba(255, 176, 90, 0.55);
+  border-radius: 999px;
+  background: rgba(120, 70, 12, 0.45);
+  color: #ffd7a0;
 }
 
 .viewer__rec {

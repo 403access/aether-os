@@ -25,6 +25,89 @@ the H.264 track in a `<video>` element and sends input over the host's `input`
 data channel. The marketing site's `#remote` panel remains a deterministic demo
 over the same `@aether/remote` state machine.
 
+## Connection map
+
+Everything on the browser-to-desktop path, and where the compositor binding is
+still missing.
+
+```mermaid
+flowchart LR
+  subgraph Browser["Browser tab · apps/web/viewer.html"]
+    V["Viewer.tsx"]
+    RC["@aether/remote<br/>RemoteClient + capability probe"]
+    HT["HttpSignalTransport"]
+    IB["InputBatcher<br/>16 ms · rate limited"]
+    VIDEO["video element<br/>H.264"]
+  end
+
+  subgraph Host["aether-remote serve · loopback"]
+    HTTP["HTTP service<br/>POST /signal · GET /health"]
+    PAIR["session.rs<br/>one-shot code · bearer token · DTLS fingerprint"]
+    RTC["transport.rs<br/>str0m WebRTC"]
+    ENC["encode.rs<br/>H.264 software · no B-frames"]
+    CAP["capture.rs<br/>SyntheticSource today<br/>compositor DMA-BUF future"]
+    PIPE["pipeline.rs + stats.rs<br/>no-queue pacing · latency ledger"]
+    STATUS["status JSON<br/>$XDG_RUNTIME_DIR/aether/remote-session.json"]
+  end
+
+  subgraph Shell["aether-shell-wayland"]
+    OVER["Remote overlay · Super+R<br/>code · tier · latency · input toggles"]
+    OUT["Compositor output"]
+  end
+
+  V --> RC
+  RC --> HT
+  HT -->|"hello (code, caps)"| HTTP
+  HTTP --> PAIR
+  PAIR -->|"welcome + token"| HTTP
+  RTC -->|"offer SDP"| HTTP
+  HTTP -->|"welcome + offer"| HT
+  HT -->|"answer SDP"| HTTP
+  HTTP --> RTC
+  RTC -.->|"DTLS-SRTP · H.264 RTP"| VIDEO
+  IB -.->|"input data channel"| RTC
+  CAP --> ENC
+  ENC --> PIPE
+  PIPE --> RTC
+  OUT -.->|"DMA-BUF capture (future)"| CAP
+  PAIR --> STATUS
+  STATUS --> OVER
+```
+
+The browser client ships both a WebCodecs/JPEG fallback and the live WebRTC
+transport; `viewer.html` uses the WebRTC path. The host's media source is
+synthetic until the compositor exports its buffers, which is why `/health` and
+the status document report `source`.
+
+## Pairing sequence
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant B as Browser
+  participant H as aether-remote serve
+  participant R as str0m
+
+  B->>H: POST /signal hello (code, capabilities)
+  H->>H: redeem one-shot code, mint session + bearer token
+  H->>R: create offer (video m-line + input channel)
+  R-->>H: offer SDP with the bound UDP candidate
+  H-->>B: welcome (session, token) + offer
+  B->>B: setRemoteDescription(offer)
+  B->>B: createAnswer, wait for ICE gathering (bounded)
+  B->>H: POST /signal answer
+  H->>R: accept answer
+  R-->>B: DTLS handshake + SRTP
+  Note over B,H: H.264 track and input channel are live
+  B->>H: POST /signal bye (Stop)
+  H->>R: close the session
+  H->>H: publish closed status
+```
+
+The host accepts one answer and does not trickle ICE, so the page waits for
+`iceGatheringState === "complete"` before posting. A code is single-use; the
+bearer token is bound to the session.
+
 ## Pipeline
 
 ```text
@@ -58,6 +141,27 @@ and enters the compositor’s virtual seat.
 The host reads the service’s status document from
 `$XDG_RUNTIME_DIR/aether/remote-session.json` and renders the pairing code,
 latency, bitrate, viewer count and the audited input/clipboard toggles.
+
+## Media and input path
+
+```mermaid
+flowchart LR
+  SRC["Capture source<br/>synthetic now · compositor DMA-BUF later"] --> ENC["H.264 encoder<br/>CBR · no B-frames · IDR every 2 s"]
+  ENC --> RTP["str0m SRTP<br/>RTP packets"]
+  RTP --> UDP["loopback UDP<br/>ephemeral port"]
+  UDP --> DEC["browser H.264 decode<br/>video element"]
+  DEC --> PRESENT["presented frame"]
+
+  KEY["keyboard · pointer · wheel"] --> BATCH["InputBatcher<br/>coalesce · rate limit"]
+  BATCH --> DC["input data channel"]
+  DC --> VALID["host validation<br/>scancodes · relative motion"]
+  VALID -.-> SEAT["virtual seat injection<br/>P7 compositor task"]
+```
+
+Media is server-to-browser over SRTP; input is browser-to-server over the data
+channel. The media path drops frames instead of queueing them, and input is
+validated before it can reach a seat. The virtual seat itself is still a P7
+task, so today the host validates and audits input without injecting it.
 
 ## Latency budget
 
@@ -230,6 +334,18 @@ interactive.
 ./scripts/vm-browser.sh            # boot/reuse, start the bridge, open Chrome
 ./scripts/vm-browser.sh --no-open  # print the URL instead
 ./scripts/vm-browser.sh --stop     # stop the bridge; leave the VM running
+```
+
+```mermaid
+flowchart LR
+  VM["aarch64 VM<br/>aether-shell-drm on tty8"] -->|"RFB"| QEMU["QEMU VNC<br/>127.0.0.1:5905"]
+  QEMU -->|"RFB"| WS["websockify<br/>127.0.0.1:6080"]
+  WS -->|"WebSocket"| NOVNC["noVNC<br/>vnc.html"]
+  NOVNC --> CHROME["Chrome tab"]
+  CHROME -->|"keyboard · pointer"| NOVNC
+  NOVNC --> WS
+  WS --> QEMU
+  QEMU --> VM
 ```
 
 The bridge is loopback-only and is a **development** path over VNC (tier 4). It

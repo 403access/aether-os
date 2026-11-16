@@ -10,6 +10,9 @@ description: The four-layer model, the process boundary, trust boundaries and th
 Aether is four layers, one supervisor, one compositor, and an explicit trust
 boundary around every agent. Nothing else runs at idle.
 
+Rendered maps of the runtime, repository, compositor and remote connection live
+on [System diagrams](/architecture/diagrams).
+
 ```text
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ aether-shell (Rust · Smithay · GLES/EGL)                               │

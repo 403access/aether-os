@@ -1,3 +1,16 @@
+## v0.1.0-alpha.77
+
+- Add Mermaid rendering to the docs site (`@docusaurus/theme-mermaid`) and a
+  **System diagrams** page: runtime topology, repository map, compositor and
+  backend internals, a remote-connection overview and deployment targets. It is
+  linked from the architecture overview and the docs sidebar.
+- Expand [remote display](/architecture/remote-display) with the detailed
+  browser → host connection map, the one-shot pairing sequence, the media/input
+  data path (including the still-synthetic capture source and the future virtual
+  seat) and the development VM's VNC → noVNC bridge.
+- Verification: `bun run --cwd apps/docs build`, plus a Mermaid parse check of
+  every diagram block in the two pages.
+
 ## v0.1.0-alpha.76
 
 - Add `scripts/vm-browser.sh` to drive the development VM's real desktop from a

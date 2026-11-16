@@ -19,6 +19,7 @@ const config: Config = {
 
   onBrokenLinks: "warn",
   markdown: {
+    mermaid: true,
     hooks: {
       onBrokenMarkdownLinks: "warn",
     },
@@ -49,6 +50,11 @@ const config: Config = {
 
   themeConfig: {
     image: "img/social-card.svg",
+    mermaid: {
+      options: {
+        layout: "elk",
+      },
+    },
     colorMode: {
       defaultMode: "dark",
       disableSwitch: true,
@@ -118,6 +124,7 @@ const config: Config = {
   } satisfies Config["themeConfig"],
 
   themes: [
+    "@docusaurus/theme-mermaid",
     [
       require.resolve("@easyops-cn/docusaurus-search-local"),
       {

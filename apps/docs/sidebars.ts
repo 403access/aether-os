@@ -33,6 +33,7 @@ const sidebars: SidebarsConfig = {
       collapsed: false,
       items: [
         "architecture/overview",
+        "architecture/diagrams",
         "architecture/hardware-target",
         "architecture/kernel-and-boot",
         "architecture/nixos-base",

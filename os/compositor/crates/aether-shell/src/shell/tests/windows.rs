@@ -104,6 +104,31 @@ fn floating_windows_are_centered_and_not_tiled() {
 }
 
 #[test]
+fn floating_windows_stay_below_the_top_gap() {
+    let mut shell = Shell::new(
+        Size::new(800, 600),
+        LayoutConfig {
+            gap: 6,
+            outer_gap: 8,
+            top_gap: 48,
+        },
+        120,
+    );
+    let id = shell.add_window(WindowSpec {
+        title: "big".into(),
+        app_id: "test".into(),
+        preferred_size: Size::new(640, 500),
+        floating: true,
+    });
+    let info = shell.windows().into_iter().find(|w| w.id == id).unwrap();
+    assert!(
+        info.rect.y >= 8 + 48,
+        "floating window overlaps the top dock: {:?}",
+        info.rect
+    );
+}
+
+#[test]
 fn moving_a_window_promotes_it_and_keeps_its_position() {
     let mut shell = shell();
     let first = shell.add_window(WindowSpec {
@@ -178,17 +203,20 @@ fn snapping_places_windows_in_halves() {
 
     assert!(shell.snap_window(id, SnapZone::LeftHalf));
     let info = shell.windows().into_iter().find(|w| w.id == id).unwrap();
-    assert_eq!(info.rect, Rect::new(0, 0, 400, 600));
+    assert_eq!(info.rect, Rect::new(8, 8, 392, 584));
     assert!(info.floating);
     assert!(!info.maximized);
 
     assert!(shell.snap_window(id, SnapZone::RightHalf));
     let info = shell.windows().into_iter().find(|w| w.id == id).unwrap();
-    assert_eq!(info.rect, Rect::new(400, 0, 400, 600));
+    assert_eq!(info.rect, Rect::new(400, 8, 392, 584));
 
     assert!(shell.snap_window(id, SnapZone::Maximize));
     let info = shell.windows().into_iter().find(|w| w.id == id).unwrap();
-    assert_eq!(info.rect, Rect::from_size(shell.viewport()));
+    assert_eq!(
+        info.rect,
+        aether_layout::work_area(Rect::from_size(shell.viewport()), shell.layout())
+    );
     assert!(info.maximized);
 
     assert!(!shell.snap_window(id, SnapZone::LeftHalf));
@@ -234,6 +262,41 @@ fn beginning_a_floating_resize_promotes_a_tile() {
     let info = shell.windows().into_iter().find(|w| w.id == id).unwrap();
     assert!(info.floating);
     assert!(!info.maximized);
+}
+
+#[test]
+fn beginning_a_title_move_keeps_the_tile_rect() {
+    let mut shell = shell();
+    let id = window(&mut shell, "tile");
+    let before = shell
+        .windows()
+        .into_iter()
+        .find(|w| w.id == id)
+        .unwrap()
+        .rect;
+    let rect = shell.begin_window_move(id).expect("move rect");
+    assert_eq!(rect, before);
+    let info = shell.windows().into_iter().find(|w| w.id == id).unwrap();
+    assert_eq!(info.rect, before);
+    assert!(info.floating);
+
+    // A floating window keeps the exact pointer offset while it moves.
+    let small = shell.add_window(WindowSpec {
+        title: "small".into(),
+        app_id: "test".into(),
+        preferred_size: Size::new(320, 200),
+        floating: true,
+    });
+    let start = shell
+        .windows()
+        .into_iter()
+        .find(|w| w.id == small)
+        .unwrap()
+        .rect;
+    assert!(shell.begin_window_move(small).is_some());
+    assert!(shell.move_floating(small, Point::new(start.x + 40, start.y + 24)));
+    let moved = shell.windows().into_iter().find(|w| w.id == small).unwrap();
+    assert_eq!((moved.rect.x, moved.rect.y), (start.x + 40, start.y + 24));
 }
 
 #[test]
@@ -305,7 +368,7 @@ fn fullscreen_covers_the_viewport_and_restores_the_layout() {
 }
 
 #[test]
-fn maximize_covers_the_viewport_and_restores_the_layout() {
+fn maximize_covers_the_work_area_and_restores_the_layout() {
     let mut shell = shell();
     let first = window(&mut shell, "first");
     let second = window(&mut shell, "second");
@@ -329,7 +392,10 @@ fn maximize_covers_the_viewport_and_restores_the_layout() {
         .into_iter()
         .find(|window| window.id == first)
         .unwrap();
-    assert_eq!(maximized.rect, Rect::from_size(shell.viewport()));
+    assert_eq!(
+        maximized.rect,
+        aether_layout::work_area(Rect::from_size(shell.viewport()), shell.layout())
+    );
     let remaining = shell
         .windows()
         .into_iter()

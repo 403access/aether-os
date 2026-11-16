@@ -31,7 +31,8 @@ pub(crate) struct FrameContext {
     pub width: u32,
     pub height: u32,
     pub visible: Vec<WindowId>,
-    pub rects: HashMap<WindowId, AetherRect>,
+    /// Client-content rects: shell rects minus the server-side title bar.
+    pub content_rects: HashMap<WindowId, AetherRect>,
     pub tokens: ThemeTokens,
     pub settings: ThemeSettings,
     pub panel_fill: [u8; 4],

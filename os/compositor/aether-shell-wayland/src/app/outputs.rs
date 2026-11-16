@@ -99,6 +99,9 @@ impl App {
         }
         self.sync_focus();
         self.configure_all();
+        // Re-homed windows retile on the remaining outputs, so their
+        // compositor-drawn frames moved even if focus did not change.
+        self.mark_full_damage();
         println!(
             "aether-shell: output {id} removed ({} remaining)",
             self.shell.outputs().len()

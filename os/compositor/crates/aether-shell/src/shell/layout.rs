@@ -1,7 +1,7 @@
 //! Tiling and floating layout updates.
 
 use aether_geometry::{Rect, Size};
-use aether_layout::tile;
+use aether_layout::{tile, work_area};
 use aether_scene::SurfaceId;
 
 use crate::model::window::FLOATING_SNAP_DISTANCE;
@@ -34,7 +34,7 @@ impl Shell {
                 self.scene.move_to(*surface, rect);
             }
 
-            let floating: Vec<(SurfaceId, Option<Rect>, Size, bool)> = ids
+            let floating: Vec<(SurfaceId, Option<Rect>, Size, bool, bool)> = ids
                 .iter()
                 .filter_map(|id| {
                     let window = self.windows.get(id)?;
@@ -44,13 +44,18 @@ impl Shell {
                             window.surface,
                             window.floating_rect,
                             window.spec.preferred_size,
-                            window.maximized || window.fullscreen,
+                            window.maximized,
+                            window.fullscreen,
                         ))
                 })
                 .collect();
-            for (index, (surface, explicit, size, maximized)) in floating.into_iter().enumerate() {
-                let rect = if maximized {
+            for (index, (surface, explicit, size, maximized, fullscreen)) in
+                floating.into_iter().enumerate()
+            {
+                let rect = if fullscreen {
                     output.rect
+                } else if maximized {
+                    work_area(output.rect, self.layout)
                 } else if let Some(rect) = explicit {
                     self.clamp_rect_to(rect, output.rect)
                 } else {
@@ -89,7 +94,9 @@ impl Shell {
     }
 
     pub(super) fn floating_rect(&self, index: usize, size: Size, output_bounds: Rect) -> Rect {
-        let bounds = output_bounds.inset(self.layout.outer_gap as i32);
+        // Centre inside the same work area tiled windows use, so a large
+        // floating window does not open underneath the top dock.
+        let bounds = work_area(output_bounds, self.layout);
         if bounds.is_empty() {
             return Rect::new(bounds.x, bounds.y, 0, 0);
         }

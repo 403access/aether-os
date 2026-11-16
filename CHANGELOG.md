@@ -1,3 +1,25 @@
+## v0.1.0-alpha.73
+
+- Give every Wayland client a **server-side Aether frame**. The compositor now
+  draws a 34 px title bar per toplevel — design-system mark, title, focus accent
+  rule and close pill — and configures the client 34 px shorter, so the terminal
+  (foot) finally opens with the same chrome, focus treatment and close
+  affordance as the explorer, chat, audio, themes and sandboxes surfaces.
+  `xdg-decoration` is still not advertised; clients never draw their own bar.
+- Dragging a title bar moves its window, promoting a tile to floating on the
+  first movement; the close pill calls `xdg_toplevel.close`. Fullscreen windows
+  drop the frame. Pointer hover on the frame no longer forwards client motion,
+  and close/body hit-testing uses the content rect.
+- Reserve a 48 px `top_gap` in `aether-layout` so tiled, floating and maximized
+  clients start below the shortcut dock. Maximize, half-snap and floating
+  placement now use the work area instead of the full output; fullscreen still
+  covers everything.
+- Damage from client commits is clipped and translated against the content
+  rect. Focus changes, title updates and window destruction repaint title bars
+  rather than relying on the client to redraw compositor chrome.
+- Verification: layout work-area test, app frame/content/hit tests, updated
+  shell maximize and snap assertions, `cargo fmt` and `clippy -D warnings`.
+
 ## v0.1.0-alpha.72
 
 - Add the **Agent sandboxes** surface (`Super+B`, palette **Agents**, top-dock

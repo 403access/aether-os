@@ -139,11 +139,26 @@ impl App {
                 })
                 .collect(),
         };
-        let rects: HashMap<WindowId, AetherRect> = self
+        let content_rects: HashMap<WindowId, AetherRect> = self
             .shell
             .windows()
             .into_iter()
-            .map(|window| (window.id, window.rect))
+            .map(|window| {
+                let inset = if window.fullscreen {
+                    0
+                } else {
+                    crate::app::WINDOW_FRAME_HEIGHT
+                };
+                (
+                    window.id,
+                    AetherRect::new(
+                        window.rect.x,
+                        window.rect.y + inset,
+                        window.rect.width,
+                        window.rect.height.saturating_sub(inset as u32),
+                    ),
+                )
+            })
             .collect();
         let primary = self
             .shell
@@ -172,7 +187,7 @@ impl App {
             width,
             height,
             visible,
-            rects,
+            content_rects,
             tokens,
             settings,
             panel_fill,
@@ -234,13 +249,18 @@ impl App {
     ) {
         let offset = ctx.offset;
         let visible = &ctx.visible;
-        let rects = &ctx.rects;
-        // Client surfaces, bottom-most first.
+        let content_rects = &ctx.content_rects;
+        // Client surfaces and their frames, bottom-most first so overlapping
+        // floating windows keep the compositor's z-order.
         for id in visible.iter().rev() {
-            let Some(rect) = rects.get(id) else {
+            let Some(rect) = content_rects.get(id) else {
                 continue;
             };
-            let Some(toplevel) = self.windows.get(id) else {
+            let Some(surface) = self
+                .windows
+                .get(id)
+                .map(|toplevel| toplevel.wl_surface().clone())
+            else {
                 continue;
             };
             elements.extend(
@@ -249,7 +269,7 @@ impl App {
                     WaylandSurfaceRenderElement<GlesRenderer>,
                 >(
                     renderer,
-                    toplevel.wl_surface(),
+                    &surface,
                     (rect.x - offset.0, rect.y - offset.1),
                     1.0,
                     1.0,
@@ -257,6 +277,28 @@ impl App {
                 )
                 .into_iter()
                 .map(AetherRenderElement::from),
+            );
+            let Some(window) = self
+                .shell
+                .windows()
+                .into_iter()
+                .find(|window| window.id == *id)
+            else {
+                continue;
+            };
+            if window.fullscreen {
+                continue;
+            }
+            let focused = self.shell.focused_window() == Some(*id);
+            self.render_window_frame(
+                renderer,
+                elements,
+                &ctx.tokens,
+                offset,
+                *id,
+                window.rect,
+                &window.title,
+                focused,
             );
         }
     }
@@ -357,53 +399,73 @@ impl App {
             }
         }
 
-        // Text labels. Cache by content/scale/colour so static chrome does not
-        // rasterize and upload the same bitmap every frame. The cache is
-        // byte-bounded: a changing status line or a scrolling explorer must not
-        // retain every label it has ever drawn.
         for (text, x, y, scale, color) in labels {
-            let base_scale = *scale & 0xff;
-            let bold = *scale >= 2 || (*scale & 0x100) != 0;
-            let key = (text.clone(), *scale, *color, bold);
-            let mut uncached = None;
-            if !self.text_cache.contains(&key) {
-                let bitmap = match self.font.as_ref() {
-                    Some(font) => {
-                        font.render(text, crate::app::App::text_px(base_scale), *color, bold)
-                    }
-                    None => TextBitmap::render(text, base_scale.max(1), *color),
-                };
-                let bytes = bitmap.pixels().len() + text.len() + 64;
-                let buffer = MemoryRenderBuffer::from_slice(
-                    bitmap.pixels(),
-                    Fourcc::Abgr8888,
-                    (bitmap.width() as i32, bitmap.height() as i32),
-                    1,
-                    Transform::Normal,
-                    None,
-                );
-                self.text_rasterizations += 1;
-                if bytes <= self.text_cache.budget() {
-                    self.text_cache.insert(key.clone(), buffer, bytes);
-                } else {
-                    // An oversized label is still drawn this frame; it simply
-                    // is not retained. Dropping the element would be a visual
-                    // bug, not a saving.
-                    uncached = Some(buffer);
-                }
+            self.push_label(
+                renderer,
+                elements,
+                text,
+                (*x - offset.0, *y - offset.1),
+                *scale,
+                *color,
+            );
+        }
+    }
+
+    /// Draw one text label through the shared, byte-bounded cache. Callers
+    /// pass already-offset coordinates in output-local space.
+    pub(crate) fn push_label(
+        &mut self,
+        renderer: &mut GlesRenderer,
+        elements: &mut Vec<AetherRenderElement>,
+        text: &str,
+        at: (i32, i32),
+        scale: u32,
+        color: [u8; 4],
+    ) {
+        let (x, y) = at;
+        // Cache by content/scale/colour so static chrome does not rasterize
+        // and upload the same bitmap every frame. The cache is byte-bounded: a
+        // changing status line or a scrolling explorer must not retain every
+        // label it has ever drawn.
+        let base_scale = scale & 0xff;
+        let bold = scale >= 2 || (scale & 0x100) != 0;
+        let key = (text.to_string(), scale, color, bold);
+        let mut uncached = None;
+        if !self.text_cache.contains(&key) {
+            let bitmap = match self.font.as_ref() {
+                Some(font) => font.render(text, crate::app::App::text_px(base_scale), color, bold),
+                None => TextBitmap::render(text, base_scale.max(1), color),
+            };
+            let bytes = bitmap.pixels().len() + text.len() + 64;
+            let buffer = MemoryRenderBuffer::from_slice(
+                bitmap.pixels(),
+                Fourcc::Abgr8888,
+                (bitmap.width() as i32, bitmap.height() as i32),
+                1,
+                Transform::Normal,
+                None,
+            );
+            self.text_rasterizations += 1;
+            if bytes <= self.text_cache.budget() {
+                self.text_cache.insert(key.clone(), buffer, bytes);
+            } else {
+                // An oversized label is still drawn this frame; it simply is
+                // not retained. Dropping the element would be a visual bug,
+                // not a saving.
+                uncached = Some(buffer);
             }
-            if let Some(buffer) = self.text_cache.get(&key).or(uncached.as_ref()) {
-                if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
-                    renderer,
-                    ((*x - offset.0) as f64, (*y - offset.1) as f64),
-                    buffer,
-                    None,
-                    None,
-                    None,
-                    Kind::Unspecified,
-                ) {
-                    elements.push(AetherRenderElement::from(element));
-                }
+        }
+        if let Some(buffer) = self.text_cache.get(&key).or(uncached.as_ref()) {
+            if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
+                renderer,
+                (x as f64, y as f64),
+                buffer,
+                None,
+                None,
+                None,
+                Kind::Unspecified,
+            ) {
+                elements.push(AetherRenderElement::from(element));
             }
         }
     }
@@ -417,7 +479,7 @@ impl App {
         let output = ctx.output;
         let offset = ctx.offset;
         let visible = &ctx.visible;
-        let rects = &ctx.rects;
+        let rects = &ctx.content_rects;
         // IME candidate/preedit popups above client windows.
         for popup in &self.input_method_popups {
             if !popup.alive() {

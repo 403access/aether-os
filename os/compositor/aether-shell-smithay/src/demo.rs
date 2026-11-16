@@ -37,6 +37,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         LayoutConfig {
             gap: 10,
             outer_gap: 16,
+            top_gap: 0,
         },
         120,
     );

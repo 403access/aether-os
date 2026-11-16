@@ -64,7 +64,7 @@ use self::chat_bridge::ChatBridge;
 use self::chat_demo::ChatDemo;
 use self::control::ControlServer;
 use self::index_worker::IndexWorker;
-use self::input::KeyProfile;
+use self::input::{KeyProfile, TitleDrag};
 use self::overlays::sandboxes::SandboxPanelState;
 use self::overlays::task_manager::TaskManagerState;
 use self::status::StatusSnapshot;
@@ -73,6 +73,8 @@ use self::handlers::ClientState;
 use self::input::{WindowDrag, WindowResize};
 use self::launcher::file_index;
 use self::outputs::OutputEntry;
+
+pub(crate) use self::windows::WINDOW_FRAME_HEIGHT;
 
 pub(crate) struct CursorCacheEntry {
     pub(crate) buffer: MemoryRenderBuffer,
@@ -115,6 +117,7 @@ pub struct App {
     pub(crate) scale: f64,
     pub(crate) pointer_pos: smithay::utils::Point<f64, smithay::utils::Logical>,
     window_drag: Option<WindowDrag>,
+    title_drag: Option<TitleDrag>,
     window_resize: Option<WindowResize>,
     pointer_captured: bool,
     modifiers: ModifiersState,
@@ -210,6 +213,7 @@ impl App {
                     LayoutConfig {
                         gap: 10,
                         outer_gap: 16,
+                        top_gap: 48,
                     },
                     120,
                 );
@@ -224,6 +228,7 @@ impl App {
             scale: 1.0,
             pointer_pos: smithay::utils::Point::from((0.0, 0.0)),
             window_drag: None,
+            title_drag: None,
             window_resize: None,
             pointer_captured: false,
             modifiers: ModifiersState::default(),

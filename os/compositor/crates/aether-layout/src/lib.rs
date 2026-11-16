@@ -13,6 +13,9 @@ pub struct LayoutConfig {
     pub gap: u32,
     /// Gap between the work area and the output edge.
     pub outer_gap: u32,
+    /// Extra space reserved above the work area for shell chrome such as the
+    /// top shortcut dock. Applies to tiled and maximized windows.
+    pub top_gap: u32,
 }
 
 impl Default for LayoutConfig {
@@ -20,8 +23,20 @@ impl Default for LayoutConfig {
         Self {
             gap: 6,
             outer_gap: 8,
+            top_gap: 0,
         }
     }
+}
+
+/// The usable area below outer gaps and reserved top chrome.
+pub fn work_area(viewport: Rect, config: LayoutConfig) -> Rect {
+    let inner = viewport.inset(config.outer_gap as i32);
+    Rect::new(
+        inner.x,
+        inner.y + config.top_gap as i32,
+        inner.width,
+        inner.height.saturating_sub(config.top_gap),
+    )
 }
 
 /// Tile `count` windows into equal-width columns across `viewport`.
@@ -30,7 +45,7 @@ pub fn tile(viewport: Rect, count: usize, config: LayoutConfig) -> Vec<Rect> {
         return Vec::new();
     }
 
-    let inner = viewport.inset(config.outer_gap as i32);
+    let inner = work_area(viewport, config);
     if inner.is_empty() {
         return vec![Rect::default(); count];
     }
@@ -117,10 +132,24 @@ mod tests {
     }
 
     #[test]
+    fn top_gap_is_reserved_above_the_work_area() {
+        let config = LayoutConfig {
+            gap: 10,
+            outer_gap: 8,
+            top_gap: 48,
+        };
+        let area = work_area(VIEWPORT, config);
+        assert_eq!(area, Rect::new(8, 56, 1584, 936));
+        let rects = tile(VIEWPORT, 2, config);
+        assert!(rects.iter().all(|rect| rect.y == 56 && rect.height == 936));
+    }
+
+    #[test]
     fn gap_is_respected() {
         let config = LayoutConfig {
             gap: 12,
             outer_gap: 0,
+            top_gap: 0,
         };
         let rects = tile(VIEWPORT, 3, config);
         assert_eq!(rects[1].x - (rects[0].x + rects[0].width as i32), 12);

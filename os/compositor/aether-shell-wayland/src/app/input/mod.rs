@@ -43,6 +43,14 @@ pub(crate) struct WindowDrag {
     offset_y: f64,
 }
 
+/// A title-bar press that becomes a move only after the pointer travels far
+/// enough. A plain click still just focuses the window.
+#[derive(Clone, Copy)]
+pub(crate) struct TitleDrag {
+    pub(crate) id: WindowId,
+    pub(crate) start_pointer: AetherPoint,
+}
+
 impl App {
     pub fn cursor(&self) -> CursorShape {
         self.cursor

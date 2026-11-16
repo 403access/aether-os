@@ -1,6 +1,7 @@
 //! Floating, maximize, fullscreen and snapping geometry.
 
 use aether_geometry::{Point, Rect};
+use aether_layout::work_area;
 
 use crate::model::window::{SnapZone, MIN_FLOATING_HEIGHT, MIN_FLOATING_WIDTH};
 use crate::{OutputId, WindowId};
@@ -62,9 +63,7 @@ impl Shell {
         let rect = if floating {
             self.scene.get(surface)?.rect
         } else {
-            let bounds = self
-                .output_bounds(output)
-                .inset(self.layout.outer_gap as i32);
+            let bounds = work_area(self.output_bounds(output), self.layout);
             let width = preferred.width.min(bounds.width).max(1);
             let height = preferred.height.min(bounds.height).max(1);
             self.clamp_rect_to(
@@ -231,6 +230,17 @@ impl Shell {
     /// Start an interactive resize. Promotes a tiled window to floating while
     /// keeping its current rect, and returns that rect.
     pub fn begin_floating_resize(&mut self, id: WindowId) -> Option<Rect> {
+        self.promote_to_floating(id)
+    }
+
+    /// Promote a window to floating without changing its rect. Used by a
+    /// title-bar drag, which should follow the pointer instead of jumping to
+    /// the window's preferred size.
+    pub fn begin_window_move(&mut self, id: WindowId) -> Option<Rect> {
+        self.promote_to_floating(id)
+    }
+
+    fn promote_to_floating(&mut self, id: WindowId) -> Option<Rect> {
         let window = self.windows.get(&id)?;
         if window.maximized || window.fullscreen {
             return None;
@@ -269,15 +279,13 @@ impl Shell {
                 self.toggle_maximized(id)
             };
         }
-        let half = viewport.width / 2;
+        let area = work_area(viewport, self.layout);
+        let half = area.width / 2;
         let rect = match zone {
-            SnapZone::LeftHalf => Rect::new(viewport.x, viewport.y, half, viewport.height),
-            SnapZone::RightHalf => Rect::new(
-                viewport.x + half as i32,
-                viewport.y,
-                viewport.width - half,
-                viewport.height,
-            ),
+            SnapZone::LeftHalf => Rect::new(area.x, area.y, half, area.height),
+            SnapZone::RightHalf => {
+                Rect::new(area.x + half as i32, area.y, area.width - half, area.height)
+            }
             SnapZone::Maximize => unreachable!(),
         };
         if let Some(window) = self.windows.get_mut(&id) {

@@ -205,7 +205,14 @@ drag and both toggles with `xdotool` and asserts each transition.*
 - Maps each toplevel into `aether-shell` as a window, so clients are **tiled by
   the shell layout** and configured to their tile size. Two terminals are shown
   side-by-side in the screenshot.
-- Renders client surfaces with Smithay surface elements at their shell rects.
+- Draws a **server-side Aether frame** around every client: a 34 px title bar
+  with the design-system mark, the toplevel title, a focus accent rule and a
+  close pill. Client buffers are configured 34 px shorter than the shell rect
+  and rendered inside it, so a foot terminal arrives with the same chrome as
+  the explorer or chat rather than its own title bar. Dragging the title bar
+  moves the window (promoting a tile to floating on the first movement), the
+  close pill sends `xdg_toplevel.close`, and fullscreen windows lose the frame.
+- Renders client surfaces with Smithay surface elements at their content rects.
 - Pointer motion focuses the window under the cursor and forwards motion/buttons
   and axis; keyboard input goes to the focused surface.
 - The shell overlay is drawn above clients (`Super+Space`) and is **modal**:
@@ -279,13 +286,16 @@ drag and both toggles with `xdotool` and asserts each transition.*
   and `XCURSOR_PATH` (plus standard icon dirs) select Xcursor images, parsed
   directly with scale-aware hotspots. Named client cursors map to shapes;
   `wl_cursor` surface images are rendered at the pointer with their hotspot.
-- **Window move, resize and maximize.** `Alt+left-drag` promotes a tiled window
-  to its preferred floating size and moves it; floating positions persist across
-  relayouts and snap flush to output edges while moving. Releasing at the left
-  or right edge snaps a half; releasing at the top maximizes.
-  `Alt+right-drag` resizes from the nearest corner with a minimum size.
-  `Super+M` maximizes to the full output and restores the previous state. Client surfaces render in shell z-order, so
-  raised/floating/maximized windows stay above others.
+- **Window move, resize and maximize.** Dragging a client's title bar (or
+  `Alt+left-drag` anywhere in it) promotes a tiled window to its preferred
+  floating size and moves it; floating positions persist across relayouts and
+  snap flush to output edges while moving. Releasing at the left or right edge
+  snaps a half; releasing at the top maximizes. `Alt+right-drag` resizes from
+  the nearest corner with a minimum size. `Super+M` maximizes to the work area
+  (the output minus the 48 px dock reserve) and restores the previous state;
+  tiled, snapped and newly floating windows share that work area.
+  Client surfaces render in shell z-order, so raised/floating/maximized windows
+  stay above others.
 - Compositor chrome renders real text through `aether-text`: workspace names,
   overlay header/search/results/footer and shortcut hints. Bitmaps are uploaded
   as Smithay `MemoryRenderBuffer` elements above client surfaces.

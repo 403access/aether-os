@@ -11,6 +11,7 @@
 //! - `context` — per-frame state shared by the composition sections.
 //! - `chrome` — cached icon, panel, rounded-fill and backdrop buffers.
 //! - `compose` — frame orchestration, client surfaces, flush and cursor.
+//! - `window_frame` — compositor-drawn title bar around client toplevels.
 //! - `surfaces` — one module per compositor-owned surface.
 //! - `helpers` — formatting, icon decoding and cursor hit-testing helpers.
 
@@ -20,6 +21,7 @@ mod context;
 mod element;
 mod helpers;
 mod surfaces;
+mod window_frame;
 
 pub(crate) use chrome::BackgroundStyle;
 pub use element::{AetherRenderElement, ComposedFrame, BACKGROUND};

@@ -5,6 +5,7 @@ use aether_geometry::{Point as AetherPoint, Rect as AetherRect};
 use smithay::input::pointer::CursorIcon as PointerIcon;
 
 use crate::app::overlays::topbar;
+use crate::app::windows::FrameHit;
 
 use super::{App, ResizeCorner};
 
@@ -15,7 +16,7 @@ pub(crate) fn cursor_for(state: &App) -> CursorShape {
     if let Some(resize) = state.window_resize {
         return resize_cursor(resize.corner);
     }
-    if state.window_drag.is_some() {
+    if state.window_drag.is_some() || state.title_drag.is_some() {
         return CursorShape::Grabbing;
     }
     if state.task_manager_open() {
@@ -93,6 +94,12 @@ pub(crate) fn cursor_for(state: &App) -> CursorShape {
     }
     if state.shell.workspace_at_global(point).is_some() {
         return CursorShape::Pointer;
+    }
+    if let Some((_, hit)) = state.window_frame_hit(point) {
+        return match hit {
+            FrameHit::Close => CursorShape::Pointer,
+            FrameHit::Title => CursorShape::Arrow,
+        };
     }
     if let Some(id) = state.shell.window_at(point) {
         if let Some(info) = state

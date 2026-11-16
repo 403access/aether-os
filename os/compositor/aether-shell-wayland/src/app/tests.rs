@@ -1,9 +1,10 @@
 //! App-level integration tests (damage tests live next to `damage.rs`).
 
-use aether_geometry::Rect as AetherRect;
-use aether_shell::OutputInfo;
+use aether_geometry::{Point as AetherPoint, Rect as AetherRect};
+use aether_shell::{OutputInfo, WindowSpec};
 use smithay::utils::Rectangle;
 
+use super::windows::FrameHit;
 use super::*;
 use smithay::output::{Mode as OutputMode, Output, PhysicalProperties, Scale, Subpixel};
 use smithay::utils::Transform;
@@ -61,6 +62,30 @@ fn take_damage_drains_once() {
     assert!(!full);
     assert_eq!(damage.len(), 1);
     assert!(!app.needs_frame());
+}
+
+#[test]
+fn client_frames_inset_content_and_hit_the_title_bar() {
+    let (_display, mut app) = test_app();
+    let id = app
+        .shell
+        .add_window(WindowSpec::new("Wayland Terminal", "wayland.client"));
+    let rect = app.window_rect(id).expect("window rect");
+    let content = app.window_content_rect(id).expect("content rect");
+    assert_eq!(content.y, rect.y + WINDOW_FRAME_HEIGHT);
+    assert_eq!(
+        content.height,
+        rect.height.saturating_sub(WINDOW_FRAME_HEIGHT as u32)
+    );
+
+    let title = AetherPoint::new(rect.x + 20, rect.y + 5);
+    assert_eq!(app.window_frame_hit(title), Some((id, FrameHit::Title)));
+    let body = AetherPoint::new(rect.x + 20, content.y + 5);
+    assert_eq!(app.window_frame_hit(body), None);
+
+    let close = app.window_close_rect(id).expect("close rect");
+    let center = AetherPoint::new(close.x + 2, close.y + 2);
+    assert_eq!(app.window_frame_hit(center), Some((id, FrameHit::Close)));
 }
 
 #[test]

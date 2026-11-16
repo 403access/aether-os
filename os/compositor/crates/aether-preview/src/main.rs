@@ -18,6 +18,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         LayoutConfig {
             gap: 10,
             outer_gap: 16,
+            top_gap: 0,
         },
         120,
     );
@@ -90,6 +91,7 @@ fn demo_shell() -> Shell {
         LayoutConfig {
             gap: 10,
             outer_gap: 16,
+            top_gap: 0,
         },
         120,
     );

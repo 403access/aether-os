@@ -8,8 +8,9 @@ use smithay::backend::input::{AxisSource, ButtonState, MouseButton};
 use smithay::input::pointer::{AxisFrame, ButtonEvent, MotionEvent};
 use smithay::utils::{Logical, Point as SPoint, SERIAL_COUNTER};
 
+use super::super::windows::FrameHit;
 use super::cursor::resize_corner;
-use super::{cursor_for, App, ResizeCorner, WindowDrag, WindowResize};
+use super::{cursor_for, App, ResizeCorner, TitleDrag, WindowDrag, WindowResize};
 
 impl App {
     /// Absolute pointer motion in logical compositor coordinates.
@@ -21,7 +22,28 @@ impl App {
         let new_cursor = cursor_for(self);
         self.cursor = new_cursor;
 
-        if let Some(resize) = self.window_resize {
+        if let Some(pending) = self.title_drag {
+            let dx = (position.x - pending.start_pointer.x as f64).abs();
+            let dy = (position.y - pending.start_pointer.y as f64).abs();
+            if dx > 4.0 || dy > 4.0 {
+                if let Some(rect) = self.shell.begin_window_move(pending.id) {
+                    self.window_drag = Some(WindowDrag {
+                        id: pending.id,
+                        offset_x: position.x - rect.x as f64,
+                        offset_y: position.y - rect.y as f64,
+                    });
+                    // Promotion retiles the remaining windows, so repaint the
+                    // whole output rather than only the dragged rect.
+                    self.mark_full_damage();
+                    self.configure_all();
+                    println!(
+                        "aether-shell: window drag started id={} rect={rect:?}",
+                        pending.id
+                    );
+                }
+                self.title_drag = None;
+            }
+        } else if let Some(resize) = self.window_resize {
             let point = AetherPoint::new(position.x.round() as i32, position.y.round() as i32);
             let dx = point.x - resize.start_pointer.x;
             let dy = point.y - resize.start_pointer.y;
@@ -89,6 +111,10 @@ impl App {
                 self.shell.overlay().is_some() || self.shell.workspace_at_global(point).is_some();
             if chrome_owns_pointer {
                 // Compositor-owned chrome never focuses a client underneath.
+            } else if self.window_frame_hit(point).is_some() {
+                // The title bar is compositor chrome: clear client hover so
+                // the surface does not keep a text/pointer cursor shape.
+                self.forward_pointer_motion(None, position, time);
             } else if let Some(id) = self.shell.window_at(point) {
                 if self.shell.focus_window(id) {
                     self.sync_focus();
@@ -146,12 +172,7 @@ impl App {
         time: u32,
     ) {
         let focus = id.and_then(|id| {
-            let rect = self
-                .shell
-                .windows()
-                .into_iter()
-                .find(|window| window.id == id)
-                .map(|window| window.rect)?;
+            let rect = self.window_content_rect(id)?;
             let origin = SPoint::from((rect.x as f64, rect.y as f64));
             self.windows
                 .get(&id)
@@ -343,6 +364,30 @@ impl App {
                 {
                     self.toggle_overlay();
                 }
+            } else if let Some((id, hit)) = self.window_frame_hit(point) {
+                self.pointer_captured = true;
+                if self.shell.focus_window(id) {
+                    self.sync_focus();
+                }
+                match hit {
+                    FrameHit::Close => {
+                        if mouse_button == Some(MouseButton::Left) {
+                            if let Some(toplevel) = self.windows.get(&id) {
+                                toplevel.send_close();
+                            }
+                            println!("aether-shell: window close requested id={id}");
+                        }
+                    }
+                    FrameHit::Title => {
+                        if mouse_button == Some(MouseButton::Left) {
+                            self.title_drag = Some(TitleDrag {
+                                id,
+                                start_pointer: point,
+                            });
+                        }
+                    }
+                }
+                self.mark_full_damage();
             } else if self.modifiers.alt && mouse_button == Some(MouseButton::Left) {
                 if let Some(id) = self.shell.window_at(point) {
                     self.shell.focus_window(id);
@@ -393,6 +438,7 @@ impl App {
 
         let forward = !self.pointer_captured;
         if state == ButtonState::Released {
+            self.title_drag = None;
             if let Some(resize) = self.window_resize.take() {
                 let rect = self
                     .shell

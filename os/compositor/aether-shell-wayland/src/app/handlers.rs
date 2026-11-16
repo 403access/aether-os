@@ -81,6 +81,12 @@ impl XdgShellHandler for App {
         });
         if let Some(id) = id {
             self.shell.set_window_title(id, title);
+            // The title lives in compositor-drawn chrome, so nothing in the
+            // client's buffer commit necessarily repaints it. Damage the frame
+            // area (the window rect) when the title changes.
+            if let Some(rect) = self.window_rect(id) {
+                self.mark_window_damage(rect);
+            }
         }
     }
 
@@ -113,6 +119,10 @@ impl XdgShellHandler for App {
             self.shell.close_window(id);
             self.sync_focus();
             self.configure_all();
+            // The frame outlives the client buffer and retiling moves the
+            // remaining windows, so repaint the output even when focus did
+            // not change.
+            self.mark_full_damage();
         }
     }
 }
@@ -171,6 +181,10 @@ impl CompositorHandler for App {
         if window.workspace != self.shell.output_workspace(window.output) {
             return;
         }
+        let Some(content) = self.window_content_rect(window.id) else {
+            self.mark_full_damage();
+            return;
+        };
 
         let (damage, buffer_scale, buffer_transform) = with_states(surface, |states| {
             let mut guard = states.cached_state.get::<SurfaceAttributes>();
@@ -182,7 +196,7 @@ impl CompositorHandler for App {
             )
         });
         if damage.is_empty() {
-            self.mark_window_damage(window.rect);
+            self.mark_window_damage(content);
             return;
         }
         for damage in damage {
@@ -192,12 +206,12 @@ impl CompositorHandler for App {
                         continue;
                     }
                     let rect = AetherRect::new(
-                        window.rect.x + rect.loc.x,
-                        window.rect.y + rect.loc.y,
+                        content.x + rect.loc.x,
+                        content.y + rect.loc.y,
                         rect.size.w as u32,
                         rect.size.h as u32,
                     );
-                    if let Some(clipped) = rect.intersect(window.rect) {
+                    if let Some(clipped) = rect.intersect(content) {
                         self.mark_damage_rect(clipped);
                     }
                 }
@@ -211,16 +225,16 @@ impl CompositorHandler for App {
                     };
                     if let Some(local) = converted {
                         let rect = AetherRect::new(
-                            window.rect.x + local.x,
-                            window.rect.y + local.y,
+                            content.x + local.x,
+                            content.y + local.y,
                             local.width,
                             local.height,
                         );
-                        if let Some(clipped) = rect.intersect(window.rect) {
+                        if let Some(clipped) = rect.intersect(content) {
                             self.mark_damage_rect(clipped);
                         }
                     } else {
-                        self.mark_window_damage(window.rect);
+                        self.mark_window_damage(content);
                     }
                 }
             }
@@ -251,16 +265,11 @@ impl InputMethodHandler for App {
         self.windows
             .iter()
             .find_map(|(id, toplevel)| (toplevel.wl_surface() == parent).then_some(*id))
-            .and_then(|id| {
-                self.shell
-                    .windows()
-                    .into_iter()
-                    .find(|window| window.id == id)
-            })
-            .map(|window| {
+            .and_then(|id| self.window_content_rect(id))
+            .map(|rect| {
                 Rectangle::new(
-                    (window.rect.x, window.rect.y).into(),
-                    (window.rect.width as i32, window.rect.height as i32).into(),
+                    (rect.x, rect.y).into(),
+                    (rect.width as i32, rect.height as i32).into(),
                 )
             })
             .unwrap_or_default()

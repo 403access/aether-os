@@ -1,3 +1,24 @@
+## v0.1.0-alpha.74
+
+- Add the **live browser viewer** at `/viewer.html`. It pairs with a real
+  `aether-remote serve`: `POST /signal` hello → welcome + str0m offer, an
+  `RTCPeerConnection` answer, the H.264 track attached to a `<video>` element,
+  and scancodes/pointer motion over the host's `input` data channel. The HUD
+  shows session, tier, codec, resolution, fps, bitrate, RTT, decoded frames and
+  the channel state; Stop posts the bye and closes the peer.
+- Add `HttpSignalTransport` to `@aether/remote`: fetch signaling, nested str0m
+  SDP unwrapping, bounded ICE-gathering wait, track/channel/connection callbacks
+  and host error surfacing. The marketing `#remote` panel stays a demo over the
+  same client state machine and links to the live page.
+- Fix `aether-remote serve` advertising the requested `--udp …:0` instead of the
+  bound UDP port, which made every browser candidate unreachable. Media now
+  waits for an active connection, and RTCP PLI requests force the next encoder
+  access unit to be an IDR.
+- Build the web app as two Vite entries (`index.html`, `viewer.html`).
+- Verification: 22 `packages/remote` tests, Rust `aether-remote` tests (45),
+  mocked viewer e2e (2), opt-in live e2e against the host in system Chrome
+  (`e2e/viewer-live.spec.ts`, `AETHER_REMOTE_LIVE=1`), and the existing suite.
+
 ## v0.1.0-alpha.73
 
 - Give every Wayland client a **server-side Aether frame**. The compositor now

@@ -16,7 +16,7 @@ deliberately layered so a failure points at one boundary.
 | --- | --- | --- | --- |
 | Unit / DOM / integration | `bun test` | Logic, ranking, capabilities, planners, components, cross-thread ring, filesystem | **206 total** (17 DOM, ~15 integration) |
 | Architecture boundary | `bun test` | VM ↔ reference imports, security posture, flake modules | 7 (included above) |
-| E2E | Playwright | Assembled marketing site, docs, install pages, VM page | **14** |
+| E2E | Playwright | Assembled marketing site, docs, live viewer (mocked peer) | **21** (1 opt-in live) |
 | Rust | `cargo test` | Scene, layout, damage, pacing, shell state, palette/commands, desktop entries/actions, filename index, picker, split/move/resize/snap/maximize/fullscreen, per-output workspaces, text, cursors, preview | **110** |
 | Rust (shared Wayland) | `cargo test --manifest-path os/compositor/aether-shell-wayland/Cargo.toml` | Damage, index worker, SVG icons, status, chat/explorer, keymap, agents | **19** |
 | Rust (DRM backend) | `cargo test --manifest-path os/compositor/aether-shell-drm/Cargo.toml` | Output origin, frame/seconds arguments | **4** |
@@ -63,6 +63,7 @@ fixture and the subject close and makes deletion obvious.
 | Adapter | `adapters.test.ts` | Index → palette mapping, filters, empty query |
 | UI | `ui.test.tsx` | ARIA, click, keyboard, explorer, meters |
 | Remote client | `packages/remote/src/remote.test.ts` | Capability probe, tiers, wire format, input batching, session state |
+| Remote transport | `packages/remote/src/transport.test.ts` | HTTP signaling, str0m SDP unwrapping, ICE wait, answer/bye, data channel, errors |
 | Boundary | `tests/separation.test.ts` | No VM/reference imports; no VM posture in the reference |
 | Rust | `os/compositor/**` | Damage, layout, shell policy, preview, pacing, capture/encode/session/transport |
 
@@ -135,7 +136,19 @@ Specs cover:
 - The palette filters results and executes an action.
 - The explorer selects and navigates folders.
 - Docs load and the sidebar navigates.
+- The live viewer pairs against a stubbed signal endpoint and a peer-connection
+  double, updates the HUD, sends a scancode and stops.
 - No console errors on either surface.
+
+The real media path is an opt-in spec. Start a host, then use system Chrome
+(Playwright's bundled Chromium often omits H.264):
+
+```bash
+./os/compositor/target/debug/aether-remote serve \
+  --http 127.0.0.1:7443 --code K7QM2H4P --seconds 120
+bun run build
+AETHER_REMOTE_LIVE=1 bunx playwright test e2e/viewer-live.spec.ts
+```
 
 E2E tests are intentionally few and coarse. Unit tests own logic.
 

@@ -17,6 +17,10 @@ This plan adds the missing piece: a live viewer page that a person can open in a
 browser, point at a running host, enter the one-shot pairing code and see (and
 control) the synthetic host stream.
 
+**Status: complete on the dev host (2026-11-16).** The live page pairs with a real
+`aether-remote serve`, negotiates WebRTC and decodes the synthetic 640×360 H.264
+track in system Chrome. Loopback only; compositor DMA-BUF capture remains P7 work.
+
 ## Goal
 
 Open `http://127.0.0.1:4321/viewer.html`, enter `http://127.0.0.1:7443/signal`
@@ -79,6 +83,17 @@ roadmap doubles as the change ledger.
 4. Pressing `Esc`/**Stop** closes the session and the host logs the close.
 5. Input events arrive on the `input` channel and the host logs each kind.
 6. No browser console errors in the e2e run.
+
+## Ledger
+
+| Commit | Scope |
+| --- | --- |
+| `docs(roadmap): plan the browser live viewer` | This plan and the sidebar entry |
+| `fix(remote): advertise the bound ICE candidate` | Bound-port candidate, media gate, PLI → encoder keyframe |
+| `feat(remote): add the HTTP/WebRTC transport` | `HttpSignalTransport`, SDP adaptation, tests |
+| `feat(web): add the live remote viewer page` | Multi-page build, viewer UI/HUD/input, mocked e2e |
+| `test(remote): verify the live viewer end to end` | Opt-in live Playwright spec against the real host |
+| `docs(remote): document the browser live viewer` | Architecture, runbook, FAQ, claims, README, changelog |
 
 ## Risks
 

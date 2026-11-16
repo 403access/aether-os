@@ -309,6 +309,41 @@ no command channel. Clipboard starts off and every toggle is audited.
 
 ![Remote-session overlay](/img/smithay-remote.png)
 
+### Browser live viewer
+
+The marketing site ships a real viewer page at `/viewer.html`. It posts the hello
+to `aether-remote serve`, answers the WebRTC offer, renders the H.264 track and
+returns scancodes over the `input` data channel.
+
+```bash
+# Terminal 1: host. `--code` is optional; without it the printed code is random.
+cargo build --manifest-path os/compositor/Cargo.toml -p aether-remote
+./os/compositor/target/debug/aether-remote serve \
+  --http 127.0.0.1:7443 --udp 127.0.0.1:0 --code K7QM2H4P
+
+# Terminal 2: the page.
+bun run dev:web
+```
+
+Open `http://localhost:4321/viewer.html?code=K7QM2H4P`, click **Connect**, then
+tick **Send input** (pointer lock is requested on the video). The HUD shows the
+session id, tier, codec, resolution, fps, bitrate, RTT, decoded frames and the
+data-channel state; the recording indicator stays visible while the track is
+live. **Stop** sends the bye and closes the peer connection.
+
+Notes:
+
+- Run the page and the host on the same machine. The candidate is loopback-only.
+- Use system Chrome (or another browser with H.264); Playwright's bundled
+  Chromium usually lacks the proprietary decoder.
+- The pairing code is one-shot. Restart the host, or omit `--code` and copy the
+  printed code, for another pairing.
+- The host still streams its synthetic 640×360 pattern; binding the compositor's
+  DMA-BUFs is the remaining P7 task.
+
+The `#remote` panel on the marketing page is a demo of the same client state
+machine with synthetic frames; it does not connect to a host.
+
 ## Task manager
 
 Open from the palette: `Ctrl+Alt+Space` (Simple) or `Super+Space`, type **task**,

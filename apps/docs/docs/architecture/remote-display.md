@@ -19,6 +19,12 @@ format. The compositor still supplies a synthetic source to the harness; binding
 the compositor’s exported DMA-BUFs and measuring glass-to-glass on the 7700K are
 the remaining P7 work. See [P7 completion](/roadmap/p7-completion).
 
+The live page is `apps/web/viewer.html`: it posts the hello to
+`aether-remote serve`, answers the str0m offer in an `RTCPeerConnection`, renders
+the H.264 track in a `<video>` element and sends input over the host's `input`
+data channel. The marketing site's `#remote` panel remains a deterministic demo
+over the same `@aether/remote` state machine.
+
 ## Pipeline
 
 ```text
@@ -45,6 +51,7 @@ and enters the compositor’s virtual seat.
 | Virtual seat: scancodes, coalesced motion, rate limit | `input.rs` | ✅ |
 | No-queue pipeline + latency ledger | `pipeline.rs`, `stats.rs` | ✅ |
 | Browser client, WebCodecs and JPEG sinks, tier ladder | `packages/remote` | ✅ unit-tested |
+| Live page, HTTP signaling + WebRTC transport | `packages/remote/src/transport.ts`, `apps/web/src/viewer` | ✅ live-tested in Chrome |
 | Signaling + status service | `aether-remote serve` | ✅ local-only, opt-in systemd unit |
 | Compositor overlay + recording indicator | `aether-shell`, `aether-shell-wayland` | ✅ `Super+R` |
 
@@ -86,8 +93,10 @@ restarted.
 
 - **WebRTC** over UDP (str0m or webrtc-rs). Built-in RTP, congestion control, packet
   loss concealment and data channels.
-- **Signaling** is a minimal local service: one offer/answer exchange, no TURN by
-  default (LAN/VPN only), explicit ICE candidates.
+- **Signaling** is a minimal local service: one `POST /signal` hello, then one
+  answer, no TURN by default (loopback only), explicit ICE candidates. The host
+  advertises the UDP port its socket actually bound; the page waits (bounded)
+  for ICE gathering because the host does not accept trickled candidates.
 - **Security:** DTLS-SRTP, a per-session bearer token, and a one-shot pairing code.
   No inbound port is opened on the public internet.
 - **Fallback:** if UDP is blocked, WebSocket + access units + WebCodecs, or JPEG
@@ -106,8 +115,11 @@ tests, so a browser can parse a packet without a demuxer.
 ![The browser client with the live session HUD](/img/remote-viewer.png)
 
 - Plain TypeScript, no framework required (`@aether/remote`).
-- `VideoDecoder` feeds a `VideoFrame` directly into the canvas; JPEG tiles use the
-  platform image decoder.
+- The live page negotiates into a `<video>` element, so the browser owns H.264
+  decoding, jitter buffering and loss concealment. `HttpSignalTransport` adapts
+  the host's nested str0m SDP and exposes the remote track and data channel.
+- The WebSocket/JPEG tiers keep the `VideoDecoder`/canvas path: an encoded
+  `VideoFrame` is drawn directly, and JPEG tiles use the platform image decoder.
 - Pointer Lock and `Keyboard.lock()` capture raw input; keys map to Linux evdev
   scancodes, never to commands.
 - Input is rate-limited and coalesced (mouse motion) to avoid flooding the host.
@@ -173,9 +185,31 @@ The architecture document promises a measurement, not a technology. See
    pending.
 5. Failed client decode falls back without restarting the session. The client state
    machine covers the transition and has unit tests.
+6. The live page pairs, negotiates and decodes real H.264 frames. Measured on the
+   dev host with system Chrome: `e2e/viewer-live.spec.ts`,
+   `AETHER_REMOTE_LIVE=1`.
 
-Runbook and evidence: [P7 completion](/roadmap/p7-completion). The service is
+Runbook and evidence: [P7 completion](/roadmap/p7-completion) and
+[Browser live viewer](/roadmap/p7-browser-viewer). The service is
 local-only by default: `aether-remote serve` binds `127.0.0.1:7443` for signaling
 and an ephemeral loopback UDP port for media. `systemctl --user start aether-remote`
 starts it; no firewall port is opened. `scripts/remote-smoke.sh` exercises
 `/health`, pairing, the welcome/offer exchange and the published status document.
+
+### Live viewer runbook
+
+```bash
+# Host: build once, then run with a deterministic code for one session.
+cargo build --manifest-path os/compositor/Cargo.toml -p aether-remote
+./os/compositor/target/debug/aether-remote serve \
+  --http 127.0.0.1:7443 --udp 127.0.0.1:0 --code K7QM2H4P
+
+# Viewer: marketing site dev server in another terminal.
+bun run dev:web
+# open http://localhost:4321/viewer.html?code=K7QM2H4P
+```
+
+Use system Chrome for the current H.264-only host; Playwright's bundled Chromium
+often omits the proprietary decoder. The code is one-shot, so restart the host (or
+omit `--code` and copy the printed code) for another pairing. The source is the
+synthetic 640×360 pattern until the compositor exports its DMA-BUFs.

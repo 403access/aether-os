@@ -80,13 +80,19 @@ the transport and the capability model, not the model.
 
 ## Can I access the desktop from a browser?
 
-The P7 pipeline exists: DMA-BUF capture descriptors, a real low-latency H.264
-software encoder, str0m WebRTC transport, pairing/DTLS signaling, a virtual-seat
-input channel and a WebCodecs/JPEG browser client. `aether-remote serve` is a
-local-only signaling and media host, and `Super+R` opens the session overlay. What
-is not done is binding the compositor’s exported DMA-BUFs and measuring
-glass-to-glass on the 7700K; those remain labelled budgets. See
-[remote display](/architecture/remote-display) and
+Yes. Run `aether-remote serve` on the desktop, open `/viewer.html` on the same
+machine, enter the one-shot pairing code and click **Connect**. The page answers
+the str0m offer in an `RTCPeerConnection`, renders the H.264 track in a `<video>`
+element and sends scancodes over the input data channel. The HUD reports the
+session, tier, codec, resolution, fps, bitrate, RTT and decoded frames.
+
+The host is loopback-only by default, has no trickle-ICE or TURN endpoint, and
+still streams a synthetic 640×360 pattern: binding the compositor’s exported
+DMA-BUFs and measuring glass-to-glass on the 7700K remain P7 tasks, so those
+numbers stay labelled budgets. Use a browser with H.264. The `#remote` panel on
+the marketing site is a demo over the same client state machine, not a host
+connection. See [remote display](/architecture/remote-display),
+[Browser live viewer](/roadmap/p7-browser-viewer) and
 [claims and evidence](/reference/claims-and-evidence).
 
 ## Why XFS?

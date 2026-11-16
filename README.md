@@ -38,7 +38,7 @@ NixOS system, live installer ISO and install path are real, tested code.
 | **Shell** | Compositor core, Smithay and native DRM backends, palette, explorer, chat, status bar, task manager, themes, audio, agent sandboxes, remote overlay; window management, clipboard, text input, cursors, damage tracking | ✅ Built; 10k palette p95 1.11 ms, explorer scroll p95 0.004 ms |
 | **Services** | `aether-index` (inotify + socket queries), `aether-mcp` (13 audited tools), `aether-chat` model loop, `aether-remote` (H.264/WebRTC), `aether-sandbox` (Landlock + seccomp + per-agent UID) | ✅ Built and screenshot-tested |
 | **Libraries** | Domain protocol, BM25F/fuzzy/prefix indexer, SPSC rings + capabilities, agent policy, palette state machine, React UI kit, remote client, benchmark gate | ✅ Unit-tested and typechecked |
-| **Web** | Marketing site with the live palette and explorer, documentation site, browser remote viewer | ✅ Built; Playwright e2e suite |
+| **Web** | Marketing site with the live palette and explorer, documentation site, live browser remote viewer | ✅ Built; Playwright e2e suite, live host pairing |
 | **OS** | NixOS flake with the custom 7700K kernel, disko layout, install script, live installer ISO, aarch64 development VM | ✅ `nix flake check` evaluates; hardware boot not in CI |
 | **Remaining** | P5 agent supervisor and red-team, reference-hardware latency/RAM gates, compositor DMA-BUF import | 🚧 [Roadmap](apps/docs/docs/roadmap/roadmap.md) |
 
@@ -56,6 +56,8 @@ runs installs, builds and tests.
 bun install
 bun run dev:web          # marketing site  → http://localhost:4321
 bun run dev:docs         # documentation   → http://localhost:4322/docs/
+# live remote viewer (with `aether-remote serve` on 127.0.0.1:7443)
+# http://localhost:4321/viewer.html?code=K7QM2H4P
 
 bun run verify           # typecheck + unit tests + design parity + build
 bun run test:e2e         # Playwright against the assembled build
@@ -156,7 +158,7 @@ packages/agents        isolation tiers, admission control, collaboration bus
 packages/palette       headless command-palette state machine
 packages/ui            React design system (palette, chat, chrome)
 packages/design-system vendored Water tokens and component primitives
-packages/remote        browser remote client (WebCodecs, tiers, input batching)
+packages/remote        browser remote client (WebCodecs, HTTP/WebRTC transport, input batching)
 packages/bench         benchmark runner + regression gate (--check)
 os/nixos               reference target: kernel, hardware, disko, installer, services
 os/vm                  separate aarch64 development VM target

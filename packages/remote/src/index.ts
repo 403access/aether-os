@@ -4,4 +4,5 @@ export * from "./wire";
 export * from "./input";
 export * from "./stats";
 export * from "./client";
+export * from "./transport";
 export * from "./decoder";

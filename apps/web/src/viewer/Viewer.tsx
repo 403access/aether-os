@@ -39,6 +39,12 @@ function initialCode(): string {
   return value.toUpperCase();
 }
 
+function initialSignalUrl(): string {
+  if (typeof window === "undefined") return defaultSignalUrl();
+  const params = new URLSearchParams(window.location.search);
+  return params.get("signal") ?? defaultSignalUrl();
+}
+
 /**
  * The live page negotiates H.264 into a `<video>` element, so "can I decode"
  * is the media element's answer, not `VideoDecoder`'s. The host's tier ladder
@@ -117,7 +123,7 @@ export function Viewer() {
   const lastSampleRef = useRef<{ at: number; bytes: number } | null>(null);
   const focusedRef = useRef(false);
 
-  const [url, setUrl] = useState(defaultSignalUrl);
+  const [url, setUrl] = useState(initialSignalUrl);
   const [code, setCode] = useState(initialCode);
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState<string | null>(null);

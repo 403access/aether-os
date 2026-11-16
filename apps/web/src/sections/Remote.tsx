@@ -363,6 +363,11 @@ export function Remote() {
         formats. Glass-to-glass and zero-copy numbers remain targets until the reference
         machine run — see <a href="/docs/reference/claims-and-evidence/">claims and evidence</a>.
       </p>
+      <p className="remote-note">
+        This panel is a demo. To drive a real host, open the{" "}
+        <a href={`${import.meta.env.BASE_URL}viewer.html`}>live viewer</a> and pair it with
+        a local <code>aether-remote serve</code>.
+      </p>
     </section>
   );
 }

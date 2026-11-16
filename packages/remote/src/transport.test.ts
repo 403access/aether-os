@@ -94,8 +94,8 @@ class FakePeerConnection {
 const factory = (config: RTCConfiguration): RTCPeerConnection =>
   new FakePeerConnection(config) as unknown as RTCPeerConnection;
 
-const WELCOME: SignalMessage = {
-  type: "welcome",
+// The host nests a bare welcome document without the signal tag.
+const WELCOME = {
   version: 1,
   session_id: "rs-test",
   token: "token",
@@ -110,7 +110,7 @@ const WELCOME: SignalMessage = {
     max_bitrate_kbps: 4_000,
     session_ttl_ms: 3_600_000,
   },
-};
+} as const;
 
 interface RecordedCall {
   url: string;
@@ -206,6 +206,7 @@ describe("HttpSignalTransport", () => {
     expect(calls[0]?.url).toBe("http://127.0.0.1:7443/signal");
     expect(JSON.parse(calls[0]?.body ?? "{}").type).toBe("hello");
     expect(seen.map((message) => message.type)).toEqual(["welcome", "offer"]);
+    expect(seen[0]).toMatchObject({ type: "welcome", session_id: "rs-test" });
     expect(lastPeer()?.remote).toEqual({
       type: "offer",
       sdp: "v=0\r\noffer",

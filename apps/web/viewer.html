@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Aether OS — remote viewer</title>
+    <meta
+      name="description"
+      content="Pair with a local aether-remote host and stream the Aether desktop into this tab."
+    />
+    <meta name="theme-color" content="#031922" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      <div style="max-width: 70ch; margin: 4rem auto; padding: 0 1.5rem; color: #e9fbff; font-family: system-ui, sans-serif">
+        <h1>Aether OS remote viewer</h1>
+        <p>The viewer needs JavaScript to negotiate WebRTC.</p>
+      </div>
+    </noscript>
+    <script type="module" src="/src/viewer/main.tsx"></script>
+  </body>
+</html>

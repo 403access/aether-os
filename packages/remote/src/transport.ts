@@ -151,7 +151,9 @@ export class HttpSignalTransport implements RemoteTransport {
       const data = (await this.#post(message)) as HelloResponse;
       if (data.welcome === undefined) throw new Error("host did not return a welcome");
       if (typeof data.offer !== "string") throw new Error("host did not return an SDP offer");
-      await this.#onSignal(data.welcome as SignalMessage);
+      // The host nests a bare welcome document; the client state machine expects
+      // the tagged signal message.
+      await this.#onSignal({ ...(data.welcome as object), type: "welcome" } as SignalMessage);
       await this.#onSignal({ type: "offer", sdp: data.offer });
     } catch (error) {
       this.#fail(error);

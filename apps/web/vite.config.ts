@@ -1,5 +1,9 @@
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+
+const root = fileURLToPath(new URL(".", import.meta.url));
 
 /**
  * Base path is configurable so the same build works at `/` locally and at
@@ -14,5 +18,11 @@ export default defineConfig({
     target: "es2022",
     cssCodeSplit: false,
     sourcemap: false,
+    rollupOptions: {
+      input: {
+        main: resolve(root, "index.html"),
+        viewer: resolve(root, "viewer.html"),
+      },
+    },
   },
 });

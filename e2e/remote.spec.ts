@@ -55,9 +55,12 @@ test.describe("remote display viewer", () => {
     const facts = page.locator(".remote-pair__facts");
     await expect(facts).toContainText("scancodes only");
     await expect(facts).toContainText("off by default");
-    await expect(page.locator(".remote-note a")).toHaveAttribute(
+    await expect(
+      page.getByRole("link", { name: "claims and evidence" }),
+    ).toHaveAttribute("href", "/docs/reference/claims-and-evidence/");
+    await expect(page.getByRole("link", { name: "live viewer" })).toHaveAttribute(
       "href",
-      "/docs/reference/claims-and-evidence/",
+      "/viewer.html",
     );
   });
 });

@@ -1,0 +1,224 @@
+import { expect, test, type Page } from "@playwright/test";
+
+const CORS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-headers": "content-type",
+  "access-control-allow-methods": "GET, POST, OPTIONS",
+};
+
+const WELCOME = {
+  version: 1,
+  session_id: "rs-viewer-e2e",
+  token: "e2e-token",
+  expires_at_ms: Date.now() + 3_600_000,
+  tier: "webrtc",
+  codec: "h264",
+  dtls_fingerprint: "sha-256 00:11",
+  policy: {
+    allow_input: true,
+    allow_clipboard: false,
+    allow_audio: false,
+    max_bitrate_kbps: 4_000,
+    session_ttl_ms: 3_600_000,
+  },
+};
+
+/**
+ * A peer connection double. The browser build used by Playwright may not ship an
+ * H.264 decoder, and CI has no host binary; this double proves the page's
+ * negotiation, HUD and input wiring. The real media path is covered by the
+ * opt-in live spec below and by the Rust transport tests.
+ */
+async function installPeerConnectionDouble(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    class FakeChannel {
+      readyState = "open";
+      onopen: (() => void) | null = null;
+      onclose: (() => void) | null = null;
+
+      send(data: string): void {
+        const sink = (window as unknown as { __viewerInput: string[] }).__viewerInput;
+        sink.push(data);
+      }
+
+      close(): void {
+        this.readyState = "closed";
+        this.onclose?.();
+      }
+    }
+
+    class FakePeerConnection {
+      iceGatheringState = "complete";
+      connectionState = "new";
+      localDescription: { type: string; sdp: string } | null = null;
+      ontrack: ((event: unknown) => void) | null = null;
+      ondatachannel: ((event: unknown) => void) | null = null;
+      onconnectionstatechange: (() => void) | null = null;
+
+      constructor(public config: unknown) {
+        (window as unknown as { __viewerPeer: unknown }).__viewerPeer = this;
+      }
+
+      addEventListener(): void {}
+      removeEventListener(): void {}
+
+      async setRemoteDescription(description: unknown): Promise<void> {
+        (this as unknown as { remoteDescription: unknown }).remoteDescription = description;
+      }
+
+      async createAnswer(): Promise<{ type: string; sdp: string }> {
+        return { type: "answer", sdp: "v=0\r\nfake-answer" };
+      }
+
+      async setLocalDescription(description: { sdp: string }): Promise<void> {
+        this.localDescription = { type: "answer", sdp: description.sdp };
+        window.setTimeout(() => {
+          this.connectionState = "connected";
+          this.onconnectionstatechange?.();
+          const channel = new FakeChannel();
+          this.ondatachannel?.({ channel });
+          this.ontrack?.({ streams: [new MediaStream()], track: { kind: "video" } });
+        }, 10);
+      }
+
+      getStats(): Promise<Map<string, unknown>> {
+        return Promise.resolve(
+          new Map<string, unknown>([
+            [
+              "inbound",
+              {
+                type: "inbound-rtp",
+                kind: "video",
+                framesDecoded: 240,
+                framesPerSecond: 60,
+                bytesReceived: 250_000,
+                frameWidth: 640,
+                frameHeight: 360,
+              },
+            ],
+            [
+              "pair",
+              { type: "candidate-pair", nominated: true, currentRoundTripTime: 0.018 },
+            ],
+          ]),
+        );
+      }
+
+      close(): void {
+        this.connectionState = "closed";
+        (window as unknown as { __viewerClosed: boolean }).__viewerClosed = true;
+      }
+    }
+
+    (window as unknown as { __viewerInput: string[] }).__viewerInput = [];
+    (window as unknown as { __viewerClosed: boolean }).__viewerClosed = false;
+    (window as unknown as { RTCPeerConnection: unknown }).RTCPeerConnection =
+      FakePeerConnection;
+  });
+}
+
+async function stubSignaling(page: Page, code: string): Promise<void> {
+  await page.route("**/signal", async (route) => {
+    if (route.request().method() === "OPTIONS") {
+      await route.fulfill({ status: 204, headers: CORS });
+      return;
+    }
+    const message = route.request().postDataJSON() as {
+      type: string;
+      pairing_code?: string;
+    };
+    if (message.type === "hello" && message.pairing_code !== code) {
+      await route.fulfill({
+        status: 403,
+        headers: { ...CORS, "content-type": "application/json" },
+        body: JSON.stringify({ error: "invalid pairing code" }),
+      });
+      return;
+    }
+    if (message.type === "hello") {
+      await route.fulfill({
+        status: 200,
+        headers: { ...CORS, "content-type": "application/json" },
+        body: JSON.stringify({
+          welcome: WELCOME,
+          offer: JSON.stringify({ type: "offer", sdp: "v=0\r\nfake-offer" }),
+        }),
+      });
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      headers: { ...CORS, "content-type": "application/json" },
+      body: JSON.stringify({ ok: true }),
+    });
+  });
+}
+
+test.describe("live viewer", () => {
+  test("pairs, streams, updates the HUD, sends input and stops", async ({ page }) => {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    page.on("console", (message) => {
+      if (message.type() === "error") errors.push(message.text());
+    });
+    await installPeerConnectionDouble(page);
+    await stubSignaling(page, "K7QM2H4P");
+
+    await page.goto("/viewer.html?code=K7QM2H4P");
+    await expect(page.getByRole("heading", { name: "The desktop, in a tab." })).toBeVisible();
+    await expect(page.getByLabel("Pairing code")).toHaveValue("K7QM2H4P");
+    await expect(page.getByLabel("Signaling URL")).toHaveValue(
+      "http://127.0.0.1:7443/signal",
+    );
+    await expect(page.getByRole("status")).toContainText("Waiting for pairing");
+
+    await page.getByRole("button", { name: "Connect" }).click();
+    await expect(page.getByRole("status")).toContainText(
+      "Streaming · session rs-viewer-e2e",
+      { timeout: 10_000 },
+    );
+
+    const hud = page.getByTestId("viewer-hud");
+    await expect(hud).toContainText("webrtc");
+    await expect(hud).toContainText("h264");
+    await expect(hud).toContainText("640×360", { timeout: 5_000 });
+    await expect(hud).toContainText("240");
+    await expect(page.locator(".viewer__rec")).toContainText("recording");
+
+    await page.getByLabel("Send input").check();
+    await page.waitForFunction(
+      () =>
+        (window as unknown as { __viewerInput: string[] }).__viewerInput.length > 0,
+    );
+    await page.evaluate(() => {
+      window.dispatchEvent(
+        new KeyboardEvent("keydown", { code: "KeyA", key: "a", bubbles: true }),
+      );
+    });
+    await page.waitForFunction(() =>
+      (window as unknown as { __viewerInput: string[] }).__viewerInput.some((entry) =>
+        entry.includes('"scancode":30'),
+      ),
+    );
+
+    await page.getByRole("button", { name: "Stop" }).click();
+    await expect(page.getByRole("status")).toContainText("Session closed");
+    await expect(page.locator(".viewer__rec")).toContainText("ready");
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { __viewerClosed: boolean }).__viewerClosed,
+      ),
+    ).toBe(true);
+    expect(errors).toEqual([]);
+  });
+
+  test("shows the host's pairing error", async ({ page }) => {
+    await installPeerConnectionDouble(page);
+    await stubSignaling(page, "K7QM2H4P");
+
+    await page.goto("/viewer.html?code=ZZZZZZZZ");
+    await page.getByRole("button", { name: "Connect" }).click();
+    await expect(page.getByRole("alert")).toContainText("invalid pairing code");
+    await expect(page.getByRole("status")).toContainText("Session error");
+  });
+});

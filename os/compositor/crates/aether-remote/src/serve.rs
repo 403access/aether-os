@@ -8,7 +8,7 @@
 //! DMA-BUFs. The transport, signaling, pairing and status path are real.
 
 use std::io::{Read, Write};
-use std::net::{SocketAddr, TcpListener, TcpStream, UdpSocket};
+use std::net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener, TcpStream, UdpSocket};
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
@@ -160,6 +160,9 @@ pub fn serve(config: ServeConfig) -> Result<(), Box<dyn std::error::Error>> {
                                     crate::transport::WebRtcEvent::ChannelOpen(_) => {
                                         state.input_channel = true;
                                     }
+                                    crate::transport::WebRtcEvent::KeyframeRequest => {
+                                        encoder.request_keyframe();
+                                    }
                                     _ => {}
                                 }
                             }
@@ -177,7 +180,7 @@ pub fn serve(config: ServeConfig) -> Result<(), Box<dyn std::error::Error>> {
                 let rtc = state.rtc.as_mut().expect("checked above");
                 (rtc.poll(Instant::now())?, rtc.is_connected())
             };
-            drain_poll(&socket, poll, &mut state);
+            drain_poll(&socket, poll, &mut state, &mut encoder);
             if connected {
                 if let Some(session) = state.session.as_mut() {
                     session.activate(unix_ms());
@@ -185,8 +188,14 @@ pub fn serve(config: ServeConfig) -> Result<(), Box<dyn std::error::Error>> {
             }
         }
 
-        // Synthetic capture → H.264 → RTP.
-        if last_frame.elapsed() >= frame_interval {
+        // Synthetic capture → H.264 → RTP. Nothing is encoded or queued before
+        // the peer is connected; an answer is not a session.
+        let media_connected = state
+            .rtc
+            .as_ref()
+            .map(WebRtcHost::is_connected)
+            .unwrap_or(false);
+        if media_connected && last_frame.elapsed() >= frame_interval {
             last_frame = Instant::now();
             let now_us = state.started.elapsed().as_micros() as u64;
             if let Some(frame) = source.next_frame(now_us) {
@@ -221,7 +230,12 @@ pub fn serve(config: ServeConfig) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn drain_poll(socket: &UdpSocket, poll: WebRtcPoll, state: &mut HostState) {
+fn drain_poll(
+    socket: &UdpSocket,
+    poll: WebRtcPoll,
+    state: &mut HostState,
+    encoder: &mut H264Encoder,
+) {
     for datagram in poll.datagrams {
         let _ = socket.send_to(&datagram.contents, datagram.destination);
     }
@@ -234,6 +248,7 @@ fn drain_poll(socket: &UdpSocket, poll: WebRtcPoll, state: &mut HostState) {
             }
             crate::transport::WebRtcEvent::ChannelOpen(_) => state.input_channel = true,
             crate::transport::WebRtcEvent::Input(data) => handle_input(state, &data),
+            crate::transport::WebRtcEvent::KeyframeRequest => encoder.request_keyframe(),
             _ => {}
         }
     }
@@ -258,6 +273,17 @@ fn handle_input(state: &mut HostState, data: &[u8]) {
     }
     if let Some(session) = state.session.as_mut() {
         let _ = session.authorize_input(unix_ms(), &session.token.0.clone());
+    }
+}
+
+/// The host candidate must name a reachable address. `--udp 127.0.0.1:0` binds
+/// an ephemeral port, and a wildcard bind is not a destination the browser can
+/// send to, so both are resolved to the loopback address on the bound port.
+fn advertised_candidate(bound: SocketAddr) -> SocketAddr {
+    if bound.ip().is_unspecified() {
+        SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), bound.port())
+    } else {
+        bound
     }
 }
 
@@ -346,7 +372,9 @@ fn respond(
         SignalMessage::Hello(hello) => {
             let now_ms = unix_ms();
             let mut rtc = WebRtcHost::new(Instant::now(), WebRtcConfig::default())?;
-            rtc.add_host_candidate(config.udp_addr)?;
+            // Advertise the socket that actually bound, never the requested
+            // `--udp 127.0.0.1:0`. A port-0 candidate is unreachable.
+            rtc.add_host_candidate(advertised_candidate(state.udp_addr))?;
             let fingerprint = rtc.fingerprint().to_string();
             let (session, welcome) = match accept_hello(
                 registry,
@@ -512,6 +540,17 @@ mod tests {
         let end = find_header_end(request).unwrap();
         assert_eq!(&request[end..end + 4], b"\r\n\r\n");
         assert_eq!(&request[end + 4..], b"{}");
+    }
+
+    #[test]
+    fn candidate_uses_the_bound_port_and_resolves_the_wildcard() {
+        let bound: SocketAddr = "127.0.0.1:54321".parse().unwrap();
+        assert_eq!(advertised_candidate(bound), bound);
+        let wildcard: SocketAddr = "0.0.0.0:54321".parse().unwrap();
+        assert_eq!(
+            advertised_candidate(wildcard),
+            "127.0.0.1:54321".parse().unwrap()
+        );
     }
 
     #[test]

@@ -319,6 +319,13 @@ impl H264Encoder {
         self.config
     }
 
+    /// Ask the encoder for an IDR on the next submitted frame. The browser sends
+    /// an RTCP PLI when it joins or loses a picture; forwarding it avoids waiting
+    /// for the periodic GOP boundary.
+    pub fn request_keyframe(&mut self) {
+        self.inner.request_keyframe();
+    }
+
     pub fn encode(&mut self, frame: &BgraFrame<'_>) -> Result<EncodedFrame, EncodeError> {
         self.encode_impl(
             frame.data,
@@ -630,6 +637,25 @@ mod tests {
             .expect("frame");
         assert!(second.is_annex_b());
         assert!(!second.data.is_empty());
+    }
+
+    #[test]
+    fn keyframe_request_forces_the_next_access_unit_to_be_an_idr() {
+        let config = EncoderConfig::low_latency(160, 96, 60).with_bitrate(2_000);
+        let mut encoder = H264Encoder::new(config).expect("encoder");
+        let first = encoder
+            .encode(&BgraFrame::new(160, 96, 640, &bgra(160, 96, 0)))
+            .expect("frame");
+        assert!(first.keyframe);
+        let second = encoder
+            .encode(&BgraFrame::new(160, 96, 640, &bgra(160, 96, 8)))
+            .expect("frame");
+        assert!(!second.keyframe, "mid-GOP frame must not be an IDR");
+        encoder.request_keyframe();
+        let third = encoder
+            .encode(&BgraFrame::new(160, 96, 640, &bgra(160, 96, 16)))
+            .expect("frame");
+        assert!(third.keyframe, "requested keyframe must be an IDR");
     }
 
     #[test]

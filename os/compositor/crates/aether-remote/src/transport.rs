@@ -488,6 +488,19 @@ mod tests {
     }
 
     #[test]
+    fn offer_carries_the_host_candidate_port() {
+        let mut host = WebRtcHost::new(Instant::now(), WebRtcConfig::default()).unwrap();
+        host.add_host_candidate("127.0.0.1:54321".parse().unwrap())
+            .unwrap();
+        let offer: serde_json::Value = serde_json::from_str(&host.create_offer().unwrap()).unwrap();
+        let sdp = offer["sdp"].as_str().expect("sdp string");
+        assert!(
+            sdp.contains(" 54321 typ host"),
+            "offer does not advertise the bound port:\n{sdp}"
+        );
+    }
+
+    #[test]
     fn writes_video_after_negotiation() {
         let mut pair = Pair::new();
         pair.connect();

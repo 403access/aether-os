@@ -55,6 +55,29 @@ marker skips the DRM check and starts `aether-vm-session` on tty8. Open
 `VM_VNC_PASSWORD`. Use `VM_GUI_DISPLAY=cocoa` for a native QEMU window.
 `VM_VNC_DISPLAY=6` selects `127.0.0.1:5906`. `Ctrl-A X` quits QEMU.
 
+### Browser access
+
+`vnc://` opens Screen Sharing, not a browser tab. To interact with the same
+session in Chrome or Safari, bridge QEMU's VNC through noVNC:
+
+```bash
+./scripts/vm-browser.sh            # boot/reuse the VM, start the bridge, open Chrome
+./scripts/vm-browser.sh --no-open  # start only and print the URL
+./scripts/vm-browser.sh --stop     # stop the bridge; the VM keeps running
+./scripts/vm-browser.sh --stop-vm  # stop a VM started by the script
+```
+
+The page is `http://127.0.0.1:6080/vnc.html`; the VNC password (`aether` by
+default) is pre-filled. The script caches noVNC in `artifacts/novnc`, uses an
+installed `websockify` (or `uvx --from websockify`), and listens on loopback
+only. `VM_BROWSER_PORT`, `VM_VNC_DISPLAY` and `VM_VNC_PASSWORD` override the
+defaults; `--no-boot` requires an already running VNC VM. Click the canvas to
+capture keyboard and pointer input.
+
+This is a development bridge over raw VNC (the tier-4 fallback). It is separate
+from the product `aether-remote` path, which still streams a synthetic source
+until compositor capture is wired.
+
 If the VNC client does not deliver Super, inject it through QEMU from the host:
 
 ```bash

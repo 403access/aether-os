@@ -91,7 +91,14 @@ still streams a synthetic 640×360 pattern: binding the compositor’s exported
 DMA-BUFs and measuring glass-to-glass on the 7700K remain P7 tasks, so those
 numbers stay labelled budgets. Use a browser with H.264. The `#remote` panel on
 the marketing site is a demo over the same client state machine, not a host
-connection. See [remote display](/architecture/remote-display),
+connection.
+
+For the **development VM**, `./scripts/vm-browser.sh` bridges QEMU's VNC output
+through noVNC (`http://127.0.0.1:6080/vnc.html`) so you can see and drive the
+real desktop in a browser tab. It is a loopback-only debugging path over VNC
+(tier 4), not the product `aether-remote` pipeline.
+
+See [remote display](/architecture/remote-display),
 [Browser live viewer](/roadmap/p7-browser-viewer) and
 [claims and evidence](/reference/claims-and-evidence).
 

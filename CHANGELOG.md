@@ -1,3 +1,20 @@
+## v0.1.0-alpha.76
+
+- Add `scripts/vm-browser.sh` to drive the development VM's real desktop from a
+  browser. It boots or reuses `./scripts/vm-run.sh --gui`, fetches noVNC into
+  `artifacts/novnc` on first use, proxies QEMU's VNC output to
+  `http://127.0.0.1:6080/vnc.html` with websockify, and opens Chrome with the
+  password pre-filled. `--no-open`, `--no-boot`, `--stop`, `--stop-vm` and
+  `--stop-all` cover headless and cleanup workflows; `VM_BROWSER_PORT`,
+  `VM_VNC_DISPLAY` and `VM_VNC_PASSWORD` move the endpoints. The bridge is
+  loopback-only and is explicitly a tier-4 debugging path, separate from the
+  `aether-remote` capture pipeline.
+- Document the browser path in the VM README, the VM getting-started guide, the
+  remote-display architecture page, the FAQ and the development script table.
+- Verification: `bash -n` and `--help`, reuse of an existing noVNC listener, and
+  a fresh start/stop on an alternate port (page served, listener PID recorded,
+  port closed and pid file removed).
+
 ## v0.1.0-alpha.75
 
 - Label the host's frame source so the synthetic test pattern is never mistaken

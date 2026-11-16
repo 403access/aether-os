@@ -216,3 +216,23 @@ synthetic 640×360 pattern until the compositor exports its DMA-BUFs. The host
 reports which source is live (`synthetic` today, `compositor` once bound) in
 `/health` and in the status document, and the page derives the health URL from
 the signal URL and labels the video accordingly.
+
+### Development VM in a browser
+
+The VM's real DRM session can be inspected and driven in a browser before
+compositor capture lands: `scripts/vm-browser.sh` boots or reuses
+`./scripts/vm-run.sh --gui`, fetches noVNC into `artifacts/novnc`, and bridges
+QEMU's VNC output (default `127.0.0.1:5905`) to
+`http://127.0.0.1:6080/vnc.html`. Input is forwarded to QEMU, so the desktop is
+interactive.
+
+```bash
+./scripts/vm-browser.sh            # boot/reuse, start the bridge, open Chrome
+./scripts/vm-browser.sh --no-open  # print the URL instead
+./scripts/vm-browser.sh --stop     # stop the bridge; leave the VM running
+```
+
+The bridge is loopback-only and is a **development** path over VNC (tier 4). It
+is separate from `aether-remote serve`, which still streams the synthetic
+source, and it does not change the P7 capture roadmap. See
+[the development VM](/getting-started/virtual-machine#browser-access).

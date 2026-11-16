@@ -45,6 +45,7 @@ The docs dev server uses `baseUrl: /docs/`, so open
 | `bun run test:e2e` | Playwright against built sites |
 | `bun run bench` | Benchmarks (`--check` gates) |
 | `bun run os:test` | `cargo test` for the compositor core |
+| `./scripts/vm-browser.sh` | Boot/reuse the dev VM and open its desktop in a browser (noVNC); `--stop` ends the bridge |
 | `./scripts/clean.sh` | Remove build/test artifacts; `--all` also removes dependencies |
 
 ## Cleaning generated state

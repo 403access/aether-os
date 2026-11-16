@@ -130,6 +130,24 @@ or with a VNC client:
 vncviewer 127.0.0.1:5905
 ```
 
+### Browser access
+
+Browsers cannot open `vnc://` directly. `scripts/vm-browser.sh` bridges QEMU's
+VNC output through noVNC and opens the same interactive session in Chrome:
+
+```bash
+./scripts/vm-browser.sh            # boot/reuse the VM, start the bridge, open Chrome
+./scripts/vm-browser.sh --no-open  # print the URL instead
+./scripts/vm-browser.sh --stop     # stop the bridge, leave the VM running
+./scripts/vm-browser.sh --stop-vm  # stop a VM started by the script
+```
+
+Open `http://127.0.0.1:6080/vnc.html` and click the canvas; keyboard and pointer
+events go to QEMU. The VNC password is `aether` by default and the script
+pre-fills it. Override the ports with `VM_BROWSER_PORT` and `VM_VNC_DISPLAY`.
+The bridge is loopback-only and is a development/debugging path (VNC is the
+tier-4 fallback), not the compositor's `aether-remote` capture path.
+
 ### Keyboard profile and VNC
 
 The compositor defaults to the **Simple** keyboard profile, which uses

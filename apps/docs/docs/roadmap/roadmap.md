@@ -232,7 +232,9 @@ Deliverables:
 **Status.** Code-complete except the target capture binding and measurement. The
 transport, encoder, client and fallback model are tested on the dev host; the
 gate numbers remain **budgets**. Execution plan and ledger:
-[P7 completion](/roadmap/p7-completion).
+[P7 completion](/roadmap/p7-completion). The live browser viewer that pairs with
+`aether-remote serve` is tracked in
+[Browser live viewer](/roadmap/p7-browser-viewer).
 
 **Dependencies.** P2, P6 (for real workloads). **Risk:** encoder/driver matrix,
 WebCodecs support differences.

@@ -63,6 +63,7 @@ const sidebars: SidebarsConfig = {
         "roadmap/p3-completion",
         "roadmap/p4-completion",
         "roadmap/p7-completion",
+        "roadmap/p7-browser-viewer",
         "roadmap/memory-scenarios",
         "roadmap/risks",
         "roadmap/design-system-and-explorer",

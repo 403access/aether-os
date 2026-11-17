@@ -31,6 +31,13 @@ export const WELCOME = {
  */
 export async function installPeerConnectionDouble(page: Page): Promise<void> {
   await page.addInitScript(() => {
+    // Pointer lock is a real user gesture in Chromium and can make later
+    // synthetic clicks land on the locked video. The viewer sets its input
+    // focus flag directly, so the test does not need the browser lock.
+    Object.defineProperty(HTMLVideoElement.prototype, "requestPointerLock", {
+      configurable: true,
+      value: () => Promise.resolve(),
+    });
     class FakeChannel {
       readyState = "open";
       onopen: (() => void) | null = null;

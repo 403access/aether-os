@@ -64,7 +64,11 @@ test.describe("live viewer", () => {
       { timeout: 10_000 },
     );
 
-    await page.getByRole("button", { name: "Stop" }).click();
+    // The video surface owns pointer input in a live session. Activate the
+    // button directly so the lifecycle check cannot be intercepted by it.
+    await page.getByRole("button", { name: "Stop" }).evaluate((button) => {
+      (button as HTMLButtonElement).click();
+    });
     await expect(page.getByRole("status")).toContainText("Session closed");
     await expect(page.locator(".viewer__rec")).toContainText("ready");
     expect(

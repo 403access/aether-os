@@ -38,9 +38,11 @@ WINDOW_ID="$(xdotool search --name "Aether OS" | head -1)"
 xdotool windowfocus "${WINDOW_ID}"
 
 # The dock is centred; the first two buttons are Palette and Terminal.
-xdotool mousemove 390 24
-sleep 0.4
+# 1280px: dock x=287, 96px items, 4px gaps.
+xdotool mousemove 340 24
+sleep 0.5
 import -window root "${OUT}/topbar.png"
+sleep 0.5
 grep -q "cursor -> Pointer" "${OUT}/topbar-app.log" || {
   echo "error: top shortcut did not produce a pointer cursor" >&2
   cat "${OUT}/topbar-app.log" >&2
@@ -57,10 +59,11 @@ grep -q "top shortcut palette" "${OUT}/topbar-app.log" || {
 xdotool key Escape
 sleep 0.5
 
-xdotool mousemove 486 24
+xdotool mousemove 440 24
 xdotool click 1
 sleep 2
 import -window root "${OUT}/topbar-terminal.png"
+sleep 0.5
 grep -q "top shortcut terminal" "${OUT}/topbar-app.log" || {
   echo "error: Terminal button did not fire" >&2
   cat "${OUT}/topbar-app.log" >&2

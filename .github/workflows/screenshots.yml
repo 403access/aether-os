@@ -1,0 +1,113 @@
+name: screenshots
+
+# Weekly refresh of every UI capture. The compositor job runs the real Xvfb
+# smokes in Linux; the web job builds the assembled site and drives it with
+# Playwright. The publish job opens (or updates) a review PR with the new
+# images. Manual runs are available from the Actions tab.
+on:
+  schedule:
+    - cron: "31 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: screenshots
+  cancel-in-progress: false
+
+jobs:
+  shell:
+    name: compositor captures
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+      - uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+      - name: Build and capture under Xvfb
+        run: |
+          nix develop .#smithay --command bash -lc '
+            set -euo pipefail
+            cargo build --manifest-path os/compositor/aether-shell-smithay/Cargo.toml
+            BIN=os/compositor/aether-shell-smithay/target/debug/aether-shell-smithay \
+              ./scripts/capture-shell-screenshots.sh --native
+          '
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: screenshots-shell
+          path: artifacts/screenshots/shell
+          retention-days: 30
+
+  web:
+    name: browser captures
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install
+        run: bun install --frozen-lockfile
+      - name: Install browser
+        run: bunx playwright install --with-deps chromium
+      - name: Build and capture
+        run: ./scripts/capture-web-screenshots.sh
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: screenshots-web
+          path: artifacts/screenshots/web
+          retention-days: 30
+
+  publish:
+    name: publish review PR
+    needs: [shell, web]
+    if: always() && (needs.shell.result == 'success' || needs.web.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install
+        run: bun install --frozen-lockfile
+      - uses: actions/download-artifact@v5
+        continue-on-error: true
+        with:
+          name: screenshots-shell
+          path: artifacts/screenshots/shell
+      - uses: actions/download-artifact@v5
+        continue-on-error: true
+        with:
+          name: screenshots-web
+          path: artifacts/screenshots/web
+      - name: Publish curated images
+        run: bun run scripts/publish-screenshots.ts
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: screenshots-index
+          path: |
+            artifacts/screenshots/index.html
+            artifacts/screenshots/manifest.json
+          retention-days: 30
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "chore(screenshots): refresh the UI captures"
+          title: "chore(screenshots): refresh the UI captures"
+          body: |
+            Automated refresh from the weekly `screenshots` workflow.
+
+            - compositor captures: Xvfb smokes on Linux
+            - browser captures: assembled site driven by Playwright
+            - contact sheet and manifest are attached to the workflow run
+          branch: screenshots/refresh
+          delete-branch: true
+          add-paths: |
+            apps/web/public/screenshots
+            apps/docs/static/img

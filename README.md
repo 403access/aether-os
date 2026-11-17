@@ -27,6 +27,12 @@ backed by an in-memory index that answers in single-digit milliseconds.
 More surface-by-surface evidence, including the keymap cheatsheet and window
 management: [`architecture/smithay-backend.md`](apps/docs/docs/architecture/smithay-backend.md).
 
+Regenerate every capture with `bun run screenshots`. The flow runs the compositor
+smokes under Xvfb (inside a Linux container on macOS), drives the assembled site
+with Playwright, publishes the curated images and writes
+`artifacts/screenshots/index.html` plus a manifest. See
+[`scripts/screenshots/README.md`](scripts/screenshots/README.md).
+
 ## What exists today
 
 This repository is the **installable base release (v0.1 “Kestrel”)**: the product

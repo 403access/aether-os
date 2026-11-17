@@ -1,0 +1,15 @@
+.git
+.github
+node_modules
+**/node_modules
+.bun
+artifacts
+apps/docs/build
+apps/docs/.docusaurus
+apps/web/dist
+test-results
+playwright-report
+bench-results
+os/compositor/target
+os/compositor/*/target
+.DS_Store

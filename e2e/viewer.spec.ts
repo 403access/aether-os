@@ -7,6 +7,9 @@ import {
 
 test.describe("live viewer", () => {
   test("pairs, streams, updates the HUD, sends input and stops", async ({ page }) => {
+    // The fake transport is fast, but a loaded CI runner can still need more
+    // than the suite default while it negotiates and samples the HUD.
+    test.setTimeout(45_000);
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     page.on("console", (message) => {
@@ -33,6 +36,7 @@ test.describe("live viewer", () => {
     const hud = page.getByTestId("viewer-hud");
     await expect(hud).toContainText("webrtc");
     await expect(hud).toContainText("h264");
+    await expect(hud).toContainText("open");
     await expect(hud).toContainText("640×360", { timeout: 5_000 });
     await expect(hud).toContainText("240");
     await expect(page.getByTestId("viewer-source")).toContainText(
@@ -44,19 +48,20 @@ test.describe("live viewer", () => {
     await expect(page.locator(".viewer__rec")).toContainText("recording");
 
     await page.getByLabel("Send input").check();
+    // The viewer ignores keys typed into form controls. Move focus off the
+    // checkbox, then use the real keyboard path so the test proves the page,
+    // the batcher and the data channel together.
+    await page.evaluate(() => {
+      (document.activeElement as HTMLElement | null)?.blur();
+    });
+    await page.keyboard.press("a");
     await page.waitForFunction(
       () =>
-        (window as unknown as { __viewerInput: string[] }).__viewerInput.length > 0,
-    );
-    await page.evaluate(() => {
-      window.dispatchEvent(
-        new KeyboardEvent("keydown", { code: "KeyA", key: "a", bubbles: true }),
-      );
-    });
-    await page.waitForFunction(() =>
-      (window as unknown as { __viewerInput: string[] }).__viewerInput.some((entry) =>
-        entry.includes('"scancode":30'),
-      ),
+        (window as unknown as { __viewerInput: string[] }).__viewerInput.some(
+          (entry) => entry.includes('"scancode":30'),
+        ),
+      undefined,
+      { timeout: 10_000 },
     );
 
     await page.getByRole("button", { name: "Stop" }).click();

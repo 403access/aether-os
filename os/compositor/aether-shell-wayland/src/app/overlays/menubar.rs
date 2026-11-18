@@ -178,14 +178,14 @@ impl App {
                     self.open_task_manager();
                 }
             }
-            TrayAction::Network => self.open_system(SystemApp::Network),
-            TrayAction::Devices => self.open_system(SystemApp::Devices),
-            TrayAction::Battery => self.open_system(SystemApp::Battery),
+            TrayAction::Network => self.toggle_tray(crate::app::tray::TrayId::Network),
+            TrayAction::Devices => self.toggle_tray(crate::app::tray::TrayId::Devices),
+            TrayAction::Battery => self.toggle_tray(crate::app::tray::TrayId::Battery),
             TrayAction::Sound => {
-                self.toggle_audio();
+                self.toggle_tray(crate::app::tray::TrayId::Sound);
             }
             TrayAction::Clock => {
-                self.open_calendar();
+                self.toggle_tray(crate::app::tray::TrayId::Calendar);
             }
             TrayAction::Appearance => {
                 if self.shell.toggle_theme_mode() {

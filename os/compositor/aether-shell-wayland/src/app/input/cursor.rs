@@ -24,6 +24,15 @@ pub(crate) fn cursor_for(state: &App) -> CursorShape {
         }
         return CursorShape::Arrow;
     }
+    if state.tray_open().is_some() {
+        if state
+            .tray_action_at(point)
+            .is_some_and(|action| !matches!(action, crate::app::tray::TrayActionKind::Nothing))
+        {
+            return CursorShape::Pointer;
+        }
+        return CursorShape::Arrow;
+    }
     if state.system_open() {
         if state
             .system_action_at(point)

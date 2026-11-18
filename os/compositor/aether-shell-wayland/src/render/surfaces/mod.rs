@@ -13,3 +13,4 @@ mod status;
 mod system_app;
 mod task_manager;
 mod themes;
+mod tray;

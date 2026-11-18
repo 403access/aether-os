@@ -250,6 +250,16 @@ impl App {
                 self.end_input(started);
                 return;
             }
+            if self.tray_open().is_some() {
+                self.pointer_captured = true;
+                if let Some(action) = self.tray_action_at(point) {
+                    self.activate_tray_action(action);
+                }
+                self.cursor = cursor_for(self);
+                self.mark_cursor_damage(self.pointer_pos);
+                self.end_input(started);
+                return;
+            }
             if self.system_open() {
                 if let Some(action) = self.system_action_at(point) {
                     self.activate_system_action(action);

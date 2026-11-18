@@ -49,6 +49,7 @@ impl App {
         chunk.merge(self.compose_explorer(&ctx));
         chunk.merge(self.compose_calendar(&ctx));
         chunk.merge(self.compose_system_app(&ctx));
+        chunk.merge(self.compose_tray(&ctx));
         chunk.merge(self.compose_dock(&ctx));
         chunk.merge(self.compose_status_chrome(&ctx));
 

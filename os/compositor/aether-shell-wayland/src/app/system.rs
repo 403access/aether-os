@@ -10,6 +10,7 @@ use smithay::input::keyboard::{keysyms, Keysym};
 
 use super::super::App;
 use super::system_info::{self, BatteryFacts, BluetoothFacts, NetworkFacts, SystemFacts};
+use super::tray::TrayId;
 
 /// Demo window box at 1280 × 800.
 pub const APP_WIDTH: u32 = 1248;
@@ -102,6 +103,8 @@ pub struct SystemState {
     /// Switches that are view state only (automatic updates, indicators, clock).
     pub settings_toggles: [bool; 5],
     pub settings_scroll: usize,
+    /// Open menu-bar tray popover.
+    pub tray: Option<TrayId>,
     /// Top CPU consumers, sampled when the window opens.
     pub consumers: Vec<(String, f32)>,
     /// Cached host facts, refreshed when a window opens.
@@ -138,6 +141,7 @@ impl SystemState {
 
 impl App {
     pub(crate) fn open_system(&mut self, app: SystemApp) {
+        self.close_tray();
         self.shortcuts_open = false;
         self.menu_open = None;
         self.close_task_manager();

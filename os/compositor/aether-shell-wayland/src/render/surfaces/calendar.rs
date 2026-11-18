@@ -37,6 +37,10 @@ impl App {
         let agenda = self.calendar_agenda_rect();
 
         // Window body and title bar.
+        let effects = self.window_effects(rect, 14, true);
+        if let Some(entry) = effects.shadow {
+            panels.push(entry);
+        }
         if let Some(buffer) = self.chrome_round(rect.width, rect.height, 14, WINDOW_FILL) {
             panels.push((buffer, rect.x, rect.y));
         }
@@ -287,6 +291,9 @@ impl App {
             rim,
         ));
 
+        if let Some((buffer, x, y)) = effects.wave {
+            panels.push((buffer, x, y));
+        }
         RenderChunk {
             chrome,
             labels,

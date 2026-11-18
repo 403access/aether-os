@@ -36,4 +36,10 @@ impl Ui {
     pub fn solid(&mut self, rect: AetherRect, color: [f32; 4]) {
         self.chrome.push((rect, color));
     }
+
+    pub fn effect(&mut self, effect: Option<(Arc<MemoryRenderBuffer>, i32, i32)>) {
+        if let Some((buffer, x, y)) = effect {
+            self.panels.push((buffer, x, y));
+        }
+    }
 }

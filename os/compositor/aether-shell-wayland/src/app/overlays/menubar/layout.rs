@@ -191,7 +191,7 @@ pub fn menu_entries(id: MenuId) -> &'static [MenuEntry] {
 
 /// Item height and padding inside a menu popover.
 const MENU_ITEM_HEIGHT: u32 = 30;
-const MENU_POP_PAD: i32 = 6;
+const MENU_POP_PAD: i32 = 5;
 const MENU_RULE: i32 = 9;
 const MENU_ICON: u32 = 15;
 const MENU_GAP: i32 = 8;
@@ -206,12 +206,12 @@ pub struct MenuPanel {
 
 pub fn menu_layout(bar: &Menubar, menu: MenuId, measure: Measure<'_>) -> MenuPanel {
     let entries = menu_entries(menu);
-    let mut widest = 150;
+    let mut widest = 244;
     for entry in entries {
         widest = widest
             .max(text(measure, entry.label, 1) + MENU_ICON as i32 + MENU_GAP + 2 * MENU_SIDE_PAD);
     }
-    let width = widest.min(280);
+    let width = widest.min(320);
     let mut height = MENU_POP_PAD * 2;
     for entry in entries {
         height += MENU_ITEM_HEIGHT as i32;
@@ -229,7 +229,7 @@ pub fn menu_layout(bar: &Menubar, menu: MenuId, measure: Measure<'_>) -> MenuPan
         .x
         .min(bar.rect.right() as i32 - width - 8)
         .max(bar.rect.x + 8);
-    let rect = Rect::new(x, bar.rect.bottom() as i32, width as u32, height as u32);
+    let rect = Rect::new(x, bar.rect.bottom() as i32 + 7, width as u32, height as u32);
     let mut items = Vec::new();
     let mut y = rect.y + MENU_POP_PAD;
     for entry in entries {

@@ -28,7 +28,46 @@ fn rgba_bytes(width: u32, height: u32) -> usize {
         .saturating_add(KEY_BYTES)
 }
 
+pub(crate) struct WindowEffects {
+    pub shadow: Option<(Arc<MemoryRenderBuffer>, i32, i32)>,
+    pub wave: Option<(Arc<MemoryRenderBuffer>, i32, i32)>,
+}
+
 impl App {
+    pub(crate) fn wave_phase_step(&self) -> u32 {
+        let millis = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|elapsed| elapsed.as_millis() as u64)
+            .unwrap_or(0);
+        ((millis % 8000) as f32 / 8000.0 * 24.0).round() as u32 % 24
+    }
+
+    /// Drop shadow and (for focused windows with effects on) the tide rim.
+    pub(crate) fn window_effects(
+        &mut self,
+        rect: aether_geometry::Rect,
+        radius: u32,
+        focused: bool,
+    ) -> WindowEffects {
+        let shadow = self
+            .chrome_shadow(rect.width, rect.height, radius)
+            .map(|buffer| {
+                (
+                    buffer,
+                    rect.x - primitives::SHADOW_PAD,
+                    rect.y - primitives::SHADOW_PAD,
+                )
+            });
+        let wave = if focused && self.shell.theme_settings().effects {
+            let phase = self.wave_phase_step();
+            self.chrome_wave(rect.width, rect.height, radius, phase, 217)
+                .map(|buffer| (buffer, rect.x - 6, rect.y - 6))
+        } else {
+            None
+        };
+        WindowEffects { shadow, wave }
+    }
+
     pub(crate) fn chrome_icon(
         &mut self,
         name: &str,
@@ -85,6 +124,47 @@ impl App {
         let buffer = Arc::new(primitives::rounded_top(width, height, radius as f32, fill)?);
         self.chrome_tops
             .insert(key, buffer.clone(), rgba_bytes(width, height));
+        Some(buffer)
+    }
+
+    pub(crate) fn chrome_shadow(
+        &mut self,
+        width: u32,
+        height: u32,
+        radius: u32,
+    ) -> Option<Arc<MemoryRenderBuffer>> {
+        let key = (width, height, radius);
+        if let Some(buffer) = self.chrome_shadows.get(&key) {
+            return Some(buffer.clone());
+        }
+        let buffer = Arc::new(primitives::shadow(width, height, radius as f32)?);
+        self.chrome_shadows
+            .insert(key, buffer.clone(), rgba_bytes(width + 56, height + 56));
+        Some(buffer)
+    }
+
+    pub(crate) fn chrome_wave(
+        &mut self,
+        width: u32,
+        height: u32,
+        radius: u32,
+        phase_step: u32,
+        opacity: u8,
+    ) -> Option<Arc<MemoryRenderBuffer>> {
+        let key = (width, height, radius, phase_step, opacity);
+        if let Some(buffer) = self.chrome_waves.get(&key) {
+            return Some(buffer.clone());
+        }
+        let phase = phase_step as f32 / 24.0 * std::f32::consts::TAU;
+        let buffer = Arc::new(primitives::wave_rim(
+            width,
+            height,
+            radius as f32,
+            phase,
+            opacity as f32 / 255.0,
+        )?);
+        self.chrome_waves
+            .insert(key, buffer.clone(), rgba_bytes(width + 12, height + 12));
         Some(buffer)
     }
 

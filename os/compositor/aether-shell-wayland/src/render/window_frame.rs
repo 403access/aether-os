@@ -49,6 +49,20 @@ impl App {
         let y = rect.y - offset.1;
         let width = rect.width.max(1);
         let height = WINDOW_FRAME_HEIGHT as u32;
+        let effects = self.window_effects(rect, TITLE_RADIUS, focused);
+        if let Some((buffer, ex, ey)) = effects.shadow {
+            if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
+                renderer,
+                ((ex - offset.0) as f64, (ey - offset.1) as f64),
+                &buffer,
+                None,
+                None,
+                None,
+                Kind::Unspecified,
+            ) {
+                elements.push(AetherRenderElement::from(element));
+            }
+        }
 
         // Title bar fill: focused windows are brighter, unfocused ones sit
         // back. `.os-window:not(.is-focused) .os-titlebar { opacity: .78 }`.
@@ -185,6 +199,20 @@ impl App {
         if let Some(subtitle) = subtitle {
             let sub_x = text_x + self.text_width(&label, 1) as i32 + 8;
             self.push_label(renderer, elements, subtitle, (sub_x, text_y), 0, tokens.dim);
+        }
+
+        if let Some((buffer, ex, ey)) = effects.wave {
+            if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
+                renderer,
+                ((ex - offset.0) as f64, (ey - offset.1) as f64),
+                &buffer,
+                None,
+                None,
+                None,
+                Kind::Unspecified,
+            ) {
+                elements.push(AetherRenderElement::from(element));
+            }
         }
     }
 }

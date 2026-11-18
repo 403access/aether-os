@@ -138,6 +138,164 @@ pub fn panel(
     Some(buffer(w, h, &straight(&pixmap)))
 }
 
+/// Soft drop shadow behind windows and popovers. Returns a padded buffer; draw
+/// it at `(x - SHADOW_PAD, y - SHADOW_PAD)`.
+pub const SHADOW_PAD: i32 = 28;
+
+pub fn shadow(width: u32, height: u32, radius: f32) -> Option<MemoryRenderBuffer> {
+    let pad = SHADOW_PAD as u32;
+    let w = width + pad * 2;
+    let h = height + pad * 2;
+    let mut pixmap = resvg::tiny_skia::Pixmap::new(w.max(1), h.max(1))?;
+    // Three stacked layers approximate the demo's
+    // `0 34px 90px rgba(0,8,14,.62), 0 3px 12px rgba(0,8,14,.4)`.
+    for (offset, alpha, spread) in [(18.0f32, 48u8, 22.0f32), (6.0, 60, 8.0), (1.0, 70, 2.0)] {
+        let mut paint = resvg::tiny_skia::Paint::default();
+        paint.set_color_rgba8(0, 8, 14, alpha);
+        if let Some(path) = rounded_path(
+            pad as f32 - spread,
+            pad as f32 - spread + offset,
+            width as f32 + spread * 2.0,
+            height as f32 + spread * 2.0,
+            radius + spread,
+        ) {
+            pixmap.fill_path(
+                &path,
+                &paint,
+                resvg::tiny_skia::FillRule::Winding,
+                resvg::tiny_skia::Transform::identity(),
+                None,
+            );
+        }
+    }
+    Some(buffer(w, h, &straight(&pixmap)))
+}
+
+/// The "tide line": a 2.5 px accent ring around a focused window, displaced by
+/// a slow sine wave and lit by two conic highlight lobes. Mirrors the demo's
+/// `.os-window::before` conic gradient + `#os-window-wave` displacement filter.
+pub fn wave_rim(
+    width: u32,
+    height: u32,
+    radius: f32,
+    phase: f32,
+    opacity: f32,
+) -> Option<MemoryRenderBuffer> {
+    const PAD: u32 = 6;
+    let w = width.max(1) as f32;
+    let h = height.max(1) as f32;
+    let mut pixmap = resvg::tiny_skia::Pixmap::new(width + PAD * 2, height + PAD * 2)?;
+    let r = radius.min(w / 2.0).min(h / 2.0);
+    let (x0, y0) = (PAD as f32 + 1.25, PAD as f32 + 1.25);
+    let (x1, y1) = (x0 + w - 2.5, y0 + h - 2.5);
+
+    // Sample the rounded-rect outline in path order: edges, then corner arcs.
+    let mut points: Vec<(f32, f32, f32, f32)> = Vec::new();
+    fn edge(
+        points: &mut Vec<(f32, f32, f32, f32)>,
+        from: (f32, f32),
+        to: (f32, f32),
+        normal: (f32, f32),
+    ) {
+        let steps = 28;
+        for i in 0..=steps {
+            let t = i as f32 / steps as f32;
+            points.push((
+                from.0 + (to.0 - from.0) * t,
+                from.1 + (to.1 - from.1) * t,
+                normal.0,
+                normal.1,
+            ));
+        }
+    }
+    fn arc(
+        points: &mut Vec<(f32, f32, f32, f32)>,
+        center: (f32, f32),
+        radius: f32,
+        start: f32,
+        end: f32,
+    ) {
+        let steps = 12;
+        for i in 0..=steps {
+            let angle = (start + (end - start) * i as f32 / steps as f32).to_radians();
+            points.push((
+                center.0 + radius * angle.cos(),
+                center.1 + radius * angle.sin(),
+                angle.cos(),
+                angle.sin(),
+            ));
+        }
+    }
+    edge(&mut points, (x0 + r, y0), (x1 - r, y0), (0.0, -1.0));
+    arc(&mut points, (x1 - r, y0 + r), r, -90.0, 0.0);
+    edge(&mut points, (x1, y0 + r), (x1, y1 - r), (1.0, 0.0));
+    arc(&mut points, (x1 - r, y1 - r), r, 0.0, 90.0);
+    edge(&mut points, (x1 - r, y1), (x0 + r, y1), (0.0, 1.0));
+    arc(&mut points, (x0 + r, y1 - r), r, 90.0, 180.0);
+    edge(&mut points, (x0, y1 - r), (x0, y0 + r), (-1.0, 0.0));
+    arc(&mut points, (x0 + r, y0 + r), r, 180.0, 270.0);
+    let len = points.len().max(1) as f32;
+    let cx = w / 2.0 + PAD as f32;
+    let cy = h / 2.0 + PAD as f32;
+    let accent = [56.0f32, 214.0, 255.0];
+    for (index, point) in points.iter().enumerate() {
+        let next = &points[(index + 1) % points.len()];
+        let s = index as f32 / len;
+        let offset = 1.25 * (s * std::f32::consts::TAU * 3.0 + phase).sin();
+        let x = point.0 + point.2 * offset;
+        let y = point.1 + point.3 * offset;
+        let nx = next.0 + next.2 * offset;
+        let ny = next.1 + next.3 * offset;
+        let angle = (y - cy).atan2(x - cx).to_degrees();
+        // Conic lobes at roughly 52 and 248 degrees, like the CSS gradient.
+        let lobe = |center: f32, width: f32| {
+            let mut delta = (angle - center).abs() % 360.0;
+            if delta > 180.0 {
+                delta = 360.0 - delta;
+            }
+            (-(delta * delta) / (2.0 * width * width)).exp()
+        };
+        let highlight = lobe(52.0, 18.0).max(lobe(248.0, 14.0) * 0.75);
+        let alpha = (0.45 + 0.55 * highlight) * opacity;
+        let mix = |base: f32, white: f32| base * (1.0 - highlight) + white * highlight;
+        let color = [
+            mix(accent[0], 235.0),
+            mix(accent[1], 250.0),
+            mix(accent[2], 255.0),
+            (alpha * 255.0).clamp(0.0, 255.0),
+        ];
+        let mut paint = resvg::tiny_skia::Paint::default();
+        paint.set_color_rgba8(
+            color[0] as u8,
+            color[1] as u8,
+            color[2] as u8,
+            color[3] as u8,
+        );
+        paint.anti_alias = true;
+        let mut pb = resvg::tiny_skia::PathBuilder::new();
+        pb.move_to(x, y);
+        pb.line_to(nx, ny);
+        if let Some(path) = pb.finish() {
+            pixmap.stroke_path(
+                &path,
+                &paint,
+                &resvg::tiny_skia::Stroke {
+                    width: 2.5,
+                    line_cap: resvg::tiny_skia::LineCap::Round,
+                    ..Default::default()
+                },
+                resvg::tiny_skia::Transform::identity(),
+                None,
+            );
+        }
+    }
+    Some(buffer(
+        width + PAD * 2,
+        height + PAD * 2,
+        &straight(&pixmap),
+    ))
+}
+
 /// Rounded top corners with a square bottom edge, used for panel headers.
 pub fn rounded_top(
     width: u32,
@@ -476,6 +634,14 @@ pub fn icon_svg(name: &str, color: &str) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
+    #[test]
+    fn shadows_and_waves_rasterize() {
+        assert!(shadow(200, 120, 14.0).is_some());
+        assert!(wave_rim(200, 120, 14.0, 0.7, 0.85).is_some());
+    }
+
     use super::*;
 
     #[test]

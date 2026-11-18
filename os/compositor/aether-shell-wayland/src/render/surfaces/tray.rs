@@ -21,6 +21,9 @@ impl App {
         let tokens = ctx.tokens;
         let rect = self.tray_rect(tray);
         let mut ui = Ui::default();
+        if let Some(buffer) = self.chrome_shadow(rect.width, rect.height, 12) {
+            ui.panel(Some(buffer), rect.x - 28, rect.y - 28);
+        }
         if let Some(buffer) = self.chrome_round(rect.width, rect.height, 12, FILL) {
             ui.panel(Some(buffer), rect.x, rect.y);
         }

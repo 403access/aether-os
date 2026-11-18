@@ -99,6 +99,8 @@ impl App {
         tokens: ThemeTokens,
     ) {
         let accent = tokens.accent(255);
+        let effects = self.window_effects(rect, 14, true);
+        ui.effect(effects.shadow);
         if let Some(buffer) = self.chrome_round(rect.width, rect.height, 14, WINDOW_FILL) {
             ui.panel(Some(buffer), rect.x, rect.y);
         }
@@ -158,6 +160,7 @@ impl App {
             }
             ui.label(text, x + 20, rect.y + 14, 0, color);
         }
+        ui.effect(effects.wave);
     }
 
     // ---------------------------------------------------------------- about

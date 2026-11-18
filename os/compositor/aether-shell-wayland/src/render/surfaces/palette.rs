@@ -235,6 +235,16 @@ impl App {
             }
         }
 
+        // The demo's command bar always carries the tide rim.
+        if palette_here {
+            if let Some(rect) = self.shell.overlay_rect() {
+                let phase = self.wave_phase_step();
+                if let Some(buffer) = self.chrome_wave(rect.width, rect.height, 14, phase, 217) {
+                    panels.push((buffer, rect.x - 6, rect.y - 6));
+                }
+            }
+        }
+
         RenderChunk {
             chrome,
             labels,

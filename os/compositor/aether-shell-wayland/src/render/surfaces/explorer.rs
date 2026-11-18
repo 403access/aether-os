@@ -50,6 +50,8 @@ impl App {
 
     fn explorer_window(&mut self, ui: &mut Ui, rect: AetherRect, tokens: ThemeTokens) {
         let accent = tokens.accent(255);
+        let effects = self.window_effects(rect, 14, true);
+        ui.effect(effects.shadow);
         if let Some(buffer) = self.chrome_round(rect.width, rect.height, 14, WINDOW_FILL) {
             ui.panel(Some(buffer), rect.x, rect.y);
         }
@@ -92,6 +94,7 @@ impl App {
             ui.panel(Some(buffer), badge_x + 8, rect.y + 17);
         }
         ui.label(badge, badge_x + 20, rect.y + 14, 0, tokens.green);
+        ui.effect(effects.wave);
     }
 
     fn explorer_sidebar(&mut self, ui: &mut Ui, body: AetherRect, tokens: ThemeTokens) {

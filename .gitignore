@@ -11,6 +11,7 @@ apps/web/dist/
 
 # rust
 target/
+.cache/
 os/compositor/target/
 
 # test artifacts

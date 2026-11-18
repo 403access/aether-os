@@ -36,7 +36,9 @@
     "verify:ci": "bash scripts/ci-local.sh",
     "lint:workflows": "bash scripts/lint-workflows.sh",
     "os:test": "cargo test --manifest-path os/compositor/Cargo.toml",
-    "verify": "bun run typecheck && bun run test:unit && bun run test:design && bun run build"
+    "verify": "bun run typecheck && bun run test:unit && bun run test:design && bun run build",
+    "parity:apps": "node scripts/screenshots/app-parity.mjs",
+    "parity:apps:report": "node scripts/screenshots/app-parity.mjs --report-only"
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "^21.0.4",

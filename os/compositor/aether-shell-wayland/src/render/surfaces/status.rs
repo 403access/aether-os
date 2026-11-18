@@ -5,9 +5,7 @@ use std::sync::Arc;
 
 use smithay::backend::renderer::element::memory::MemoryRenderBuffer;
 
-use crate::app::overlays::menubar::{
-    menu_layout, MenuId, Menubar, TrayAction, MENUBAR_HEIGHT,
-};
+use crate::app::overlays::menubar::{menu_layout, MenuId, Menubar, TrayAction, MENUBAR_HEIGHT};
 use crate::app::App;
 use crate::render::context::{FrameContext, RenderChunk};
 
@@ -39,7 +37,12 @@ impl App {
         }
         chrome.push((
             aether_geometry::Rect::new(x, y + MENUBAR_HEIGHT as i32 - 1, bar.rect.width, 1),
-            [RULE[0] as f32 / 255.0, RULE[1] as f32 / 255.0, RULE[2] as f32 / 255.0, 0.15],
+            [
+                RULE[0] as f32 / 255.0,
+                RULE[1] as f32 / 255.0,
+                RULE[2] as f32 / 255.0,
+                0.15,
+            ],
         ));
 
         // Brand mark: two overlapping glass panels with a check, like `.os-logo`.
@@ -64,7 +67,8 @@ impl App {
         for (id, rect) in &bar.menus {
             let open = self.menu_open == Some(*id);
             if open {
-                if let Some(buffer) = self.chrome_round(rect.width, rect.height, 5, [255, 255, 255, 22])
+                if let Some(buffer) =
+                    self.chrome_round(rect.width, rect.height, 5, [255, 255, 255, 22])
                 {
                     panels.push((buffer, rect.x, rect.y));
                 }
@@ -79,7 +83,8 @@ impl App {
         }
 
         // Sync pill: 50% surface fill with a hairline border.
-        if let Some(buffer) = self.chrome_round(bar.sync.width, bar.sync.height, 5, tokens.surface_a(128))
+        if let Some(buffer) =
+            self.chrome_round(bar.sync.width, bar.sync.height, 5, tokens.surface_a(128))
         {
             panels.push((buffer, bar.sync.x, bar.sync.y));
         }
@@ -100,26 +105,28 @@ impl App {
         ));
 
         // Resource meters.
-        if let Some(buffer) =
-            self.chrome_round(bar.resources.width, bar.resources.height, 5, tokens.surface_a(115))
-        {
+        if let Some(buffer) = self.chrome_round(
+            bar.resources.width,
+            bar.resources.height,
+            5,
+            tokens.surface_a(115),
+        ) {
             panels.push((buffer, bar.resources.x, bar.resources.y));
         }
         for (index, (meter, rect)) in bar.meters.iter().enumerate() {
             if index > 0 {
                 chrome.push((
                     aether_geometry::Rect::new(rect.x - 4, y + 6, 1, 14),
-                    [RULE[0] as f32 / 255.0, RULE[1] as f32 / 255.0, RULE[2] as f32 / 255.0, RULE[3] as f32 / 255.0],
+                    [
+                        RULE[0] as f32 / 255.0,
+                        RULE[1] as f32 / 255.0,
+                        RULE[2] as f32 / 255.0,
+                        RULE[3] as f32 / 255.0,
+                    ],
                 ));
             }
             let label_x = rect.x + 8;
-            labels.push((
-                meter.label.clone(),
-                label_x,
-                y + 8,
-                6,
-                tokens.dim,
-            ));
+            labels.push((meter.label.clone(), label_x, y + 8, 6, tokens.dim));
             let meter_x = label_x + self.text_width(&meter.label, 6) as i32 + 4;
             if let Some(buffer) = self.chrome_round(20, 3, 2, [255, 255, 255, 26]) {
                 panels.push((buffer, meter_x, y + 12));
@@ -135,23 +142,14 @@ impl App {
                     panels.push((buffer, meter_x, y + 12));
                 }
             }
-            labels.push((
-                meter.value.clone(),
-                meter_x + 24,
-                y + 9,
-                4,
-                tokens.soft,
-            ));
+            labels.push((meter.value.clone(), meter_x + 24, y + 9, 4, tokens.soft));
         }
 
         // Tray glyphs.
         for (action, rect) in &bar.tray {
             let (glyph, width) = match action {
                 TrayAction::Sync | TrayAction::Resources | TrayAction::Clock => continue,
-                TrayAction::Battery => (
-                    Some("battery"),
-                    rect.width,
-                ),
+                TrayAction::Battery => (Some("battery"), rect.width),
                 TrayAction::Gallery => (Some("grid"), rect.width),
                 TrayAction::Appearance => (Some("moon"), rect.width),
                 other => (Some(other.icon()), rect.width),
@@ -174,25 +172,20 @@ impl App {
 
         // Clock: dim date, bright time.
         let clock_date_x = bar.clock.x + 8;
-        labels.push((
-            bar.clock_date.clone(),
-            clock_date_x,
-            y + 12,
-            0,
-            tokens.dim,
-        ));
+        labels.push((bar.clock_date.clone(), clock_date_x, y + 12, 0, tokens.dim));
         let time_x = clock_date_x + self.text_width(&bar.clock_date, 0) as i32 + 7;
-        labels.push((
-            bar.clock_time.clone(),
-            time_x,
-            y + 12,
-            0x100,
-            tokens.text,
-        ));
+        labels.push((bar.clock_time.clone(), time_x, y + 12, 0x100, tokens.text));
 
         // Open popover.
         if let Some(menu) = self.menu_open {
-            self.compose_menu_popover(ctx, menu, &bar, &mut labels, &mut panels, &mut display_icons);
+            self.compose_menu_popover(
+                ctx,
+                menu,
+                &bar,
+                &mut labels,
+                &mut panels,
+                &mut display_icons,
+            );
         }
 
         RenderChunk {
@@ -216,12 +209,9 @@ impl App {
         let tokens = ctx.tokens;
         let measure = |text: &str, scale: u32| self.text_width(text, scale);
         let panel = menu_layout(bar, menu, &measure);
-        if let Some(buffer) = self.chrome_round(
-            panel.rect.width,
-            panel.rect.height,
-            10,
-            POPOVER_FILL,
-        ) {
+        if let Some(buffer) =
+            self.chrome_round(panel.rect.width, panel.rect.height, 10, POPOVER_FILL)
+        {
             panels.push((buffer, panel.rect.x, panel.rect.y));
         }
         for (entry, rect) in &panel.items {
@@ -236,13 +226,7 @@ impl App {
                     panels.push((buffer, rule.x, rule.y));
                 }
             }
-            display_icons.push((
-                entry.icon.into(),
-                15,
-                tokens.dim,
-                rect.x + 8,
-                rect.y + 7,
-            ));
+            display_icons.push((entry.icon.into(), 15, tokens.dim, rect.x + 8, rect.y + 7));
             labels.push((
                 entry.label.into(),
                 rect.x + 31,

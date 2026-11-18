@@ -75,12 +75,7 @@ pub fn layout(bounds: Rect) -> Dock {
     let group_one = DockAction::FIRST_GROUP.len() as i32;
     let group_two = DockAction::SECOND_GROUP.len() as i32;
     let items = group_one + group_two;
-    let width = PAD * 2
-        + ITEM * items
-        + GAP * (items - 1)
-        + SEP_WIDTH
-        + SEP_MARGIN * 2
-        + GAP;
+    let width = PAD * 2 + ITEM * items + GAP * (items - 1) + SEP_WIDTH + SEP_MARGIN * 2 + GAP;
     let x = bounds.x + (bounds.width as i32 - width) / 2;
     let y = bounds.y + bounds.height as i32 - DOCK_BOTTOM - DOCK_HEIGHT as i32;
     let rect = Rect::new(x, y, width as u32, DOCK_HEIGHT);
@@ -92,15 +87,13 @@ pub fn layout(bounds: Rect) -> Dock {
         item_rects.push((action, Rect::new(cursor, item_y, ITEM as u32, ITEM as u32)));
         cursor += ITEM + GAP;
     }
-    let separator = Rect::new(
-        cursor + SEP_MARGIN,
-        rect.y + 14,
-        SEP_WIDTH as u32,
-        34,
-    );
+    let separator = Rect::new(cursor + SEP_MARGIN, rect.y + 14, SEP_WIDTH as u32, 34);
     cursor += SEP_WIDTH + SEP_MARGIN * 2;
     for action in DockAction::SECOND_GROUP {
-        item_rects.push((action, Rect::new(cursor + GAP, item_y, ITEM as u32, ITEM as u32)));
+        item_rects.push((
+            action,
+            Rect::new(cursor + GAP, item_y, ITEM as u32, ITEM as u32),
+        ));
         cursor += ITEM + GAP;
     }
 
@@ -131,7 +124,11 @@ mod tests {
         let center = dock.rect.x + dock.rect.width as i32 / 2;
         assert!((center - 640).abs() <= 2, "center {center}");
         // The demo dock is 441 px wide at 1280.
-        assert!((dock.rect.width as i32 - 441).abs() <= 4, "width {}", dock.rect.width);
+        assert!(
+            (dock.rect.width as i32 - 441).abs() <= 4,
+            "width {}",
+            dock.rect.width
+        );
     }
 
     #[test]

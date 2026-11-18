@@ -183,12 +183,8 @@ impl CompositorHandler for App {
                 let parent_window = self
                     .windows
                     .iter()
-                    .find_map(|(id, toplevel)| {
-                        (toplevel.wl_surface() == &parent).then_some(*id)
-                    });
-                if let Some(rect) = parent_window
-                    .and_then(|id| self.window_content_rect(id))
-                {
+                    .find_map(|(id, toplevel)| (toplevel.wl_surface() == &parent).then_some(*id));
+                if let Some(rect) = parent_window.and_then(|id| self.window_content_rect(id)) {
                     self.mark_damage_rect(rect);
                     return;
                 }

@@ -126,12 +126,9 @@ impl App {
         let mark_x = x + 66;
         let mark_y = y + (height as i32 - APP_MARK as i32) / 2;
         let accent = tokens.accent(255);
-        if let Some(buffer) = self.chrome_round(
-            APP_MARK,
-            APP_MARK,
-            5,
-            [accent[0], accent[1], accent[2], 36],
-        ) {
+        if let Some(buffer) =
+            self.chrome_round(APP_MARK, APP_MARK, 5, [accent[0], accent[1], accent[2], 36])
+        {
             if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
                 renderer,
                 (mark_x as f64, mark_y as f64),

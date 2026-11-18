@@ -99,12 +99,7 @@ impl App {
         if let Some(buffer) = self.chrome_outlines.get(&key) {
             return Some(buffer.clone());
         }
-        let buffer = Arc::new(primitives::outline(
-            width,
-            height,
-            radius as f32,
-            border,
-        )?);
+        let buffer = Arc::new(primitives::outline(width, height, radius as f32, border)?);
         self.chrome_outlines
             .insert(key, buffer.clone(), rgba_bytes(width, height));
         Some(buffer)

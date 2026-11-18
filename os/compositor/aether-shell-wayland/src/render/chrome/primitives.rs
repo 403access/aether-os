@@ -429,9 +429,7 @@ pub fn icon_svg(name: &str, color: &str) -> Option<String> {
         "wifi" => {
             r#"<path d="M2.8 7.4a11 11 0 0 1 14.4 0M5.4 10.4a7 7 0 0 1 9.2 0M8 13.4a3.2 3.2 0 0 1 4 0"/><circle cx="10" cy="16.2" r="1" fill="{color}" stroke="none"/>"#
         }
-        "bluetooth" => {
-            r#"<path d="M10 2.5v15l-4-3.2M10 2.5l4 3.2-8 6.4M6 7.4l8 6.4"/>"#
-        }
+        "bluetooth" => r#"<path d="M10 2.5v15l-4-3.2M10 2.5l4 3.2-8 6.4M6 7.4l8 6.4"/>"#,
         "battery" => {
             r#"<rect x="2.2" y="6.6" width="13.6" height="6.8" rx="1.8"/><path d="M18 8.8v2.4"/><rect x="4" y="8.2" width="9.4" height="3.6" rx="0.9" fill="{color}" stroke="none"/>"#
         }

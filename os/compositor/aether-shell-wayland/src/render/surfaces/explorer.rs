@@ -33,12 +33,9 @@ impl App {
             ) {
                 panels.push((buffer, bounds.x, bounds.y));
             }
-            if let Some(buffer) = self.chrome_round_top(
-                bounds.width.max(1),
-                40,
-                14,
-                [10, 51, 66, 255],
-            ) {
+            if let Some(buffer) =
+                self.chrome_round_top(bounds.width.max(1), 40, 14, [10, 51, 66, 255])
+            {
                 panels.push((buffer, bounds.x, bounds.y));
             }
             // Accent rim: one 14 px-radius outline so the window reads as the
@@ -77,7 +74,12 @@ impl App {
                 23,
                 23,
                 5,
-                [tokens.accent(255)[0], tokens.accent(255)[1], tokens.accent(255)[2], 36],
+                [
+                    tokens.accent(255)[0],
+                    tokens.accent(255)[1],
+                    tokens.accent(255)[2],
+                    36,
+                ],
             ) {
                 panels.push((buffer, mark_x, mark_y));
             }
@@ -131,13 +133,7 @@ impl App {
                 bounds.x + 21,
                 appbar_y + 17,
             ));
-            labels.push((
-                "Files".into(),
-                bounds.x + 54,
-                appbar_y + 9,
-                3,
-                tokens.text,
-            ));
+            labels.push(("Files".into(), bounds.x + 54, appbar_y + 9, 3, tokens.text));
             labels.push((
                 "All indexed roots".into(),
                 bounds.x + 54,
@@ -162,7 +158,13 @@ impl App {
             let pane_icon = pane.x + 16;
             let pane_y = pane.y + 14;
             display_icons.push(("folder".into(), 22, tokens.accent(255), pane_icon, pane_y));
-            labels.push(("Local index".into(), pane.x + 48, pane.y + 14, 3, tokens.text));
+            labels.push((
+                "Local index".into(),
+                pane.x + 48,
+                pane.y + 14,
+                3,
+                tokens.text,
+            ));
             labels.push((
                 "All indexed roots".into(),
                 pane.x + 48,

@@ -79,10 +79,7 @@ impl Clock {
 
     /// Midnight on the first of this clock's month, as a new clock.
     pub fn month_start(self) -> Self {
-        Self {
-            day: 1,
-            ..self
-        }
+        Self { day: 1, ..self }
     }
 
     pub fn month_name(&self) -> &'static str {

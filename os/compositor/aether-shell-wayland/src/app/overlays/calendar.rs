@@ -7,8 +7,8 @@
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect};
 use smithay::input::keyboard::{keysyms, Keysym};
 
-use super::menubar::Clock;
 use super::super::App;
+use super::menubar::Clock;
 
 /// A seeded agenda entry. `day_offset` is relative to today so the demo data
 /// follows the clock instead of going stale.
@@ -171,7 +171,7 @@ mod tests {
         let today = cells.iter().find(|cell| cell.today).expect("today cell");
         assert_eq!(today.date.day, 18);
         assert!(today.selected);
-        assert!(!today.in_month == false);
+        assert!(today.in_month);
     }
 
     #[test]

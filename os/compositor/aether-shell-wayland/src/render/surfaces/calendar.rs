@@ -40,18 +40,26 @@ impl App {
         if let Some(buffer) = self.chrome_round(rect.width, rect.height, 14, WINDOW_FILL) {
             panels.push((buffer, rect.x, rect.y));
         }
-        if let Some(buffer) = self.chrome_round_top(rect.width, TITLEBAR_HEIGHT as u32, 14, TITLEBAR_FILL)
+        if let Some(buffer) =
+            self.chrome_round_top(rect.width, TITLEBAR_HEIGHT as u32, 14, TITLEBAR_FILL)
         {
             panels.push((buffer, rect.x, rect.y));
         }
         chrome.push((
             AetherRect::new(rect.x, rect.y + TITLEBAR_HEIGHT - 1, rect.width, 1),
-            [RULE[0] as f32 / 255.0, RULE[1] as f32 / 255.0, RULE[2] as f32 / 255.0, 0.82],
+            [
+                RULE[0] as f32 / 255.0,
+                RULE[1] as f32 / 255.0,
+                RULE[2] as f32 / 255.0,
+                0.82,
+            ],
         ));
 
         // Traffic lights.
         for (light, color) in self.calendar_light_rects().iter().zip(LIGHTS) {
-            if let Some(buffer) = self.chrome_round(light.width, light.height, light.width / 2, color) {
+            if let Some(buffer) =
+                self.chrome_round(light.width, light.height, light.width / 2, color)
+            {
                 panels.push((buffer, light.x, light.y));
             }
         }
@@ -64,7 +72,13 @@ impl App {
             panels.push((buffer, mark_x, mark_y));
         }
         display_icons.push(("calendar".into(), 13, accent, mark_x + 5, mark_y + 5));
-        labels.push(("Calendar".into(), mark_x + 31, rect.y + 13, 0x100, tokens.text));
+        labels.push((
+            "Calendar".into(),
+            mark_x + 31,
+            rect.y + 13,
+            0x100,
+            tokens.text,
+        ));
         labels.push((
             "Month and agenda".into(),
             mark_x + 31 + self.text_width("Calendar", 1) as i32 + 8,
@@ -97,7 +111,12 @@ impl App {
         // Month column divider.
         chrome.push((
             AetherRect::new(month.right() as i32 - 1, month.y, 1, month.height),
-            [RULE[0] as f32 / 255.0, RULE[1] as f32 / 255.0, RULE[2] as f32 / 255.0, RULE[3] as f32 / 255.0],
+            [
+                RULE[0] as f32 / 255.0,
+                RULE[1] as f32 / 255.0,
+                RULE[2] as f32 / 255.0,
+                RULE[3] as f32 / 255.0,
+            ],
         ));
 
         let (view_label, selected_label, clock_time, cells, events) = {
@@ -113,13 +132,7 @@ impl App {
             )
         };
         let content = month.inset(14);
-        labels.push((
-            view_label,
-            content.x + 32,
-            content.y + 4,
-            3,
-            tokens.text,
-        ));
+        labels.push((view_label, content.x + 32, content.y + 4, 3, tokens.text));
         // Toolbar buttons.
         for (rect, glyph) in [
             (self.calendar_prev_rect(), "chevron-left"),
@@ -128,7 +141,8 @@ impl App {
             display_icons.push((glyph.into(), 13, tokens.text_soft, rect.x + 6, rect.y + 6));
         }
         let today_rect = self.calendar_today_rect();
-        if let Some(buffer) = self.chrome_round(today_rect.width, today_rect.height, 5, [255, 255, 255, 10])
+        if let Some(buffer) =
+            self.chrome_round(today_rect.width, today_rect.height, 5, [255, 255, 255, 10])
         {
             panels.push((buffer, today_rect.x, today_rect.y));
         }
@@ -169,7 +183,12 @@ impl App {
                         cell_rect.width,
                         cell_rect.height,
                         8,
-                        [tokens.accent(255)[0], tokens.accent(255)[1], tokens.accent(255)[2], 32],
+                        [
+                            tokens.accent(255)[0],
+                            tokens.accent(255)[1],
+                            tokens.accent(255)[2],
+                            32,
+                        ],
                     ) {
                         panels.push((buffer, cell_rect.x, cell_rect.y));
                     }
@@ -197,7 +216,11 @@ impl App {
                         tokens.accent(255)
                     };
                     if let Some(buffer) = self.chrome_round(4, 4, 2, dot) {
-                        panels.push((buffer, cell_rect.x + cell_rect.width as i32 / 2 - 2, cell_rect.bottom() as i32 - 9));
+                        panels.push((
+                            buffer,
+                            cell_rect.x + cell_rect.width as i32 / 2 - 2,
+                            cell_rect.bottom() as i32 - 9,
+                        ));
                     }
                 }
             }
@@ -208,13 +231,7 @@ impl App {
             panels.push((buffer, agenda.x, agenda.y));
         }
         let pad = agenda.inset(14);
-        labels.push((
-            selected_label,
-            pad.x,
-            pad.y + 2,
-            0x100,
-            tokens.text,
-        ));
+        labels.push((selected_label, pad.x, pad.y + 2, 0x100, tokens.text));
         let time_w = self.text_width(&clock_time, 3) as i32;
         labels.push((
             clock_time.clone(),
@@ -225,7 +242,12 @@ impl App {
         ));
         chrome.push((
             AetherRect::new(pad.x, pad.y + 28, pad.width, 1),
-            [RULE[0] as f32 / 255.0, RULE[1] as f32 / 255.0, RULE[2] as f32 / 255.0, RULE[3] as f32 / 255.0],
+            [
+                RULE[0] as f32 / 255.0,
+                RULE[1] as f32 / 255.0,
+                RULE[2] as f32 / 255.0,
+                RULE[3] as f32 / 255.0,
+            ],
         ));
 
         if events.is_empty() {
@@ -248,7 +270,12 @@ impl App {
         }
 
         // Frame rim: `.os-window` draws a 1 px accent border on focus.
-        let rim = [accent[0] as f32 / 255.0, accent[1] as f32 / 255.0, accent[2] as f32 / 255.0, 0.47];
+        let rim = [
+            accent[0] as f32 / 255.0,
+            accent[1] as f32 / 255.0,
+            accent[2] as f32 / 255.0,
+            0.47,
+        ];
         chrome.push((AetherRect::new(rect.x, rect.y, rect.width, 1), rim));
         chrome.push((
             AetherRect::new(rect.x, rect.bottom() as i32 - 1, rect.width, 1),

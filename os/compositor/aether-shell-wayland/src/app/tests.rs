@@ -86,7 +86,10 @@ fn client_frames_inset_content_and_hit_the_title_bar() {
     let lights = app.window_light_rects(id).expect("light rects");
     assert_eq!(lights[0].width, 11);
     let at = |rect: AetherRect| AetherPoint::new(rect.x + rect.width as i32 / 2, rect.y + 5);
-    assert_eq!(app.window_frame_hit(at(lights[0])), Some((id, FrameHit::Close)));
+    assert_eq!(
+        app.window_frame_hit(at(lights[0])),
+        Some((id, FrameHit::Close))
+    );
     assert_eq!(
         app.window_frame_hit(at(lights[1])),
         Some((id, FrameHit::Minimize))

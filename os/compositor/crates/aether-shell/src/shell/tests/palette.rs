@@ -38,7 +38,13 @@ fn palette_filters_workspaces_and_close() {
         .collect();
     assert_eq!(
         titles,
-        ["code", "Chat", "Calendar", "Close palette", "Keyboard shortcuts"]
+        [
+            "code",
+            "Chat",
+            "Calendar",
+            "Close palette",
+            "Keyboard shortcuts"
+        ]
     );
 
     assert!(shell.palette_push_char('o'));

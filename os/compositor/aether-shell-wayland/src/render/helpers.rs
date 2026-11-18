@@ -120,7 +120,7 @@ mod icon_tests {
         let (width, height, pixels) = load_icon(path.to_str().unwrap()).expect("svg icon");
         assert_eq!((width, height), (64, 64));
         assert_eq!(pixels.len(), 64 * 64 * 4);
-        assert!(pixels.chunks_exact(4).any(|pixel| pixel[3] > 0));
+        assert!(pixels.as_chunks::<4>().0.iter().any(|pixel| pixel[3] > 0));
         let _ = std::fs::remove_file(path);
     }
 }

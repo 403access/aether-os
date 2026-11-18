@@ -194,7 +194,8 @@ pub fn menu_layout(bar: &Menubar, menu: MenuId, measure: Measure<'_>) -> MenuPan
     let entries = menu_entries(menu);
     let mut widest = 150;
     for entry in entries {
-        widest = widest.max(text(measure, entry.label, 1) + MENU_ICON as i32 + MENU_GAP + 2 * MENU_SIDE_PAD);
+        widest = widest
+            .max(text(measure, entry.label, 1) + MENU_ICON as i32 + MENU_GAP + 2 * MENU_SIDE_PAD);
     }
     let width = widest.min(280);
     let mut height = MENU_POP_PAD * 2;
@@ -227,11 +228,7 @@ pub fn menu_layout(bar: &Menubar, menu: MenuId, measure: Measure<'_>) -> MenuPan
         ));
         y += MENU_ITEM_HEIGHT as i32;
     }
-    MenuPanel {
-        menu,
-        rect,
-        items,
-    }
+    MenuPanel { menu, rect, items }
 }
 
 pub fn menu_hit(panel: &MenuPanel, x: i32, y: i32) -> Option<MenuCommand> {
@@ -299,7 +296,7 @@ pub fn layout(
 ) -> Menubar {
     let compact = bounds.width < 900;
     let rect = Rect::new(bounds.x, bounds.y, bounds.width, MENUBAR_HEIGHT);
-    let top = bounds.y + ITEM_Y as i32;
+    let top = bounds.y + ITEM_Y;
     let right = bounds.x + bounds.width as i32 - BAR_PAD;
 
     let logo = Rect::new(bounds.x + BAR_PAD, top, 28, ITEM_HEIGHT);
@@ -309,7 +306,8 @@ pub fn layout(
     let max_title = 160 - 10;
     if text(measure, &title, 1) > max_title && title.chars().count() > 4 {
         let mut limit = title.chars().count();
-        while limit > 4 && text(measure, &title.chars().take(limit).collect::<String>(), 1) > max_title
+        while limit > 4
+            && text(measure, &title.chars().take(limit).collect::<String>(), 1) > max_title
         {
             limit -= 1;
         }
@@ -574,7 +572,10 @@ mod tests {
         assert_eq!(menubar.menus.len(), 5);
         assert_eq!(menubar.menus[0].0, MenuId::File);
         let (_, file) = menubar.menus[0];
-        assert_eq!(hit(&menubar, file.x + 4, file.y + 4), Some(MenubarAction::Menu(MenuId::File)));
+        assert_eq!(
+            hit(&menubar, file.x + 4, file.y + 4),
+            Some(MenubarAction::Menu(MenuId::File))
+        );
         assert_eq!(hit(&menubar, 2, 2), None);
         assert!((menubar.menus[4].1.right() as i32) < menubar.sync.x);
     }
@@ -583,7 +584,10 @@ mod tests {
     fn sync_pill_sits_left_of_the_resources() {
         let menubar = bar(1280);
         assert!((menubar.sync.right() as i32) < menubar.resources.x);
-        assert_eq!(menubar.resources.x - menubar.sync.right() as i32, RESOURCE_GAP);
+        assert_eq!(
+            menubar.resources.x - menubar.sync.right() as i32,
+            RESOURCE_GAP
+        );
         assert_eq!(
             hit(&menubar, menubar.sync.x + 2, menubar.sync.y + 2),
             Some(MenubarAction::Tray(TrayAction::Sync))

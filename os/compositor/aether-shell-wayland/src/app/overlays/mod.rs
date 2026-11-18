@@ -6,8 +6,8 @@
 
 pub(crate) mod audio;
 pub(crate) mod calendar;
-pub(crate) mod dock;
 pub(crate) mod chat;
+pub(crate) mod dock;
 pub(crate) mod explorer;
 pub(crate) mod menubar;
 pub(crate) mod palette;

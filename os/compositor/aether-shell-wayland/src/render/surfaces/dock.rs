@@ -25,18 +25,11 @@ impl App {
         let chrome: Vec<(AetherRect, [f32; 4])> = Vec::new();
 
         let dock = self.dock(chrome_output);
-        if let Some(buffer) =
-            self.chrome_round(dock.rect.width, dock.rect.height, 17, DOCK_FILL)
-        {
+        if let Some(buffer) = self.chrome_round(dock.rect.width, dock.rect.height, 17, DOCK_FILL) {
             panels.push((buffer, dock.rect.x, dock.rect.y));
         }
         // The strip is a rounded glass panel: fill plus a 1 px strong rim.
-        if let Some(buffer) = self.chrome_outline(
-            dock.rect.width,
-            dock.rect.height,
-            17,
-            DOCK_RIM,
-        ) {
+        if let Some(buffer) = self.chrome_outline(dock.rect.width, dock.rect.height, 17, DOCK_RIM) {
             panels.push((buffer, dock.rect.x, dock.rect.y));
         }
 

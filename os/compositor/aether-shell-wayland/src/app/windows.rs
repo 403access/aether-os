@@ -62,12 +62,7 @@ impl App {
         Some([
             AetherRect::new(window.rect.x + WINDOW_LIGHT_INSET, y, size, size),
             AetherRect::new(window.rect.x + WINDOW_LIGHT_INSET + step, y, size, size),
-            AetherRect::new(
-                window.rect.x + WINDOW_LIGHT_INSET + step * 2,
-                y,
-                size,
-                size,
-            ),
+            AetherRect::new(window.rect.x + WINDOW_LIGHT_INSET + step * 2, y, size, size),
         ])
     }
 
@@ -79,18 +74,15 @@ impl App {
             return None;
         }
         if let Some(lights) = self.window_light_rects(id) {
-            for (rect, hit) in lights
-                .iter()
-                .zip([FrameHit::Close, FrameHit::Minimize, FrameHit::Maximize])
+            for (rect, hit) in
+                lights
+                    .iter()
+                    .zip([FrameHit::Close, FrameHit::Minimize, FrameHit::Maximize])
             {
                 // A light is a small target: grow it by 3 px on every side so
                 // it is reachable without changing the drawn size.
-                let target = AetherRect::new(
-                    rect.x - 3,
-                    rect.y - 3,
-                    rect.width + 6,
-                    rect.height + 6,
-                );
+                let target =
+                    AetherRect::new(rect.x - 3, rect.y - 3, rect.width + 6, rect.height + 6);
                 if target.contains(point) {
                     return Some((id, hit));
                 }

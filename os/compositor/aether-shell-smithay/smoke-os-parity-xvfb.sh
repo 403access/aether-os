@@ -51,6 +51,20 @@ xdotool windowfocus "${WINDOW_ID}"
 xdotool mousemove 640 400
 sleep 0.4
 
+# File menu popover, captured before any window is open so the app name and
+# menu geometry are deterministic. The crop in app-parity.mjs is (110,0,250,215).
+xdotool mousemove 125 19
+sleep 0.4
+xdotool click 1
+sleep 0.8
+xdotool mousemove 640 400
+sleep 0.4
+import -window root "${OUT}/menu.png"
+xdotool key Escape
+sleep 0.5
+xdotool mousemove 640 400
+sleep 0.3
+
 # Explorer from the dock's first tile, then move the pointer off the chrome so
 # no hover state is baked into the capture.
 xdotool mousemove 445 760
@@ -72,4 +86,14 @@ xdotool mousemove 640 400
 sleep 0.4
 import -window root "${OUT}/calendar.png"
 
-echo "wrote ${OUT}/desktop.png and ${OUT}/calendar.png"
+# Agent sandboxes (Super+B) is Aether-only; close the Calendar first.
+xdotool key Escape
+sleep 0.6
+xdotool windowfocus "${WINDOW_ID}"
+xdotool key super+b
+sleep 1.2
+xdotool mousemove 640 400
+sleep 0.4
+import -window root "${OUT}/sandboxes.png"
+
+echo "wrote ${OUT}/desktop.png, ${OUT}/calendar.png and ${OUT}/sandboxes.png"

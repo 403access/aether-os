@@ -35,6 +35,12 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.99.1
         with:
           components: clippy, rustfmt
+      # Clippy and test compile the whole workspace from scratch otherwise
+      # (~120 s). The cache key follows the lockfile, so it is rewritten only
+      # when dependencies change.
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: os/compositor
       - name: Format
         run: cargo fmt --manifest-path os/compositor/Cargo.toml --all -- --check
       - name: Clippy
@@ -52,6 +58,14 @@ jobs:
           bun-version: latest
       - name: Install
         run: bun install --frozen-lockfile
+      # Downloads are ~150 MB; the browser binaries do not change unless the
+      # lockfile does. --with-deps still runs so a drifted runner image cannot
+      # leave the cached browser without its libraries.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - name: Install browser
         run: bunx playwright install --with-deps chromium
       - name: Build

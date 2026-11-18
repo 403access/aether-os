@@ -17,6 +17,23 @@ jobs:
         with:
           extra_nix_config: |
             experimental-features = nix-command flakes
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            os/compositor/aether-shell-smithay/target
+          key: smithay-nightly-v1-${{ runner.os }}-${{ hashFiles('flake.lock', 'os/compositor/aether-shell-smithay/Cargo.lock') }}
+          restore-keys: |
+            smithay-nightly-v1-${{ runner.os }}-
+      # The suite drives target/debug/aether-shell-smithay; without this every
+      # smoke stopped at its "not built" guard.
+      - name: Build the compositor
+        run: |
+          nix develop .#smithay --command bash -lc '
+            cargo build --manifest-path os/compositor/aether-shell-smithay/Cargo.toml
+          '
       - name: Full smoke suite
         run: |
           # shellcheck disable=SC2016  # ${smoke} expands in the nested bash -lc

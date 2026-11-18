@@ -34,6 +34,7 @@ jobs:
             experimental-features = nix-command flakes
       - name: Build and clippy all backends
         run: |
+          # shellcheck disable=SC2016  # $crate expands in the nested bash -lc
           nix develop .#smithay --command bash -lc '
             set -euo pipefail
             for crate in aether-shell-wayland aether-shell-smithay aether-shell-drm; do
@@ -44,6 +45,7 @@ jobs:
           '
       - name: Test standalone backends
         run: |
+          # shellcheck disable=SC2016  # $crate expands in the nested bash -lc
           nix develop .#smithay --command bash -lc '
             set -euo pipefail
             cargo test --manifest-path os/compositor/aether-shell-wayland/Cargo.toml
@@ -51,6 +53,7 @@ jobs:
           '
       - name: Curated presentation smokes
         run: |
+          # shellcheck disable=SC2016  # ${smoke} expands in the nested bash -lc
           nix develop .#smithay --command bash -lc '
             set -euo pipefail
             BIN=os/compositor/aether-shell-smithay/target/debug/aether-shell-smithay

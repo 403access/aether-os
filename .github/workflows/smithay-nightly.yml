@@ -19,6 +19,7 @@ jobs:
             experimental-features = nix-command flakes
       - name: Full smoke suite
         run: |
+          # shellcheck disable=SC2016  # ${smoke} expands in the nested bash -lc
           nix develop .#smithay --command bash -lc '
             set -euo pipefail
             BIN=os/compositor/aether-shell-smithay/target/debug/aether-shell-smithay

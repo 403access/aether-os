@@ -425,11 +425,24 @@ impl App {
         // label it has ever drawn.
         let base_scale = scale & 0xff;
         let bold = scale >= 2 || (scale & 0x100) != 0;
-        let key = (text.to_string(), scale, color, bold);
+        let spacing = Self::text_spacing(scale);
+        let key = (
+            text.to_string(),
+            scale,
+            color,
+            bold,
+            (spacing * 1000.0) as i32,
+        );
         let mut uncached = None;
         if !self.text_cache.contains(&key) {
             let bitmap = match self.font.as_ref() {
-                Some(font) => font.render(text, crate::app::App::text_px(base_scale), color, bold),
+                Some(font) => font.render(
+                    text,
+                    crate::app::App::text_px(base_scale),
+                    color,
+                    bold,
+                    spacing,
+                ),
                 None => TextBitmap::render(text, base_scale.max(1), color),
             };
             let bytes = bitmap.pixels().len() + text.len() + 64;

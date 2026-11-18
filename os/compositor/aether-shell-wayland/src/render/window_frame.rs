@@ -204,12 +204,12 @@ impl App {
             elements,
             &label,
             (text_x, text_y),
-            0x100,
+            0x100 | 10,
             if focused { tokens.text } else { tokens.soft },
         );
         if let Some(subtitle) = subtitle {
             let sub_x = text_x + self.text_width(&label, 1) as i32 + 8;
-            self.push_label(renderer, elements, subtitle, (sub_x, text_y), 0, tokens.dim);
+            self.push_label(renderer, elements, subtitle, (sub_x, text_y), 9, tokens.dim);
         }
 
         if let Some((buffer, ex, ey)) = effects.wave {

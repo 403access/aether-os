@@ -102,14 +102,14 @@ impl App {
                 "Task Manager".into(),
                 bounds.x + 97,
                 bounds.y + 13,
-                0x100,
+                0x100 | 10,
                 tokens.text,
             ));
             labels.push((
                 "Processes and resources".into(),
-                bounds.x + 97 + self.text_width("Task Manager", 1) as i32 + 8,
+                bounds.x + 97 + self.text_width("Task Manager", 10) as i32 + 8,
                 bounds.y + 13,
-                0,
+                9,
                 tokens.dim,
             ));
             let badge = format!("{} tasks", snapshot.process_count);

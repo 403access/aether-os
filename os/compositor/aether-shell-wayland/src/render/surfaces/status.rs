@@ -58,8 +58,8 @@ impl App {
         labels.push((
             bar.app_title.clone(),
             bar.app.x + 2,
-            y + 9,
-            0x101,
+            y + 10,
+            0x100 | 10,
             tokens.text,
         ));
 
@@ -76,8 +76,8 @@ impl App {
             labels.push((
                 id.label().into(),
                 rect.x + 9,
-                y + 10,
-                1,
+                y + 11,
+                10,
                 if open { tokens.text } else { tokens.soft },
             ));
         }
@@ -100,7 +100,7 @@ impl App {
             bar.sync_label.clone(),
             bar.sync.x + 20,
             y + 11,
-            0,
+            9,
             tokens.soft,
         ));
 
@@ -126,7 +126,7 @@ impl App {
                 ));
             }
             let label_x = rect.x + 8;
-            labels.push((meter.label.clone(), label_x, y + 14, 6, tokens.dim));
+            labels.push((meter.label.clone(), label_x, y + 14, 7, tokens.dim));
             let meter_x = label_x + self.text_width(&meter.label, 6) as i32 + 4;
             if let Some(buffer) = self.chrome_round(20, 3, 2, [255, 255, 255, 26]) {
                 panels.push((buffer, meter_x, y + 18));
@@ -142,7 +142,7 @@ impl App {
                     panels.push((buffer, meter_x, y + 18));
                 }
             }
-            labels.push((meter.value.clone(), meter_x + 24, y + 14, 4, tokens.soft));
+            labels.push((meter.value.clone(), meter_x + 24, y + 14, 8, tokens.soft));
         }
 
         // Tray glyphs.
@@ -167,14 +167,20 @@ impl App {
             .iter()
             .find(|(action, _)| *action == TrayAction::Battery)
         {
-            labels.push(("78%".into(), battery.x + 29, y + 12, 0, tokens.text_soft));
+            labels.push(("78%".into(), battery.x + 29, y + 12, 9, tokens.text_soft));
         }
 
         // Clock: dim date, bright time.
         let clock_date_x = bar.clock.x + 8;
-        labels.push((bar.clock_date.clone(), clock_date_x, y + 11, 0, tokens.dim));
+        labels.push((bar.clock_date.clone(), clock_date_x, y + 11, 9, tokens.dim));
         let time_x = clock_date_x + self.text_width(&bar.clock_date, 0) as i32 + 7;
-        labels.push((bar.clock_time.clone(), time_x, y + 11, 0x100, tokens.text));
+        labels.push((
+            bar.clock_time.clone(),
+            time_x,
+            y + 11,
+            0x100 | 9,
+            tokens.text,
+        ));
 
         // Open popover.
         if let Some(menu) = self.menu_open {
@@ -231,7 +237,7 @@ impl App {
                 entry.label.into(),
                 rect.x + 31,
                 rect.y + 8,
-                1,
+                11,
                 tokens.text_soft,
             ));
         }

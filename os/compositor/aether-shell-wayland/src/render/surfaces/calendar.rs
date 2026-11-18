@@ -84,14 +84,14 @@ impl App {
             "Calendar".into(),
             mark_x + 31,
             rect.y + 13,
-            0x100,
+            0x100 | 10,
             tokens.text,
         ));
         labels.push((
             "Month and agenda".into(),
-            mark_x + 31 + self.text_width("Calendar", 1) as i32 + 8,
+            mark_x + 31 + self.text_width("Calendar", 10) as i32 + 8,
             rect.y + 13,
-            0,
+            9,
             tokens.dim,
         ));
 

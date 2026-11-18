@@ -24,13 +24,40 @@ impl App {
             3 => aether_text::font::HEADING_PX,
             4 => aether_text::font::TINY_PX,
             5 => aether_text::font::MICRO_PX,
-            _ => aether_text::font::CAPTION_PX,
+            6 => aether_text::font::CAPTION_PX,
+            7 => aether_text::font::OS_CAPTION_PX,
+            8 => aether_text::font::OS_MICRO_PX,
+            9 => aether_text::font::OS_SMALL_PX,
+            10 => aether_text::font::OS_XS_PX,
+            11 => aether_text::font::OS_SM_PX,
+            _ => aether_text::font::HEADING_PX,
+        }
+    }
+
+    /// Letter spacing from the design system: `0.04em` on resource captions and
+    /// `-0.01em` on titles.
+    pub fn text_spacing(scale: u32) -> f32 {
+        let base = scale & 0xff;
+        let bold = scale >= 2 || (scale & 0x100) != 0;
+        match base {
+            7 => 0.32,
+            10 if bold => -0.13,
+            _ => 0.0,
         }
     }
 
     pub fn text_width(&self, text: &str, scale: u32) -> u32 {
+        let bold = scale >= 2 || (scale & 0x100) != 0;
         match self.font.as_ref() {
-            Some(font) => font.measure(text, Self::text_px(scale), scale >= 2).0,
+            Some(font) => {
+                font.measure(
+                    text,
+                    Self::text_px(scale & 0xff),
+                    bold,
+                    Self::text_spacing(scale),
+                )
+                .0
+            }
             None => text_width(text, scale.max(1)),
         }
     }

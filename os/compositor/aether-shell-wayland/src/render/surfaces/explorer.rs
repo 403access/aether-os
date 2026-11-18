@@ -79,13 +79,19 @@ impl App {
             ui.panel(Some(buffer), rect.x + 66, rect.y + 8);
         }
         ui.icon("folder", 13, accent, rect.x + 71, rect.y + 13);
-        ui.label("Explorer", rect.x + 97, rect.y + 13, 0x100, tokens.text);
+        ui.label(
+            "Explorer",
+            rect.x + 97,
+            rect.y + 13,
+            0x100 | 10,
+            tokens.text,
+        );
         let path = self.explorer_path_label();
         ui.label(
             &path,
-            rect.x + 97 + self.text_width("Explorer", 1) as i32 + 8,
+            rect.x + 97 + self.text_width("Explorer", 10) as i32 + 8,
             rect.y + 13,
-            0,
+            9,
             tokens.dim,
         );
         let badge = format!("{} files", self.shell.explorer_match_count());

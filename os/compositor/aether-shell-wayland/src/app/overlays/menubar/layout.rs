@@ -318,7 +318,7 @@ pub fn layout(
     // App title: `.os-menubar__app` — max 160 px, 2 px + 8 px padding.
     let mut title = app_title.to_string();
     let max_title = 160 - 10;
-    if text(measure, &title, 1) > max_title && title.chars().count() > 4 {
+    if text(measure, &title, 10) > max_title && title.chars().count() > 4 {
         let mut limit = title.chars().count();
         while limit > 4
             && text(measure, &title.chars().take(limit).collect::<String>(), 1) > max_title
@@ -327,14 +327,14 @@ pub fn layout(
         }
         title = title.chars().take(limit).collect();
     }
-    let app_width = (text(measure, &title, 1) + 10).max(24);
+    let app_width = (text(measure, &title, 10) + 10).max(24);
     let app = Rect::new(logo.right() as i32 + 4, top, app_width as u32, ITEM_HEIGHT);
 
     // Menus: gap 1 px between buttons, 9 px horizontal padding.
     let mut menus = Vec::new();
     let mut menu_x = app.right() as i32 + 4;
     for id in MenuId::ALL {
-        let width = text(measure, id.label(), 1) + MENU_PAD * 2;
+        let width = text(measure, id.label(), 10) + MENU_PAD * 2;
         let item = Rect::new(menu_x, top, width as u32, ITEM_HEIGHT);
         menus.push((id, item));
         menu_x += width + 1;
@@ -350,7 +350,7 @@ pub fn layout(
     );
 
     let clock_width =
-        CLOCK_PAD * 2 + text(measure, clock_date, 0) + CLOCK_GAP + text(measure, clock_time, 0);
+        CLOCK_PAD * 2 + text(measure, clock_date, 9) + CLOCK_GAP + text(measure, clock_time, 9);
     let clock = Rect::new(
         appearance.x - ITEM_GAP - clock_width,
         top,
@@ -364,7 +364,7 @@ pub fn layout(
         ITEM_HEIGHT,
     );
     // Battery shows the glyph plus a percentage: 8 + 15 + 6 + value + 8.
-    let battery_width = 8 + GLYPH as i32 + 6 + text(measure, "78%", 0) + 8;
+    let battery_width = 8 + GLYPH as i32 + 6 + text(measure, "78%", 9) + 8;
     let battery = Rect::new(
         sound.x - ITEM_GAP - battery_width,
         top,
@@ -389,11 +389,11 @@ pub fn layout(
         .iter()
         .map(|meter| {
             let value_min = if meter.label == "STORAGE" { 42 } else { 26 };
-            text(measure, &meter.label, 6)
+            text(measure, &meter.label, 7)
                 + 4
                 + 20
                 + 4
-                + text(measure, &meter.value, 4).max(value_min)
+                + text(measure, &meter.value, 8).max(value_min)
         })
         .collect();
     // `.os-resource + .os-resource` adds 7 px padding and a 1 px divider on
@@ -409,7 +409,7 @@ pub fn layout(
     );
 
     // Sync pill: 8 px padding, 6 px dot, 6 px gap.
-    let sync_width = 8 + 6 + 6 + text(measure, sync_label, 0) + 8;
+    let sync_width = 8 + 6 + 6 + text(measure, sync_label, 9) + 8;
     let sync = Rect::new(
         resources.x - RESOURCE_GAP - sync_width,
         top,

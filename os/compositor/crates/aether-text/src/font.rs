@@ -20,6 +20,12 @@ pub const TINY_PX: f32 = 9.0;
 pub const MICRO_PX: f32 = 10.0;
 /// Resource captions and other 8 px chrome labels.
 pub const CAPTION_PX: f32 = 8.0;
+/// Explicit OS-concept sizes: the demo scales its type by 1.14.
+pub const OS_CAPTION_PX: f32 = 7.98;
+pub const OS_MICRO_PX: f32 = 9.69;
+pub const OS_SMALL_PX: f32 = 11.4;
+pub const OS_XS_PX: f32 = 12.54;
+pub const OS_SM_PX: f32 = 14.82;
 
 pub struct FontRenderer {
     font: Font,
@@ -74,14 +80,18 @@ impl FontRenderer {
         &self.path
     }
 
-    pub fn measure(&self, text: &str, px: f32, bold: bool) -> (u32, u32) {
+    pub fn measure(&self, text: &str, px: f32, bold: bool, spacing: f32) -> (u32, u32) {
         let mut width = 0.0f32;
         let mut lines = 0u32;
         for line in text.split('\n') {
             lines += 1;
             let mut line_width = 0.0f32;
+            let count = line.chars().count();
             for character in line.chars() {
                 line_width += self.font.metrics(character, px).advance_width;
+            }
+            if count > 1 {
+                line_width += spacing * (count - 1) as f32;
             }
             width = width.max(line_width);
         }
@@ -96,8 +106,15 @@ impl FontRenderer {
         )
     }
 
-    pub fn render(&self, text: &str, px: f32, color: [u8; 4], bold: bool) -> TextBitmap {
-        let (width, height) = self.measure(text, px, bold);
+    pub fn render(
+        &self,
+        text: &str,
+        px: f32,
+        color: [u8; 4],
+        bold: bool,
+        spacing: f32,
+    ) -> TextBitmap {
+        let (width, height) = self.measure(text, px, bold, spacing);
         if width == 0 || height == 0 {
             return TextBitmap::empty();
         }
@@ -122,6 +139,7 @@ impl FontRenderer {
                     glyph_y,
                     color,
                 );
+                x += metrics.advance_width + spacing;
                 if bold {
                     blit(
                         &mut pixels,
@@ -135,7 +153,6 @@ impl FontRenderer {
                         color,
                     );
                 }
-                x += metrics.advance_width;
             }
         }
         TextBitmap::from_rgba(width, height, pixels)

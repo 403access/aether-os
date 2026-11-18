@@ -141,13 +141,19 @@ impl App {
             ui.panel(Some(buffer), mark_x, mark_y);
         }
         ui.icon(app.icon(), 13, accent, mark_x + 5, mark_y + 5);
-        ui.label(app.title(), mark_x + 31, rect.y + 13, 0x100, tokens.text);
+        ui.label(
+            app.title(),
+            mark_x + 31,
+            rect.y + 13,
+            0x100 | 10,
+            tokens.text,
+        );
         if !app.subtitle().is_empty() {
             ui.label(
                 app.subtitle(),
-                mark_x + 31 + self.text_width(app.title(), 1) as i32 + 8,
+                mark_x + 31 + self.text_width(app.title(), 10) as i32 + 8,
                 rect.y + 13,
-                0,
+                9,
                 tokens.dim,
             );
         }

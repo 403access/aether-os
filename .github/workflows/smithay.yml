@@ -21,6 +21,12 @@ on:
     - cron: "17 4 * * *"
   workflow_dispatch:
 
+# Superseded pushes are the most common waste here: a second commit while this
+# job is mid-run used to pay for both. Mirror ci.yml and cancel the older one.
+concurrency:
+  group: smithay-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-present:
     name: build + test + Xvfb smokes

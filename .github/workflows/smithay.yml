@@ -32,6 +32,23 @@ jobs:
         with:
           extra_nix_config: |
             experimental-features = nix-command flakes
+      # Three standalone workspaces, each with its own debug target (~1.5 GB
+      # once built). Compiling them cold is the bulk of this job (~330 s).
+      # No SHA in the key: the entry is immutable, so a new upload happens only
+      # when the flake or a lockfile changes. Restoring an older target is safe
+      # because cargo fingerprints every unit and rebuilds just the delta.
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            os/compositor/aether-shell-wayland/target
+            os/compositor/aether-shell-smithay/target
+            os/compositor/aether-shell-drm/target
+          key: smithay-v1-${{ runner.os }}-${{ hashFiles('flake.lock', 'os/compositor/Cargo.lock', 'os/compositor/aether-shell-*/Cargo.lock') }}
+          restore-keys: |
+            smithay-v1-${{ runner.os }}-
       - name: Build and clippy all backends
         run: |
           # shellcheck disable=SC2016  # $crate expands in the nested bash -lc

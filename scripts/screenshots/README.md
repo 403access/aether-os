@@ -61,7 +61,8 @@ useful.
 ## What is captured
 
 Shell surfaces: menu bar, dock, palette, explorer, chat, audio, themes, task manager,
-calendar,
+calendar, the first-party apps (About, Network, Battery, Devices, Tide Radio,
+Settings) and their menu-bar trays,
 remote overlay, shortcuts, window move/resize/snap/maximize, fullscreen,
 workspace picker, cursor, clipboard, desktop/file/agent/index providers and the
 partial-damage probe.

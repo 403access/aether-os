@@ -57,6 +57,7 @@ SMOKES=(
   "actions:90:smoke-actions-xvfb.sh"
   "agents:91:smoke-agents-xvfb.sh"
   "partial-damage:92:smoke-damage-xvfb.sh"
+  "system:95:smoke-system-apps-xvfb.sh"
 )
 
 # Linux-only visual smokes that need tools the Docker image does not package.

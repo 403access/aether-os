@@ -42,11 +42,59 @@ The docs dev server uses `baseUrl: /docs/`, so open
 | --- | --- |
 | `bun run build` | Build web, docs, assemble into `apps/web/dist` |
 | `bun run verify` | typecheck + unit tests + build |
+| `bun run verify:ci` | Replay the GitHub workflow jobs locally (`--list`, `--job NAME`, `--all`) |
+| `bun run lint:workflows` | `actionlint` + ShellCheck over `.github/workflows` |
 | `bun run test:e2e` | Playwright against built sites |
 | `bun run bench` | Benchmarks (`--check` gates) |
 | `bun run os:test` | `cargo test` for the compositor core |
 | `./scripts/vm-browser.sh` | Boot/reuse the dev VM and open its desktop in a browser (noVNC); `--stop` ends the bridge |
 | `./scripts/clean.sh` | Remove build/test artifacts; `--all` also removes dependencies |
+
+## Checking CI before pushing
+
+A red run costs a push and a queue slot. Both checks below run the same
+instructions the workflows run, so a local pass is evidence and a local failure
+is the real error, with the log in front of you.
+
+```bash
+bun run lint:workflows              # milliseconds: YAML, expressions, run: shell
+bun run verify:ci                   # verify, rust, e2e, bench, pages
+bun run verify:ci --job rust        # one job while iterating
+bun run verify:ci --all             # also the Nix-only smithay job
+bun run verify:ci --list            # job names and the workflow each mirrors
+```
+
+`lint:workflows` wraps `actionlint` (install with
+`brew install actionlint shellcheck`). It catches what only shows up after a
+push: bad `${{ }}` expressions, unknown action inputs, dangling `needs`
+references, runner labels and ShellCheck findings inside `run:` blocks. Custom
+self-hosted labels are declared in `.github/actionlint.yaml`, not ignored.
+
+`verify:ci` (`scripts/ci-local.sh`) replays each step verbatim and keeps going
+after a failed job, so one invocation shows every broken job. Three jobs are
+deliberately out of scope because the runner is the point of them: `drm-vm`
+needs a labelled arm64 KVM host, `screenshots` needs the Nix smithay shell plus
+Xvfb, and `nix` evaluates a machine-specific flake.
+
+The `rust` job is only authoritative on Linux. Parts of the compositor are
+cfg-gated per target (`SystemMonitor::sample_linux` and friends), so clippy on a
+Mac compiles stub branches that CI never sees and reports dead code. Off Linux
+the script runs `cargo fmt` and skips clippy/test with that reason; `--native`
+forces them anyway.
+
+`act` (also from `brew install act`) executes the YAML in a Linux container,
+which is useful when you have changed workflow wiring itself:
+
+```bash
+act -l                      # jobs, no containers
+act -j verify               # one job in Docker
+act -j verify -n            # dry run: show the plan
+act -j verify --container-architecture linux/amd64
+```
+
+It cannot reproduce the Nix jobs, GitHub Pages, or the self-hosted runners, and
+its container is still not `ubuntu-latest`, so treat it as a wiring check rather
+than a parity guarantee.
 
 ## Cleaning generated state
 

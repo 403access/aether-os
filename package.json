@@ -33,6 +33,8 @@
     "typecheck": "tsc --noEmit",
     "bench": "bun run packages/bench/src/cli.ts",
     "bench:check": "bun run packages/bench/src/cli.ts --check",
+    "verify:ci": "bash scripts/ci-local.sh",
+    "lint:workflows": "bash scripts/lint-workflows.sh",
     "os:test": "cargo test --manifest-path os/compositor/Cargo.toml",
     "verify": "bun run typecheck && bun run test:unit && bun run test:design && bun run build"
   },

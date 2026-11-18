@@ -1,0 +1,7 @@
+# actionlint configuration.
+#
+# `drm-vm.yml` targets a labelled self-hosted runner; these labels are not in
+# actionlint's built-in list, so declare them here instead of ignoring the job.
+self-hosted-runner:
+  labels:
+    - kvm

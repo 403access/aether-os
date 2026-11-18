@@ -65,6 +65,8 @@ use self::chat_demo::ChatDemo;
 use self::control::ControlServer;
 use self::index_worker::IndexWorker;
 use self::input::{KeyProfile, TitleDrag};
+use self::overlays::calendar::CalendarState;
+use self::overlays::menubar::MenuId;
 use self::overlays::sandboxes::SandboxPanelState;
 use self::overlays::task_manager::TaskManagerState;
 use self::status::StatusSnapshot;
@@ -154,6 +156,10 @@ pub struct App {
     chat_bridge: ChatBridge,
     control: Option<ControlServer>,
     pub(crate) shortcuts_open: bool,
+    /// Open menu bar popover, if any.
+    pub(crate) menu_open: Option<MenuId>,
+    /// Open Calendar app, if any.
+    pub(crate) calendar: Option<CalendarState>,
     pub(crate) task_manager: Option<TaskManagerState>,
     pub(crate) sandboxes: Option<SandboxPanelState>,
     pub(crate) sandbox_last: std::time::Instant,
@@ -213,7 +219,7 @@ impl App {
                     LayoutConfig {
                         gap: 10,
                         outer_gap: 16,
-                        top_gap: 48,
+                        top_gap: 38,
                     },
                     120,
                 );
@@ -264,6 +270,8 @@ impl App {
             chat_bridge: ChatBridge::bind(None),
             control: None,
             shortcuts_open: false,
+            menu_open: None,
+            calendar: None,
             task_manager: None,
             sandboxes: None,
             sandbox_last: std::time::Instant::now(),

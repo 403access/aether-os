@@ -38,6 +38,17 @@ impl Shell {
         }
     }
 
+    /// Cycle the light/dark/water mode from menu bar chrome (View ▸ Toggle
+    /// appearance, tray moon). Returns whether anything changed.
+    pub fn toggle_theme_mode(&mut self) -> bool {
+        let mut settings = self.theme;
+        let changed = settings.toggle(theme::ThemeField::Mode);
+        if changed {
+            self.set_theme_settings(settings);
+        }
+        changed
+    }
+
     /// Open the Themes app with the current settings.
     pub fn open_themes(&mut self) -> Option<()> {
         self.close_overlay();

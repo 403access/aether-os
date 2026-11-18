@@ -14,13 +14,16 @@ impl App {
         self.text_rasterizations
     }
 
-    /// Pixel size for a chrome text style. 0=small, 1=body, 2=title.
+    /// Pixel size for a chrome text style. 0=small, 1=body, 2=title,
+    /// 3=heading, 4=tiny, 5=micro.
     pub fn text_px(scale: u32) -> f32 {
         match scale {
             0 => aether_text::font::SMALL_PX,
             1 => aether_text::font::BODY_PX,
             2 => aether_text::font::TITLE_PX,
-            _ => aether_text::font::HEADING_PX,
+            3 => aether_text::font::HEADING_PX,
+            4 => aether_text::font::TINY_PX,
+            _ => aether_text::font::MICRO_PX,
         }
     }
 

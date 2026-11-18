@@ -10,6 +10,10 @@ use super::{cursor_for, App};
 impl App {
     fn handle_shortcut(&mut self, modifiers: &ModifiersState, keysym: Keysym) -> bool {
         let escape: Keysym = keysyms::KEY_Escape.into();
+        if self.menu_open.is_some() && keysym == escape {
+            self.close_menu();
+            return true;
+        }
         if self.shortcuts_open && keysym == escape {
             self.close_shortcuts();
             return true;
@@ -128,6 +132,7 @@ impl App {
         let mut audio_key = false;
         let mut theme_key = false;
         let mut remote_key = false;
+        let mut calendar_key = false;
         keyboard.input::<(), _>(
             self,
             key_code,
@@ -151,6 +156,12 @@ impl App {
                 } else if state.task_manager_open() {
                     if pressed {
                         state.handle_task_key(sym);
+                    }
+                    FilterResult::Intercept(())
+                } else if state.calendar_open() {
+                    if pressed {
+                        state.handle_calendar_key(sym);
+                        calendar_key = true;
                     }
                     FilterResult::Intercept(())
                 } else if state.shell.overlay().is_some() {
@@ -218,6 +229,8 @@ impl App {
             self.mark_shortcuts_damage();
         } else if self.task_manager_open() {
             self.mark_task_damage();
+        } else if self.calendar_open() || calendar_key {
+            self.mark_calendar_damage();
         } else if palette_key {
             let new_overlay = self.shell.overlay_rect();
             if let Some(rect) = old_overlay {

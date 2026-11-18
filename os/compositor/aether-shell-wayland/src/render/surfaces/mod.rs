@@ -1,6 +1,7 @@
 //! Independently composed surface sections.
 
 mod audio;
+mod calendar;
 mod chat;
 mod explorer;
 mod palette;

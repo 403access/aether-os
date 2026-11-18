@@ -14,6 +14,10 @@ pub const BODY_PX: f32 = 13.0;
 pub const SMALL_PX: f32 = 11.0;
 pub const TITLE_PX: f32 = 20.0;
 pub const HEADING_PX: f32 = 16.0;
+/// Resource captions, weekday headers and event metadata.
+pub const TINY_PX: f32 = 9.0;
+/// Resource values and agenda times.
+pub const MICRO_PX: f32 = 10.0;
 
 pub struct FontRenderer {
     font: Font,

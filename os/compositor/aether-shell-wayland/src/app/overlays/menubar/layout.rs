@@ -50,10 +50,6 @@ impl MenuId {
             Self::Help => "Help",
         }
     }
-
-    pub fn index(self) -> usize {
-        Self::ALL.iter().position(|item| *item == self).unwrap_or(0)
-    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -93,6 +89,160 @@ pub enum MenubarAction {
     Tray(TrayAction),
 }
 
+/// Commands a menu can run. Kept in geometry so the popover layout and the
+/// input handler share one list.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MenuCommand {
+    NewTerminal,
+    Explorer,
+    TaskManager,
+    Calendar,
+    Themes,
+    Shortcuts,
+    CloseWindow,
+    ToggleTheme,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct MenuEntry {
+    pub label: &'static str,
+    pub icon: &'static str,
+    pub command: MenuCommand,
+    /// Draw a rule above this item.
+    pub separator_before: bool,
+}
+
+macro_rules! entry {
+    ($label:literal, $icon:literal, $command:ident) => {
+        MenuEntry {
+            label: $label,
+            icon: $icon,
+            command: MenuCommand::$command,
+            separator_before: false,
+        }
+    };
+    ($label:literal, $icon:literal, $command:ident, sep) => {
+        MenuEntry {
+            label: $label,
+            icon: $icon,
+            command: MenuCommand::$command,
+            separator_before: true,
+        }
+    };
+}
+
+pub const FILE_MENU: &[MenuEntry] = &[
+    entry!("New Terminal", "terminal", NewTerminal),
+    entry!("Open Explorer", "folder", Explorer),
+    entry!("Task Manager", "chart", TaskManager),
+    entry!("Water settings", "drop", Themes, sep),
+    entry!("Close window", "close", CloseWindow),
+];
+
+pub const VIEW_MENU: &[MenuEntry] = &[
+    entry!("Toggle appearance", "moon", ToggleTheme),
+    entry!("Water settings", "drop", Themes),
+    entry!("Keyboard shortcuts", "keyboard", Shortcuts, sep),
+];
+
+pub const GO_MENU: &[MenuEntry] = &[
+    entry!("Indexed files", "folder", Explorer),
+    entry!("New terminal", "terminal", NewTerminal),
+    entry!("Task Manager", "chart", TaskManager, sep),
+];
+
+pub const WINDOW_MENU: &[MenuEntry] = &[
+    entry!("Terminal", "terminal", NewTerminal),
+    entry!("Explorer", "folder", Explorer),
+    entry!("Task Manager", "chart", TaskManager),
+    entry!("Calendar", "calendar", Calendar),
+    entry!("Water settings", "drop", Themes),
+    entry!("Keyboard shortcuts", "keyboard", Shortcuts),
+];
+
+pub const HELP_MENU: &[MenuEntry] = &[
+    entry!("Keyboard shortcuts", "keyboard", Shortcuts),
+    entry!("Water settings", "drop", Themes),
+];
+
+pub fn menu_entries(id: MenuId) -> &'static [MenuEntry] {
+    match id {
+        MenuId::File => FILE_MENU,
+        MenuId::View => VIEW_MENU,
+        MenuId::Go => GO_MENU,
+        MenuId::Window => WINDOW_MENU,
+        MenuId::Help => HELP_MENU,
+    }
+}
+
+/// Item height and padding inside a menu popover.
+const MENU_ITEM_HEIGHT: u32 = 30;
+const MENU_POP_PAD: i32 = 6;
+const MENU_RULE: i32 = 9;
+const MENU_ICON: u32 = 15;
+const MENU_GAP: i32 = 8;
+const MENU_SIDE_PAD: i32 = 10;
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct MenuPanel {
+    pub menu: MenuId,
+    pub rect: Rect,
+    pub items: Vec<(MenuEntry, Rect)>,
+}
+
+pub fn menu_layout(bar: &Menubar, menu: MenuId, measure: Measure<'_>) -> MenuPanel {
+    let entries = menu_entries(menu);
+    let mut widest = 150;
+    for entry in entries {
+        widest = widest.max(text(measure, entry.label, 1) + MENU_ICON as i32 + MENU_GAP + 2 * MENU_SIDE_PAD);
+    }
+    let width = widest.min(280);
+    let mut height = MENU_POP_PAD * 2;
+    for entry in entries {
+        height += MENU_ITEM_HEIGHT as i32;
+        if entry.separator_before {
+            height += MENU_RULE;
+        }
+    }
+    let button = bar
+        .menus
+        .iter()
+        .find(|(id, _)| *id == menu)
+        .map(|(_, rect)| *rect)
+        .unwrap_or(bar.rect);
+    let x = button
+        .x
+        .min(bar.rect.right() as i32 - width - 8)
+        .max(bar.rect.x + 8);
+    let rect = Rect::new(x, bar.rect.bottom() as i32, width as u32, height as u32);
+    let mut items = Vec::new();
+    let mut y = rect.y + MENU_POP_PAD;
+    for entry in entries {
+        if entry.separator_before {
+            y += MENU_RULE;
+        }
+        items.push((
+            *entry,
+            Rect::new(rect.x + 4, y, (width - 8) as u32, MENU_ITEM_HEIGHT),
+        ));
+        y += MENU_ITEM_HEIGHT as i32;
+    }
+    MenuPanel {
+        menu,
+        rect,
+        items,
+    }
+}
+
+pub fn menu_hit(panel: &MenuPanel, x: i32, y: i32) -> Option<MenuCommand> {
+    let point = aether_geometry::Point::new(x, y);
+    panel
+        .items
+        .iter()
+        .find(|(_, rect)| rect.contains(point))
+        .map(|(entry, _)| entry.command)
+}
+
 /// One resource meter: caption, fill fraction and value text.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ResourceMeter {
@@ -126,13 +276,6 @@ pub struct Menubar {
     pub clock_time: String,
     pub items: Vec<Item>,
     pub compact: bool,
-}
-
-impl Menubar {
-    /// Every interactive region, used for hit-testing and the pointer cursor.
-    pub fn hits(&self) -> impl Iterator<Item = (&MenubarAction, Rect)> {
-        self.items.iter().map(|item| (&item.action, item.rect))
-    }
 }
 
 /// Measure a chrome label with the compositor font, in whole pixels.
@@ -173,11 +316,11 @@ pub fn layout(
         title = title.chars().take(limit).collect();
     }
     let app_width = (text(measure, &title, 1) + 10).max(24);
-    let app = Rect::new(logo.right() + 4, top, app_width as u32, ITEM_HEIGHT);
+    let app = Rect::new(logo.right() as i32 + 4, top, app_width as u32, ITEM_HEIGHT);
 
     // Menus: gap 1 px between buttons, 9 px horizontal padding.
     let mut menus = Vec::new();
-    let mut menu_x = app.right() + 4;
+    let mut menu_x = app.right() as i32 + 4;
     for id in MenuId::ALL {
         let width = text(measure, id.label(), 1) + MENU_PAD * 2;
         let item = Rect::new(menu_x, top, width as u32, ITEM_HEIGHT);
@@ -416,7 +559,7 @@ mod tests {
         sorted.sort_by_key(|rect| rect.x);
         for pair in sorted.windows(2) {
             assert!(
-                pair[0].right() <= pair[1].x,
+                pair[0].right() as i32 <= pair[1].x,
                 "overlapping tray items: {:?} {:?}",
                 pair[0],
                 pair[1]
@@ -432,14 +575,14 @@ mod tests {
         let (_, file) = menubar.menus[0];
         assert_eq!(hit(&menubar, file.x + 4, file.y + 4), Some(MenubarAction::Menu(MenuId::File)));
         assert_eq!(hit(&menubar, 2, 2), None);
-        assert!(menubar.menus[4].1.right() < menubar.sync.x);
+        assert!((menubar.menus[4].1.right() as i32) < menubar.sync.x);
     }
 
     #[test]
     fn sync_pill_sits_left_of_the_resources() {
         let menubar = bar(1280);
-        assert!(menubar.sync.right() < menubar.resources.x);
-        assert_eq!(menubar.resources.x - menubar.sync.right(), RESOURCE_GAP);
+        assert!((menubar.sync.right() as i32) < menubar.resources.x);
+        assert_eq!(menubar.resources.x - menubar.sync.right() as i32, RESOURCE_GAP);
         assert_eq!(
             hit(&menubar, menubar.sync.x + 2, menubar.sync.y + 2),
             Some(MenubarAction::Tray(TrayAction::Sync))

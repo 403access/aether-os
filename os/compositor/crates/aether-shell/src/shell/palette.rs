@@ -233,6 +233,14 @@ impl Shell {
             if let Some(score) = palette_score(&query, &task.title) {
                 scored.push((score, window_offset + self.windows.len(), task));
             }
+            let calendar = PaletteEntry {
+                title: "Calendar".to_string(),
+                detail: "Month grid · agenda · today".to_string(),
+                action: PaletteAction::OpenCalendar,
+            };
+            if let Some(score) = palette_score(&query, &calendar.title) {
+                scored.push((score, window_offset + self.windows.len() + 2, calendar));
+            }
             let close = PaletteEntry {
                 title: "Close palette".to_string(),
                 detail: "Esc".to_string(),

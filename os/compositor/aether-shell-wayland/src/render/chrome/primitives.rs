@@ -328,6 +328,8 @@ pub fn icon_svg(name: &str, color: &str) -> Option<String> {
         }
         "close" => r#"<path d="m5 5 10 10M15 5 5 15"/>"#,
         "chevron" => r#"<path d="m5 7.5 5 5 5-5"/>"#,
+        "chevron-left" => r#"<path d="m12 5.5-4.5 4.5 4.5 4.5"/>"#,
+        "chevron-right" => r#"<path d="m8 5.5 4.5 4.5-4.5 4.5"/>"#,
         "arrow" => r#"<path d="M3.5 10h12M11 5.5l4.5 4.5-4.5 4.5"/>"#,
         "cpu" => {
             r#"<rect x="4" y="4" width="12" height="12" rx="2"/><rect x="7" y="7" width="6" height="6" rx="1"/><path d="M7 1.5v2M13 1.5v2M7 16.5v2M13 16.5v2M1.5 7h2M1.5 13h2M16.5 7h2M16.5 13h2"/>"#
@@ -367,6 +369,9 @@ pub fn icon_svg(name: &str, color: &str) -> Option<String> {
         }
         "moon" => r#"<path d="M16.8 12A7 7 0 0 1 8 3.2a7 7 0 1 0 8.8 8.8z"/>"#,
         "drop" => r#"<path d="M10 2.4s-5 5.2-5 8.7a5 5 0 0 0 10 0C15 7.6 10 2.4 10 2.4z"/>"#,
+        "water" => {
+            r#"<rect x="1.2" y="4.4" width="10.6" height="9.4" rx="2.6"/><rect x="8.2" y="6.2" width="10.6" height="9.4" rx="2.6"/><path d="m9.4 11.4 1.6 1.6 3-3.4"/>"#
+        }
         "sliders" => {
             r#"<path d="M3.5 6h13M3.5 14h13"/><circle cx="7.5" cy="6" r="2"/><circle cx="12.5" cy="14" r="2"/>"#
         }

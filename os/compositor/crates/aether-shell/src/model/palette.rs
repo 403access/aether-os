@@ -50,6 +50,7 @@ pub enum PaletteAction {
     LaunchApp(usize),
     SpawnTerminal,
     OpenTaskManager,
+    OpenCalendar,
     OpenExplorer,
     OpenChat,
     OpenAudio,

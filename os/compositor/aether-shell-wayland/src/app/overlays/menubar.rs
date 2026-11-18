@@ -1,0 +1,202 @@
+//! The Water OS menu bar: brand, application menus, system status and tray.
+//!
+//! This replaces the original top shortcut dock. It is passive chrome like the
+//! desktop's own bar, but every item is a real target: menus open popovers,
+//! the clock opens the Calendar app, the resource group opens the task manager
+//! and the tray mirrors the audio overlay, theme settings and launcher.
+
+mod clock;
+mod layout;
+
+pub(crate) use clock::{Clock, WEEKDAY_HEADERS};
+pub(crate) use layout::{
+    hit, menu_hit, menu_layout, MenuCommand, MenuId, MenuPanel, Menubar, MenubarAction,
+    ResourceMeter, TrayAction, MENUBAR_HEIGHT,
+};
+
+use aether_geometry::Point as AetherPoint;
+use aether_shell::OutputId;
+
+use super::super::App;
+
+/// Label on the sync pill. The index worker owns the real state; the pill
+/// mirrors its presence rather than inventing a percentage.
+const SYNC_LABEL: &str = "Synced";
+
+impl App {
+    pub(crate) fn menubar(&self, output: OutputId) -> Menubar {
+        let bounds = self.shell.output_bounds(output);
+        let clock = Clock::now();
+        let status = self.status();
+        let cpu = status.cpu_percent.min(100) as f32 / 100.0;
+        let memory = if status.mem_total_mb > 0 {
+            status.mem_used_mb as f32 / status.mem_total_mb as f32
+        } else {
+            0.0
+        };
+        let meters = [
+            ResourceMeter {
+                label: "CPU".into(),
+                value: format!("{}%", status.cpu_percent),
+                fraction: cpu,
+            },
+            ResourceMeter {
+                label: "RAM".into(),
+                value: format!("{}%", (memory * 100.0).round() as i64),
+                fraction: memory,
+            },
+            ResourceMeter {
+                label: "STORAGE".into(),
+                value: "—".into(),
+                fraction: 0.0,
+            },
+        ];
+        let title = self.menubar_title();
+        let measure = |text: &str, scale: u32| self.text_width(text, scale);
+        layout::layout(
+            bounds,
+            &measure,
+            &title,
+            SYNC_LABEL,
+            &meters,
+            &clock.short_date(),
+            &clock.time_label(),
+        )
+    }
+
+    /// The active application name: the focused window, else the shell itself.
+    fn menubar_title(&self) -> String {
+        self.shell
+            .focused_window()
+            .and_then(|id| {
+                self.shell
+                    .windows()
+                    .into_iter()
+                    .find(|window| window.id == id)
+                    .map(|window| window.title.clone())
+            })
+            .unwrap_or_else(|| "Aether OS".to_string())
+    }
+
+    /// The bar is chrome: fullscreen clients hide it so they get every pixel.
+    pub(crate) fn menubar_visible(&self, output: OutputId) -> bool {
+        self.shell.fullscreen_window_on(output).is_none()
+    }
+
+    pub(crate) fn menubar_action_at(&self, point: AetherPoint) -> Option<MenubarAction> {
+        let output = self.shell.output_at(point)?;
+        if !self.menubar_visible(output) {
+            return None;
+        }
+        hit(&self.menubar(output), point.x, point.y)
+    }
+
+    pub(crate) fn menubar_menu_panel(&self, output: OutputId, menu: MenuId) -> MenuPanel {
+        let bar = self.menubar(output);
+        let measure = |text: &str, scale: u32| self.text_width(text, scale);
+        menu_layout(&bar, menu, &measure)
+    }
+
+    /// Menu command under the pointer, if a popover is open.
+    pub(crate) fn menubar_command_at(&self, point: AetherPoint) -> Option<MenuCommand> {
+        let menu = self.menu_open?;
+        let output = self.shell.output_at(point)?;
+        let panel = self.menubar_menu_panel(output, menu);
+        menu_hit(&panel, point.x, point.y)
+    }
+
+    pub(crate) fn toggle_menu(&mut self, menu: MenuId) {
+        self.menu_open = (self.menu_open != Some(menu)).then_some(menu);
+        self.mark_full_damage();
+    }
+
+    pub(crate) fn close_menu(&mut self) {
+        if self.menu_open.take().is_some() {
+            self.mark_full_damage();
+        }
+    }
+
+    pub(crate) fn activate_menubar(&mut self, action: MenubarAction) {
+        match action {
+            MenubarAction::Logo => {
+                self.close_menu();
+                self.toggle_shortcuts();
+            }
+            MenubarAction::App => {}
+            MenubarAction::Menu(menu) => self.toggle_menu(menu),
+            MenubarAction::Tray(tray) => {
+                self.close_menu();
+                self.activate_tray(tray);
+            }
+        }
+    }
+
+    fn activate_tray(&mut self, action: TrayAction) {
+        match action {
+            TrayAction::Sync | TrayAction::Resources => {
+                if self.task_manager_open() {
+                    self.close_task_manager();
+                } else {
+                    self.open_task_manager();
+                }
+            }
+            TrayAction::Network => {
+                println!("aether-shell: tray network");
+            }
+            TrayAction::Devices => {
+                println!("aether-shell: tray devices");
+            }
+            TrayAction::Battery => {
+                println!("aether-shell: tray battery");
+            }
+            TrayAction::Sound => {
+                self.toggle_audio();
+            }
+            TrayAction::Clock => {
+                self.open_calendar();
+            }
+            TrayAction::Appearance => {
+                if self.shell.toggle_theme_mode() {
+                    self.apply_theme_action(Some(aether_shell::theme::ThemeAction::Changed));
+                }
+            }
+            TrayAction::Gallery => {
+                println!("aether-shell: tray gallery");
+            }
+        }
+    }
+
+    pub(crate) fn activate_menu_command(&mut self, command: MenuCommand) {
+        self.close_menu();
+        match command {
+            MenuCommand::NewTerminal => {
+                self.spawn_terminal();
+                println!("aether-shell: menu terminal");
+            }
+            MenuCommand::Explorer => self.toggle_explorer(),
+            MenuCommand::Calendar => self.open_calendar(),
+            MenuCommand::TaskManager => {
+                if self.task_manager_open() {
+                    self.close_task_manager();
+                } else {
+                    self.open_task_manager();
+                }
+            }
+            MenuCommand::Themes => self.toggle_themes(),
+            MenuCommand::Shortcuts => self.toggle_shortcuts(),
+            MenuCommand::CloseWindow => {
+                if let Some(id) = self.shell.focused_window() {
+                    if let Some(toplevel) = self.windows.get(&id) {
+                        toplevel.send_close();
+                    }
+                    println!("aether-shell: menu close window id={id}");
+                }
+            }
+            MenuCommand::ToggleTheme => {
+                if self.shell.toggle_theme_mode() {
+                    self.apply_theme_action(Some(aether_shell::theme::ThemeAction::Changed));
+                }
+            }
+        }
+    }
+}

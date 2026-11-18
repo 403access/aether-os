@@ -4,7 +4,6 @@ use aether_cursor::CursorShape;
 use aether_geometry::{Point as AetherPoint, Rect as AetherRect};
 use smithay::input::pointer::CursorIcon as PointerIcon;
 
-use crate::app::overlays::topbar;
 use crate::app::windows::FrameHit;
 
 use super::{App, ResizeCorner};
@@ -25,15 +24,26 @@ pub(crate) fn cursor_for(state: &App) -> CursorShape {
         }
         return CursorShape::Arrow;
     }
-    if state.shortcuts_open {
-        return CursorShape::Arrow;
-    }
-    if let Some(output) = state.shell.output_at(point) {
-        if state.top_bar_visible(output)
-            && topbar::hit(&state.top_bar(output), point.x, point.y).is_some()
+    if state.calendar_open() {
+        let rect = state.calendar_rect();
+        if !rect.contains(point) {
+            return CursorShape::Arrow;
+        }
+        if state.calendar_cell_at(point).is_some()
+            || state.calendar_prev_rect().contains(point)
+            || state.calendar_next_rect().contains(point)
+            || state.calendar_today_rect().contains(point)
+            || state.calendar_light_rects()[0].contains(point)
         {
             return CursorShape::Pointer;
         }
+        return CursorShape::Arrow;
+    }
+    if state.shortcuts_open {
+        return CursorShape::Arrow;
+    }
+    if state.menubar_action_at(point).is_some() || state.menubar_command_at(point).is_some() {
+        return CursorShape::Pointer;
     }
     if let Some(overlay) = state.shell.overlay_rect() {
         if overlay.contains(point) {

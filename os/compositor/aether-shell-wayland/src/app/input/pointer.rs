@@ -216,10 +216,39 @@ impl App {
                 || self.shell.themes_open()
                 || self.shortcuts_open
                 || self.sandbox_panel_open()
-                || self.task_manager_open();
-            if let Some(action) = self.top_shortcut_at(point) {
+                || self.task_manager_open()
+                || self.calendar_open()
+                || self.menu_open.is_some();
+            if self.menu_open.is_some() {
                 self.pointer_captured = true;
-                self.activate_top_shortcut(action);
+                if let Some(command) = self.menubar_command_at(point) {
+                    self.activate_menu_command(command);
+                } else if let Some(action) = self.menubar_action_at(point) {
+                    self.activate_menubar(action);
+                } else {
+                    self.close_menu();
+                }
+                self.cursor = cursor_for(self);
+                self.mark_cursor_damage(self.pointer_pos);
+                self.end_input(started);
+                return;
+            }
+            if let Some(action) = self.menubar_action_at(point) {
+                self.pointer_captured = true;
+                self.activate_menubar(action);
+                self.cursor = cursor_for(self);
+                self.mark_cursor_damage(self.pointer_pos);
+                self.end_input(started);
+                return;
+            }
+            if self.calendar_open() {
+                if self.calendar_light_rects()[0].contains(point) {
+                    self.close_calendar();
+                } else if self.calendar_rect().contains(point) {
+                    self.calendar_select_at(point);
+                } else {
+                    self.close_calendar();
+                }
                 self.cursor = cursor_for(self);
                 self.mark_cursor_damage(self.pointer_pos);
                 self.end_input(started);

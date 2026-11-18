@@ -71,6 +71,10 @@ impl App {
                 self.shell.close_overlay();
                 self.open_task_manager();
             }
+            PaletteAction::OpenCalendar => {
+                self.shell.close_overlay();
+                self.open_calendar();
+            }
             PaletteAction::OpenExplorer => {
                 self.shell.close_overlay();
                 self.toggle_explorer();

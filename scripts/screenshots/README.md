@@ -7,8 +7,7 @@ Two capture pipelines feed the gallery, the docs and the README:
 | `capture-shell-screenshots.sh` | Smithay winit adapter under Xvfb | `artifacts/screenshots/shell` |
 | `capture-web-screenshots.sh` | assembled site + Playwright | `artifacts/screenshots/web` |
 | `publish-screenshots.ts` | curated copies + manifest | `apps/web/public/screenshots`, `apps/docs/static/img` |
-| `os-parity.sh` + `os-parity.mjs` | live Water OS demo vs compositor (full frame + regions) | `artifacts/os-parity` |
-| `app-parity.mjs` | source checkout vs compositor, per app/window element | `reports/os-app-parity` |
+| `os-parity.sh` + `os-parity.mjs` | live Water OS demo vs compositor | `artifacts/os-parity` |
 
 ## Run everything
 

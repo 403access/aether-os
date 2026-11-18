@@ -1,19 +1,3 @@
-## v0.1.0-alpha.79
-
-- Add an **app-by-app parity report**: `bun run parity:apps` serves the local
-  Water OS checkout, screenshots every demo window, menu, dock, tray popover and
-  the command overlay as an element (never the full desktop), crops the matching
-  Aether surface out of the compositor captures, and writes
-  `reports/os-app-parity/index.html` plus `ROADMAP.md`.
-- The checklist covers all 13 demo apps (Data Cloud Compare, Explorer, Settings,
-  Network, Battery, Devices, Calendar, Task Manager, Terminal, Tide Radio,
-  Keyboard shortcuts, About, App Studio), the system chrome and the five trays.
-  Status: 6 implemented, 5 partial, 11 missing, 4 Aether-only.
-- Add the missing Aether captures for this report: the File menu popover and the
-  agent-sandboxes panel.
-- Verification: `node scripts/screenshots/app-parity.mjs` (22 element shots,
-  14 Aether crops), report rendered in Chromium.
-
 ## v0.1.0-alpha.78
 
 - Replace the compositor's top shortcut dock, workspace chips and status pill

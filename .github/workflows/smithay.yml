@@ -55,8 +55,9 @@ jobs:
         run: |
           # shellcheck disable=SC2016  # ${smoke} expands in the nested bash -lc
           nix develop .#smithay --command bash -lc '
-            set -euo pipefail
+            set -uo pipefail
             BIN=os/compositor/aether-shell-smithay/target/debug/aether-shell-smithay
+            failed=""
             for smoke in \
               smoke-damage-xvfb.sh \
               smoke-idle-xvfb.sh \
@@ -78,8 +79,17 @@ jobs:
               smoke-topbar-xvfb.sh \
               smoke-task-manager-xvfb.sh; do
                 echo "=== ${smoke}"
-                BIN="${BIN}" "./os/compositor/aether-shell-smithay/${smoke}"
+                # Run the whole set: one push should report every broken smoke
+                # instead of stopping at the first and hiding the rest.
+                if ! BIN="${BIN}" "./os/compositor/aether-shell-smithay/${smoke}"; then
+                  failed="${failed} ${smoke}"
+                fi
             done
+            if [ -n "${failed}" ]; then
+              echo "FAILED smokes:${failed}"
+              exit 1
+            fi
+            echo "all curated smokes passed"
           '
       - name: Frame stats summary
         if: always()

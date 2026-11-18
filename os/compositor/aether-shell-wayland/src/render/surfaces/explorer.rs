@@ -104,6 +104,7 @@ impl App {
             ui.panel(Some(buffer), badge_x + 8, rect.y + 17);
         }
         ui.label(badge, badge_x + 20, rect.y + 14, 0, tokens.green);
+        ui.grip(rect, [1.0, 1.0, 1.0, 0.18]);
         ui.effect(effects.wave);
     }
 

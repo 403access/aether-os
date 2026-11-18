@@ -295,6 +295,17 @@ impl App {
             rim,
         ));
 
+        for (dx, dy, width) in [(15, 10, 5), (13, 13, 5), (11, 16, 5)] {
+            chrome.push((
+                AetherRect::new(
+                    rect.right() as i32 - dx,
+                    rect.bottom() as i32 - dy,
+                    width,
+                    1,
+                ),
+                [1.0, 1.0, 1.0, 0.18],
+            ));
+        }
         if let Some((buffer, x, y)) = effects.wave {
             panels.push((buffer, x, y));
         }

@@ -549,6 +549,18 @@ impl App {
             ));
         }
 
+        let grip = self.task_rect();
+        for (dx, dy, width) in [(15, 10, 5), (13, 13, 5), (11, 16, 5)] {
+            chrome.push((
+                AetherRect::new(
+                    grip.right() as i32 - dx,
+                    grip.bottom() as i32 - dy,
+                    width,
+                    1,
+                ),
+                [1.0, 1.0, 1.0, 0.18],
+            ));
+        }
         if let Some(entry) = effects.wave {
             panels.push(entry);
         }

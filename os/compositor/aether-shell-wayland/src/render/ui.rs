@@ -37,6 +37,21 @@ impl Ui {
         self.chrome.push((rect, color));
     }
 
+    /// Three diagonal ticks in the bottom-right corner of a window.
+    pub fn grip(&mut self, rect: AetherRect, color: [f32; 4]) {
+        for (dx, dy, width) in [(15, 10, 5), (13, 13, 5), (11, 16, 5)] {
+            self.solid(
+                AetherRect::new(
+                    rect.right() as i32 - dx,
+                    rect.bottom() as i32 - dy,
+                    width,
+                    1,
+                ),
+                color,
+            );
+        }
+    }
+
     pub fn effect(&mut self, effect: Option<(Arc<MemoryRenderBuffer>, i32, i32)>) {
         if let Some((buffer, x, y)) = effect {
             self.panels.push((buffer, x, y));

@@ -170,6 +170,7 @@ impl App {
             }
             ui.label(text, x + 20, rect.y + 14, 0, color);
         }
+        ui.grip(rect, [1.0, 1.0, 1.0, 0.18]);
         ui.effect(effects.wave);
     }
 

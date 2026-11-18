@@ -387,6 +387,7 @@ function sourceRevision() {
 }
 
 let SOURCE = { origin: LIVE_ORIGIN, revision: "live deployment" };
+let closeServer = null;
 {
   const revision = sourceRevision();
   if (revision) SOURCE = { origin: "local design-system/ checkout", revision };
@@ -478,6 +479,8 @@ async function captureSource(origin) {
     timezoneId: "UTC",
     locale: "en-US",
   });
+  // Every element must appear promptly; fail loudly instead of hanging.
+  page.setDefaultTimeout(10_000);
   await page.addInitScript((fixed) => {
     const RealDate = Date;
     const offset = fixed * 1000 - RealDate.now();
@@ -539,11 +542,13 @@ async function captureSource(origin) {
     await clickVisible(`[data-cmd="${app.cmd}"]`);
     await page.waitForTimeout(700);
     await shot(`#win-${app.id}`, app.id);
+    console.log(`source: app ${app.id}`);
   }
 
   await closeAll();
   await shot(".os-menubar", "menubar");
   await shot(".os-dock-wrap", "dock");
+  console.log("source: chrome");
 
   // Command overlay is modal: close it before moving on.
   await clickVisible('[data-cmd="open-command"]');
@@ -579,6 +584,7 @@ async function captureSource(origin) {
     await clickVisible(`[data-tray-toggle="${tray.toggle}"]`);
     await page.waitForTimeout(400);
     await shot(tray.selector, tray.id);
+    console.log(`source: ${tray.id}`);
     await page.keyboard.press("Escape");
     await page.waitForTimeout(200);
   }
@@ -768,6 +774,7 @@ async function buildReport() {
 if (!args.has("--report-only")) {
   const served = await serveSource();
   if (served) {
+    closeServer = served.close;
     SOURCE = { origin: "local design-system/ checkout", revision: served.revision };
     await captureSource(served.origin);
   } else {
@@ -778,4 +785,7 @@ if (!args.has("--source-only")) {
   await cropAether();
   await buildReport();
 }
-SOURCE.close?.();
+closeServer?.();
+// The capture only needs the server while Playwright is running. Exit
+// explicitly so a lingering socket cannot keep the process alive.
+process.exit(process.exitCode ?? 0);

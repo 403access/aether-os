@@ -1,8 +1,8 @@
 # Water OS app parity · roadmap
 
-Source: `a4b4e52 Add tabbed Settings app to Aether OS (+ local changes)` (local design-system/ checkout)
+Source: `283b31c Add a sidebar toggle to the Explorer (+ local changes)` (local design-system/ checkout)
 
-Aether: `c294f8d Merge pull request #1 from 403access/fix/smithay-clipboard-smoke`
+Aether: `8343d3e Merge pull request #2 from 403access/perf/ci-caching`
 
 Implemented **5** · partial **6** · missing **11** · Aether-only **4**.
 

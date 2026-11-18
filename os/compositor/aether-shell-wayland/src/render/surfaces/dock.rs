@@ -49,7 +49,12 @@ impl App {
             if let Some(buffer) = self.chrome_round(38, 38, 10, TILE_FILL) {
                 panels.push((buffer, tile_x, tile_y));
             }
-            if let Some(buffer) = self.chrome_round(38, 38, 10, [r, g, b, 58]) {
+            if let Some(buffer) = self.chrome_round(38, 38, 10, TILE_FILL) {
+                panels.push((buffer, tile_x, tile_y));
+            }
+            if let Some(buffer) =
+                self.chrome_round_gradient(38, 38, 10, [r, g, b, 87], [r, g, b, 0])
+            {
                 panels.push((buffer, tile_x, tile_y));
             }
             if let Some(buffer) = self.chrome_outline(38, 38, 10, [r, g, b, 92]) {

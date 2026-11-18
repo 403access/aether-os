@@ -168,6 +168,30 @@ impl App {
         Some(buffer)
     }
 
+    pub(crate) fn chrome_round_gradient(
+        &mut self,
+        width: u32,
+        height: u32,
+        radius: u32,
+        top: [u8; 4],
+        bottom: [u8; 4],
+    ) -> Option<Arc<MemoryRenderBuffer>> {
+        let key = (width, height, radius, top, bottom);
+        if let Some(buffer) = self.chrome_gradients.get(&key) {
+            return Some(buffer.clone());
+        }
+        let buffer = Arc::new(primitives::rounded_gradient(
+            width,
+            height,
+            radius as f32,
+            top,
+            bottom,
+        )?);
+        self.chrome_gradients
+            .insert(key, buffer.clone(), rgba_bytes(width, height));
+        Some(buffer)
+    }
+
     pub(crate) fn chrome_outline(
         &mut self,
         width: u32,

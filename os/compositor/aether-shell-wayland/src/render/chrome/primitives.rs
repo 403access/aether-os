@@ -402,6 +402,53 @@ pub fn outline(
     Some(buffer(width.max(1), height.max(1), &straight(&pixmap)))
 }
 
+/// Rounded fill with a vertical gradient, used for dock tiles.
+pub fn rounded_gradient(
+    width: u32,
+    height: u32,
+    radius: f32,
+    top: [u8; 4],
+    bottom: [u8; 4],
+) -> Option<MemoryRenderBuffer> {
+    let mut pixmap = resvg::tiny_skia::Pixmap::new(width.max(1), height.max(1))?;
+    let shader = resvg::tiny_skia::LinearGradient::new(
+        resvg::tiny_skia::Point::from_xy(0.0, 0.0),
+        resvg::tiny_skia::Point::from_xy(0.0, height.max(1) as f32),
+        vec![
+            resvg::tiny_skia::GradientStop::new(
+                0.0,
+                resvg::tiny_skia::Color::from_rgba8(top[0], top[1], top[2], top[3]),
+            ),
+            resvg::tiny_skia::GradientStop::new(
+                0.7,
+                resvg::tiny_skia::Color::from_rgba8(bottom[0], bottom[1], bottom[2], bottom[3]),
+            ),
+        ],
+        resvg::tiny_skia::SpreadMode::Pad,
+        resvg::tiny_skia::Transform::identity(),
+    )?;
+    let path = rounded_path(
+        0.5,
+        0.5,
+        width.max(1) as f32 - 1.0,
+        height.max(1) as f32 - 1.0,
+        radius,
+    )?;
+    let paint = resvg::tiny_skia::Paint {
+        shader,
+        anti_alias: true,
+        ..Default::default()
+    };
+    pixmap.fill_path(
+        &path,
+        &paint,
+        resvg::tiny_skia::FillRule::Winding,
+        resvg::tiny_skia::Transform::identity(),
+        None,
+    );
+    Some(buffer(width.max(1), height.max(1), &straight(&pixmap)))
+}
+
 /// Rounded fill used for selected rows, pills and badges.
 pub fn rounded(width: u32, height: u32, radius: f32, fill: [u8; 4]) -> Option<MemoryRenderBuffer> {
     let mut pixmap = resvg::tiny_skia::Pixmap::new(width.max(1), height.max(1))?;

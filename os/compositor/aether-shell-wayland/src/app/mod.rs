@@ -104,6 +104,8 @@ const TOP_CACHE_BYTES: usize = 1024 * 1024;
 /// outputs (or one 4K plus a secondary) and evicts resize history.
 const BACKGROUND_CACHE_BYTES: usize = 48 * 1024 * 1024;
 
+pub(crate) type GradientKey = (u32, u32, u32, [u8; 4], [u8; 4]);
+
 pub struct App {
     display_handle: DisplayHandle,
     compositor_state: CompositorState,
@@ -144,6 +146,7 @@ pub struct App {
     pub(crate) chrome_rounds: BudgetCache<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_outlines: BudgetCache<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_shadows: BudgetCache<(u32, u32, u32), Arc<MemoryRenderBuffer>>,
+    pub(crate) chrome_gradients: BudgetCache<GradientKey, Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_waves: BudgetCache<(u32, u32, u32, u32, u8), Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_tops: BudgetCache<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_bottoms: BudgetCache<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
@@ -267,6 +270,7 @@ impl App {
             chrome_rounds: BudgetCache::new(ROUND_CACHE_BYTES),
             chrome_outlines: BudgetCache::new(ROUND_CACHE_BYTES),
             chrome_shadows: BudgetCache::new(PANEL_CACHE_BYTES),
+            chrome_gradients: BudgetCache::new(ROUND_CACHE_BYTES),
             chrome_waves: BudgetCache::new(PANEL_CACHE_BYTES),
             chrome_tops: BudgetCache::new(TOP_CACHE_BYTES),
             chrome_bottoms: BudgetCache::new(TOP_CACHE_BYTES),

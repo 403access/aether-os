@@ -16,7 +16,8 @@
   the source concept's 730 px height; the dock floats above the window bottom.
 - Add `smoke-system-apps-xvfb.sh` (all apps + trays in one capture run) and an
   `AETHER_HIDE_DOCK` capture switch for clean window crops. The parity report is
-  now **18 implemented / 2 partial / 2 missing / 4 Aether-only**.
+  now **18 implemented / 2 partial / 0 missing / 2 out of scope / 4 Aether-only**
+  (Data Cloud Compare and App Studio are out of scope by decision).
 - Verification: `cargo test` (aether-shell 85, aether-shell-wayland 64),
   clippy `-D warnings` and rustfmt for the standalone crate, the Xvfb smoke set,
   and a rendered report with 46 element screenshots and no broken references.

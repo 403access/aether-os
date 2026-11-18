@@ -1,12 +1,12 @@
 # Water OS app parity · roadmap
 
-Source: `ba9740a Center dock tiles in left and right dock positions (+ local changes)` (local design-system/ checkout)
+Source: `a72f82d Give dropdown chevrons more breathing room (+ local changes)` (local design-system/ checkout)
 
-Aether: `53019ca feat(shell): grow first-party windows to the demo's 730 px box`
+Aether: `c2df4dc chore(screenshots): capture the system apps in the shell pipeline`
 
-Implemented **18** · partial **2** · missing **2** · Aether-only **4**.
+Implemented **18** · partial **2** · missing **0** · out of scope **2** · Aether-only **4**.
 
-**Status key** — implemented: matches the source surface · partial: present but a different scope or layout · missing: no Aether surface · Aether only: no source counterpart.
+**Status key** — implemented: matches the source surface · partial: present but a different scope or layout · missing: no Aether surface · out of scope: intentionally not an Aether app · Aether only: no source counterpart.
 
 | Surface | Group | Status | Priority | Where | Notes |
 | --- | --- | --- | --- | --- | --- |
@@ -14,7 +14,7 @@ Implemented **18** · partial **2** · missing **2** · Aether-only **4**.
 | Dock | System chrome | Implemented | P0 · done | `app/overlays/dock.rs` | Same 46 px items, 38 px tinted tiles, separator and running dot. The demo hides its dock below 1360 px, so the source capture is at 1440; Aether keeps it at 1280. The demo has ten tiles (adding Projects and App Studio); Aether ships eight. |
 | App menus | System chrome | Implemented | P0 · done | `app/overlays/menubar/layout.rs` | File/View/Go/Window/Help open popovers that run real commands. The Aether crop includes the bar segment above the popover. |
 | Command overlay | System chrome | Partial | P2 | `crates/aether-shell/src/shell/palette.rs` | Both are ⌘K surfaces. The demo uses the explorer's command palette (groups, filters, previews); Aether uses its own providers and row language. |
-| Data Cloud Compare | Apps | Missing | — | product-specific | The product's two-pane cloud-vs-index comparator with match badges, legend and command bar. Aether has no cloud archive model. |
+| Data Cloud Compare | Apps | Out of scope | — | product-specific | Ignored by decision: the Data Cloud Compare product surface (cloud-vs-index comparator) is not an Aether app. |
 | Explorer | Apps | Implemented | P1 | `render/surfaces/explorer.rs` | Sidebar (favourites, locations, read-only notice), toolbar with breadcrumb and hidden switch, in-pane search row, Name/Type/Size/Modified columns, footer and status strip. Hidden/Everywhere/Filter are still visual-only. |
 | Settings | Apps | Implemented | P1 | `app/system.rs` + `render/surfaces/system_app.rs` | Fourteen tabs with section cards. General/Network/Bluetooth/Sound/Battery read live host facts; Appearance switches drive the Water theme. Widgets is folded into Desktop & Dock. |
 | Network | Apps | Implemented | P0 · done | `app/system.rs` + `app/system_info.rs` | Interfaces from /sys/class/net, IP from fib_trie, router from /proc/net/route and DNS from resolv.conf, in the demo's header/switch/list/details card layout. |
@@ -26,7 +26,7 @@ Implemented **18** · partial **2** · missing **2** · Aether-only **4**.
 | Tide Radio | Apps | Implemented | P0 · done | `app/system.rs` | Player window with artwork, track metadata, progress, transport controls and a five-track queue; Space toggles playback. |
 | Keyboard shortcuts | Apps | Partial | P2 | `app/overlays/shortcuts.rs` | Both are Super+/ cheatsheets. The demo groups the explorer key map; Aether lists the compositor's own surfaces and window actions. |
 | About Aether OS | Apps | Implemented | P0 · done | `app/system.rs` + `render/surfaces/system_app.rs` | Version, build, hardware and licence. The menu-bar logo currently opens the cheatsheet. |
-| App Studio | Apps | Missing | — | product-specific | The demo's GUI builder for app surfaces. No Aether equivalent. |
+| App Studio | Apps | Out of scope | — | product-specific | Ignored by decision: the demo's GUI builder is a product surface, not part of the Aether desktop. |
 | Wi-Fi tray | System trays | Implemented | P0 · done | `render/surfaces/tray.rs` | Wi-Fi switch, connected interface, network list and a Network Settings link. Panel size matches the demo (301 x 329). |
 | Bluetooth tray | System trays | Implemented | P0 · done | `render/surfaces/tray.rs` | Bluetooth switch, paired-device area and a Bluetooth Settings link (301 x 253). |
 | Battery tray | System trays | Implemented | P0 · done | `render/surfaces/tray.rs` | Charge, estimate, level bar, three-way energy mode and a Battery Settings link (287 x 271). |
@@ -39,11 +39,11 @@ Implemented **18** · partial **2** · missing **2** · Aether-only **4**.
 
 ## Next up
 
-1. **App Studio** (P3): a node canvas and inspector for app surfaces.
-2. **Data Cloud Compare** (P3): a two-pane cloud-vs-index comparator; needs a snapshot model.
-3. **Explorer wiring** (P1): make Hidden, Everywhere, Filter and the navigation buttons functional.
-4. **Command overlay** (P2): align the palette with the demo's grouped command surface.
-5. **Keyboard shortcuts** (P2): group the cheatsheet by app like the demo.
+Data Cloud Compare and App Studio are **out of scope by decision** and excluded from the gap.
+
+1. **Explorer wiring** (P1): make Hidden, Everywhere, Filter and the navigation buttons functional.
+2. **Command overlay** (P2): align the palette with the demo's grouped command surface.
+3. **Keyboard shortcuts** (P2): group the cheatsheet by app like the demo.
 
 ## Regenerate
 

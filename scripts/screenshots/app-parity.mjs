@@ -159,9 +159,9 @@ const SURFACES = [
     where: "product-specific",
     source: "compare",
     aether: null,
-    status: "missing",
+    status: "out-of-scope",
     notes:
-      "The product's two-pane cloud-vs-index comparator with match badges, legend and command bar. Aether has no cloud archive model.",
+      "Ignored by decision: the Data Cloud Compare product surface (cloud-vs-index comparator) is not an Aether app.",
   },
   {
     group: "Apps",
@@ -290,8 +290,9 @@ const SURFACES = [
     where: "product-specific",
     source: "builder",
     aether: null,
-    status: "missing",
-    notes: "The demo's GUI builder for app surfaces. No Aether equivalent.",
+    status: "out-of-scope",
+    notes:
+      "Ignored by decision: the demo's GUI builder is a product surface, not part of the Aether desktop.",
   },
   {
     group: "System trays",
@@ -425,6 +426,7 @@ const STATUS_LABEL = {
   partial: "Partial",
   missing: "Missing",
   "aether-only": "Aether only",
+  "out-of-scope": "Out of scope",
 };
 
 const args = new Set(process.argv.slice(2));
@@ -680,7 +682,13 @@ function imageSize(buffer) {
 
 async function buildReport() {
   await mkdir(outDir, { recursive: true });
-  const counts = { implemented: 0, partial: 0, missing: 0, "aether-only": 0 };
+  const counts = {
+    implemented: 0,
+    partial: 0,
+    missing: 0,
+    "aether-only": 0,
+    "out-of-scope": 0,
+  };
   for (const surface of SURFACES) counts[surface.status] += 1;
 
   const cards = [];
@@ -740,6 +748,7 @@ async function buildReport() {
   .pill--partial { color:var(--amber); border-color:color-mix(in srgb,var(--amber) 40%,transparent); background:color-mix(in srgb,var(--amber) 12%,transparent); }
   .pill--missing { color:var(--red); border-color:color-mix(in srgb,var(--red) 40%,transparent); background:color-mix(in srgb,var(--red) 12%,transparent); }
   .pill--aether-only { color:var(--violet); border-color:color-mix(in srgb,var(--violet) 40%,transparent); background:color-mix(in srgb,var(--violet) 12%,transparent); }
+  .pill--out-of-scope { color:var(--mute); border-color:color-mix(in srgb,var(--mute) 40%,transparent); background:color-mix(in srgb,var(--mute) 12%,transparent); }
   .pair { display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:14px; align-items:start; }
   figure { margin:0; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:#041c26; display:flex; flex-direction:column; }
   figure img { flex:1 1 auto; object-fit:contain; }
@@ -762,6 +771,7 @@ async function buildReport() {
     <div class="stat"><b>${counts.implemented}</b><span>Implemented</span></div>
     <div class="stat"><b>${counts.partial}</b><span>Partial</span></div>
     <div class="stat"><b>${counts.missing}</b><span>Missing</span></div>
+    <div class="stat"><b>${counts["out-of-scope"]}</b><span>Out of scope</span></div>
     <div class="stat"><b>${counts["aether-only"]}</b><span>Aether only</span></div>
   </div>
   ${cards.join("\n")}
@@ -778,9 +788,9 @@ async function buildReport() {
     "",
     `Aether: \`${AETHER_REVISION}\``,
     "",
-    `Implemented **${counts.implemented}** · partial **${counts.partial}** · missing **${counts.missing}** · Aether-only **${counts["aether-only"]}**.`,
+    `Implemented **${counts.implemented}** · partial **${counts.partial}** · missing **${counts.missing}** · out of scope **${counts["out-of-scope"]}** · Aether-only **${counts["aether-only"]}**.`,
     "",
-    "**Status key** — implemented: matches the source surface · partial: present but a different scope or layout · missing: no Aether surface · Aether only: no source counterpart.",
+    "**Status key** — implemented: matches the source surface · partial: present but a different scope or layout · missing: no Aether surface · out of scope: intentionally not an Aether app · Aether only: no source counterpart.",
     "",
     "| Surface | Group | Status | Priority | Where | Notes |",
     "| --- | --- | --- | --- | --- | --- |",
@@ -791,11 +801,11 @@ async function buildReport() {
     "",
     "## Next up",
     "",
-    "1. **App Studio** (P3): a node canvas and inspector for app surfaces.",
-    "2. **Data Cloud Compare** (P3): a two-pane cloud-vs-index comparator; needs a snapshot model.",
-    "3. **Explorer wiring** (P1): make Hidden, Everywhere, Filter and the navigation buttons functional.",
-    "4. **Command overlay** (P2): align the palette with the demo's grouped command surface.",
-    "5. **Keyboard shortcuts** (P2): group the cheatsheet by app like the demo.",
+    "Data Cloud Compare and App Studio are **out of scope by decision** and excluded from the gap.",
+    "",
+    "1. **Explorer wiring** (P1): make Hidden, Everywhere, Filter and the navigation buttons functional.",
+    "2. **Command overlay** (P2): align the palette with the demo's grouped command surface.",
+    "3. **Keyboard shortcuts** (P2): group the cheatsheet by app like the demo.",
     "",
     "## Regenerate",
     "",

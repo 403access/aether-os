@@ -26,6 +26,7 @@
   .pill--partial { color:var(--amber); border-color:color-mix(in srgb,var(--amber) 40%,transparent); background:color-mix(in srgb,var(--amber) 12%,transparent); }
   .pill--missing { color:var(--red); border-color:color-mix(in srgb,var(--red) 40%,transparent); background:color-mix(in srgb,var(--red) 12%,transparent); }
   .pill--aether-only { color:var(--violet); border-color:color-mix(in srgb,var(--violet) 40%,transparent); background:color-mix(in srgb,var(--violet) 12%,transparent); }
+  .pill--out-of-scope { color:var(--mute); border-color:color-mix(in srgb,var(--mute) 40%,transparent); background:color-mix(in srgb,var(--mute) 12%,transparent); }
   .pair { display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:14px; align-items:start; }
   figure { margin:0; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:#041c26; display:flex; flex-direction:column; }
   figure img { flex:1 1 auto; object-fit:contain; }
@@ -40,14 +41,15 @@
   <h1>Water OS app parity</h1>
   <p class="lede">Every surface from the Water OS demo next to the current Aether compositor. Captures are element or window crops only — no full-desktop frames.</p>
   <p class="meta">
-    <span>Source · ba9740a Center dock tiles in left and right dock positions (+ local changes)</span>
-    <span>Aether · 53019ca feat(shell): grow first-party windows to the demo's 730 px box</span>
+    <span>Source · a72f82d Give dropdown chevrons more breathing room (+ local changes)</span>
+    <span>Aether · c2df4dc chore(screenshots): capture the system apps in the shell pipeline</span>
     <span>1280×800 · clock pinned to 2026-11-18 16:47 UTC</span>
   </p>
   <div class="stats">
     <div class="stat"><b>18</b><span>Implemented</span></div>
     <div class="stat"><b>2</b><span>Partial</span></div>
-    <div class="stat"><b>2</b><span>Missing</span></div>
+    <div class="stat"><b>0</b><span>Missing</span></div>
+    <div class="stat"><b>2</b><span>Out of scope</span></div>
     <div class="stat"><b>4</b><span>Aether only</span></div>
   </div>
   <h2 class="group">System chrome</h2>
@@ -97,10 +99,10 @@
         <header>
           <h3>Data Cloud Compare</h3>
           <span class="priority">—</span>
-          <span class="pill pill--missing">Missing</span>
+          <span class="pill pill--out-of-scope">Out of scope</span>
         </header>
         <div class="pair"><figure><img src="source/compare.png" alt="Demo Data Cloud Compare"><figcaption>Source · 1248x730</figcaption></figure><figure class="empty"><div>Not implemented yet</div><figcaption>roadmap</figcaption></figure></div>
-        <p class="notes">The product's two-pane cloud-vs-index comparator with match badges, legend and command bar. Aether has no cloud archive model.</p>
+        <p class="notes">Ignored by decision: the Data Cloud Compare product surface (cloud-vs-index comparator) is not an Aether app.</p>
       </section>
 
       <section class="surface">
@@ -217,10 +219,10 @@
         <header>
           <h3>App Studio</h3>
           <span class="priority">—</span>
-          <span class="pill pill--missing">Missing</span>
+          <span class="pill pill--out-of-scope">Out of scope</span>
         </header>
         <div class="pair"><figure><img src="source/builder.png" alt="Demo App Studio"><figcaption>Source · 1248x730</figcaption></figure><figure class="empty"><div>Not implemented yet</div><figcaption>roadmap</figcaption></figure></div>
-        <p class="notes">The demo's GUI builder for app surfaces. No Aether equivalent.</p>
+        <p class="notes">Ignored by decision: the demo's GUI builder is a product surface, not part of the Aether desktop.</p>
       </section>
 <h2 class="group">System trays</h2>
 

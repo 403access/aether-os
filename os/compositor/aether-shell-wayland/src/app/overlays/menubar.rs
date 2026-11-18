@@ -68,8 +68,8 @@ impl App {
             static ONCE: AtomicBool = AtomicBool::new(false);
             if !ONCE.swap(true, Ordering::Relaxed) {
                 println!(
-                    "aether-shell: menubar sync={:?} resources={:?} clock={:?} traps={:?}",
-                    bar.sync, bar.resources, bar.clock, bar.tray
+                    "aether-shell: menubar app={:?} menus={:?} sync={:?} resources={:?} clock={:?} traps={:?}",
+                    bar.app, bar.menus, bar.sync, bar.resources, bar.clock, bar.tray
                 );
             }
         }

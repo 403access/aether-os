@@ -48,18 +48,18 @@ impl App {
         // Brand mark: two overlapping glass panels with a check, like `.os-logo`.
         display_icons.push((
             "water".into(),
-            20,
+            18,
             tokens.accent(255),
-            bar.logo.x + 4,
-            y + 3,
+            bar.logo.x + 5,
+            y + 8,
         ));
 
         // Application title (`.os-menubar__app`), 12.5 px semibold.
         labels.push((
             bar.app_title.clone(),
             bar.app.x + 2,
-            y + 12,
-            0x100,
+            y + 9,
+            0x101,
             tokens.text,
         ));
 
@@ -76,8 +76,8 @@ impl App {
             labels.push((
                 id.label().into(),
                 rect.x + 9,
-                y + 12,
-                0x100,
+                y + 10,
+                1,
                 if open { tokens.text } else { tokens.soft },
             ));
         }
@@ -99,7 +99,7 @@ impl App {
         labels.push((
             bar.sync_label.clone(),
             bar.sync.x + 20,
-            y + 12,
+            y + 11,
             0,
             tokens.soft,
         ));
@@ -126,10 +126,10 @@ impl App {
                 ));
             }
             let label_x = rect.x + 8;
-            labels.push((meter.label.clone(), label_x, y + 8, 6, tokens.dim));
+            labels.push((meter.label.clone(), label_x, y + 14, 6, tokens.dim));
             let meter_x = label_x + self.text_width(&meter.label, 6) as i32 + 4;
             if let Some(buffer) = self.chrome_round(20, 3, 2, [255, 255, 255, 26]) {
-                panels.push((buffer, meter_x, y + 12));
+                panels.push((buffer, meter_x, y + 18));
             }
             let fill = (20.0 * meter.fraction.clamp(0.0, 1.0)).round() as u32;
             if fill > 0 {
@@ -139,10 +139,10 @@ impl App {
                     _ => tokens.green,
                 };
                 if let Some(buffer) = self.chrome_round(fill.max(2), 3, 2, color) {
-                    panels.push((buffer, meter_x, y + 12));
+                    panels.push((buffer, meter_x, y + 18));
                 }
             }
-            labels.push((meter.value.clone(), meter_x + 24, y + 9, 4, tokens.soft));
+            labels.push((meter.value.clone(), meter_x + 24, y + 14, 4, tokens.soft));
         }
 
         // Tray glyphs.
@@ -172,9 +172,9 @@ impl App {
 
         // Clock: dim date, bright time.
         let clock_date_x = bar.clock.x + 8;
-        labels.push((bar.clock_date.clone(), clock_date_x, y + 12, 0, tokens.dim));
+        labels.push((bar.clock_date.clone(), clock_date_x, y + 11, 0, tokens.dim));
         let time_x = clock_date_x + self.text_width(&bar.clock_date, 0) as i32 + 7;
-        labels.push((bar.clock_time.clone(), time_x, y + 12, 0x100, tokens.text));
+        labels.push((bar.clock_time.clone(), time_x, y + 11, 0x100, tokens.text));
 
         // Open popover.
         if let Some(menu) = self.menu_open {

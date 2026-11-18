@@ -84,16 +84,26 @@ const AETHER_CROPS = {
   dock: { file: "desktop.png", rect: [420, 730, 439, 62] },
   menu: { file: "menu.png", rect: [110, 0, 250, 215] },
   command: { file: "palette-default.png", rect: [300, 190, 680, 420] },
-  explorer: { file: "explorer.png", rect: [16, 54, 1248, 610] },
-  settings: { file: "themes.png", rect: [310, 56, 660, 688] },
-  calendar: { file: "calendar.png", rect: [290, 88, 700, 590] },
-  taskmanager: { file: "task-manager.png", rect: [0, 38, 1280, 688] },
+  explorer: { file: "explorer.png", rect: [16, 54, 1248, 730] },
+  about: { file: "app-about.png", rect: [16, 54, 1248, 730] },
+  network: { file: "app-network.png", rect: [16, 54, 1248, 730] },
+  battery: { file: "app-battery.png", rect: [16, 54, 1248, 730] },
+  devices: { file: "app-devices.png", rect: [16, 54, 1248, 730] },
+  radio: { file: "app-radio.png", rect: [16, 54, 1248, 730] },
+  settings: { file: "app-settings.png", rect: [16, 54, 1248, 730] },
+  calendar: { file: "calendar.png", rect: [16, 54, 1248, 730] },
+  taskmanager: { file: "app-task-manager.png", rect: [16, 54, 1248, 730] },
   terminal: { file: "client-window.png", rect: [16, 54, 619, 730] },
   shortcuts: { file: "shortcuts.png", rect: [260, 120, 760, 560] },
   audio: { file: "audio.png", rect: [310, 120, 660, 560] },
   chat: { file: "chat.png", rect: [864, 54, 400, 660] },
   agents: { file: "sandboxes.png", rect: [0, 38, 1280, 688] },
   remote: { file: "remote.png", rect: [330, 190, 620, 420] },
+  "tray-network": { file: "tray-network.png", rect: [620, 42, 301, 329] },
+  "tray-devices": { file: "tray-devices.png", rect: [656, 42, 301, 253] },
+  "tray-battery": { file: "tray-battery.png", rect: [736, 42, 287, 271] },
+  "tray-sound": { file: "tray-sound.png", rect: [766, 42, 293, 256] },
+  "tray-calendar": { file: "tray-calendar.png", rect: [900, 42, 308, 351] },
 };
 
 /** The checklist that drives the report. `aether` names a crop key. */
@@ -118,7 +128,7 @@ const SURFACES = [
     aether: "dock",
     status: "implemented",
     notes:
-      "Same 46 px items, 38 px tinted tiles, separator and running dot. The demo dock has ten tiles (adding Projects and App Studio); Aether ships eight for its own apps.",
+      "Same 46 px items, 38 px tinted tiles, separator and running dot. The demo hides its dock below 1360 px, so the source capture is at 1440; Aether keeps it at 1280. The demo has ten tiles (adding Projects and App Studio); Aether ships eight.",
   },
   {
     group: "System chrome",
@@ -156,54 +166,57 @@ const SURFACES = [
   {
     group: "Apps",
     title: "Explorer",
-    priority: "P2",
+    priority: "P1",
     where: "`render/surfaces/explorer.rs`",
     source: "explorer",
     aether: "explorer",
-    status: "partial",
+    status: "implemented",
     notes:
-      "Window geometry, title bar, app bar, pane card, rows and status strip match. The demo explorer is a single-pane file browser with a breadcrumb and search row; Aether's is a single indexed pane.",
+      "Sidebar (favourites, locations, read-only notice), toolbar with breadcrumb and hidden switch, in-pane search row, Name/Type/Size/Modified columns, footer and status strip. Hidden/Everywhere/Filter are still visual-only.",
   },
   {
     group: "Apps",
     title: "Settings",
-    priority: "P2",
-    where: "`render/surfaces/themes.rs`",
+    priority: "P1",
+    where: "`app/system.rs` + `render/surfaces/system_app.rs`",
     source: "settings",
     aether: "settings",
-    status: "partial",
+    status: "implemented",
     notes:
-      "The demo Settings app is tabbed: General, Appearance, Displays, Desktop & Dock, Search, Widgets, Accessibility, Network, Bluetooth, Sound, Battery, Privacy, Screen Time and Storage. Aether only ships the Water settings panel (Themes).",
+      "Fourteen tabs with section cards. General/Network/Bluetooth/Sound/Battery read live host facts; Appearance switches drive the Water theme. Widgets is folded into Desktop & Dock.",
   },
   {
     group: "Apps",
     title: "Network",
-    priority: "P1",
-    where: "—",
+    priority: "P0 · done",
+    where: "`app/system.rs` + `app/system_info.rs`",
     source: "network",
-    aether: null,
-    status: "missing",
-    notes: "Wi-Fi, VPN and known networks. The menu bar Wi-Fi tray is a stub that logs.",
+    aether: "network",
+    status: "implemented",
+    notes:
+      "Interfaces from /sys/class/net, IP from fib_trie, router from /proc/net/route and DNS from resolv.conf, in the demo's header/switch/list/details card layout.",
   },
   {
     group: "Apps",
     title: "Battery",
-    priority: "P1",
-    where: "—",
+    priority: "P0 · done",
+    where: "`app/system.rs` + `app/system_info.rs`",
     source: "battery",
-    aether: null,
-    status: "missing",
-    notes: "Charge, health, energy mode and history. The menu bar battery item is a stub.",
+    aether: "battery",
+    status: "implemented",
+    notes:
+      "Charge and estimate, energy mode, low-power and optimised-charging switches, health table and largest CPU consumers. Shows an AC-power state when no battery exists.",
   },
   {
     group: "Apps",
     title: "Devices",
-    priority: "P1",
-    where: "—",
+    priority: "P0 · done",
+    where: "`app/system.rs` + `app/system_info.rs`",
     source: "devices",
-    aether: null,
-    status: "missing",
-    notes: "Bluetooth accessories, pairing and battery levels. The tray item is a stub.",
+    aether: "devices",
+    status: "implemented",
+    notes:
+      "Bluetooth summary, accessory switches and paired-device list over /sys/class/bluetooth, with an explicit no-adapter state.",
   },
   {
     group: "Apps",
@@ -223,9 +236,9 @@ const SURFACES = [
     where: "`app/overlays/task_manager.rs`",
     source: "taskmanager",
     aether: "taskmanager",
-    status: "partial",
+    status: "implemented",
     notes:
-      "Live /proc sampling, tabs and a sorted table in both. Aether runs it as a full-width panel below the menu bar; the demo uses a floating window with its own title bar.",
+      "Live /proc sampling, tabs, a sorted table, task-count badge and status strip in the demo's floating window box.",
   },
   {
     group: "Apps",
@@ -241,12 +254,13 @@ const SURFACES = [
   {
     group: "Apps",
     title: "Tide Radio",
-    priority: "P3",
-    where: "—",
+    priority: "P0 · done",
+    where: "`app/system.rs`",
     source: "music",
-    aether: null,
-    status: "missing",
-    notes: "Playback, queue and presets. Aether has an audio-route overlay but no player.",
+    aether: "radio",
+    status: "implemented",
+    notes:
+      "Player window with artwork, track metadata, progress, transport controls and a five-track queue; Space toggles playback.",
   },
   {
     group: "Apps",
@@ -262,11 +276,11 @@ const SURFACES = [
   {
     group: "Apps",
     title: "About Aether OS",
-    priority: "P2",
-    where: "—",
+    priority: "P0 · done",
+    where: "`app/system.rs` + `render/surfaces/system_app.rs`",
     source: "about",
-    aether: null,
-    status: "missing",
+    aether: "about",
+    status: "implemented",
     notes: "Version, build, hardware and licence. The menu-bar logo currently opens the cheatsheet.",
   },
   {
@@ -282,53 +296,57 @@ const SURFACES = [
   {
     group: "System trays",
     title: "Wi-Fi tray",
-    priority: "P1",
-    where: "—",
+    priority: "P0 · done",
+    where: "`render/surfaces/tray.rs`",
     source: "tray-network",
-    aether: null,
-    status: "missing",
-    notes: "Connected network, known networks, VPN state, link to Network.",
+    aether: "tray-network",
+    status: "implemented",
+    notes:
+      "Wi-Fi switch, connected interface, network list and a Network Settings link. Panel size matches the demo (301 x 329).",
   },
   {
     group: "System trays",
     title: "Bluetooth tray",
-    priority: "P1",
-    where: "—",
+    priority: "P0 · done",
+    where: "`render/surfaces/tray.rs`",
     source: "tray-devices",
-    aether: null,
-    status: "missing",
-    notes: "Accessory list and toggle, link to Devices.",
+    aether: "tray-devices",
+    status: "implemented",
+    notes:
+      "Bluetooth switch, paired-device area and a Bluetooth Settings link (301 x 253).",
   },
   {
     group: "System trays",
     title: "Battery tray",
-    priority: "P1",
-    where: "—",
+    priority: "P0 · done",
+    where: "`render/surfaces/tray.rs`",
     source: "tray-battery",
-    aether: null,
-    status: "missing",
-    notes: "Charge figure, energy mode and time remaining.",
+    aether: "tray-battery",
+    status: "implemented",
+    notes:
+      "Charge, estimate, level bar, three-way energy mode and a Battery Settings link (287 x 271).",
   },
   {
     group: "System trays",
     title: "Sound tray",
-    priority: "P3",
-    where: "—",
+    priority: "P0 · done",
+    where: "`render/surfaces/tray.rs`",
     source: "tray-sound",
-    aether: null,
-    status: "missing",
-    notes: "Output selection and volume. Aether's audio overlay covers the routing UI but not this tray.",
+    aether: "tray-sound",
+    status: "implemented",
+    notes:
+      "Output name, volume bar and a Sound Settings link (293 x 256). Preset switching stays in the audio overlay.",
   },
   {
     group: "System trays",
     title: "Calendar tray",
-    priority: "P2",
-    where: "—",
+    priority: "P0 · done",
+    where: "`render/surfaces/tray.rs`",
     source: "tray-calendar",
-    aether: null,
-    status: "partial",
+    aether: "tray-calendar",
+    status: "implemented",
     notes:
-      "The demo opens a month popover from the clock and offers Open Calendar. Aether opens the Calendar window directly.",
+      "Month popover from the clock with today filled and an Open Calendar link (308 x 351).",
   },
   {
     group: "Aether-only",
@@ -532,22 +550,49 @@ async function captureSource(origin) {
     const locator = page.locator(selector).first();
     await locator.waitFor({ state: "visible", timeout: 5000 });
     await locator.scrollIntoViewIfNeeded().catch(() => {});
-    await locator.screenshot({ path: join(sourceDir, `${file}.png`) });
+    await locator.screenshot({
+      path: join(sourceDir, `${file}.png`),
+      animations: "disabled",
+    });
     const box = await locator.boundingBox();
     return box;
   };
 
   for (const app of SOURCE_APPS) {
-    await closeAll();
-    await clickVisible(`[data-cmd="${app.cmd}"]`);
-    await page.waitForTimeout(700);
-    await shot(`#win-${app.id}`, app.id);
-    console.log(`source: app ${app.id}`);
+    try {
+      await closeAll();
+      await clickVisible(`[data-cmd="${app.cmd}"]`);
+      await page.waitForTimeout(700);
+      await shot(`#win-${app.id}`, app.id);
+      console.log(`source: app ${app.id}`);
+    } catch (error) {
+      console.warn(`skip ${app.id}: ${error.message.split("\n")[0]}`);
+    }
   }
 
+  // Chrome elements are captured with every window hidden so the dock is
+  // never occluded by a maximised window.
   await closeAll();
+  await page.evaluate(() => {
+    document.querySelectorAll(".os-window").forEach((windowElement) => {
+      windowElement.hidden = true;
+      windowElement.classList.remove("is-open", "is-focused");
+    });
+  });
+  await page.waitForTimeout(300);
   await shot(".os-menubar", "menubar");
-  await shot(".os-dock-wrap", "dock");
+  // The demo hides the dock below 1360 px. Capture it at 1440 so the
+  // comparison still shows the design, and note the breakpoint.
+  try {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.waitForTimeout(500);
+    await shot(".os-dock-wrap", "dock");
+  } catch (error) {
+    console.warn(`skip dock: ${error.message.split("\n")[0]}`);
+  } finally {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.waitForTimeout(300);
+  }
   console.log("source: chrome");
 
   // Command overlay is modal: close it before moving on.
@@ -746,14 +791,11 @@ async function buildReport() {
     "",
     "## Next up",
     "",
-    "1. **P1 · Network, Battery, Devices** windows and their tray popovers (menu-bar items are stubs today).",
-    "2. **P1 · Task Manager as a floating window** instead of a full-width panel.",
-    "3. **P2 · Explorer parity**: sidebar/favourites, breadcrumb, in-pane search row and size/modified columns.",
-    "4. **P2 · Settings tabs** beyond Water (Appearance, Displays, Desktop & Dock, Search, Accessibility).",
-    "5. **P2 · About Aether OS** window behind the menu-bar logo.",
-    "6. **P2 · Calendar and Sound trays** (month popover from the clock, output/volume popover).",
-    "7. **P3 · Tide Radio** player and the sound tray that opens it.",
-    "8. **Not planned**: Data Cloud Compare and App Studio are product-specific to the demo.",
+    "1. **App Studio** (P3): a node canvas and inspector for app surfaces.",
+    "2. **Data Cloud Compare** (P3): a two-pane cloud-vs-index comparator; needs a snapshot model.",
+    "3. **Explorer wiring** (P1): make Hidden, Everywhere, Filter and the navigation buttons functional.",
+    "4. **Command overlay** (P2): align the palette with the demo's grouped command surface.",
+    "5. **Keyboard shortcuts** (P2): group the cheatsheet by app like the demo.",
     "",
     "## Regenerate",
     "",

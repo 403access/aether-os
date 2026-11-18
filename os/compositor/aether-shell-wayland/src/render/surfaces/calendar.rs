@@ -297,21 +297,5 @@ impl App {
     }
 }
 
-/// Kept for tests: the calendar window matches the demo's 700 x 590.
 #[cfg(test)]
-fn demo_size() -> (u32, u32) {
-    (
-        crate::app::overlays::calendar::CALENDAR_WIDTH,
-        crate::app::overlays::calendar::CALENDAR_HEIGHT,
-    )
-}
-
-#[cfg(test)]
-mod tests {
-    use super::demo_size;
-
-    #[test]
-    fn window_matches_the_demo() {
-        assert_eq!(demo_size(), (700, 590));
-    }
-}
+mod tests {}

@@ -14,7 +14,7 @@ use super::tray::TrayId;
 
 /// Demo window box at 1280 × 800.
 pub const APP_WIDTH: u32 = 1248;
-pub const APP_HEIGHT: u32 = 664;
+pub const APP_HEIGHT: u32 = 730;
 pub const TITLEBAR_HEIGHT: i32 = 40;
 
 #[allow(dead_code)] // variants land one commit at a time
@@ -177,7 +177,7 @@ impl App {
             .map(|output| output.rect)
             .unwrap_or_else(|| AetherRect::new(0, 0, 1280, 800));
         let width = APP_WIDTH.min(bounds.width.saturating_sub(32));
-        let height = APP_HEIGHT.min(bounds.height.saturating_sub(54 + 70));
+        let height = APP_HEIGHT.min(bounds.height.saturating_sub(54 + 16));
         AetherRect::new(bounds.x + 16, bounds.y + 54, width, height)
     }
 

@@ -22,7 +22,7 @@ impl Shell {
         } else {
             (bounds.width.saturating_sub(336)).min(1080)
         };
-        let height = (bounds.height.saturating_sub(54 + 70)).min(664);
+        let height = (bounds.height.saturating_sub(54 + 16)).min(730);
         Rect::new(bounds.x + 16, bounds.y + 54, width, height)
     }
 

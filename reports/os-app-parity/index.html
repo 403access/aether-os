@@ -40,14 +40,14 @@
   <h1>Water OS app parity</h1>
   <p class="lede">Every surface from the Water OS demo next to the current Aether compositor. Captures are element or window crops only — no full-desktop frames.</p>
   <p class="meta">
-    <span>Source · 283b31c Add a sidebar toggle to the Explorer (+ local changes)</span>
-    <span>Aether · 8343d3e Merge pull request #2 from 403access/perf/ci-caching</span>
+    <span>Source · ba9740a Center dock tiles in left and right dock positions (+ local changes)</span>
+    <span>Aether · 7c4596b feat(shell): bring the Explorer up to the demo layout</span>
     <span>1280×800 · clock pinned to 2026-11-18 16:47 UTC</span>
   </p>
   <div class="stats">
-    <div class="stat"><b>5</b><span>Implemented</span></div>
-    <div class="stat"><b>6</b><span>Partial</span></div>
-    <div class="stat"><b>11</b><span>Missing</span></div>
+    <div class="stat"><b>18</b><span>Implemented</span></div>
+    <div class="stat"><b>2</b><span>Partial</span></div>
+    <div class="stat"><b>2</b><span>Missing</span></div>
     <div class="stat"><b>4</b><span>Aether only</span></div>
   </div>
   <h2 class="group">System chrome</h2>
@@ -69,7 +69,7 @@
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/dock.png" alt="Demo Dock"><figcaption>Source · 546x62</figcaption></figure><figure><img src="aether/dock.png" alt="Aether Dock"><figcaption>Aether · 439x62</figcaption></figure></div>
-        <p class="notes">Same 46 px items, 38 px tinted tiles, separator and running dot. The demo dock has ten tiles (adding Projects and App Studio); Aether ships eight for its own apps.</p>
+        <p class="notes">Same 46 px items, 38 px tinted tiles, separator and running dot. The demo hides its dock below 1360 px, so the source capture is at 1440; Aether keeps it at 1280. The demo has ten tiles (adding Projects and App Studio); Aether ships eight.</p>
       </section>
 
       <section class="surface">
@@ -99,58 +99,58 @@
           <span class="priority">—</span>
           <span class="pill pill--missing">Missing</span>
         </header>
-        <div class="pair"><figure><img src="source/compare.png" alt="Demo Data Cloud Compare"><figcaption>Source · 1248x664</figcaption></figure><figure class="empty"><div>Not implemented yet</div><figcaption>roadmap</figcaption></figure></div>
+        <div class="pair"><figure><img src="source/compare.png" alt="Demo Data Cloud Compare"><figcaption>Source · 1248x730</figcaption></figure><figure class="empty"><div>Not implemented yet</div><figcaption>roadmap</figcaption></figure></div>
         <p class="notes">The product's two-pane cloud-vs-index comparator with match badges, legend and command bar. Aether has no cloud archive model.</p>
       </section>
 
       <section class="surface">
         <header>
           <h3>Explorer</h3>
-          <span class="priority">P2</span>
-          <span class="pill pill--partial">Partial</span>
+          <span class="priority">P1</span>
+          <span class="pill pill--implemented">Implemented</span>
         </header>
-        <div class="pair"><figure><img src="source/explorer.png" alt="Demo Explorer"><figcaption>Source · 1248x664</figcaption></figure><figure><img src="aether/explorer.png" alt="Aether Explorer"><figcaption>Aether · 1248x610</figcaption></figure></div>
-        <p class="notes">Window geometry, title bar, app bar, pane card, rows and status strip match. The demo explorer is a single-pane file browser with a breadcrumb and search row; Aether's is a single indexed pane.</p>
+        <div class="pair"><figure><img src="source/explorer.png" alt="Demo Explorer"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/explorer.png" alt="Aether Explorer"><figcaption>Aether · 1248x730</figcaption></figure></div>
+        <p class="notes">Sidebar (favourites, locations, read-only notice), toolbar with breadcrumb and hidden switch, in-pane search row, Name/Type/Size/Modified columns, footer and status strip. Hidden/Everywhere/Filter are still visual-only.</p>
       </section>
 
       <section class="surface">
         <header>
           <h3>Settings</h3>
-          <span class="priority">P2</span>
-          <span class="pill pill--partial">Partial</span>
+          <span class="priority">P1</span>
+          <span class="pill pill--implemented">Implemented</span>
         </header>
-        <div class="pair"><figure><img src="source/settings.png" alt="Demo Settings"><figcaption>Source · 1248x664</figcaption></figure><figure><img src="aether/settings.png" alt="Aether Settings"><figcaption>Aether · 660x688</figcaption></figure></div>
-        <p class="notes">The demo Settings app is tabbed: General, Appearance, Displays, Desktop & Dock, Search, Widgets, Accessibility, Network, Bluetooth, Sound, Battery, Privacy, Screen Time and Storage. Aether only ships the Water settings panel (Themes).</p>
+        <div class="pair"><figure><img src="source/settings.png" alt="Demo Settings"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings.png" alt="Aether Settings"><figcaption>Aether · 1248x730</figcaption></figure></div>
+        <p class="notes">Fourteen tabs with section cards. General/Network/Bluetooth/Sound/Battery read live host facts; Appearance switches drive the Water theme. Widgets is folded into Desktop & Dock.</p>
       </section>
 
       <section class="surface">
         <header>
           <h3>Network</h3>
-          <span class="priority">P1</span>
-          <span class="pill pill--missing">Missing</span>
+          <span class="priority">P0 · done</span>
+          <span class="pill pill--implemented">Implemented</span>
         </header>
-        <div class="pair"><figure><img src="source/network.png" alt="Demo Network"><figcaption>Source · 1248x664</figcaption></figure><figure class="empty"><div>Not implemented yet</div><figcaption>roadmap</figcaption></figure></div>
-        <p class="notes">Wi-Fi, VPN and known networks. The menu bar Wi-Fi tray is a stub that logs.</p>
+        <div class="pair"><figure><img src="source/network.png" alt="Demo Network"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/network.png" alt="Aether Network"><figcaption>Aether · 1248x730</figcaption></figure></div>
+        <p class="notes">Interfaces from /sys/class/net, IP from fib_trie, router from /proc/net/route and DNS from resolv.conf, in the demo's header/switch/list/details card layout.</p>
       </section>
 
       <section class="surface">
         <header>
           <h3>Battery</h3>
-          <span class="priority">P1</span>
-          <span class="pill pill--missing">Missing</span>
+          <span class="priority">P0 · done</span>
+          <span class="pill pill--implemented">Implemented</span>
         </header>
-        <div class="pair"><figure><img src="source/battery.png" alt="Demo Battery"><figcaption>Source · 1248x664</figcaption></figure><figure class="empty"><div>Not implemented yet</div><figcaption>roadmap</figcaption></figure></div>
-        <p class="notes">Charge, health, energy mode and history. The menu bar battery item is a stub.</p>
+        <div class="pair"><figure><img src="source/battery.png" alt="Demo Battery"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/battery.png" alt="Aether Battery"><figcaption>Aether · 1248x730</figcaption></figure></div>
+        <p class="notes">Charge and estimate, energy mode, low-power and optimised-charging switches, health table and largest CPU consumers. Shows an AC-power state when no battery exists.</p>
       </section>
 
       <section class="surface">
         <header>
           <h3>Devices</h3>
-          <span class="priority">P1</span>
-          <span class="pill pill--missing">Missing</span>
+          <span class="priority">P0 · done</span>
+          <span class="pill pill--implemented">Implemented</span>
         </header>
-        <div class="pair"><figure><img src="source/devices.png" alt="Demo Devices"><figcaption>Source · 1248x664</figcaption></figure><figure class="empty"><div>Not implemented yet</div><figcaption>roadmap</figcaption></figure></div>
-        <p class="notes">Bluetooth accessories, pairing and battery levels. The tray item is a stub.</p>
+        <div class="pair"><figure><img src="source/devices.png" alt="Demo Devices"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/devices.png" alt="Aether Devices"><figcaption>Aether · 1248x730</figcaption></figure></div>
+        <p class="notes">Bluetooth summary, accessory switches and paired-device list over /sys/class/bluetooth, with an explicit no-adapter state.</p>
       </section>
 
       <section class="surface">
@@ -159,7 +159,7 @@
           <span class="priority">P0 · done</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
-        <div class="pair"><figure><img src="source/calendar.png" alt="Demo Calendar"><figcaption>Source · 1248x664</figcaption></figure><figure><img src="aether/calendar.png" alt="Aether Calendar"><figcaption>Aether · 700x590</figcaption></figure></div>
+        <div class="pair"><figure><img src="source/calendar.png" alt="Demo Calendar"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/calendar.png" alt="Aether Calendar"><figcaption>Aether · 1248x730</figcaption></figure></div>
         <p class="notes">Six-row month grid, today fill, selected rim, event dots and agenda column. Keyboard navigation implemented.</p>
       </section>
 
@@ -167,10 +167,10 @@
         <header>
           <h3>Task Manager</h3>
           <span class="priority">P1</span>
-          <span class="pill pill--partial">Partial</span>
+          <span class="pill pill--implemented">Implemented</span>
         </header>
-        <div class="pair"><figure><img src="source/taskmanager.png" alt="Demo Task Manager"><figcaption>Source · 1248x664</figcaption></figure><figure><img src="aether/taskmanager.png" alt="Aether Task Manager"><figcaption>Aether · 1280x688</figcaption></figure></div>
-        <p class="notes">Live /proc sampling, tabs and a sorted table in both. Aether runs it as a full-width panel below the menu bar; the demo uses a floating window with its own title bar.</p>
+        <div class="pair"><figure><img src="source/taskmanager.png" alt="Demo Task Manager"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/taskmanager.png" alt="Aether Task Manager"><figcaption>Aether · 1248x730</figcaption></figure></div>
+        <p class="notes">Live /proc sampling, tabs, a sorted table, task-count badge and status strip in the demo's floating window box.</p>
       </section>
 
       <section class="surface">
@@ -179,18 +179,18 @@
           <span class="priority">P0 · done</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
-        <div class="pair"><figure><img src="source/terminal.png" alt="Demo Terminal"><figcaption>Source · 1248x664</figcaption></figure><figure><img src="aether/terminal.png" alt="Aether Terminal"><figcaption>Aether · 619x730</figcaption></figure></div>
+        <div class="pair"><figure><img src="source/terminal.png" alt="Demo Terminal"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/terminal.png" alt="Aether Terminal"><figcaption>Aether · 619x730</figcaption></figure></div>
         <p class="notes">Aether hosts real Wayland clients (foot) with the compositor's Water title bar; the demo renders a mock terminal inside its own window.</p>
       </section>
 
       <section class="surface">
         <header>
           <h3>Tide Radio</h3>
-          <span class="priority">P3</span>
-          <span class="pill pill--missing">Missing</span>
+          <span class="priority">P0 · done</span>
+          <span class="pill pill--implemented">Implemented</span>
         </header>
-        <div class="pair"><figure><img src="source/music.png" alt="Demo Tide Radio"><figcaption>Source · 1248x664</figcaption></figure><figure class="empty"><div>Not implemented yet</div><figcaption>roadmap</figcaption></figure></div>
-        <p class="notes">Playback, queue and presets. Aether has an audio-route overlay but no player.</p>
+        <div class="pair"><figure><img src="source/music.png" alt="Demo Tide Radio"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/radio.png" alt="Aether Tide Radio"><figcaption>Aether · 1248x730</figcaption></figure></div>
+        <p class="notes">Player window with artwork, track metadata, progress, transport controls and a five-track queue; Space toggles playback.</p>
       </section>
 
       <section class="surface">
@@ -199,17 +199,17 @@
           <span class="priority">P2</span>
           <span class="pill pill--partial">Partial</span>
         </header>
-        <div class="pair"><figure><img src="source/shortcuts.png" alt="Demo Keyboard shortcuts"><figcaption>Source · 1248x664</figcaption></figure><figure><img src="aether/shortcuts.png" alt="Aether Keyboard shortcuts"><figcaption>Aether · 760x560</figcaption></figure></div>
+        <div class="pair"><figure><img src="source/shortcuts.png" alt="Demo Keyboard shortcuts"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/shortcuts.png" alt="Aether Keyboard shortcuts"><figcaption>Aether · 760x560</figcaption></figure></div>
         <p class="notes">Both are Super+/ cheatsheets. The demo groups the explorer key map; Aether lists the compositor's own surfaces and window actions.</p>
       </section>
 
       <section class="surface">
         <header>
           <h3>About Aether OS</h3>
-          <span class="priority">P2</span>
-          <span class="pill pill--missing">Missing</span>
+          <span class="priority">P0 · done</span>
+          <span class="pill pill--implemented">Implemented</span>
         </header>
-        <div class="pair"><figure><img src="source/about.png" alt="Demo About Aether OS"><figcaption>Source · 1248x664</figcaption></figure><figure class="empty"><div>Not implemented yet</div><figcaption>roadmap</figcaption></figure></div>
+        <div class="pair"><figure><img src="source/about.png" alt="Demo About Aether OS"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/about.png" alt="Aether About Aether OS"><figcaption>Aether · 1248x730</figcaption></figure></div>
         <p class="notes">Version, build, hardware and licence. The menu-bar logo currently opens the cheatsheet.</p>
       </section>
 
@@ -219,7 +219,7 @@
           <span class="priority">—</span>
           <span class="pill pill--missing">Missing</span>
         </header>
-        <div class="pair"><figure><img src="source/builder.png" alt="Demo App Studio"><figcaption>Source · 1248x664</figcaption></figure><figure class="empty"><div>Not implemented yet</div><figcaption>roadmap</figcaption></figure></div>
+        <div class="pair"><figure><img src="source/builder.png" alt="Demo App Studio"><figcaption>Source · 1248x730</figcaption></figure><figure class="empty"><div>Not implemented yet</div><figcaption>roadmap</figcaption></figure></div>
         <p class="notes">The demo's GUI builder for app surfaces. No Aether equivalent.</p>
       </section>
 <h2 class="group">System trays</h2>
@@ -227,51 +227,51 @@
       <section class="surface">
         <header>
           <h3>Wi-Fi tray</h3>
-          <span class="priority">P1</span>
-          <span class="pill pill--missing">Missing</span>
+          <span class="priority">P0 · done</span>
+          <span class="pill pill--implemented">Implemented</span>
         </header>
-        <div class="pair"><figure><img src="source/tray-network.png" alt="Demo Wi-Fi tray"><figcaption>Source · 301x329</figcaption></figure><figure class="empty"><div>Not implemented yet</div><figcaption>roadmap</figcaption></figure></div>
-        <p class="notes">Connected network, known networks, VPN state, link to Network.</p>
+        <div class="pair"><figure><img src="source/tray-network.png" alt="Demo Wi-Fi tray"><figcaption>Source · 301x329</figcaption></figure><figure><img src="aether/tray-network.png" alt="Aether Wi-Fi tray"><figcaption>Aether · 301x329</figcaption></figure></div>
+        <p class="notes">Wi-Fi switch, connected interface, network list and a Network Settings link. Panel size matches the demo (301 x 329).</p>
       </section>
 
       <section class="surface">
         <header>
           <h3>Bluetooth tray</h3>
-          <span class="priority">P1</span>
-          <span class="pill pill--missing">Missing</span>
+          <span class="priority">P0 · done</span>
+          <span class="pill pill--implemented">Implemented</span>
         </header>
-        <div class="pair"><figure><img src="source/tray-devices.png" alt="Demo Bluetooth tray"><figcaption>Source · 301x253</figcaption></figure><figure class="empty"><div>Not implemented yet</div><figcaption>roadmap</figcaption></figure></div>
-        <p class="notes">Accessory list and toggle, link to Devices.</p>
+        <div class="pair"><figure><img src="source/tray-devices.png" alt="Demo Bluetooth tray"><figcaption>Source · 301x253</figcaption></figure><figure><img src="aether/tray-devices.png" alt="Aether Bluetooth tray"><figcaption>Aether · 301x253</figcaption></figure></div>
+        <p class="notes">Bluetooth switch, paired-device area and a Bluetooth Settings link (301 x 253).</p>
       </section>
 
       <section class="surface">
         <header>
           <h3>Battery tray</h3>
-          <span class="priority">P1</span>
-          <span class="pill pill--missing">Missing</span>
+          <span class="priority">P0 · done</span>
+          <span class="pill pill--implemented">Implemented</span>
         </header>
-        <div class="pair"><figure><img src="source/tray-battery.png" alt="Demo Battery tray"><figcaption>Source · 287x271</figcaption></figure><figure class="empty"><div>Not implemented yet</div><figcaption>roadmap</figcaption></figure></div>
-        <p class="notes">Charge figure, energy mode and time remaining.</p>
+        <div class="pair"><figure><img src="source/tray-battery.png" alt="Demo Battery tray"><figcaption>Source · 287x271</figcaption></figure><figure><img src="aether/tray-battery.png" alt="Aether Battery tray"><figcaption>Aether · 287x271</figcaption></figure></div>
+        <p class="notes">Charge, estimate, level bar, three-way energy mode and a Battery Settings link (287 x 271).</p>
       </section>
 
       <section class="surface">
         <header>
           <h3>Sound tray</h3>
-          <span class="priority">P3</span>
-          <span class="pill pill--missing">Missing</span>
+          <span class="priority">P0 · done</span>
+          <span class="pill pill--implemented">Implemented</span>
         </header>
-        <div class="pair"><figure><img src="source/tray-sound.png" alt="Demo Sound tray"><figcaption>Source · 293x256</figcaption></figure><figure class="empty"><div>Not implemented yet</div><figcaption>roadmap</figcaption></figure></div>
-        <p class="notes">Output selection and volume. Aether's audio overlay covers the routing UI but not this tray.</p>
+        <div class="pair"><figure><img src="source/tray-sound.png" alt="Demo Sound tray"><figcaption>Source · 293x256</figcaption></figure><figure><img src="aether/tray-sound.png" alt="Aether Sound tray"><figcaption>Aether · 293x256</figcaption></figure></div>
+        <p class="notes">Output name, volume bar and a Sound Settings link (293 x 256). Preset switching stays in the audio overlay.</p>
       </section>
 
       <section class="surface">
         <header>
           <h3>Calendar tray</h3>
-          <span class="priority">P2</span>
-          <span class="pill pill--partial">Partial</span>
+          <span class="priority">P0 · done</span>
+          <span class="pill pill--implemented">Implemented</span>
         </header>
-        <div class="pair"><figure><img src="source/tray-calendar.png" alt="Demo Calendar tray"><figcaption>Source · 308x351</figcaption></figure><figure class="empty"><div>Not implemented yet</div><figcaption>roadmap</figcaption></figure></div>
-        <p class="notes">The demo opens a month popover from the clock and offers Open Calendar. Aether opens the Calendar window directly.</p>
+        <div class="pair"><figure><img src="source/tray-calendar.png" alt="Demo Calendar tray"><figcaption>Source · 308x351</figcaption></figure><figure><img src="aether/tray-calendar.png" alt="Aether Calendar tray"><figcaption>Aether · 308x351</figcaption></figure></div>
+        <p class="notes">Month popover from the clock with today filled and an Open Calendar link (308 x 351).</p>
       </section>
 <h2 class="group">Aether-only</h2>
 

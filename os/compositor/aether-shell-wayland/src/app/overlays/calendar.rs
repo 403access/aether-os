@@ -231,8 +231,6 @@ fn events_on(date: Clock, today: Clock) -> Vec<CalendarEvent> {
 }
 
 /// Chrome geometry. The window is 700 x 590, centered like `.os-window--calendar`.
-pub const CALENDAR_WIDTH: u32 = 700;
-pub const CALENDAR_HEIGHT: u32 = 590;
 pub const TITLEBAR_HEIGHT: i32 = 40;
 const PAD: i32 = 14;
 const GRID_GAP: i32 = 3;
@@ -266,20 +264,16 @@ impl App {
         }
     }
 
+    /// Calendar as a first-party window: the demo's `.os-window` box.
     pub(crate) fn calendar_rect(&self) -> AetherRect {
         let bounds = self
             .shell
             .primary_output()
             .map(|output| output.rect)
             .unwrap_or_else(|| AetherRect::new(0, 0, 1280, 800));
-        let width = CALENDAR_WIDTH.min(bounds.width.saturating_sub(32));
-        let height = CALENDAR_HEIGHT.min(bounds.height.saturating_sub(60));
-        AetherRect::new(
-            bounds.x + (bounds.width as i32 - width as i32) / 2,
-            bounds.y + 88,
-            width,
-            height,
-        )
+        let width = 1248.min(bounds.width.saturating_sub(32));
+        let height = 730.min(bounds.height.saturating_sub(54 + 16));
+        AetherRect::new(bounds.x + 16, bounds.y + 54, width, height)
     }
 
     /// Body below the title bar.

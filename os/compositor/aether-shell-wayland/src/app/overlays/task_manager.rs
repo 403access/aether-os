@@ -47,7 +47,7 @@ impl App {
             .map(|output| output.rect)
             .unwrap_or_else(|| AetherRect::new(0, 0, 1280, 800));
         let width = 1248.min(bounds.width.saturating_sub(32));
-        let height = 664.min(bounds.height.saturating_sub(54 + 70));
+        let height = 730.min(bounds.height.saturating_sub(54 + 16));
         AetherRect::new(bounds.x + 16, bounds.y + 54, width, height)
     }
 

@@ -1,3 +1,21 @@
+## v0.1.0-alpha.81
+
+- Formalise the design-system gap: `reports/os-app-parity/VISUAL-SPEC.md`
+  documents the source model (tokens, menu bar, windows, tide ring, dock,
+  popovers), the Aether target model (Rust primitives/modules), the measurement
+  method (DOM boxes + rasterised ink bands) and a V1–V16 difference register.
+- Fix the menu bar by measured ink boxes: 13 px menu and title type, resource
+  captions/values centred with the meters, 1 px label shifts and the brand mark
+  at the source position. Before/after ink bands are in the spec.
+- Add window depth and focus effects: a three-layer drop shadow, the wavy
+  "tide" rim (2.5 px accent ring with sine displacement and conic lobes) on
+  first-party windows, clients, calendar, task manager and the command overlay,
+  plus the 1 px inset highlight. Menu popovers now use the demo's +7 px offset,
+  244 px minimum width and 5 px padding.
+- Open in the register: continuous tide animation scheduling, backdrop blur,
+  hover states (rim/lift/tooltips), letter spacing, the 14.82 px menu row type
+  and command-overlay grouping.
+
 ## v0.1.0-alpha.80
 
 - Close most of the app parity gap against the Water OS concept. New

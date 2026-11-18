@@ -108,7 +108,7 @@ technique), **open** (visible gap, not implemented).
 | V6 | Tide motion | continuous 8 s rotation | phase advances on rendered frames only | **open** |
 | V7 | Menu popover geometry | top +7, min-width 244, padding 5, pop shadow | matched | **fixed** (`8c02033`) |
 | V8 | Glass blur | `backdrop-filter: blur(22px) saturate(160%)` | flat translucent fills | **open** |
-| V9 | Window inset highlight | `inset 0 1px 0 rgba(255,255,255,.07)` | missing | **open** |
+| V9 | Window inset highlight | `inset 0 1px 0 rgba(255,255,255,.07)` | 1 px white 7 % line inside the top edge | **fixed** (`65564da`) |
 | V10 | Hover states | rim 34 % → 80 %, shadow grows, dock lift + label | focus-only rim, no hover | **open** |
 | V11 | Dock tiles | gradient + 1 px tile border | flat tint + border | **approximated** |
 | V12 | Type scale | 12.54 / 11.4 px from a 1.14 scale | 13 / 11 px integer sizes | **approximated** |
@@ -133,6 +133,5 @@ technique), **open** (visible gap, not implemented).
 2. **V8** — backdrop blur for the bar, popovers and windows (read the backdrop
    region into a buffer and blur it before compositing).
 3. **V10** — pointer hover state per window/dock item (rim, lift, tooltip).
-4. **V9 / V13 / V14** — inset highlight, letter spacing and the 14.82 px menu
-   row type.
+4. **V13 / V14** — letter spacing and the 14.82 px menu row type.
 5. **V15** — regroup the palette to the demo's command surface.

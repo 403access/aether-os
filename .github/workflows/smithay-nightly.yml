@@ -21,12 +21,21 @@ jobs:
         run: |
           # shellcheck disable=SC2016  # ${smoke} expands in the nested bash -lc
           nix develop .#smithay --command bash -lc '
-            set -euo pipefail
+            set -uo pipefail
             BIN=os/compositor/aether-shell-smithay/target/debug/aether-shell-smithay
+            failed=""
             for smoke in os/compositor/aether-shell-smithay/smoke-*.sh; do
               echo "=== ${smoke}"
-              BIN="${BIN}" "${smoke}"
+              # Report every broken smoke from one nightly run.
+              if ! BIN="${BIN}" "${smoke}"; then
+                failed="${failed} ${smoke}"
+              fi
             done
+            if [ -n "${failed}" ]; then
+              echo "FAILED smokes:${failed}"
+              exit 1
+            fi
+            echo "full smoke suite passed"
           '
       - uses: actions/upload-artifact@v5
         if: always()

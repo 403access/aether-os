@@ -2,8 +2,9 @@
 //!
 //! This is a small, synchronous scan used to make files reachable from the
 //! palette before the full system indexer is wired in. It walks configured
-//! roots, skips hidden entries and heavy build directories, caps depth/entries
-//! and sorts by name. It indexes names and paths only, not file contents.
+//! roots, skips hidden entries, build directories and generated output, caps
+//! depth/entries and sorts by name. It indexes names and paths only, not file
+//! contents.
 
 #![forbid(unsafe_code)]
 
@@ -84,7 +85,16 @@ fn walk(
 fn ignored_dir(name: &str) -> bool {
     matches!(
         name,
-        "node_modules" | "target" | "vendor" | "__pycache__" | "build" | "dist"
+        "node_modules"
+            | "target"
+            | "vendor"
+            | "__pycache__"
+            | "build"
+            | "dist"
+            // Generated screenshots, evidence and logs. The palette scan runs
+            // from $HOME, so a checkout's artifacts/ would otherwise compete
+            // with commands for queries like "task" (task-manager-app.log).
+            | "artifacts"
     )
 }
 
@@ -103,6 +113,7 @@ mod tests {
         ));
         fs::create_dir_all(root.join("notes/deep")).unwrap();
         fs::create_dir_all(root.join("target/debug")).unwrap();
+        fs::create_dir_all(root.join("artifacts/smithay")).unwrap();
         fs::create_dir_all(root.join(".hidden")).unwrap();
         fs::write(root.join("alpha.txt"), "a").unwrap();
         fs::write(root.join("notes/beta.md"), "b").unwrap();
@@ -110,6 +121,7 @@ mod tests {
         fs::write(root.join(".secret"), "s").unwrap();
         fs::write(root.join(".hidden/inside.txt"), "h").unwrap();
         fs::write(root.join("target/debug/ignored.txt"), "i").unwrap();
+        fs::write(root.join("artifacts/smithay/task-manager-app.log"), "l").unwrap();
         root
     }
 

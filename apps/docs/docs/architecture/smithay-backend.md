@@ -186,8 +186,8 @@ session, searches it and launches its command.*
 ![Clipboard persistence after the source exits](/img/smithay-clipboard-persist.png)
 
 *`wl-clip-persist` re-owns the regular/primary selection through
-`zwlr-data-control`. The smoke copies with `wl-copy --paste-once`, pastes once,
-then pastes again after the source has exited.*
+`zwlr-data-control`. The smoke publishes a selection from a foreground source,
+stops that source, then pastes twice to prove the helper kept the data.*
 
 ![The same window maximized](/img/smithay-window-maximized.png)
 

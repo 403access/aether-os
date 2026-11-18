@@ -1,3 +1,31 @@
+## v0.1.0-alpha.78
+
+- Replace the compositor's top shortcut dock, workspace chips and status pill
+  with the Water OS **menu bar**: a 38 px full-width strip with the brand mark,
+  active application name, File/View/Go/Window/Help popovers, a Synced pill,
+  CPU/RAM/STORAGE meters, Wi-Fi/Bluetooth/battery/sound tray items, a live clock,
+  the appearance toggle and the launcher. Geometry tracks the demo within 2-3 px.
+- Add the **Calendar** app (Window ▸ Calendar or the clock): a 700 × 590 window
+  with a six-row month grid, weekday headers, today/selection states, event dots
+  and a seeded agenda. Arrow keys move the selection, Page Up/Down change months,
+  `t` jumps to today. The clock is a dependency-free civil-time formatter.
+- Add the **desktop dock**: a centered 441 × 62 glass strip with eight tinted
+  tiles, a separator and running dots; Explorer, Search, Settings, Terminal,
+  Tide Radio and About open the existing surfaces.
+- Fit client windows with the demo's **40 px title bar**: three 11 px traffic
+  lights (close / minimise / maximise), a 23 px app mark, a bold title with a dim
+  subtitle and an accent rim on focus. The explorer is now a floating
+  `.os-window--explorer`-sized window instead of a full-screen surface.
+- Add `bun run parity`: `scripts/screenshots/os-parity.sh` captures the live
+  Water OS demo and the compositor at 1280 × 800 with a pinned clock, then diffs
+  them by region (`artifacts/os-parity/report.md`). Menu bar 10.7 %, dock 2.2 %,
+  whole desktop 5.7 %; the remaining gap is the explorer's two-pane content.
+- Fix: child-surface (client-side decoration) commits repaint their parent
+  window instead of the whole output, so idle terminals no longer force full
+  frames. `AETHER_TEST_CLIENT_COUNT=0` and `AETHER_FIXED_UNIX` support captures.
+- Verification: `cargo test` (aether-shell-wayland 57 tests), the full Xvfb
+  smoke set, `bun run typecheck`, `bun run test:unit` (276) and `test:design`.
+
 ## v0.1.0-alpha.77
 
 - Add Mermaid rendering to the docs site (`@docusaurus/theme-mermaid`) and a

@@ -233,6 +233,14 @@ impl App {
                 self.end_input(started);
                 return;
             }
+            if let Some(action) = self.dock_action_at(point) {
+                self.pointer_captured = true;
+                self.activate_dock(action);
+                self.cursor = cursor_for(self);
+                self.mark_cursor_damage(self.pointer_pos);
+                self.end_input(started);
+                return;
+            }
             if let Some(action) = self.menubar_action_at(point) {
                 self.pointer_captured = true;
                 self.activate_menubar(action);

@@ -372,6 +372,15 @@ pub fn icon_svg(name: &str, color: &str) -> Option<String> {
         "water" => {
             r#"<rect x="1.2" y="4.4" width="10.6" height="9.4" rx="2.6"/><rect x="8.2" y="6.2" width="10.6" height="9.4" rx="2.6"/><path d="m9.4 11.4 1.6 1.6 3-3.4"/>"#
         }
+        "gear" => {
+            r#"<circle cx="10" cy="10" r="2.7"/><path d="M10 2.4v2M10 15.6v2M2.4 10h2M15.6 10h2M4.6 4.6 6 6M14 14l1.4 1.4M15.4 4.6 14 6M6 14l-1.4 1.4"/>"#
+        }
+        "trash" => {
+            r#"<path d="M3.4 5.4h13.2M8 5.4V3.9a1.1 1.1 0 0 1 1.1-1.1h1.8A1.1 1.1 0 0 1 12 3.9v1.5"/><path d="M5.4 5.4 6.2 17h7.6l.8-11.6"/><path d="M8.2 8.4v5.4M11.8 8.4v5.4"/>"#
+        }
+        "layers" => {
+            r#"<path d="m10 2.2 7.4 4.1L10 10.4 2.6 6.3z"/><path d="m2.6 10.4 7.4 4.1 7.4-4.1"/><path d="m2.6 14.3 7.4 4.1 7.4-4.1"/>"#
+        }
         "sliders" => {
             r#"<path d="M3.5 6h13M3.5 14h13"/><circle cx="7.5" cy="6" r="2"/><circle cx="12.5" cy="14" r="2"/>"#
         }

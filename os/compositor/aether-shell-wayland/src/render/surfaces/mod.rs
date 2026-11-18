@@ -3,6 +3,7 @@
 mod audio;
 mod calendar;
 mod chat;
+mod dock;
 mod explorer;
 mod palette;
 mod remote;

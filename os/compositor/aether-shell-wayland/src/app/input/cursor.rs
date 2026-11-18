@@ -42,7 +42,10 @@ pub(crate) fn cursor_for(state: &App) -> CursorShape {
     if state.shortcuts_open {
         return CursorShape::Arrow;
     }
-    if state.menubar_action_at(point).is_some() || state.menubar_command_at(point).is_some() {
+    if state.dock_action_at(point).is_some()
+        || state.menubar_action_at(point).is_some()
+        || state.menubar_command_at(point).is_some()
+    {
         return CursorShape::Pointer;
     }
     if let Some(overlay) = state.shell.overlay_rect() {

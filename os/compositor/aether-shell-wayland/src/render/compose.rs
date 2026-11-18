@@ -48,6 +48,7 @@ impl App {
         chunk.merge(self.compose_sandboxes(&ctx));
         chunk.merge(self.compose_explorer(&ctx));
         chunk.merge(self.compose_calendar(&ctx));
+        chunk.merge(self.compose_dock(&ctx));
         chunk.merge(self.compose_status_chrome(&ctx));
 
         self.compose_flush(&ctx, renderer, &chunk, &mut elements);

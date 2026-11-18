@@ -45,15 +45,57 @@ impl App {
                 )
             };
             let visible = self.task_visible_rows();
-            if let Some(buffer) =
-                self.chrome_round(bounds.width.max(1), 62, 0, tokens.surface_a(236))
-            {
+            // First-party window chrome.
+            if let Some(buffer) = self.chrome_round(bounds.width.max(1), bounds.height.max(1), 14, [7, 39, 51, 235]) {
                 panels.push((buffer, bounds.x, bounds.y));
             }
-            if let Some(buffer) =
-                self.chrome_round(bounds.width.max(1), 36, 0, tokens.surface_a(242))
+            if let Some(buffer) = self.chrome_round_top(bounds.width.max(1), 40, 14, [10, 51, 66, 255]) {
+                panels.push((buffer, bounds.x, bounds.y));
+            }
+            if let Some(buffer) = self.chrome_outline(
+                bounds.width.max(1),
+                bounds.height.max(1),
+                14,
+                [tokens.accent(255)[0], tokens.accent(255)[1], tokens.accent(255)[2], 120],
+            ) {
+                panels.push((buffer, bounds.x, bounds.y));
+            }
+            for (index, color) in [
+                [0xff, 0x8a, 0x92, 255],
+                [0xff, 0xd2, 0x7a, 255],
+                [0x5e, 0xf2, 0xb0, 255],
+            ]
+            .into_iter()
+            .enumerate()
             {
-                panels.push((buffer, bounds.x, bounds.y + height - 36));
+                if let Some(buffer) = self.chrome_round(11, 11, 5, color) {
+                    panels.push((buffer, bounds.x + 11 + index as i32 * 17, bounds.y + 14));
+                }
+            }
+            if let Some(buffer) = self.chrome_round(23, 23, 5, tokens.accent(30)) {
+                panels.push((buffer, bounds.x + 66, bounds.y + 8));
+            }
+            display_icons.push(("chart".into(), 13, tokens.accent(255), bounds.x + 71, bounds.y + 13));
+            labels.push(("Task Manager".into(), bounds.x + 97, bounds.y + 13, 0x100, tokens.text));
+            labels.push((
+                "Processes and resources".into(),
+                bounds.x + 97 + self.text_width("Task Manager", 1) as i32 + 8,
+                bounds.y + 13,
+                0,
+                tokens.dim,
+            ));
+            let badge = format!("{} tasks", snapshot.process_count);
+            let badge_w = 8 + 6 + 6 + self.text_width(&badge, 0) + 8;
+            let badge_x = bounds.x + width - 12 - badge_w as i32;
+            if let Some(buffer) = self.chrome_round(badge_w, 22, 11, tokens.green_a(28)) {
+                panels.push((buffer, badge_x, bounds.y + 9));
+            }
+            if let Some(buffer) = self.chrome_round(6, 6, 3, tokens.green) {
+                panels.push((buffer, badge_x + 8, bounds.y + 17));
+            }
+            labels.push((badge, badge_x + 20, bounds.y + 14, 0, tokens.green));
+            if let Some(buffer) = self.chrome_round_bottom(bounds.width.max(1), 32, 13, tokens.surface_a(242)) {
+                panels.push((buffer, bounds.x, bounds.y + height - 32));
             }
             if let Some(buffer) = self.chrome_panel(
                 pane.width,
@@ -64,43 +106,22 @@ impl App {
             ) {
                 panels.push((buffer, pane.x - 18, pane.y - 18));
             }
-            display_icons.push((
-                "cpu".into(),
-                28,
-                tokens.accent(255),
-                bounds.x + 18,
-                bounds.y + 17,
-            ));
-            labels.push((
-                "Task manager".into(),
-                bounds.x + 56,
-                bounds.y + 12,
-                2,
-                tokens.text,
-            ));
-            labels.push((
-                "Live /proc · 1 s refresh".into(),
-                bounds.x + 56,
-                bounds.y + 35,
-                0,
-                tokens.dim,
-            ));
-            // Tabs.
-            let tabs_x = bounds.x + width / 2 - 180;
+            // Tabs inside the window body.
+            let tabs_x = bounds.x + 16;
             for (index, tab_item) in crate::app::overlays::task_manager::TaskTab::ALL
                 .into_iter()
                 .enumerate()
             {
-                let tab_rect = AetherRect::new(tabs_x + index as i32 * 116, bounds.y + 15, 110, 32);
+                let tab_rect = AetherRect::new(tabs_x + index as i32 * 116, bounds.y + 50, 110, 30);
                 if tab_item == tab {
-                    if let Some(buffer) = self.chrome_round(110, 32, 8, tokens.accent(38)) {
+                    if let Some(buffer) = self.chrome_round(110, 30, 8, tokens.accent(38)) {
                         panels.push((buffer, tab_rect.x, tab_rect.y));
                     }
                 }
                 labels.push((
                     tab_item.label().into(),
                     tab_rect.x + 14,
-                    tab_rect.y + 9,
+                    tab_rect.y + 8,
                     1,
                     if tab_item == tab {
                         tokens.text
@@ -109,13 +130,6 @@ impl App {
                     },
                 ));
             }
-            display_icons.push((
-                "close".into(),
-                16,
-                tokens.dim,
-                self.task_close_rect().x,
-                self.task_close_rect().y + 4,
-            ));
             // Pane header.
             display_icons.push((
                 "chart".into(),
@@ -477,7 +491,7 @@ impl App {
                 0,
                 tokens.dim,
             ));
-            let status_y = bounds.y + height - 36;
+            let status_y = bounds.y + height - 32;
             labels.push((
                 format!(
                     "{} processes · {} threads · cpu {:.0}% · load {:.2} · up {}",

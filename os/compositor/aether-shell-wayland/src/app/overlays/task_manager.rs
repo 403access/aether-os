@@ -39,29 +39,25 @@ impl App {
         }
     }
 
+    /// Task Manager as a first-party window: the demo's `.os-window` box.
     pub(crate) fn task_rect(&self) -> AetherRect {
         let bounds = self
             .shell
             .primary_output()
             .map(|output| output.rect)
             .unwrap_or_else(|| AetherRect::new(0, 0, 1280, 800));
-        // Below the menu bar and above the dock: the panel used to own the
-        // full output when the top dock hid itself for overlays.
-        AetherRect::new(
-            bounds.x,
-            bounds.y + 38,
-            bounds.width,
-            bounds.height.saturating_sub(38 + 74),
-        )
+        let width = 1248.min(bounds.width.saturating_sub(32));
+        let height = 664.min(bounds.height.saturating_sub(54 + 70));
+        AetherRect::new(bounds.x + 16, bounds.y + 54, width, height)
     }
 
     pub(crate) fn task_pane_rect(&self) -> AetherRect {
         let bounds = self.task_rect();
         AetherRect::new(
             bounds.x + 16,
-            bounds.y + 74,
+            bounds.y + 40 + 52,
             bounds.width.saturating_sub(32),
-            bounds.height.saturating_sub(74 + 52),
+            bounds.height.saturating_sub(40 + 52 + 32 + 12),
         )
     }
 
@@ -86,7 +82,7 @@ impl App {
 
     pub(crate) fn task_close_rect(&self) -> AetherRect {
         let rect = self.task_rect();
-        AetherRect::new(rect.right() as i32 - 42, rect.y + 20, 24, 24)
+        AetherRect::new(rect.x + 11, rect.y + 14, 11, 11)
     }
 
     pub(crate) fn task_row_at(&self, point: AetherPoint) -> Option<usize> {

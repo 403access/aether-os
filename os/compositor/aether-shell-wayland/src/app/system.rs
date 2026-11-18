@@ -98,6 +98,9 @@ pub struct SystemState {
     pub discoverable: bool,
     /// Energy mode (0 = low power, 1 = balanced, 2 = high performance).
     pub energy: usize,
+    pub charging_optimised: bool,
+    /// Top CPU consumers, sampled when the window opens.
+    pub consumers: Vec<(String, f32)>,
     /// Cached host facts, refreshed when a window opens.
     pub network: NetworkFacts,
     pub battery: BatteryFacts,
@@ -114,6 +117,7 @@ impl SystemState {
             discoverable: false,
             playing: true,
             energy: 1,
+            charging_optimised: true,
             ..Default::default()
         }
     }
@@ -143,6 +147,7 @@ impl App {
         self.shell.close_overlay();
         self.system.app = Some(app);
         self.system.refresh();
+        self.system.consumers = self.top_consumers();
         println!("aether-shell: system app {}", app.title());
         self.mark_full_damage();
     }
@@ -288,6 +293,19 @@ impl App {
         }
     }
 
+    /// Top CPU consumers from one /proc sample, used by Battery and Settings.
+    fn top_consumers(&mut self) -> Vec<(String, f32)> {
+        let snapshot = self.task_monitor.sample();
+        let mut rows: Vec<(String, f32)> = snapshot
+            .processes
+            .iter()
+            .map(|process| (process.name.clone(), process.cpu_percent))
+            .collect();
+        rows.sort_by(|a, b| b.1.total_cmp(&a.1));
+        rows.truncate(4);
+        rows
+    }
+
     pub(crate) fn mark_system_damage(&mut self) {
         if self.system_open() {
             self.mark_damage_rect(self.system_rect());
@@ -309,12 +327,14 @@ impl App {
 
     pub(crate) fn energy_segment_rect(&self, index: usize) -> AetherRect {
         let body = self.system_body_rect();
-        let width = 220;
+        let card_x = body.x + 16;
+        let card_width = body.width as i32 - 32;
+        let segment = (card_width - 16) / 3;
         AetherRect::new(
-            body.x + 96 + index as i32 * width,
-            body.y + 196,
-            (width - 4) as u32,
-            32,
+            card_x + 8 + index as i32 * segment,
+            body.y + 124 + 34,
+            (segment - 4) as u32,
+            30,
         )
     }
 

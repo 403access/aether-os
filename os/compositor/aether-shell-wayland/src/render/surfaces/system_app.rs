@@ -66,6 +66,9 @@ impl App {
         if app == SystemApp::Network {
             self.network_body(&mut ui, body, tokens);
         }
+        if app == SystemApp::Battery {
+            self.battery_body(&mut ui, body, tokens);
+        }
 
         RenderChunk {
             chrome: ui.chrome,
@@ -436,6 +439,181 @@ impl App {
             let row_y = details_y + 36 + index as i32 * 20;
             ui.label(label, x + 14, row_y, 4, tokens.dim);
             ui.label(value, x + 140, row_y - 1, 4, tokens.text_soft);
+        }
+    }
+}
+
+impl App {
+    // --------------------------------------------------------------- battery
+
+    fn battery_body(&mut self, ui: &mut Ui, body: AetherRect, tokens: ThemeTokens) {
+        let x = body.x + 16;
+        let width = body.width as i32 - 32;
+        let facts = self.system.battery.clone();
+
+        let header = AetherRect::new(x, body.y + 16, width as u32, 96);
+        self.card(ui, header, tokens);
+        if facts.present {
+            ui.label(
+                format!("{}%", facts.capacity),
+                x + 16,
+                body.y + 30,
+                2,
+                tokens.text,
+            );
+            let remaining = match facts.status.as_str() {
+                "Charging" => "Charging".to_string(),
+                "Full" => "Fully charged".to_string(),
+                _ => format!("{} · {:.1} h estimated", facts.status, 4.2),
+            };
+            ui.label(remaining, x + 16, body.y + 58, 4, tokens.dim);
+            let bar = AetherRect::new(x + 16, body.y + 82, width as u32 - 32, 10);
+            if let Some(buffer) = self.chrome_round(bar.width, bar.height, 5, [255, 255, 255, 22]) {
+                ui.panel(Some(buffer), bar.x, bar.y);
+            }
+            let fill = (bar.width as f32 * (facts.capacity as f32 / 100.0)).round() as u32;
+            if fill > 0 {
+                let color = if facts.capacity >= 20 {
+                    tokens.green
+                } else {
+                    tokens.amber
+                };
+                if let Some(buffer) = self.chrome_round(fill.max(6), bar.height, 5, color) {
+                    ui.panel(Some(buffer), bar.x, bar.y);
+                }
+            }
+        } else {
+            ui.label("On AC power", x + 16, body.y + 32, 2, tokens.text);
+            ui.label(
+                "No battery detected on this machine.",
+                x + 16,
+                body.y + 66,
+                4,
+                tokens.dim,
+            );
+        }
+
+        // Energy mode.
+        let energy = AetherRect::new(x, body.y + 124, width as u32, 76);
+        self.card(ui, energy, tokens);
+        self.section(ui, x + 16, body.y + 136, "Energy mode", tokens);
+        let labels = ["Low power", "Balanced", "High performance"];
+        for (index, label) in labels.iter().enumerate() {
+            let rect = self.energy_segment_rect(index);
+            let active = self.system.energy == index;
+            let fill = if active {
+                tokens.accent(255)
+            } else {
+                [255, 255, 255, 12]
+            };
+            if let Some(buffer) = self.chrome_round(rect.width, rect.height, 7, fill) {
+                ui.panel(Some(buffer), rect.x, rect.y);
+            }
+            let text_width = self.text_width(label, 4) as i32;
+            ui.label(
+                *label,
+                rect.x + (rect.width as i32 - text_width) / 2,
+                rect.y + 9,
+                4,
+                if active { [3, 25, 34, 255] } else { tokens.text_soft },
+            );
+        }
+
+        // Toggles.
+        let toggle = AetherRect::new(x, body.y + 212, width as u32, 104);
+        self.card(ui, toggle, tokens);
+        for (index, (label, detail, value)) in [
+            (
+                "Low power mode",
+                "Reduce background activity when unplugged.",
+                self.system.energy == 0,
+            ),
+            (
+                "Optimised charging",
+                "Finish charging closer to when you unplug.",
+                self.system.charging_optimised,
+            ),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let row_y = body.y + 222 + index as i32 * 52;
+            ui.label(label, x + 16, row_y + 6, 0x100, tokens.text);
+            ui.label(detail, x + 16, row_y + 22, 4, tokens.dim);
+            let rect = AetherRect::new(x + width - 50, row_y + 16, 34, 20);
+            self.switch(ui, rect, value, tokens);
+            if index == 0 {
+                ui.solid(
+                    AetherRect::new(x + 1, row_y + 51, width as u32 - 2, 1),
+                    [RULE[0] as f32 / 255.0, RULE[1] as f32 / 255.0, RULE[2] as f32 / 255.0, 0.12],
+                );
+            }
+        }
+
+        // Battery health.
+        let health_y = body.y + 328;
+        let health = AetherRect::new(x, health_y, width as u32, 138);
+        self.card(ui, health, tokens);
+        self.section(ui, x + 16, health_y + 12, "Battery health", tokens);
+        let health_rows = [
+            ("Condition", facts.health.clone()),
+            (
+                "Maximum capacity",
+                if facts.present {
+                    format!("{}%", facts.capacity)
+                } else {
+                    "—".into()
+                },
+            ),
+            (
+                "Cycle count",
+                facts
+                    .cycles
+                    .map(|value| value.to_string())
+                    .unwrap_or_else(|| "—".into()),
+            ),
+            (
+                "Temperature",
+                facts
+                    .temperature
+                    .map(|value| format!("{value:.1} °C"))
+                    .unwrap_or_else(|| "—".into()),
+            ),
+            ("Charging", facts.status.clone()),
+        ];
+        for (index, (label, value)) in health_rows.into_iter().enumerate() {
+            let row_y = health_y + 38 + index as i32 * 21;
+            ui.label(label, x + 16, row_y, 4, tokens.dim);
+            ui.label(value, x + 170, row_y - 1, 4, tokens.text_soft);
+        }
+
+        // Largest consumers.
+        let consumers_y = health_y + 150;
+        let rows = self.system.consumers.len().max(1) as i32;
+        let consumers = AetherRect::new(x, consumers_y, width as u32, (34 + rows * 26) as u32);
+        self.card(ui, consumers, tokens);
+        self.section(ui, x + 16, consumers_y + 12, "Largest consumers", tokens);
+        if self.system.consumers.is_empty() {
+            ui.label("No process samples.", x + 16, consumers_y + 40, 4, tokens.dim);
+        }
+        for (index, (name, cpu)) in self.system.consumers.clone().into_iter().enumerate() {
+            let row_y = consumers_y + 34 + index as i32 * 26;
+            ui.label(name, x + 16, row_y + 2, 4, tokens.text_soft);
+            let bar_x = x + 190;
+            let bar = AetherRect::new(bar_x, row_y + 6, (width as u32) - 250, 6);
+            if let Some(buffer) = self.chrome_round(bar.width, bar.height, 3, [255, 255, 255, 20]) {
+                ui.panel(Some(buffer), bar.x, bar.y);
+            }
+            let fill = (bar.width as f32 * (cpu.clamp(0.0, 100.0) / 100.0)).round() as u32;
+            if fill > 0 {
+                if let Some(buffer) = self.chrome_round(fill.max(3), bar.height, 3, tokens.accent(255))
+                {
+                    ui.panel(Some(buffer), bar.x, bar.y);
+                }
+            }
+            let value = format!("{cpu:.1}%");
+            let value_width = self.text_width(&value, 4) as i32;
+            ui.label(value, x + width - 16 - value_width, row_y + 2, 4, tokens.text_soft);
         }
     }
 }

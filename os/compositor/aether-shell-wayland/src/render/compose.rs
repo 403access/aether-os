@@ -103,13 +103,6 @@ impl App {
         };
         let panel_border = settings.glass.then(|| tokens.border(34));
         let panel_border_soft = settings.glass.then(|| tokens.border(30));
-        let accent_rgb = self.shell.theme_accent();
-        let accent_f = [
-            accent_rgb[0] as f32 / 255.0,
-            accent_rgb[1] as f32 / 255.0,
-            accent_rgb[2] as f32 / 255.0,
-            1.0,
-        ];
         // DRM compositors are output-sized; translate extended-desktop
         // coordinates into the output's local space. Winit (None) keeps the
         // global origin because its single output starts at (0, 0).
@@ -198,7 +191,6 @@ impl App {
             panel_fill_soft,
             panel_border,
             panel_border_soft,
-            accent_f,
             flags: SurfaceFlags {
                 palette,
                 explorer,

@@ -39,7 +39,6 @@ pub(crate) struct FrameContext {
     pub panel_fill_soft: [u8; 4],
     pub panel_border: Option<[u8; 4]>,
     pub panel_border_soft: Option<[u8; 4]>,
-    pub accent_f: [f32; 4],
     pub flags: SurfaceFlags,
 }
 

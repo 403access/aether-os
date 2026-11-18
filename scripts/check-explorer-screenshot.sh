@@ -39,13 +39,13 @@ BOTTOM="$(probe 10 790)"
 [ "${TOP}" != "${BOTTOM}" ] || { echo "error: background gradient is flat (#${TOP})" >&2; exit 1; }
 echo "background gradient: #${TOP} -> #${BOTTOM}"
 # Geometry follows `.os-window--explorer`: 38 px menu bar, window at 16/54,
-# 40 px title bar, 52 px app bar, pane card, 32 px status strip.
+# 40 px title bar, 220 px sidebar, toolbar + search row, table, status strip.
 check_near "menu bar" 640 30 "062833" 5
 check_near "window title bar" 300 70 "0A3342" 6
-check_near "app bar" 300 110 "062530" 5
-check_near "pane card" 300 400 "072833" 4
-check_near "column header" 300 220 "072F3D" 8
-check "selection bar" 41 258 "38D6FF"
-check_near "selection fill" 300 258 "134D5F" 8
-check_near "status bar" 640 650 "092732" 5
+check_near "toolbar" 300 110 "062632" 5
+check_near "sidebar" 100 400 "052531" 5
+check_near "column header" 300 190 "062632" 5
+check "selection bar" 245 218 "38D6FF"
+check_near "selection fill" 400 218 "114D5F" 8
+check_near "status bar" 640 702 "052531" 5
 echo "explorer screenshot matches design tokens"

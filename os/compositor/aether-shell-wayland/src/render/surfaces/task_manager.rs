@@ -46,17 +46,29 @@ impl App {
             };
             let visible = self.task_visible_rows();
             // First-party window chrome.
-            if let Some(buffer) = self.chrome_round(bounds.width.max(1), bounds.height.max(1), 14, [7, 39, 51, 235]) {
+            if let Some(buffer) = self.chrome_round(
+                bounds.width.max(1),
+                bounds.height.max(1),
+                14,
+                [7, 39, 51, 235],
+            ) {
                 panels.push((buffer, bounds.x, bounds.y));
             }
-            if let Some(buffer) = self.chrome_round_top(bounds.width.max(1), 40, 14, [10, 51, 66, 255]) {
+            if let Some(buffer) =
+                self.chrome_round_top(bounds.width.max(1), 40, 14, [10, 51, 66, 255])
+            {
                 panels.push((buffer, bounds.x, bounds.y));
             }
             if let Some(buffer) = self.chrome_outline(
                 bounds.width.max(1),
                 bounds.height.max(1),
                 14,
-                [tokens.accent(255)[0], tokens.accent(255)[1], tokens.accent(255)[2], 120],
+                [
+                    tokens.accent(255)[0],
+                    tokens.accent(255)[1],
+                    tokens.accent(255)[2],
+                    120,
+                ],
             ) {
                 panels.push((buffer, bounds.x, bounds.y));
             }
@@ -75,8 +87,20 @@ impl App {
             if let Some(buffer) = self.chrome_round(23, 23, 5, tokens.accent(30)) {
                 panels.push((buffer, bounds.x + 66, bounds.y + 8));
             }
-            display_icons.push(("chart".into(), 13, tokens.accent(255), bounds.x + 71, bounds.y + 13));
-            labels.push(("Task Manager".into(), bounds.x + 97, bounds.y + 13, 0x100, tokens.text));
+            display_icons.push((
+                "chart".into(),
+                13,
+                tokens.accent(255),
+                bounds.x + 71,
+                bounds.y + 13,
+            ));
+            labels.push((
+                "Task Manager".into(),
+                bounds.x + 97,
+                bounds.y + 13,
+                0x100,
+                tokens.text,
+            ));
             labels.push((
                 "Processes and resources".into(),
                 bounds.x + 97 + self.text_width("Task Manager", 1) as i32 + 8,
@@ -94,7 +118,9 @@ impl App {
                 panels.push((buffer, badge_x + 8, bounds.y + 17));
             }
             labels.push((badge, badge_x + 20, bounds.y + 14, 0, tokens.green));
-            if let Some(buffer) = self.chrome_round_bottom(bounds.width.max(1), 32, 13, tokens.surface_a(242)) {
+            if let Some(buffer) =
+                self.chrome_round_bottom(bounds.width.max(1), 32, 13, tokens.surface_a(242))
+            {
                 panels.push((buffer, bounds.x, bounds.y + height - 32));
             }
             if let Some(buffer) = self.chrome_panel(

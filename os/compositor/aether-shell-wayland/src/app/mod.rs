@@ -168,6 +168,8 @@ pub struct App {
     pub(crate) calendar: Option<CalendarState>,
     /// First-party app window (About, Network, Battery, ...).
     pub(crate) system: SystemState,
+    /// Cached size and mtime for indexed paths shown by the explorer.
+    pub(crate) file_meta: HashMap<String, (u64, Option<u64>)>,
     pub(crate) task_manager: Option<TaskManagerState>,
     pub(crate) sandboxes: Option<SandboxPanelState>,
     pub(crate) sandbox_last: std::time::Instant,
@@ -283,6 +285,7 @@ impl App {
             menu_open: None,
             calendar: None,
             system: SystemState::new(),
+            file_meta: HashMap::new(),
             task_manager: None,
             sandboxes: None,
             sandbox_last: std::time::Instant::now(),

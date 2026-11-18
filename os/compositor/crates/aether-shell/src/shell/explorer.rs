@@ -22,23 +22,28 @@ impl Shell {
         } else {
             (bounds.width.saturating_sub(336)).min(1080)
         };
-        let height = (bounds.height.saturating_sub(190)).min(680);
+        let height = (bounds.height.saturating_sub(54 + 70)).min(664);
         Rect::new(bounds.x + 16, bounds.y + 54, width, height)
     }
 
-    /// Card below the explorer title bar, app bar and above its status bar.
+    /// Explorer sidebar width (`.os-file__sidebar`).
+    pub const SIDEBAR_WIDTH: i32 = 220;
+
+    /// Scrollable rows area: below the title bar, toolbar, search row and
+    /// column header; above the footer and status strip.
     pub fn explorer_pane_rect(&self) -> Rect {
         let bounds = self.explorer_rect();
+        let main_x = bounds.x + Self::SIDEBAR_WIDTH;
         Rect::new(
-            bounds.x + 16,
-            bounds.y + 40 + 52 + 12,
-            bounds.width.saturating_sub(32),
-            bounds.height.saturating_sub(40 + 52 + 12 + 32 + 12),
+            main_x + 8,
+            bounds.y + 40 + 40 + 40 + 30,
+            bounds.width.saturating_sub(Self::SIDEBAR_WIDTH as u32 + 16),
+            bounds.height.saturating_sub(40 + 40 + 40 + 30 + 30 + 32),
         )
     }
 
     pub fn explorer_rows_top(&self) -> i32 {
-        self.explorer_pane_rect().y + 56 + 30
+        self.explorer_pane_rect().y
     }
 
     pub fn open_explorer(&mut self) -> Option<()> {
@@ -84,7 +89,7 @@ impl Shell {
             return 0;
         }
         let pane = self.explorer_pane_rect();
-        ((pane.height.saturating_sub(56 + 30 + 30)) / design::EXPLORER_ROW_HEIGHT).max(1) as usize
+        (pane.height / design::EXPLORER_ROW_HEIGHT).max(1) as usize
     }
 
     pub fn explorer_match_count(&self) -> usize {

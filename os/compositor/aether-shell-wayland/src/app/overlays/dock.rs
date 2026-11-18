@@ -30,7 +30,7 @@ impl App {
         match action {
             DockAction::Explorer => self.toggle_explorer(),
             DockAction::Search => self.toggle_overlay(),
-            DockAction::Settings => self.toggle_themes(),
+            DockAction::Settings => self.open_system(crate::app::system::SystemApp::Settings),
             DockAction::Terminal => {
                 self.spawn_terminal();
                 println!("aether-shell: dock terminal");

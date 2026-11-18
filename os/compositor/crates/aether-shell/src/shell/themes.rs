@@ -38,6 +38,17 @@ impl Shell {
         }
     }
 
+    /// Toggle one theme field from the Settings app. Returns whether the
+    /// settings changed.
+    pub fn toggle_theme_field(&mut self, field: theme::ThemeField) -> bool {
+        let mut settings = self.theme;
+        let changed = settings.toggle(field);
+        if changed {
+            self.set_theme_settings(settings);
+        }
+        changed
+    }
+
     /// Cycle the light/dark/water mode from menu bar chrome (View ▸ Toggle
     /// appearance, tray moon). Returns whether anything changed.
     pub fn toggle_theme_mode(&mut self) -> bool {

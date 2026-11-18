@@ -75,6 +75,9 @@ impl App {
         if app == SystemApp::Radio {
             self.radio_body(&mut ui, body, tokens);
         }
+        if app == SystemApp::Settings {
+            self.settings_body(&mut ui, body, tokens);
+        }
 
         RenderChunk {
             chrome: ui.chrome,
@@ -521,7 +524,11 @@ impl App {
                 rect.x + (rect.width as i32 - text_width) / 2,
                 rect.y + 9,
                 4,
-                if active { [3, 25, 34, 255] } else { tokens.text_soft },
+                if active {
+                    [3, 25, 34, 255]
+                } else {
+                    tokens.text_soft
+                },
             );
         }
 
@@ -551,7 +558,12 @@ impl App {
             if index == 0 {
                 ui.solid(
                     AetherRect::new(x + 1, row_y + 51, width as u32 - 2, 1),
-                    [RULE[0] as f32 / 255.0, RULE[1] as f32 / 255.0, RULE[2] as f32 / 255.0, 0.12],
+                    [
+                        RULE[0] as f32 / 255.0,
+                        RULE[1] as f32 / 255.0,
+                        RULE[2] as f32 / 255.0,
+                        0.12,
+                    ],
                 );
             }
         }
@@ -600,7 +612,13 @@ impl App {
         self.card(ui, consumers, tokens);
         self.section(ui, x + 16, consumers_y + 12, "Largest consumers", tokens);
         if self.system.consumers.is_empty() {
-            ui.label("No process samples.", x + 16, consumers_y + 40, 4, tokens.dim);
+            ui.label(
+                "No process samples.",
+                x + 16,
+                consumers_y + 40,
+                4,
+                tokens.dim,
+            );
         }
         for (index, (name, cpu)) in self.system.consumers.clone().into_iter().enumerate() {
             let row_y = consumers_y + 34 + index as i32 * 26;
@@ -612,14 +630,21 @@ impl App {
             }
             let fill = (bar.width as f32 * (cpu.clamp(0.0, 100.0) / 100.0)).round() as u32;
             if fill > 0 {
-                if let Some(buffer) = self.chrome_round(fill.max(3), bar.height, 3, tokens.accent(255))
+                if let Some(buffer) =
+                    self.chrome_round(fill.max(3), bar.height, 3, tokens.accent(255))
                 {
                     ui.panel(Some(buffer), bar.x, bar.y);
                 }
             }
             let value = format!("{cpu:.1}%");
             let value_width = self.text_width(&value, 4) as i32;
-            ui.label(value, x + width - 16 - value_width, row_y + 2, 4, tokens.text_soft);
+            ui.label(
+                value,
+                x + width - 16 - value_width,
+                row_y + 2,
+                4,
+                tokens.text_soft,
+            );
         }
     }
 }
@@ -638,13 +663,7 @@ impl App {
         if let Some(buffer) = self.chrome_round(34, 34, 9, tokens.accent(30)) {
             ui.panel(Some(buffer), x + 16, body.y + 31);
         }
-        ui.icon(
-            "bluetooth",
-            18,
-            tokens.accent(255),
-            x + 24,
-            body.y + 39,
-        );
+        ui.icon("bluetooth", 18, tokens.accent(255), x + 24, body.y + 39);
         ui.label("Bluetooth", x + 64, body.y + 26, 3, tokens.text);
         let meta = if !facts.adapter {
             "No adapter detected".to_string()
@@ -683,7 +702,12 @@ impl App {
             if index == 0 {
                 ui.solid(
                     AetherRect::new(x + 1, row_y + 51, width as u32 - 2, 1),
-                    [RULE[0] as f32 / 255.0, RULE[1] as f32 / 255.0, RULE[2] as f32 / 255.0, 0.12],
+                    [
+                        RULE[0] as f32 / 255.0,
+                        RULE[1] as f32 / 255.0,
+                        RULE[2] as f32 / 255.0,
+                        0.12,
+                    ],
                 );
             }
         }
@@ -714,7 +738,14 @@ impl App {
             ui.icon("bluetooth", 16, tokens.text_soft, x + 23, row_y + 13);
             ui.label(device, x + 56, row_y + 6, 0x100, tokens.text);
             ui.label("Connected", x + 56, row_y + 24, 4, tokens.dim);
-            self.inline_badge(ui, x + width - 16, row_y + 14, "Connected", tokens.green, tokens);
+            self.inline_badge(
+                ui,
+                x + width - 16,
+                row_y + 14,
+                "Connected",
+                tokens.green,
+                tokens,
+            );
         }
     }
 }
@@ -745,7 +776,9 @@ impl App {
         }
         for (size, alpha) in [(64u32, 26u8), (40, 46), (16, 220)] {
             let offset = (96 - size as i32) / 2;
-            if let Some(buffer) = self.chrome_round(size, size, size / 2, [tint[0], tint[1], tint[2], alpha]) {
+            if let Some(buffer) =
+                self.chrome_round(size, size, size / 2, [tint[0], tint[1], tint[2], alpha])
+            {
                 ui.panel(Some(buffer), art.x + offset, art.y + offset);
             }
         }
@@ -762,11 +795,18 @@ impl App {
         );
 
         let progress = AetherRect::new(text_x, center_y + 30, (body.width as i32 - 320) as u32, 4);
-        if let Some(buffer) = self.chrome_round(progress.width, progress.height, 2, [255, 255, 255, 24]) {
+        if let Some(buffer) =
+            self.chrome_round(progress.width, progress.height, 2, [255, 255, 255, 24])
+        {
             ui.panel(Some(buffer), progress.x, progress.y);
         }
         let fill = (progress.width as f32 * 0.38) as u32;
-        if let Some(buffer) = self.chrome_round(fill.max(4), progress.height, 2, [tint[0], tint[1], tint[2], 255]) {
+        if let Some(buffer) = self.chrome_round(
+            fill.max(4),
+            progress.height,
+            2,
+            [tint[0], tint[1], tint[2], 255],
+        ) {
             ui.panel(Some(buffer), progress.x, progress.y);
         }
 
@@ -774,7 +814,9 @@ impl App {
             let rect = self.radio_button_rect(index);
             let is_play = index == 1;
             if is_play {
-                if let Some(buffer) = self.chrome_round(40, 40, 20, [tint[0], tint[1], tint[2], 255]) {
+                if let Some(buffer) =
+                    self.chrome_round(40, 40, 20, [tint[0], tint[1], tint[2], 255])
+                {
                     ui.panel(Some(buffer), rect.x + 2, rect.y);
                 }
                 ui.icon(
@@ -797,5 +839,146 @@ impl App {
             4,
             tokens.dim,
         );
+    }
+}
+
+impl App {
+    // -------------------------------------------------------------- settings
+
+    fn settings_body(&mut self, ui: &mut Ui, body: AetherRect, tokens: ThemeTokens) {
+        // Sidebar: search affordance and 14 tabs.
+        let sidebar_width = 220;
+        ui.solid(
+            AetherRect::new(
+                body.x + sidebar_width,
+                body.y + 12,
+                1,
+                body.height.saturating_sub(24),
+            ),
+            [
+                RULE[0] as f32 / 255.0,
+                RULE[1] as f32 / 255.0,
+                RULE[2] as f32 / 255.0,
+                0.15,
+            ],
+        );
+        let search = AetherRect::new(body.x + 12, body.y + 14, 196, 30);
+        if let Some(buffer) = self.chrome_round(search.width, search.height, 7, [255, 255, 255, 10])
+        {
+            ui.panel(Some(buffer), search.x, search.y);
+        }
+        ui.icon("search", 13, tokens.dim, search.x + 9, search.y + 8);
+        ui.label(
+            "Search settings",
+            search.x + 28,
+            search.y + 8,
+            4,
+            tokens.dim,
+        );
+
+        let tabs = crate::app::system::SETTINGS_TABS;
+        let icons = [
+            "gear",
+            "drop",
+            "chart",
+            "grid",
+            "search",
+            "agents",
+            "wifi",
+            "bluetooth",
+            "audio",
+            "battery",
+            "shield",
+            "chart",
+            "layers",
+            "drop",
+        ];
+        for (index, label) in tabs.iter().enumerate() {
+            let rect = AetherRect::new(body.x + 12, body.y + 56 + index as i32 * 30, 196, 28);
+            let active = index == self.system.selected;
+            if active {
+                if let Some(buffer) =
+                    self.chrome_round(rect.width, rect.height, 6, tokens.accent(38))
+                {
+                    ui.panel(Some(buffer), rect.x, rect.y);
+                }
+            }
+            ui.icon(
+                icons[index],
+                14,
+                if active {
+                    tokens.accent(255)
+                } else {
+                    tokens.dim
+                },
+                rect.x + 8,
+                rect.y + 7,
+            );
+            ui.label(
+                *label,
+                rect.x + 30,
+                rect.y + 7,
+                4,
+                if active {
+                    tokens.text
+                } else {
+                    tokens.text_soft
+                },
+            );
+        }
+
+        // Content: title + sections.
+        let content = self.settings_content_rect();
+        ui.label(
+            tabs[self.system.selected.min(tabs.len() - 1)],
+            content.x,
+            content.y + 2,
+            3,
+            tokens.text,
+        );
+        let mut y = content.y + 44;
+        for section in self.settings_sections() {
+            let height = 36 + section.rows.len() as i32 * 34;
+            let card = AetherRect::new(content.x, y, content.width, height as u32);
+            self.card(ui, card, tokens);
+            self.section(ui, content.x + 14, y + 12, section.title, tokens);
+            for (index, row) in section.rows.iter().enumerate() {
+                let row_y = y + 36 + index as i32 * 34;
+                if index > 0 {
+                    ui.solid(
+                        AetherRect::new(content.x + 1, row_y, content.width.saturating_sub(2), 1),
+                        [
+                            RULE[0] as f32 / 255.0,
+                            RULE[1] as f32 / 255.0,
+                            RULE[2] as f32 / 255.0,
+                            0.1,
+                        ],
+                    );
+                }
+                ui.label(row.label, content.x + 14, row_y + 9, 0x100, tokens.text);
+                match row.switch {
+                    Some((on, _)) => {
+                        let switch = AetherRect::new(
+                            content.x + content.width as i32 - 50,
+                            row_y + 7,
+                            34,
+                            20,
+                        );
+                        self.switch(ui, switch, on, tokens);
+                    }
+                    None => {
+                        let width = self.text_width(&row.value, 4) as i32;
+                        ui.label(
+                            &row.value,
+                            content.x + content.width as i32 - 14 - width,
+                            row_y + 9,
+                            4,
+                            tokens.text_soft,
+                        );
+                    }
+                }
+            }
+            y += height + 12;
+        }
     }
 }

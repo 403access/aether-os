@@ -99,6 +99,9 @@ pub struct SystemState {
     /// Energy mode (0 = low power, 1 = balanced, 2 = high performance).
     pub energy: usize,
     pub charging_optimised: bool,
+    /// Switches that are view state only (automatic updates, indicators, clock).
+    pub settings_toggles: [bool; 5],
+    pub settings_scroll: usize,
     /// Top CPU consumers, sampled when the window opens.
     pub consumers: Vec<(String, f32)>,
     /// Cached host facts, refreshed when a window opens.
@@ -118,6 +121,7 @@ impl SystemState {
             playing: true,
             energy: 1,
             charging_optimised: true,
+            settings_toggles: [true, true, false, false, false],
             ..Default::default()
         }
     }
@@ -235,7 +239,10 @@ impl App {
                     None
                 }
             }
-            SystemApp::Settings => self.settings_tab_at(point).map(SystemAction::SettingsTab),
+            SystemApp::Settings => self
+                .settings_switch_at(point)
+                .map(SystemAction::SettingsSwitch)
+                .or_else(|| self.settings_tab_at(point).map(SystemAction::SettingsTab)),
             SystemApp::Studio => self.studio_node_at(point).map(SystemAction::StudioNode),
             SystemApp::Compare => None,
         }
@@ -272,7 +279,9 @@ impl App {
             }
             SystemAction::SettingsTab(index) => {
                 self.system.selected = index;
+                self.system.settings_scroll = 0;
             }
+            SystemAction::SettingsSwitch(action) => self.toggle_settings_action(action),
             SystemAction::StudioNode(index) => {
                 self.system.selected = index;
             }
@@ -348,9 +357,9 @@ impl App {
 
     pub(crate) fn settings_tab_at(&self, point: AetherPoint) -> Option<usize> {
         let body = self.system_body_rect();
-        let x = body.x + 16;
+        let x = body.x + 12;
         (0..SETTINGS_TABS.len()).find(|index| {
-            AetherRect::new(x, body.y + 16 + *index as i32 * 34, 200, 30).contains(point)
+            AetherRect::new(x, body.y + 56 + *index as i32 * 30, 196, 28).contains(point)
         })
     }
 
@@ -398,6 +407,7 @@ pub enum SystemAction {
     PreviousTrack,
     NextTrack,
     SettingsTab(usize),
+    SettingsSwitch(SettingsAction),
     StudioNode(usize),
 }
 
@@ -419,5 +429,482 @@ mod tests {
         assert_eq!(SETTINGS_TABS.len(), 14);
         assert_eq!(SETTINGS_TABS[0], "General");
         assert_eq!(SETTINGS_TABS[13], "About");
+    }
+}
+
+fn start_section(sections: &mut Vec<SettingsSection>, title: &'static str) -> usize {
+    sections.push(SettingsSection {
+        title,
+        rows: Vec::new(),
+    });
+    sections.len() - 1
+}
+
+/// One row in a Settings section: label left, value or switch right.
+#[derive(Clone, Debug)]
+pub struct SettingsRow {
+    pub label: &'static str,
+    pub value: String,
+    pub switch: Option<(bool, SettingsAction)>,
+}
+
+#[derive(Clone, Debug)]
+pub struct SettingsSection {
+    pub title: &'static str,
+    pub rows: Vec<SettingsRow>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SettingsAction {
+    Theme(aether_shell::theme::ThemeField),
+    State(usize),
+}
+
+impl App {
+    /// Data for the selected Settings tab. Shared by the renderer and hit
+    /// testing so switches cannot drift from what is drawn.
+    pub(crate) fn settings_sections(&self) -> Vec<SettingsSection> {
+        let tab = self.system.selected.min(SETTINGS_TABS.len() - 1);
+        let facts = &self.system.facts;
+        let theme = *self.shell.theme_settings();
+        let output = self.shell.primary_output();
+        let mut sections: Vec<SettingsSection> = Vec::new();
+        let push = |sections: &mut Vec<SettingsSection>,
+                    index: usize,
+                    label: &'static str,
+                    value: String| {
+            sections[index].rows.push(SettingsRow {
+                label,
+                value,
+                switch: None,
+            });
+        };
+        let toggle = |sections: &mut Vec<SettingsSection>,
+                      index: usize,
+                      label: &'static str,
+                      value: &'static str,
+                      on: bool,
+                      action: SettingsAction| {
+            sections[index].rows.push(SettingsRow {
+                label,
+                value: value.to_string(),
+                switch: Some((on, action)),
+            });
+        };
+
+        match tab {
+            0 => {
+                let about = start_section(&mut sections, "About");
+                push(&mut sections, about, "Aether OS", "0.1.0-alpha".into());
+                push(
+                    &mut sections,
+                    about,
+                    "Host",
+                    if facts.hostname.is_empty() {
+                        "—".into()
+                    } else {
+                        facts.hostname.clone()
+                    },
+                );
+                push(&mut sections, about, "Kernel", facts.kernel.clone());
+                push(&mut sections, about, "Processor", facts.cpu.clone());
+                push(
+                    &mut sections,
+                    about,
+                    "Memory",
+                    if facts.memory_gb > 0.0 {
+                        format!("{:.1} GB", facts.memory_gb)
+                    } else {
+                        "—".into()
+                    },
+                );
+                let update = start_section(&mut sections, "Software update");
+                toggle(
+                    &mut sections,
+                    update,
+                    "Automatic updates",
+                    "Check on session start",
+                    self.system.settings_toggles[0],
+                    SettingsAction::State(0),
+                );
+                push(&mut sections, update, "Last checked", "Today".into());
+                let region = start_section(&mut sections, "Language & Region");
+                push(&mut sections, region, "Language", "English (UK)".into());
+                push(&mut sections, region, "Region", "Europe".into());
+            }
+            1 => {
+                let appearance = start_section(&mut sections, "Appearance");
+                push(
+                    &mut sections,
+                    appearance,
+                    "Theme",
+                    theme.mode.label().to_string(),
+                );
+                toggle(
+                    &mut sections,
+                    appearance,
+                    "Reduce motion",
+                    "Use the same theme with calm motion",
+                    !theme.effects,
+                    SettingsAction::Theme(aether_shell::theme::ThemeField::Effects),
+                );
+                let effects = start_section(&mut sections, "Water effects");
+                toggle(
+                    &mut sections,
+                    effects,
+                    "Effects",
+                    "Ripples and shimmer",
+                    theme.effects,
+                    SettingsAction::Theme(aether_shell::theme::ThemeField::Effects),
+                );
+                toggle(
+                    &mut sections,
+                    effects,
+                    "Cursor drips",
+                    "Soft rings follow the pointer",
+                    theme.drips,
+                    SettingsAction::Theme(aether_shell::theme::ThemeField::Drips),
+                );
+                toggle(
+                    &mut sections,
+                    effects,
+                    "Caustic shimmer",
+                    "Light patterns behind the app",
+                    theme.caustics,
+                    SettingsAction::Theme(aether_shell::theme::ThemeField::Caustics),
+                );
+                toggle(
+                    &mut sections,
+                    effects,
+                    "Glass surfaces",
+                    "Frosted panels over the sea",
+                    theme.glass,
+                    SettingsAction::Theme(aether_shell::theme::ThemeField::Glass),
+                );
+                let look = start_section(&mut sections, "Look");
+                push(
+                    &mut sections,
+                    look,
+                    "Water tone",
+                    theme.tone.label().to_string(),
+                );
+                push(
+                    &mut sections,
+                    look,
+                    "Flow speed",
+                    theme.speed.label().to_string(),
+                );
+            }
+            2 => {
+                let display = start_section(&mut sections, "Display");
+                push(
+                    &mut sections,
+                    display,
+                    "Output",
+                    output
+                        .as_ref()
+                        .map(|output| output.name.clone())
+                        .unwrap_or_else(|| "—".into()),
+                );
+                push(
+                    &mut sections,
+                    display,
+                    "Resolution",
+                    output
+                        .as_ref()
+                        .map(|output| format!("{} × {}", output.rect.width, output.rect.height))
+                        .unwrap_or_else(|| "—".into()),
+                );
+                push(
+                    &mut sections,
+                    display,
+                    "Refresh rate",
+                    output
+                        .as_ref()
+                        .map(|output| format!("{} Hz", output.refresh_hz))
+                        .unwrap_or_else(|| "—".into()),
+                );
+                push(
+                    &mut sections,
+                    display,
+                    "Scale",
+                    output
+                        .as_ref()
+                        .map(|output| format!("{:.2}×", output.scale))
+                        .unwrap_or_else(|| "—".into()),
+                );
+            }
+            3 => {
+                let dock = start_section(&mut sections, "Desktop & Dock");
+                push(&mut sections, dock, "Position", "Bottom".into());
+                push(&mut sections, dock, "Size", "441 × 62".into());
+                toggle(
+                    &mut sections,
+                    dock,
+                    "Running indicators",
+                    "Dot under open apps",
+                    self.system.settings_toggles[1],
+                    SettingsAction::State(1),
+                );
+                push(
+                    &mut sections,
+                    dock,
+                    "Workspaces",
+                    "Keyboard and palette".into(),
+                );
+                let bar = start_section(&mut sections, "Menu bar");
+                toggle(
+                    &mut sections,
+                    bar,
+                    "24-hour clock",
+                    "Show 17:47 instead of 05:47 PM",
+                    self.system.settings_toggles[2],
+                    SettingsAction::State(2),
+                );
+                push(&mut sections, bar, "Meters", "CPU · RAM · storage".into());
+            }
+            4 => {
+                let palette = start_section(&mut sections, "Command palette");
+                push(&mut sections, palette, "Shortcut", "Super+Space".into());
+                push(&mut sections, palette, "Prefix · commands", ">".into());
+                push(&mut sections, palette, "Prefix · agents", "@".into());
+                push(&mut sections, palette, "Prefix · files", "/".into());
+                let search = start_section(&mut sections, "Search");
+                push(&mut sections, search, "Provider", "aether-index".into());
+                push(
+                    &mut sections,
+                    search,
+                    "Ranking",
+                    "BM25F · fuzzy · prefix".into(),
+                );
+            }
+            5 => {
+                let motion = start_section(&mut sections, "Motion");
+                toggle(
+                    &mut sections,
+                    motion,
+                    "Reduce motion",
+                    "Disable ambient and interface motion",
+                    self.system.settings_toggles[3],
+                    SettingsAction::State(3),
+                );
+                let vision = start_section(&mut sections, "Vision");
+                push(&mut sections, vision, "Text size", "Comfortable".into());
+                push(&mut sections, vision, "Focus ring", "Accent".into());
+                push(
+                    &mut sections,
+                    vision,
+                    "Contrast",
+                    "Design-system defaults".into(),
+                );
+            }
+            6 => {
+                let network = start_section(&mut sections, "Network");
+                if let Some(primary) = self.system.network.primary() {
+                    push(
+                        &mut sections,
+                        network,
+                        "Interface",
+                        format!(
+                            "{} · {}",
+                            primary.name,
+                            if primary.wireless {
+                                "Wi-Fi"
+                            } else {
+                                "Ethernet"
+                            }
+                        ),
+                    );
+                    push(&mut sections, network, "MAC address", primary.mac.clone());
+                } else {
+                    push(&mut sections, network, "Interface", "—".into());
+                }
+                push(
+                    &mut sections,
+                    network,
+                    "IP address",
+                    self.system.network.ip.clone().unwrap_or_else(|| "—".into()),
+                );
+                push(
+                    &mut sections,
+                    network,
+                    "Router",
+                    self.system
+                        .network
+                        .gateway
+                        .clone()
+                        .unwrap_or_else(|| "—".into()),
+                );
+                push(
+                    &mut sections,
+                    network,
+                    "DNS",
+                    if self.system.network.dns.is_empty() {
+                        "—".into()
+                    } else {
+                        self.system.network.dns.join(", ")
+                    },
+                );
+            }
+            7 => {
+                let bluetooth = start_section(&mut sections, "Bluetooth");
+                push(
+                    &mut sections,
+                    bluetooth,
+                    "Adapter",
+                    if self.system.bluetooth_facts.adapter {
+                        "Present".into()
+                    } else {
+                        "Not detected".into()
+                    },
+                );
+                toggle(
+                    &mut sections,
+                    bluetooth,
+                    "Discoverable",
+                    "Let nearby devices find this machine",
+                    self.system.discoverable,
+                    SettingsAction::State(4),
+                );
+                push(&mut sections, bluetooth, "Paired devices", "0".into());
+            }
+            8 => {
+                let sound = start_section(&mut sections, "Sound");
+                push(&mut sections, sound, "Output", self.status().audio.clone());
+                push(
+                    &mut sections,
+                    sound,
+                    "Presets",
+                    "Studio · Hall · Deep".into(),
+                );
+                push(&mut sections, sound, "Inputs", "Microphone gate".into());
+            }
+            9 => {
+                let battery = start_section(&mut sections, "Battery");
+                push(
+                    &mut sections,
+                    battery,
+                    "Charge",
+                    if self.system.battery.present {
+                        format!("{}%", self.system.battery.capacity)
+                    } else {
+                        "AC power".into()
+                    },
+                );
+                push(
+                    &mut sections,
+                    battery,
+                    "Condition",
+                    if self.system.battery.health.is_empty() {
+                        "—".into()
+                    } else {
+                        self.system.battery.health.clone()
+                    },
+                );
+                push(
+                    &mut sections,
+                    battery,
+                    "Energy mode",
+                    ["Low power", "Balanced", "High performance"][self.system.energy.min(2)].into(),
+                );
+            }
+            10 => {
+                let security = start_section(&mut sections, "Privacy & Security");
+                push(
+                    &mut sections,
+                    security,
+                    "Agent isolation",
+                    "Landlock · seccomp".into(),
+                );
+                push(&mut sections, security, "Telemetry", "Off".into());
+                push(
+                    &mut sections,
+                    security,
+                    "Audit log",
+                    "~/.local/share/aether".into(),
+                );
+            }
+            11 => {
+                let time = start_section(&mut sections, "Screen Time");
+                push(
+                    &mut sections,
+                    time,
+                    "Uptime",
+                    crate::render::helpers::format_uptime(self.system_uptime()),
+                );
+                push(&mut sections, time, "Sessions", "1".into());
+            }
+            12 => {
+                let storage = start_section(&mut sections, "Storage");
+                push(&mut sections, storage, "Root filesystem", "XFS".into());
+                push(
+                    &mut sections,
+                    storage,
+                    "Index",
+                    "aether-index · inotify".into(),
+                );
+                push(&mut sections, storage, "Free space", "—".into());
+            }
+            _ => {
+                let about = start_section(&mut sections, "About");
+                push(&mut sections, about, "Aether OS", "0.1.0-alpha".into());
+                push(&mut sections, about, "Rust compositor", "Smithay".into());
+                push(&mut sections, about, "Design system", "Water".into());
+                push(&mut sections, about, "Licence", "MIT".into());
+            }
+        }
+        sections
+    }
+
+    fn system_uptime(&self) -> u64 {
+        std::fs::read_to_string("/proc/uptime")
+            .ok()
+            .and_then(|text| text.split_whitespace().next()?.parse::<f64>().ok())
+            .map(|seconds| seconds as u64)
+            .unwrap_or(0)
+    }
+
+    pub(crate) fn toggle_settings_action(&mut self, action: SettingsAction) {
+        match action {
+            SettingsAction::Theme(field) => {
+                if self.shell.toggle_theme_field(field) {
+                    self.apply_theme_action(Some(aether_shell::theme::ThemeAction::Changed));
+                }
+            }
+            SettingsAction::State(index) => {
+                if index < self.system.settings_toggles.len() {
+                    self.system.settings_toggles[index] = !self.system.settings_toggles[index];
+                }
+            }
+        }
+        self.mark_full_damage();
+    }
+
+    /// Switch under the pointer in the selected Settings tab.
+    pub(crate) fn settings_switch_at(&self, point: AetherPoint) -> Option<SettingsAction> {
+        let content = self.settings_content_rect();
+        let mut y = content.y + 44;
+        for section in self.settings_sections() {
+            y += 28 + 8;
+            for row in &section.rows {
+                let switch = AetherRect::new(content.x + content.width as i32 - 50, y + 6, 34, 20);
+                if row.switch.is_some() && switch.contains(point) {
+                    return row.switch.map(|(_, action)| action);
+                }
+                y += 34;
+            }
+            y += 8;
+        }
+        None
+    }
+
+    pub(crate) fn settings_content_rect(&self) -> AetherRect {
+        let body = self.system_body_rect();
+        AetherRect::new(
+            body.x + 236,
+            body.y + 16,
+            body.width.saturating_sub(252),
+            body.height.saturating_sub(32),
+        )
     }
 }

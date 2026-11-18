@@ -72,7 +72,7 @@ pub(super) fn format_rate(bytes_per_second: f64) -> String {
     }
 }
 
-pub(super) fn format_uptime(seconds: u64) -> String {
+pub(crate) fn format_uptime(seconds: u64) -> String {
     let hours = seconds / 3600;
     let minutes = (seconds % 3600) / 60;
     if hours > 0 {

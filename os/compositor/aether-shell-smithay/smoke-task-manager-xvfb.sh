@@ -17,6 +17,15 @@ mkdir -p "${OUT}"
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-$(mktemp -d)}"
 chmod 700 "${XDG_RUNTIME_DIR}"
 
+# The palette scans $HOME for files, and on CI the checkout lives inside it, so
+# the smoke's own artifacts/ logs ranked against the command being typed
+# ("task" matched task-manager-app.log and won). Point the scan at an empty
+# fixture so the query resolves to the command on any machine.
+FIXTURE="${OUT}/task-manager-fixture"
+rm -rf "${FIXTURE}"
+mkdir -p "${FIXTURE}"
+export AETHER_FILE_ROOTS="${FIXTURE}"
+
 Xvfb ":${DISPLAY_NUM}" -screen 0 "${WIDTH}x${HEIGHT}x24" -ac >"${OUT}/xvfb-task-manager.log" 2>&1 &
 XVFB_PID=$!
 APP_PID=""

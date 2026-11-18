@@ -69,6 +69,9 @@ impl App {
         if app == SystemApp::Battery {
             self.battery_body(&mut ui, body, tokens);
         }
+        if app == SystemApp::Devices {
+            self.devices_body(&mut ui, body, tokens);
+        }
 
         RenderChunk {
             chrome: ui.chrome,
@@ -614,6 +617,101 @@ impl App {
             let value = format!("{cpu:.1}%");
             let value_width = self.text_width(&value, 4) as i32;
             ui.label(value, x + width - 16 - value_width, row_y + 2, 4, tokens.text_soft);
+        }
+    }
+}
+
+impl App {
+    // --------------------------------------------------------------- devices
+
+    fn devices_body(&mut self, ui: &mut Ui, body: AetherRect, tokens: ThemeTokens) {
+        let x = body.x + 16;
+        let width = body.width as i32 - 32;
+        let facts = self.system.bluetooth_facts.clone();
+        let connected = facts.devices.len();
+
+        let header = AetherRect::new(x, body.y + 16, width as u32, 64);
+        self.card(ui, header, tokens);
+        if let Some(buffer) = self.chrome_round(34, 34, 9, tokens.accent(30)) {
+            ui.panel(Some(buffer), x + 16, body.y + 31);
+        }
+        ui.icon(
+            "bluetooth",
+            18,
+            tokens.accent(255),
+            x + 24,
+            body.y + 39,
+        );
+        ui.label("Bluetooth", x + 64, body.y + 26, 3, tokens.text);
+        let meta = if !facts.adapter {
+            "No adapter detected".to_string()
+        } else if !self.system.bluetooth {
+            "Off".to_string()
+        } else {
+            format!(
+                "On · {connected} accessory{} connected",
+                if connected == 1 { "" } else { "ies" }
+            )
+        };
+        ui.label(meta, x + 64, body.y + 48, 4, tokens.dim);
+
+        let toggle = AetherRect::new(x, body.y + 92, width as u32, 104);
+        self.card(ui, toggle, tokens);
+        for (index, (label, detail, value)) in [
+            (
+                "Bluetooth",
+                "Find and connect wireless accessories.",
+                self.system.bluetooth,
+            ),
+            (
+                "Discoverable",
+                "Let nearby devices find this machine.",
+                self.system.discoverable,
+            ),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let row_y = body.y + 102 + index as i32 * 52;
+            ui.label(label, x + 16, row_y + 6, 0x100, tokens.text);
+            ui.label(detail, x + 16, row_y + 22, 4, tokens.dim);
+            let switch = self.system_switch_rect(index);
+            self.switch(ui, switch, value, tokens);
+            if index == 0 {
+                ui.solid(
+                    AetherRect::new(x + 1, row_y + 51, width as u32 - 2, 1),
+                    [RULE[0] as f32 / 255.0, RULE[1] as f32 / 255.0, RULE[2] as f32 / 255.0, 0.12],
+                );
+            }
+        }
+
+        let rows = facts.devices.len().max(1) as i32;
+        let list_y = body.y + 208;
+        let list = AetherRect::new(x, list_y, width as u32, (34 + rows * 52) as u32);
+        self.card(ui, list, tokens);
+        self.section(ui, x + 16, list_y + 12, "Paired devices", tokens);
+        if facts.devices.is_empty() {
+            ui.label(
+                if facts.adapter {
+                    "No paired devices."
+                } else {
+                    "No Bluetooth adapter detected."
+                },
+                x + 16,
+                list_y + 40,
+                4,
+                tokens.dim,
+            );
+        }
+        for (index, device) in facts.devices.iter().enumerate() {
+            let row_y = list_y + 32 + index as i32 * 52;
+            if let Some(buffer) = self.chrome_round(30, 30, 8, [255, 255, 255, 12]) {
+                ui.panel(Some(buffer), x + 16, row_y + 6);
+            }
+            ui.icon("bluetooth", 16, tokens.text_soft, x + 23, row_y + 13);
+            ui.label(device, x + 56, row_y + 6, 0x100, tokens.text);
+            ui.label("Connected", x + 56, row_y + 24, 4, tokens.dim);
+            self.inline_badge(ui, x + width - 16, row_y + 14, "Connected", tokens.green, tokens);
         }
     }
 }

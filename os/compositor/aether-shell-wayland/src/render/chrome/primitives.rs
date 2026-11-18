@@ -423,6 +423,9 @@ pub fn icon_svg(name: &str, color: &str) -> Option<String> {
         "remote" => {
             r#"<rect x="2.5" y="3.5" width="15" height="10" rx="2"/><path d="M7 16.5h6M10 13.5v3"/><path d="m15 8 2 2-2 2"/>"#
         }
+        "globe" => {
+            r#"<circle cx="10" cy="10" r="7.4"/><path d="M2.8 7.6h14.4M2.8 12.4h14.4"/><path d="M10 2.6c2 2 3 4.6 3 7.4s-1 5.4-3 7.4c-2-2-3-4.6-3-7.4s1-5.4 3-7.4Z"/>"#
+        }
         "calendar" => {
             r#"<rect x="2.8" y="4.2" width="14.4" height="13" rx="2.2"/><path d="M2.8 8h14.4M6.6 2.6v3M13.4 2.6v3"/><path d="M6.2 11h1.6M9.2 11h1.6M12.2 11h1.6M6.2 14h1.6M9.2 14h1.6"/>"#
         }

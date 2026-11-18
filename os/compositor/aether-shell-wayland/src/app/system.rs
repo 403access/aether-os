@@ -9,6 +9,7 @@ use aether_geometry::{Point as AetherPoint, Rect as AetherRect};
 use smithay::input::keyboard::{keysyms, Keysym};
 
 use super::super::App;
+use super::system_info::{self, BatteryFacts, BluetoothFacts, NetworkFacts, SystemFacts};
 
 /// Demo window box at 1280 × 800.
 pub const APP_WIDTH: u32 = 1248;
@@ -97,6 +98,11 @@ pub struct SystemState {
     pub discoverable: bool,
     /// Energy mode (0 = low power, 1 = balanced, 2 = high performance).
     pub energy: usize,
+    /// Cached host facts, refreshed when a window opens.
+    pub network: NetworkFacts,
+    pub battery: BatteryFacts,
+    pub bluetooth_facts: BluetoothFacts,
+    pub facts: SystemFacts,
 }
 
 impl SystemState {
@@ -110,6 +116,15 @@ impl SystemState {
             energy: 1,
             ..Default::default()
         }
+    }
+
+    pub fn refresh(&mut self) {
+        self.network = system_info::network();
+        self.battery = system_info::battery();
+        self.bluetooth_facts = system_info::bluetooth();
+        self.facts = system_info::system();
+        self.wifi = self.network.wireless();
+        self.bluetooth = self.bluetooth_facts.adapter;
     }
 }
 
@@ -127,6 +142,7 @@ impl App {
         self.shell.close_chat();
         self.shell.close_overlay();
         self.system.app = Some(app);
+        self.system.refresh();
         println!("aether-shell: system app {}", app.title());
         self.mark_full_damage();
     }
@@ -278,12 +294,14 @@ impl App {
         }
     }
 
-    /// Switch geometry shared by Network and Devices: 34 × 20 capsule.
+    /// Switch geometry shared by Network and Devices: 34 × 20 capsule in the
+    /// card below the 64 px header (rows are 52 px apart).
     pub(crate) fn system_switch_rect(&self, index: usize) -> AetherRect {
         let body = self.system_body_rect();
+        let card_y = body.y + 16 + 64 + 12;
         AetherRect::new(
-            body.x + body.width as i32 - 62,
-            body.y + 118 + index as i32 * 74,
+            body.x + body.width as i32 - 50,
+            card_y + 10 + index as i32 * 52 + 16,
             34,
             20,
         )

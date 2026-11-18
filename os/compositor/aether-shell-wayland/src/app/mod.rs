@@ -23,6 +23,7 @@ mod outputs;
 pub(crate) mod overlays;
 pub(crate) mod status;
 pub(crate) mod system;
+pub(crate) mod system_info;
 mod windows;
 
 #[cfg(test)]

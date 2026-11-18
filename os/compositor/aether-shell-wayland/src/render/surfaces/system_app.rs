@@ -32,10 +32,18 @@ impl App {
         let mut ui = Ui::default();
 
         let badge = match app {
-            SystemApp::Network => Some((
-                if self.system.wifi { "Connected" } else { "Off" },
-                tokens.green,
-            )),
+            SystemApp::Network => {
+                let up = self
+                    .system
+                    .network
+                    .interfaces
+                    .iter()
+                    .any(|interface| interface.state == "up");
+                Some((
+                    if up { "Connected" } else { "Off" },
+                    if up { tokens.green } else { tokens.soft },
+                ))
+            }
             SystemApp::Battery => Some(("AC power", tokens.text_soft)),
             SystemApp::Devices => Some((
                 if self.system.bluetooth {
@@ -54,6 +62,9 @@ impl App {
 
         if app == SystemApp::About {
             self.about_body(&mut ui, body, tokens);
+        }
+        if app == SystemApp::Network {
+            self.network_body(&mut ui, body, tokens);
         }
 
         RenderChunk {
@@ -226,5 +237,205 @@ impl App {
             0,
             tokens.dim,
         );
+    }
+}
+
+impl App {
+    // ------------------------------------------------------------- primitives
+
+    fn card(&mut self, ui: &mut Ui, rect: AetherRect, tokens: ThemeTokens) {
+        if let Some(buffer) = self.chrome_round(rect.width, rect.height, 10, CARD_FILL) {
+            ui.panel(Some(buffer), rect.x, rect.y);
+        }
+        if let Some(buffer) = self.chrome_outline(rect.width, rect.height, 10, tokens.border(42)) {
+            ui.panel(Some(buffer), rect.x, rect.y);
+        }
+    }
+
+    fn section(&mut self, ui: &mut Ui, x: i32, y: i32, text: &str, tokens: ThemeTokens) {
+        ui.label(text.to_uppercase(), x, y, 6, tokens.dim);
+    }
+
+    fn switch(&mut self, ui: &mut Ui, rect: AetherRect, on: bool, tokens: ThemeTokens) {
+        let fill = if on {
+            tokens.accent(255)
+        } else {
+            [255, 255, 255, 26]
+        };
+        if let Some(buffer) = self.chrome_round(rect.width, rect.height, 10, fill) {
+            ui.panel(Some(buffer), rect.x, rect.y);
+        }
+        let knob = if on {
+            [255, 255, 255, 255]
+        } else {
+            [165, 219, 229, 255]
+        };
+        let x = if on { rect.x + 18 } else { rect.x + 4 };
+        if let Some(buffer) = self.chrome_round(12, 12, 6, knob) {
+            ui.panel(Some(buffer), x, rect.y + 4);
+        }
+    }
+
+    fn inline_badge(
+        &mut self,
+        ui: &mut Ui,
+        x: i32,
+        y: i32,
+        text: &str,
+        color: [u8; 4],
+        tokens: ThemeTokens,
+    ) {
+        let width = 8 + 6 + 6 + self.text_width(text, 0) + 8;
+        if let Some(buffer) = self.chrome_round(width, 20, 10, [color[0], color[1], color[2], 24]) {
+            ui.panel(Some(buffer), x - width as i32, y);
+        }
+        if let Some(buffer) = self.chrome_round(6, 6, 3, color) {
+            ui.panel(Some(buffer), x - width as i32 + 8, y + 7);
+        }
+        ui.label(text, x - width as i32 + 20, y + 4, 0, tokens.text_soft);
+    }
+
+    // --------------------------------------------------------------- network
+
+    fn network_body(&mut self, ui: &mut Ui, body: AetherRect, tokens: ThemeTokens) {
+        let x = body.x + 16;
+        let width = body.width as i32 - 32;
+        let facts = self.system.network.clone();
+        let primary = facts.primary().cloned().unwrap_or_default();
+
+        let header = AetherRect::new(x, body.y + 16, width as u32, 64);
+        self.card(ui, header, tokens);
+        if let Some(buffer) = self.chrome_round(34, 34, 9, tokens.accent(30)) {
+            ui.panel(Some(buffer), x + 16, body.y + 31);
+        }
+        ui.icon(
+            if primary.wireless { "wifi" } else { "globe" },
+            18,
+            tokens.accent(255),
+            x + 24,
+            body.y + 39,
+        );
+        let title = if primary.name.is_empty() {
+            "No network".to_string()
+        } else {
+            primary.name.clone()
+        };
+        ui.label(title, x + 64, body.y + 26, 3, tokens.text);
+        let meta = match (primary.name.is_empty(), primary.wireless) {
+            (true, _) => "No interfaces detected".to_string(),
+            (false, true) => format!("Wi-Fi · {}", primary.state),
+            (false, false) => format!("Ethernet · {}", primary.state),
+        };
+        ui.label(meta, x + 64, body.y + 48, 4, tokens.dim);
+
+        let toggle = AetherRect::new(x, body.y + 92, width as u32, 104);
+        self.card(ui, toggle, tokens);
+        for (index, (label, detail, value)) in [
+            (
+                "Wi-Fi",
+                "Discover and join nearby networks.",
+                self.system.wifi,
+            ),
+            (
+                "VPN",
+                "Route traffic through the archive gateway.",
+                self.system.vpn,
+            ),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let row_y = body.y + 102 + index as i32 * 52;
+            ui.label(label, x + 16, row_y + 6, 0x100, tokens.text);
+            ui.label(detail, x + 16, row_y + 22, 4, tokens.dim);
+            let switch = self.system_switch_rect(index);
+            self.switch(ui, switch, value, tokens);
+            if index == 0 {
+                ui.solid(
+                    AetherRect::new(x + 1, row_y + 51, width as u32 - 2, 1),
+                    [
+                        RULE[0] as f32 / 255.0,
+                        RULE[1] as f32 / 255.0,
+                        RULE[2] as f32 / 255.0,
+                        0.12,
+                    ],
+                );
+            }
+        }
+
+        let rows = facts.interfaces.len().max(1) as i32;
+        let networks_y = body.y + 92 + 104 + 12;
+        let networks = AetherRect::new(x, networks_y, width as u32, (34 + rows * 44) as u32);
+        self.card(ui, networks, tokens);
+        self.section(ui, x + 14, networks_y + 12, "Networks", tokens);
+        if facts.interfaces.is_empty() {
+            ui.label(
+                "No interfaces detected.",
+                x + 14,
+                networks_y + 40,
+                4,
+                tokens.dim,
+            );
+        }
+        for (index, interface) in facts.interfaces.iter().enumerate() {
+            let row_y = networks_y + 30 + index as i32 * 44;
+            ui.icon(
+                if interface.wireless { "wifi" } else { "globe" },
+                16,
+                tokens.text_soft,
+                x + 14,
+                row_y + 10,
+            );
+            ui.label(&interface.name, x + 42, row_y + 6, 0x100, tokens.text);
+            let detail = format!(
+                "{} · {}",
+                if interface.wireless {
+                    "Wi-Fi"
+                } else {
+                    "Ethernet"
+                },
+                interface.state
+            );
+            ui.label(detail, x + 42, row_y + 22, 4, tokens.dim);
+            let (label, color) = if interface.state == "up" {
+                ("Connected", tokens.green)
+            } else {
+                ("Down", tokens.dim)
+            };
+            self.inline_badge(ui, x + width - 16, row_y + 12, label, color, tokens);
+        }
+
+        let details_y = networks_y + 34 + rows * 44 + 12;
+        let details = AetherRect::new(x, details_y, width as u32, 160);
+        self.card(ui, details, tokens);
+        self.section(ui, x + 14, details_y + 12, "Details", tokens);
+        let dns = if facts.dns.is_empty() {
+            "—".to_string()
+        } else {
+            facts.dns.join(", ")
+        };
+        let rows = [
+            ("IP address", facts.ip.clone().unwrap_or_else(|| "—".into())),
+            (
+                "Router",
+                facts.gateway.clone().unwrap_or_else(|| "—".into()),
+            ),
+            ("DNS", dns),
+            (
+                "MAC address",
+                if primary.mac.is_empty() {
+                    "—".to_string()
+                } else {
+                    primary.mac.clone()
+                },
+            ),
+            ("Band", "—".to_string()),
+            ("Security", "—".to_string()),
+        ];
+        for (index, (label, value)) in rows.into_iter().enumerate() {
+            let row_y = details_y + 36 + index as i32 * 20;
+            ui.label(label, x + 14, row_y, 4, tokens.dim);
+            ui.label(value, x + 140, row_y - 1, 4, tokens.text_soft);
+        }
     }
 }

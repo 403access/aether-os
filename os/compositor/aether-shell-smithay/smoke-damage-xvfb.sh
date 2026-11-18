@@ -52,9 +52,9 @@ WINDOW_ID="$(xdotool search --name "Aether OS" | head -1)"
 xdotool windowfocus "${WINDOW_ID}"
 xdotool mousemove 300 300 click 1
 sleep 0.3
-xdotool type --delay 25 "sleep 1; echo partial-damage-ok"
+xdotool type --delay 25 "for i in \$(seq 1 30); do echo partial-damage-ok; sleep 0.05; done"
 xdotool key Return
-sleep 3
+sleep 4
 import -window root "${OUT}/partial-damage.png"
 
 if ! grep -q "damage=partial" "${OUT}/damage-app.log"; then

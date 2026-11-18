@@ -175,6 +175,24 @@ impl CompositorHandler for App {
                 .into_iter()
                 .find(|window| window.id == id)
         }) else {
+            // Child surfaces (client-side decorations, popups) do not own a
+            // window rect. Repaint the parent window instead of the whole
+            // output: foot repaints its decoration subsurfaces continuously
+            // while its title bar animates.
+            if let Some(parent) = smithay::wayland::compositor::get_parent(surface) {
+                let parent_window = self
+                    .windows
+                    .iter()
+                    .find_map(|(id, toplevel)| {
+                        (toplevel.wl_surface() == &parent).then_some(*id)
+                    });
+                if let Some(rect) = parent_window
+                    .and_then(|id| self.window_content_rect(id))
+                {
+                    self.mark_damage_rect(rect);
+                    return;
+                }
+            }
             self.mark_full_damage();
             return;
         };

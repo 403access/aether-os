@@ -1,3 +1,26 @@
+## v0.1.0-alpha.80
+
+- Close most of the app parity gap against the Water OS concept. New
+  compositor-owned windows, each with the demo's 1248 × 730 box and 40 px title
+  bar: **Network** (interfaces, IP, router, DNS, switches), **Battery** (charge,
+  energy mode, health, CPU consumers), **Devices** (Bluetooth), **Tide Radio**
+  (artwork, transport, queue), **About**, and a **14-tab Settings** app whose
+  Appearance switches drive the Water theme.
+- Add the five **menu-bar trays** at the demo's exact sizes: Wi-Fi, Bluetooth,
+  battery (with energy segments), sound (volume) and a calendar month popover.
+  Each footer opens the matching app.
+- Rebuild the **Explorer** as the demo's single-pane browser: sidebar,
+  breadcrumb toolbar, hidden switch, in-pane search row and
+  Name/Type/Size/Modified columns backed by one stat per path.
+- Turn the **Task Manager** into a first-party window and grow every window to
+  the source concept's 730 px height; the dock floats above the window bottom.
+- Add `smoke-system-apps-xvfb.sh` (all apps + trays in one capture run) and an
+  `AETHER_HIDE_DOCK` capture switch for clean window crops. The parity report is
+  now **18 implemented / 2 partial / 2 missing / 4 Aether-only**.
+- Verification: `cargo test` (aether-shell 85, aether-shell-wayland 64),
+  clippy `-D warnings` and rustfmt for the standalone crate, the Xvfb smoke set,
+  and a rendered report with 46 element screenshots and no broken references.
+
 ## v0.1.0-alpha.79
 
 - Add an **app-by-app parity report**: `bun run parity:apps` serves the local

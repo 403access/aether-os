@@ -15,6 +15,11 @@ impl App {
     }
 
     pub(crate) fn dock_visible(&self, output: OutputId) -> bool {
+        // Capture switch: app-only screenshots should not bake the floating
+        // dock over the bottom of a window crop.
+        if std::env::var_os("AETHER_HIDE_DOCK").is_some() {
+            return false;
+        }
         self.shell.fullscreen_window_on(output).is_none()
     }
 

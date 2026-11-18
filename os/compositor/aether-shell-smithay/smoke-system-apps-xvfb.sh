@@ -14,6 +14,14 @@ mkdir -p "${OUT}"
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-$(mktemp -d)}"
 chmod 700 "${XDG_RUNTIME_DIR}"
 export AETHER_FIXED_UNIX="${AETHER_FIXED_UNIX:-1795020420}"
+# App-only captures: keep the floating dock out of the window crops.
+export AETHER_HIDE_DOCK="${AETHER_HIDE_DOCK:-1}"
+FILES="${OUT}/system-fixture"
+rm -rf "${FILES}"; mkdir -p "${FILES}/notes" "${FILES}/archive"
+printf 'alpha\n' >"${FILES}/notes/alpha.md"
+printf 'beta\n' >"${FILES}/beta.txt"
+printf 'gamma\n' >"${FILES}/archive/gamma.json"
+export AETHER_FILE_ROOTS="${FILES}"
 
 Xvfb ":${DISPLAY_NUM}" -screen 0 "${WIDTH}x${HEIGHT}x24" -ac >"${OUT}/xvfb-system.log" 2>&1 &
 XVFB_PID=$!
@@ -66,4 +74,9 @@ xdotool key Escape; sleep 0.4
 xdotool mousemove 280 19; sleep 0.3; xdotool click 1; sleep 0.5
 xdotool mousemove 300 104; sleep 0.3; xdotool click 1; sleep 1.0; shot app-task-manager
 
-echo "wrote app, tray and calendar captures to ${OUT}"
+# Explorer with a real fixture, dock hidden.
+xdotool windowfocus "${WINDOW_ID}"
+xdotool key super+e; sleep 1.2; shot app-explorer
+xdotool key Escape; sleep 0.4
+
+echo "wrote app, tray, calendar and explorer captures to ${OUT}"

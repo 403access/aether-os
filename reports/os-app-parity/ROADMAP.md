@@ -2,7 +2,7 @@
 
 Source: `ba9740a Center dock tiles in left and right dock positions (+ local changes)` (local design-system/ checkout)
 
-Aether: `7c4596b feat(shell): bring the Explorer up to the demo layout`
+Aether: `53019ca feat(shell): grow first-party windows to the demo's 730 px box`
 
 Implemented **18** · partial **2** · missing **2** · Aether-only **4**.
 

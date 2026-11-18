@@ -84,7 +84,7 @@ const AETHER_CROPS = {
   dock: { file: "desktop.png", rect: [420, 730, 439, 62] },
   menu: { file: "menu.png", rect: [110, 0, 250, 215] },
   command: { file: "palette-default.png", rect: [300, 190, 680, 420] },
-  explorer: { file: "explorer.png", rect: [16, 54, 1248, 730] },
+  explorer: { file: "app-explorer.png", rect: [16, 54, 1248, 730] },
   about: { file: "app-about.png", rect: [16, 54, 1248, 730] },
   network: { file: "app-network.png", rect: [16, 54, 1248, 730] },
   battery: { file: "app-battery.png", rect: [16, 54, 1248, 730] },

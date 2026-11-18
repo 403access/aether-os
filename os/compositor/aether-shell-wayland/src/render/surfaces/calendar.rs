@@ -50,6 +50,10 @@ impl App {
             panels.push((buffer, rect.x, rect.y));
         }
         chrome.push((
+            AetherRect::new(rect.x + 14, rect.y + 1, rect.width.saturating_sub(28), 1),
+            [1.0, 1.0, 1.0, 0.07],
+        ));
+        chrome.push((
             AetherRect::new(rect.x, rect.y + TITLEBAR_HEIGHT - 1, rect.width, 1),
             [
                 RULE[0] as f32 / 255.0,

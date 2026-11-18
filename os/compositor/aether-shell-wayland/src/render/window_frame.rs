@@ -87,6 +87,17 @@ impl App {
 
         // Focused windows carry the accent rim along the top edge and down the
         // sides; unfocused windows use the neutral line.
+        let highlight =
+            SolidColorBuffer::new((width.saturating_sub(28) as i32, 1), [1.0, 1.0, 1.0, 0.07]);
+        elements.push(AetherRenderElement::from(
+            SolidColorRenderElement::from_buffer(
+                &highlight,
+                (x + 14, y + 1),
+                1.0f64,
+                1.0,
+                Kind::Unspecified,
+            ),
+        ));
         let rim = if focused {
             tokens.accent(120)
         } else {

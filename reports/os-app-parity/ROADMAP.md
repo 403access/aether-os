@@ -1,8 +1,9 @@
 # Water OS app parity · roadmap
 
 Source: `a72f82d Give dropdown chevrons more breathing room (+ local changes)` (local design-system/ checkout)
+Visual spec (source vs target, difference register): [`VISUAL-SPEC.md`](VISUAL-SPEC.md).
 
-Aether: `c2df4dc chore(screenshots): capture the system apps in the shell pipeline`
+Aether: `b453fe9 docs(parity): add the formal visual spec and difference register`
 
 Implemented **18** · partial **2** · missing **0** · out of scope **2** · Aether-only **4**.
 

@@ -66,6 +66,10 @@ impl App {
         ) {
             ui.panel(Some(buffer), rect.x, rect.y);
         }
+        ui.solid(
+            AetherRect::new(rect.x + 14, rect.y + 1, rect.width.saturating_sub(28), 1),
+            [1.0, 1.0, 1.0, 0.07],
+        );
         for (index, color) in LIGHTS.into_iter().enumerate() {
             if let Some(buffer) = self.chrome_round(11, 11, 5, color) {
                 ui.panel(Some(buffer), rect.x + 11 + index as i32 * 17, rect.y + 14);

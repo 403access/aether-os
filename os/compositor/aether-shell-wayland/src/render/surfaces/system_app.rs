@@ -118,6 +118,10 @@ impl App {
             ui.panel(Some(buffer), rect.x, rect.y);
         }
         ui.solid(
+            AetherRect::new(rect.x + 14, rect.y + 1, rect.width.saturating_sub(28), 1),
+            [1.0, 1.0, 1.0, 0.07],
+        );
+        ui.solid(
             AetherRect::new(rect.x + 1, rect.y + TITLEBAR_HEIGHT - 1, rect.width - 2, 1),
             [
                 RULE[0] as f32 / 255.0,

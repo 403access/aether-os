@@ -24,6 +24,8 @@
     "test:e2e": "playwright test",
     "test:all": "bun run test:unit && bun run test:e2e",
     "test:design": "bun scripts/design-parity.ts",
+    "parity": "bash scripts/screenshots/os-parity.sh",
+    "parity:compare": "node scripts/screenshots/os-parity.mjs --compare",
     "screenshots": "bash scripts/capture-screenshots.sh",
     "screenshots:web": "bash scripts/capture-web-screenshots.sh",
     "screenshots:shell": "bash scripts/capture-shell-screenshots.sh",
@@ -43,6 +45,8 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "happy-dom": "^21.0.4",
+    "pixelmatch": "^8.0.0",
+    "pngjs": "^7.0.0",
     "react": "^19",
     "react-dom": "^19",
     "typescript": "^5.9.0"

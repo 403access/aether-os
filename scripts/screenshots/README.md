@@ -7,6 +7,7 @@ Two capture pipelines feed the gallery, the docs and the README:
 | `capture-shell-screenshots.sh` | Smithay winit adapter under Xvfb | `artifacts/screenshots/shell` |
 | `capture-web-screenshots.sh` | assembled site + Playwright | `artifacts/screenshots/web` |
 | `publish-screenshots.ts` | curated copies + manifest | `apps/web/public/screenshots`, `apps/docs/static/img` |
+| `os-parity.sh` + `os-parity.mjs` | live Water OS demo vs compositor | `artifacts/os-parity` |
 
 ## Run everything
 
@@ -58,7 +59,8 @@ useful.
 
 ## What is captured
 
-Shell surfaces: top bar, palette, explorer, chat, audio, themes, task manager,
+Shell surfaces: menu bar, dock, palette, explorer, chat, audio, themes, task manager,
+calendar,
 remote overlay, shortcuts, window move/resize/snap/maximize, fullscreen,
 workspace picker, cursor, clipboard, desktop/file/agent/index providers and the
 partial-damage probe.

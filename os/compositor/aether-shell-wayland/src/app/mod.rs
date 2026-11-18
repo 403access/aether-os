@@ -138,6 +138,7 @@ pub struct App {
     pub(crate) chrome_icons: BudgetCache<(String, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_panels: BudgetCache<PanelCacheKey, Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_rounds: BudgetCache<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
+    pub(crate) chrome_outlines: BudgetCache<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_tops: BudgetCache<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_background:
         BudgetCache<(u32, u32), (crate::render::BackgroundStyle, Arc<MemoryRenderBuffer>)>,
@@ -253,6 +254,7 @@ impl App {
             chrome_icons: BudgetCache::new(ICON_CACHE_BYTES),
             chrome_panels: BudgetCache::new(PANEL_CACHE_BYTES),
             chrome_rounds: BudgetCache::new(ROUND_CACHE_BYTES),
+            chrome_outlines: BudgetCache::new(ROUND_CACHE_BYTES),
             chrome_tops: BudgetCache::new(TOP_CACHE_BYTES),
             chrome_background: BudgetCache::new(BACKGROUND_CACHE_BYTES),
             cursor_buffers: HashMap::new(),
@@ -400,11 +402,11 @@ impl App {
         let Ok(path) = std::env::var("AETHER_TEST_CLIENT") else {
             return;
         };
+        // Zero is meaningful: parity captures compare an empty desktop.
         let count = std::env::var("AETHER_TEST_CLIENT_COUNT")
             .ok()
             .and_then(|value| value.parse::<u32>().ok())
-            .unwrap_or(1)
-            .max(1);
+            .unwrap_or(1);
         for _ in 0..count {
             let mut command = std::process::Command::new(&path);
             command.env("WAYLAND_DISPLAY", &self.socket_name);

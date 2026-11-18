@@ -48,6 +48,13 @@ pub struct Clock {
 
 impl Clock {
     pub fn now() -> Self {
+        // `AETHER_FIXED_UNIX` pins the clock for screenshot comparison: the
+        // reference demo and the compositor must agree on the date and time.
+        if let Ok(fixed) = std::env::var("AETHER_FIXED_UNIX") {
+            if let Ok(seconds) = fixed.parse::<i64>() {
+                return Self::from_unix(seconds);
+            }
+        }
         let seconds = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .map(|elapsed| elapsed.as_secs() as i64)

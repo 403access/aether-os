@@ -12,8 +12,6 @@ use crate::render::helpers::{file_kind, truncate};
 impl App {
     pub(crate) fn compose_explorer(&mut self, ctx: &FrameContext) -> RenderChunk {
         let tokens = ctx.tokens;
-        let panel_fill_soft = ctx.panel_fill_soft;
-        let panel_border_soft = ctx.panel_border_soft;
         let accent_f = ctx.accent_f;
         let explorer_here = ctx.flags.explorer;
         let mut chrome: Vec<(AetherRect, [f32; 4])> = Vec::new();
@@ -26,61 +24,130 @@ impl App {
             let pane = self.shell.explorer_pane_rect();
             let width = bounds.width as i32;
             let height = bounds.height as i32;
-            // App bar and status bar.
-            if let Some(buffer) =
-                self.chrome_round(bounds.width.max(1), 62, 0, tokens.surface_a(236))
-            {
+            // Window body and title bar (`.os-window--explorer`).
+            if let Some(buffer) = self.chrome_round(
+                bounds.width.max(1),
+                bounds.height.max(1),
+                14,
+                [7, 39, 51, 235],
+            ) {
                 panels.push((buffer, bounds.x, bounds.y));
             }
-            if let Some(buffer) =
-                self.chrome_round(bounds.width.max(1), 36, 0, tokens.surface_a(242))
-            {
-                panels.push((buffer, bounds.x, bounds.y + height - 36));
-            }
-            // Pane card.
-            if let Some(buffer) = self.chrome_panel(
-                pane.width,
-                pane.height,
-                12,
-                panel_fill_soft,
-                panel_border_soft,
+            if let Some(buffer) = self.chrome_round_top(
+                bounds.width.max(1),
+                40,
+                14,
+                [10, 51, 66, 255],
             ) {
-                panels.push((buffer, pane.x - 18, pane.y - 18));
+                panels.push((buffer, bounds.x, bounds.y));
             }
-            // App bar brand.
+            let rim = accent_f;
+            let rim_soft = [rim[0], rim[1], rim[2], 0.47];
+            chrome.push((AetherRect::new(bounds.x, bounds.y, bounds.width, 1), rim_soft));
+            chrome.push((
+                AetherRect::new(bounds.x, bounds.y + height - 1, bounds.width, 1),
+                rim_soft,
+            ));
+            chrome.push((AetherRect::new(bounds.x, bounds.y, 1, bounds.height), rim_soft));
+            chrome.push((
+                AetherRect::new(bounds.x + width - 1, bounds.y, 1, bounds.height),
+                rim_soft,
+            ));
+            chrome.push((
+                AetherRect::new(bounds.x, bounds.y + 39, bounds.width, 1),
+                tokens.surface_a(120).map(|value| value as f32 / 255.0),
+            ));
+
+            // Traffic lights.
+            for (index, color) in [
+                [0xff, 0x8a, 0x92, 255],
+                [0xff, 0xd2, 0x7a, 255],
+                [0x5e, 0xf2, 0xb0, 255],
+            ]
+            .into_iter()
+            .enumerate()
+            {
+                if let Some(buffer) = self.chrome_round(11, 11, 5, color) {
+                    panels.push((buffer, bounds.x + 11 + index as i32 * 17, bounds.y + 14));
+                }
+            }
+            // App mark, title and subtitle.
+            let mark_x = bounds.x + 66;
+            let mark_y = bounds.y + 8;
+            if let Some(buffer) = self.chrome_round(
+                23,
+                23,
+                5,
+                [tokens.accent(255)[0], tokens.accent(255)[1], tokens.accent(255)[2], 36],
+            ) {
+                panels.push((buffer, mark_x, mark_y));
+            }
             display_icons.push((
-                "explorer".into(),
-                28,
+                "folder".into(),
+                13,
                 tokens.accent(255),
-                bounds.x + 18,
-                bounds.y + 17,
+                mark_x + 5,
+                mark_y + 5,
             ));
             labels.push((
-                "Aether".into(),
-                bounds.x + 56,
-                bounds.y + 12,
-                2,
+                "Files".into(),
+                mark_x + 31,
+                bounds.y + 13,
+                0x100,
                 tokens.text,
             ));
             labels.push((
-                "Files · indexed system".into(),
-                bounds.x + 56,
-                bounds.y + 35,
+                "Indexed system".into(),
+                mark_x + 31 + self.text_width("Files", 1) as i32 + 8,
+                bounds.y + 13,
                 0,
                 tokens.dim,
             ));
-            // Center tabs.
-            let tab_x = bounds.x + width / 2 - 150;
-            let tab_active = AetherRect::new(tab_x, bounds.y + 15, 92, 32);
-            if let Some(buffer) = self.chrome_round(92, 32, 8, tokens.accent(38)) {
-                panels.push((buffer, tab_active.x, tab_active.y));
+            // Live badge.
+            let badge = "Live".to_string();
+            let badge_w = 8 + 6 + 6 + self.text_width(&badge, 0) + 8;
+            let badge_x = bounds.x + width - 12 - badge_w as i32;
+            if let Some(buffer) = self.chrome_round(badge_w, 22, 11, tokens.green_a(28)) {
+                panels.push((buffer, badge_x, bounds.y + 9));
             }
-            labels.push(("Files".into(), tab_x + 26, bounds.y + 22, 1, tokens.text));
-            labels.push(("Palette".into(), tab_x + 120, bounds.y + 22, 1, tokens.soft));
-            labels.push(("Chat".into(), tab_x + 215, bounds.y + 22, 1, tokens.soft));
-            // Search affordance.
-            let search = AetherRect::new(bounds.x + width - 250, bounds.y + 15, 232, 32);
-            if let Some(buffer) = self.chrome_round(232, 32, 8, tokens.base) {
+            if let Some(buffer) = self.chrome_round(6, 6, 3, tokens.green) {
+                panels.push((buffer, badge_x + 8, bounds.y + 17));
+            }
+            labels.push((badge, badge_x + 20, bounds.y + 14, 0, tokens.green));
+
+            // App bar: brand, then the search affordance.
+            let appbar_y = bounds.y + 40;
+            if let Some(buffer) =
+                self.chrome_round(bounds.width.max(1), 52, 0, tokens.surface_a(236))
+            {
+                panels.push((buffer, bounds.x, appbar_y));
+            }
+            if let Some(buffer) = self.chrome_round(28, 28, 7, tokens.accent(38)) {
+                panels.push((buffer, bounds.x + 16, appbar_y + 12));
+            }
+            display_icons.push((
+                "explorer".into(),
+                18,
+                tokens.accent(255),
+                bounds.x + 21,
+                appbar_y + 17,
+            ));
+            labels.push((
+                "Files".into(),
+                bounds.x + 54,
+                appbar_y + 9,
+                3,
+                tokens.text,
+            ));
+            labels.push((
+                "All indexed roots".into(),
+                bounds.x + 54,
+                appbar_y + 30,
+                4,
+                tokens.dim,
+            ));
+            let search = AetherRect::new(bounds.x + width - 252, appbar_y + 10, 232, 32);
+            if let Some(buffer) = self.chrome_round(232, 32, 8, tokens.base_a(120)) {
                 panels.push((buffer, search.x, search.y));
             }
             display_icons.push(("search".into(), 16, tokens.dim, search.x + 10, search.y + 8));
@@ -91,13 +158,7 @@ impl App {
                 0,
                 tokens.dim,
             ));
-            labels.push((
-                "Super+K".into(),
-                search.x + 176,
-                search.y + 9,
-                0,
-                tokens.dim,
-            ));
+
             // Pane header.
             let pane_icon = pane.x + 16;
             let pane_y = pane.y + 14;
@@ -233,7 +294,7 @@ impl App {
                 tokens.dim,
             ));
             // Status bar.
-            let status_y = bounds.y + height - 36;
+            let status_y = bounds.y + height - 32;
             let selected_file = self.shell.explorer_selected_file();
             if let Some(file) = selected_file {
                 labels.push((

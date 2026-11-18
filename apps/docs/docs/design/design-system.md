@@ -113,14 +113,16 @@ premultiplied alpha, soft shadows, SVG icons and a deep-sea gradient.
 | Panel header bands | `chrome::rounded_top` |
 | `.ds-badge`, selection fill | `chrome::rounded` |
 | Icon set | `chrome::icon_svg` + `resvg` (search, folder, file, terminal, chat, cpu, memory, audio, agents, palette, close, arrow) |
-| Type scale | `aether-text::font` — 11 / 13 / 16 / 20 px, semibold via double-blit |
-| Explorer | 62 px app bar, 56 px pane header, 30 px columns and rows, 30 px footer, 36 px status bar |
+| Type scale | `aether-text::font` — 8 / 9 / 10 / 11 / 13 / 16 / 20 px, semibold via double-blit |
+| Menu bar | 38 px full-width bar: brand, active app, five menus, sync pill, CPU/RAM/STORAGE meters, tray, clock |
+| Explorer | Floating 700-class window: 40 px title bar, 52 px app bar, 56 px pane header, 30 px columns and rows, 30 px footer, 32 px status bar |
 | Palette | 680 × 420, 58 px search header, six 40 px rows at 46 px pitch, keycap footer |
 | Chat | 400 px drawer, header pill, assistant card with code strips, 38 px composer |
-| Client windows | 34 px compositor title bar: `chrome::rounded_top` header, mark icon, title, focus accent rule, close pill |
+| Client windows | 40 px compositor title bar: three 11 px traffic lights, 23 px app mark, bold title with dim subtitle, accent rim on focus |
+| Clock and Calendar | Pure civil-time formatter; 700 × 590 Calendar window with a six-row month grid and agenda |
 | Terminal | `aether-terminal` (foot) with Water ANSI palette, 11 px mono, framed by the compositor title bar |
 | Audio overlay | 660 × 560 glass panel, section labels, route rows, preset chips, input meter |
-| Top shortcut dock | Centred 606 × 34 glass pill, six labelled icon buttons, icon-only under 900 px |
+| Desktop dock | Centred 441 × 62 glass strip, eight 38 px tinted tiles, separator, running dots |
 
 ![Water explorer in the compositor](/img/smithay-explorer.png)
 
@@ -160,9 +162,12 @@ palette, `DejaVu Sans Mono` at 11 px and a cyan beam cursor. Set
 
 The compositor never asks clients to draw their own frame: `xdg-decoration` is
 not advertised, and every toplevel gets the server-side title bar described
-above. The shell reserves a 48 px `top_gap` in the layout so tiled, floating
-and maximized clients start below the shortcut dock, exactly like the
-first-party surfaces.
+above. The shell reserves a 38 px `top_gap` in the layout so tiled, floating
+and maximized clients start below the menu bar, exactly like the first-party
+surfaces.
+
+`bun run parity` captures the Water OS demo and the compositor at 1280 × 800
+and diffs them by region; see `artifacts/os-parity/report.md`.
 
 ## Usage
 

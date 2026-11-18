@@ -22,7 +22,7 @@ impl App {
         }
         let mut panels: Vec<(Arc<MemoryRenderBuffer>, i32, i32)> = Vec::new();
         let mut display_icons: Vec<(String, u32, [u8; 4], i32, i32)> = Vec::new();
-        let mut chrome: Vec<(AetherRect, [f32; 4])> = Vec::new();
+        let chrome: Vec<(AetherRect, [f32; 4])> = Vec::new();
 
         let dock = self.dock(chrome_output);
         if let Some(buffer) =
@@ -30,34 +30,15 @@ impl App {
         {
             panels.push((buffer, dock.rect.x, dock.rect.y));
         }
-        // Rim: four 1 px edges so the strip reads as glass without a fill swap.
-        let rim = [
-            DOCK_RIM[0] as f32 / 255.0,
-            DOCK_RIM[1] as f32 / 255.0,
-            DOCK_RIM[2] as f32 / 255.0,
-            DOCK_RIM[3] as f32 / 255.0,
-        ];
-        let rect = dock.rect;
-        chrome.push((AetherRect::new(rect.x + 8, rect.y, rect.width.saturating_sub(16), 1), rim));
-        chrome.push((
-            AetherRect::new(
-                rect.x + 8,
-                rect.bottom() as i32 - 1,
-                rect.width.saturating_sub(16),
-                1,
-            ),
-            rim,
-        ));
-        chrome.push((AetherRect::new(rect.x, rect.y + 12, 1, rect.height.saturating_sub(24)), rim));
-        chrome.push((
-            AetherRect::new(
-                rect.right() as i32 - 1,
-                rect.y + 12,
-                1,
-                rect.height.saturating_sub(24),
-            ),
-            rim,
-        ));
+        // The strip is a rounded glass panel: fill plus a 1 px strong rim.
+        if let Some(buffer) = self.chrome_outline(
+            dock.rect.width,
+            dock.rect.height,
+            17,
+            DOCK_RIM,
+        ) {
+            panels.push((buffer, dock.rect.x, dock.rect.y));
+        }
 
         // Separator between the applications and the utility group.
         if let Some(buffer) =
@@ -75,7 +56,10 @@ impl App {
             if let Some(buffer) = self.chrome_round(38, 38, 10, TILE_FILL) {
                 panels.push((buffer, tile_x, tile_y));
             }
-            if let Some(buffer) = self.chrome_round(38, 38, 10, [r, g, b, 46]) {
+            if let Some(buffer) = self.chrome_round(38, 38, 10, [r, g, b, 58]) {
+                panels.push((buffer, tile_x, tile_y));
+            }
+            if let Some(buffer) = self.chrome_outline(38, 38, 10, [r, g, b, 92]) {
                 panels.push((buffer, tile_x, tile_y));
             }
             display_icons.push((

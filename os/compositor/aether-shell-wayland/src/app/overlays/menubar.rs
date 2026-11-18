@@ -53,7 +53,7 @@ impl App {
         ];
         let title = self.menubar_title();
         let measure = |text: &str, scale: u32| self.text_width(text, scale);
-        layout::layout(
+        let bar = layout::layout(
             bounds,
             &measure,
             &title,
@@ -61,11 +61,41 @@ impl App {
             &meters,
             &clock.short_date(),
             &clock.time_label(),
-        )
+        );
+        if std::env::var_os("AETHER_MENUBAR_DEBUG").is_some() {
+            use std::sync::atomic::{AtomicBool, Ordering};
+            static ONCE: AtomicBool = AtomicBool::new(false);
+            if !ONCE.swap(true, Ordering::Relaxed) {
+                println!(
+                    "aether-shell: menubar sync={:?} resources={:?} clock={:?} traps={:?}",
+                    bar.sync, bar.resources, bar.clock, bar.tray
+                );
+            }
+        }
+        bar
     }
 
-    /// The active application name: the focused window, else the shell itself.
+    /// The active application name: the frontmost overlay, else the focused
+    /// client window, else the shell itself.
     fn menubar_title(&self) -> String {
+        if self.calendar_open() {
+            return "Calendar".to_string();
+        }
+        if self.shell.explorer_open() {
+            return "Files".to_string();
+        }
+        if self.shell.themes_open() {
+            return "Water settings".to_string();
+        }
+        if self.shell.audio_open() {
+            return "Audio".to_string();
+        }
+        if self.task_manager_open() {
+            return "Task Manager".to_string();
+        }
+        if self.shell.overlay().is_some() {
+            return "Aether OS".to_string();
+        }
         self.shell
             .focused_window()
             .and_then(|id| {

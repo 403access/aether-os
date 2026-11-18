@@ -74,12 +74,17 @@ impl App {
                 rect.x + 9,
                 y + 12,
                 0x100,
-                if open { tokens.text } else { tokens.text_soft },
+                if open { tokens.text } else { tokens.soft },
             ));
         }
 
-        // Sync pill.
+        // Sync pill: 50% surface fill with a hairline border.
         if let Some(buffer) = self.chrome_round(bar.sync.width, bar.sync.height, 5, tokens.surface_a(128))
+        {
+            panels.push((buffer, bar.sync.x, bar.sync.y));
+        }
+        if let Some(buffer) =
+            self.chrome_outline(bar.sync.width, bar.sync.height, 5, tokens.border(38))
         {
             panels.push((buffer, bar.sync.x, bar.sync.y));
         }
@@ -91,7 +96,7 @@ impl App {
             bar.sync.x + 20,
             y + 12,
             0,
-            tokens.text_soft,
+            tokens.soft,
         ));
 
         // Resource meters.
@@ -112,10 +117,10 @@ impl App {
                 meter.label.clone(),
                 label_x,
                 y + 8,
-                4,
+                6,
                 tokens.dim,
             ));
-            let meter_x = label_x + self.text_width(&meter.label, 4) as i32 + 4;
+            let meter_x = label_x + self.text_width(&meter.label, 6) as i32 + 4;
             if let Some(buffer) = self.chrome_round(20, 3, 2, [255, 255, 255, 26]) {
                 panels.push((buffer, meter_x, y + 12));
             }
@@ -134,8 +139,8 @@ impl App {
                 meter.value.clone(),
                 meter_x + 24,
                 y + 9,
-                5,
-                tokens.text_soft,
+                4,
+                tokens.soft,
             ));
         }
 

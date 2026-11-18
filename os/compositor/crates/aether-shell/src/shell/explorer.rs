@@ -9,21 +9,31 @@ use crate::model::palette::{palette_score, PaletteFile};
 use super::Shell;
 
 impl Shell {
-    /// Explorer panel rect, centred in the primary output.
+    /// Explorer window rect. Matches `.os-window--explorer`: 16 px from the
+    /// top-left of the work area, full width below 1360 px, 610 px tall at
+    /// 1280 x 800 so the dock stays visible.
     pub fn explorer_rect(&self) -> Rect {
-        self.primary_output()
+        let bounds = self
+            .primary_output()
             .map(|output| output.rect)
-            .unwrap_or_else(|| Rect::from_size(self.viewport))
+            .unwrap_or_else(|| Rect::from_size(self.viewport));
+        let width = if bounds.width <= 1360 {
+            bounds.width.saturating_sub(32)
+        } else {
+            (bounds.width.saturating_sub(336)).min(1080)
+        };
+        let height = (bounds.height.saturating_sub(190)).min(680);
+        Rect::new(bounds.x + 16, bounds.y + 54, width, height)
     }
 
-    /// Card below the explorer app bar and above its status bar.
+    /// Card below the explorer title bar, app bar and above its status bar.
     pub fn explorer_pane_rect(&self) -> Rect {
         let bounds = self.explorer_rect();
         Rect::new(
             bounds.x + 16,
-            bounds.y + 74,
+            bounds.y + 40 + 52 + 12,
             bounds.width.saturating_sub(32),
-            bounds.height.saturating_sub(74 + 52),
+            bounds.height.saturating_sub(40 + 52 + 12 + 32 + 12),
         )
     }
 

@@ -26,7 +26,7 @@ const GLYPH: u32 = 15;
 /// Menu button horizontal padding.
 const MENU_PAD: i32 = 9;
 /// Clock padding and the gap between date and time.
-const CLOCK_PAD: i32 = 8;
+const CLOCK_PAD: i32 = 10;
 const CLOCK_GAP: i32 = 7;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -377,17 +377,18 @@ pub fn layout(
         .iter()
         .map(|meter| {
             let value_min = if meter.label == "STORAGE" { 42 } else { 26 };
-            text(measure, &meter.label, 3)
+            text(measure, &meter.label, 6)
                 + 4
                 + 20
                 + 4
-                + text(measure, &meter.value, 3).max(value_min)
+                + text(measure, &meter.value, 4).max(value_min)
         })
         .collect();
-    let resources_width = 16
-        + meter_widths.iter().sum::<i32>()
-        + 8 * (meters.len().saturating_sub(1) as i32)
-        + 6;
+    // `.os-resource + .os-resource` adds 7 px padding and a 1 px divider on
+    // top of the 6 px flex gap.
+    let separators = meters.len().saturating_sub(1) as i32;
+    let resources_width =
+        16 + meter_widths.iter().sum::<i32>() + 8 * separators + 7 * separators + 6;
     let resources = Rect::new(
         network.x - ITEM_GAP - resources_width,
         top,
@@ -410,7 +411,7 @@ pub fn layout(
     for (meter, width) in meters.iter().zip(meter_widths.iter()) {
         let rect = Rect::new(meter_x, top, *width as u32, ITEM_HEIGHT);
         meters_with_rects.push((meter.clone(), rect));
-        meter_x += width + 8;
+        meter_x += width + 8 + 7;
     }
 
     let mut items = Vec::new();

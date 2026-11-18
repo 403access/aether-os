@@ -18,6 +18,8 @@ pub const HEADING_PX: f32 = 16.0;
 pub const TINY_PX: f32 = 9.0;
 /// Resource values and agenda times.
 pub const MICRO_PX: f32 = 10.0;
+/// Resource captions and other 8 px chrome labels.
+pub const CAPTION_PX: f32 = 8.0;
 
 pub struct FontRenderer {
     font: Font,

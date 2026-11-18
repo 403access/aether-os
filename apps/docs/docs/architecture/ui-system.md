@@ -14,13 +14,14 @@ not a widget toolkit with a plugin ecosystem.
 
 | Surface | Renderer | Input model | Lifetime |
 | --- | --- | --- | --- |
-| Top shortcut dock | shell scene graph | pointer | session |
-| Status bar | shell scene graph | pointer + shortcuts | session |
+| Menu bar | shell scene graph | pointer + shortcuts | session |
+| Desktop dock | shell scene graph | pointer | session |
 | Command palette | shell scene graph | modal keyboard | on demand |
 | Chat drawer | shell scene graph | text + shortcuts | session or on demand |
 | Audio overlay | shell scene graph | keyboard + pointer | on demand |
 | Themes app | shell scene graph | keyboard + pointer | on demand |
 | Task manager | shell scene graph | keyboard + pointer | on demand |
+| Calendar | shell scene graph | keyboard + pointer | on demand |
 | Agent sandboxes | shell scene graph | keyboard + pointer | on demand |
 
 The palette merges three application sources: XDG `.desktop` entries, Aether's

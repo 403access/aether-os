@@ -57,25 +57,40 @@ next/previous. `Ctrl+Alt+Shift+Tab` walks the MRU stack backwards.
 In Simple, the complete `Super` map remains available as a fallback, so existing
 muscle memory keeps working.
 
-## The top shortcut dock
+## The menu bar and dock
 
-The top-centre dock is the mouse-friendly mirror of the global shortcuts:
+The 38 px menu bar is permanent chrome, mirroring the Water OS concept:
 
-![Top shortcut dock](/img/smithay-topbar.png)
+![Menu bar and dock](/img/smithay-topbar.png)
 
-| Button | Opens |
+| Area | Action |
 | --- | --- |
-| Palette | `Super+Space` |
-| Terminal | `Super+Return` |
-| Files | `Super+E` |
-| Chat | `Super+C` |
-| Audio | `Super+A` |
-| Agents | `Super+B` |
-| Remote | `Super+R` |
-| Shortcuts | `Super+/` |
+| Brand mark | Keyboard cheat sheet (`Super+/`) |
+| File / View / Go / Window / Help | Popover menus for windows, themes and shortcuts |
+| Synced pill, CPU/RAM/STORAGE | Task manager |
+| Wi-Fi, Bluetooth, battery | Tray (reserved) |
+| Sound | Audio overlay (`Super+A`) |
+| Clock | Calendar app |
+| Moon | Cycle Water → Dark → Light |
+| Grid | Launcher palette (`Super+Space`) |
 
-Click any button. The dock hides while a surface is open so it never competes
-with the palette, explorer, chat, audio or Themes surfaces.
+The dock at the bottom edge mirrors the same applications: Explorer, Search,
+Settings, Terminal, Tide Radio, About, Trash and the design-system gallery.
+The Explorer is a floating window at 16/54 with its own title bar, so the dock
+and the sea stay visible while you work.
+
+## Calendar
+
+Click the menu bar clock (or choose Window ▸ Calendar) to open the Calendar.
+The month grid is always six rows, today is filled with the accent, selected
+days carry an accent border and days with agenda entries show a dot.
+
+| Key | Action |
+| --- | --- |
+| Arrow keys | Move the selection by a day or a week |
+| Page Up / Page Down | Previous / next month |
+| `t` | Jump to today |
+| `Esc` | Close |
 
 ## Global shortcuts
 

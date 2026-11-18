@@ -176,6 +176,37 @@ pub fn rounded_top(
     Some(buffer(width.max(1), height.max(1), &straight(&pixmap)))
 }
 
+/// 1 px rounded outline with a transparent interior.
+pub fn outline(
+    width: u32,
+    height: u32,
+    radius: f32,
+    border: [u8; 4],
+) -> Option<MemoryRenderBuffer> {
+    let mut pixmap = resvg::tiny_skia::Pixmap::new(width.max(1), height.max(1))?;
+    let mut paint = resvg::tiny_skia::Paint::default();
+    paint.set_color_rgba8(border[0], border[1], border[2], border[3]);
+    paint.anti_alias = true;
+    let path = rounded_path(
+        0.5,
+        0.5,
+        width.max(1) as f32 - 1.0,
+        height.max(1) as f32 - 1.0,
+        radius,
+    )?;
+    pixmap.stroke_path(
+        &path,
+        &paint,
+        &resvg::tiny_skia::Stroke {
+            width: 1.0,
+            ..Default::default()
+        },
+        resvg::tiny_skia::Transform::identity(),
+        None,
+    );
+    Some(buffer(width.max(1), height.max(1), &straight(&pixmap)))
+}
+
 /// Rounded fill used for selected rows, pills and badges.
 pub fn rounded(width: u32, height: u32, radius: f32, fill: [u8; 4]) -> Option<MemoryRenderBuffer> {
     let mut pixmap = resvg::tiny_skia::Pixmap::new(width.max(1), height.max(1))?;
@@ -373,7 +404,7 @@ pub fn icon_svg(name: &str, color: &str) -> Option<String> {
             r#"<rect x="1.2" y="4.4" width="10.6" height="9.4" rx="2.6"/><rect x="8.2" y="6.2" width="10.6" height="9.4" rx="2.6"/><path d="m9.4 11.4 1.6 1.6 3-3.4"/>"#
         }
         "gear" => {
-            r#"<circle cx="10" cy="10" r="2.7"/><path d="M10 2.4v2M10 15.6v2M2.4 10h2M15.6 10h2M4.6 4.6 6 6M14 14l1.4 1.4M15.4 4.6 14 6M6 14l-1.4 1.4"/>"#
+            r#"<path d="M8.4 2.6h3.2l.5 1.9 1.4.8 1.9-.6 1.6 2.7-1.4 1.4v1.6l1.4 1.4-1.6 2.7-1.9-.6-1.4.8-.5 1.9H8.4l-.5-1.9-1.4-.8-1.9.6L3 11.8l1.4-1.4V8.8L3 7.4l1.6-2.7 1.9.6 1.4-.8z"/><circle cx="10" cy="9.6" r="2.4"/>"#
         }
         "trash" => {
             r#"<path d="M3.4 5.4h13.2M8 5.4V3.9a1.1 1.1 0 0 1 1.1-1.1h1.8A1.1 1.1 0 0 1 12 3.9v1.5"/><path d="M5.4 5.4 6.2 17h7.6l.8-11.6"/><path d="M8.2 8.4v5.4M11.8 8.4v5.4"/>"#

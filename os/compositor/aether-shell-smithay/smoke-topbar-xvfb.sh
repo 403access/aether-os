@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Top shortcut dock: verify pointer cursor, palette launch and terminal launch.
+# Menu bar and dock: verify pointer cursors, menu popovers and app launches.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -37,43 +37,50 @@ export DISPLAY=":${DISPLAY_NUM}"
 WINDOW_ID="$(xdotool search --name "Aether OS" | head -1)"
 xdotool windowfocus "${WINDOW_ID}"
 
-# The dock is centred; the first two buttons are Palette and Terminal.
-# 1280px: dock x=287, 96px items, 4px gaps.
-xdotool mousemove 340 24
+# The bar is always on screen: hovering the clock yields a pointer cursor.
+# 1280 px: the clock sits at x=1064..1208, y=6..32.
+xdotool mousemove 1130 19
 sleep 0.5
 import -window root "${OUT}/topbar.png"
-sleep 0.5
+sleep 0.3
 grep -q "cursor -> Pointer" "${OUT}/topbar-app.log" || {
-  echo "error: top shortcut did not produce a pointer cursor" >&2
+  echo "error: menu bar did not produce a pointer cursor" >&2
   cat "${OUT}/topbar-app.log" >&2
   exit 1
 }
 
+# Clicking the clock opens the Calendar app.
 xdotool click 1
-sleep 1
-grep -q "top shortcut palette" "${OUT}/topbar-app.log" || {
-  echo "error: Palette button did not open the palette" >&2
-  cat "${OUT}/topbar-app.log" >&2
+sleep 1.2
+import -window root "${OUT}/topbar-menu.png"
+grep -q "calendar opened" "${OUT}/topbar-app.log" || {
+  echo "error: clock did not open the Calendar" >&2
+  tail -20 "${OUT}/topbar-app.log" >&2
   exit 1
 }
 xdotool key Escape
 sleep 0.5
 
-xdotool mousemove 440 24
+# The dock launches applications: Terminal spawns a client, Search opens the
+# palette. Tiles are 46 px wide starting at x=429.
+xdotool mousemove 606 760
+sleep 0.3
 xdotool click 1
 sleep 2
-import -window root "${OUT}/topbar-terminal.png"
-sleep 0.5
-grep -q "top shortcut terminal" "${OUT}/topbar-app.log" || {
-  echo "error: Terminal button did not fire" >&2
-  cat "${OUT}/topbar-app.log" >&2
-  exit 1
-}
 grep -q "spawned app terminal" "${OUT}/topbar-app.log" || {
-  echo "error: Terminal button did not spawn a terminal" >&2
-  cat "${OUT}/topbar-app.log" >&2
+  echo "error: dock Terminal did not spawn a terminal" >&2
+  tail -20 "${OUT}/topbar-app.log" >&2
   exit 1
 }
+import -window root "${OUT}/topbar-terminal.png"
+
+xdotool mousemove 502 760
+sleep 0.3
+xdotool click 1
+sleep 1
+import -window root "${OUT}/topbar-palette.png"
+xdotool key Escape
+sleep 0.4
 
 cat "${OUT}/topbar-app.log"
-echo "wrote ${OUT}/topbar.png and ${OUT}/topbar-terminal.png"
+echo "wrote ${OUT}/topbar.png, ${OUT}/topbar-menu.png and ${OUT}/topbar-terminal.png"

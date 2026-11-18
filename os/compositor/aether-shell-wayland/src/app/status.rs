@@ -23,7 +23,8 @@ impl App {
             2 => aether_text::font::TITLE_PX,
             3 => aether_text::font::HEADING_PX,
             4 => aether_text::font::TINY_PX,
-            _ => aether_text::font::MICRO_PX,
+            5 => aether_text::font::MICRO_PX,
+            _ => aether_text::font::CAPTION_PX,
         }
     }
 

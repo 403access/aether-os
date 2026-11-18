@@ -13,11 +13,12 @@ impl Shell {
             .map(|output| output.rect)
             .unwrap_or_else(|| Rect::from_size(self.viewport));
         let width = 400.min(bounds.width.saturating_sub(32)).max(1);
+        // Start below the 38 px menu bar and stop above the dock.
         Rect::new(
             bounds.right() as i32 - width as i32 - 16,
-            bounds.y + 20,
+            bounds.y + 54,
             width,
-            bounds.height.saturating_sub(40),
+            bounds.height.saturating_sub(54 + 86),
         )
     }
 

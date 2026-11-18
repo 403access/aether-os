@@ -140,6 +140,7 @@ pub struct App {
     pub(crate) chrome_rounds: BudgetCache<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_outlines: BudgetCache<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_tops: BudgetCache<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
+    pub(crate) chrome_bottoms: BudgetCache<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_background:
         BudgetCache<(u32, u32), (crate::render::BackgroundStyle, Arc<MemoryRenderBuffer>)>,
     pub(crate) cursor_buffers: HashMap<CursorShape, CursorCacheEntry>,
@@ -256,6 +257,7 @@ impl App {
             chrome_rounds: BudgetCache::new(ROUND_CACHE_BYTES),
             chrome_outlines: BudgetCache::new(ROUND_CACHE_BYTES),
             chrome_tops: BudgetCache::new(TOP_CACHE_BYTES),
+            chrome_bottoms: BudgetCache::new(TOP_CACHE_BYTES),
             chrome_background: BudgetCache::new(BACKGROUND_CACHE_BYTES),
             cursor_buffers: HashMap::new(),
             cursor_theme: Some(CursorTheme::discover()),

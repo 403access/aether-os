@@ -110,6 +110,28 @@ impl App {
         Some(buffer)
     }
 
+    pub(crate) fn chrome_round_bottom(
+        &mut self,
+        width: u32,
+        height: u32,
+        radius: u32,
+        fill: [u8; 4],
+    ) -> Option<Arc<MemoryRenderBuffer>> {
+        let key = (width, height, radius, fill);
+        if let Some(buffer) = self.chrome_bottoms.get(&key) {
+            return Some(buffer.clone());
+        }
+        let buffer = Arc::new(primitives::rounded_bottom(
+            width,
+            height,
+            radius as f32,
+            fill,
+        )?);
+        self.chrome_bottoms
+            .insert(key, buffer.clone(), rgba_bytes(width, height));
+        Some(buffer)
+    }
+
     pub(crate) fn chrome_round(
         &mut self,
         width: u32,

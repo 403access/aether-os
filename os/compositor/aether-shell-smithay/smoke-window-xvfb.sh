@@ -116,9 +116,9 @@ if ! grep -q "window snapped id=2 zone=LeftHalf" "${OUT}/window-app.log"; then
   cat "${OUT}/window-app.log" >&2
   exit 1
 fi
-# Halves tile inside the work area: 16 px outer gap and the 48 px dock
-# reserve, so a 1280x800 output gives (16, 64, 624, 720).
-if ! grep -q "window moved id=2 rect=Some(Rect { x: 16, y: 64, width: 624, height: 720 })" "${OUT}/window-app.log"; then
+# Halves tile inside the work area: 16 px outer gap under the 38 px menu
+# bar, so a 1280x800 output gives (16, 54, 624, 730).
+if ! grep -q "window moved id=2 rect=Some(Rect { x: 16, y: 54, width: 624, height: 730 })" "${OUT}/window-app.log"; then
   echo "error: snapped window does not occupy the left half" >&2
   cat "${OUT}/window-app.log" >&2
   exit 1

@@ -176,6 +176,43 @@ pub fn rounded_top(
     Some(buffer(width.max(1), height.max(1), &straight(&pixmap)))
 }
 
+/// Rounded bottom corners with a square top edge, used for status strips.
+pub fn rounded_bottom(
+    width: u32,
+    height: u32,
+    radius: f32,
+    fill: [u8; 4],
+) -> Option<MemoryRenderBuffer> {
+    let mut pixmap = resvg::tiny_skia::Pixmap::new(width.max(1), height.max(1))?;
+    let mut paint = resvg::tiny_skia::Paint::default();
+    paint.set_color_rgba8(fill[0], fill[1], fill[2], fill[3]);
+    let r = radius.min(width as f32 / 2.0).min(height as f32);
+    let (x, y, w, h) = (
+        0.5f32,
+        0.5f32,
+        width.max(1) as f32 - 1.0,
+        height.max(1) as f32 - 1.0,
+    );
+    let mut pb = resvg::tiny_skia::PathBuilder::new();
+    pb.move_to(x, y);
+    pb.line_to(x + w, y);
+    pb.line_to(x + w, y + h - r);
+    pb.quad_to(x + w, y + h, x + w - r, y + h);
+    pb.line_to(x + r, y + h);
+    pb.quad_to(x, y + h, x, y + h - r);
+    pb.close();
+    if let Some(path) = pb.finish() {
+        pixmap.fill_path(
+            &path,
+            &paint,
+            resvg::tiny_skia::FillRule::Winding,
+            resvg::tiny_skia::Transform::identity(),
+            None,
+        );
+    }
+    Some(buffer(width.max(1), height.max(1), &straight(&pixmap)))
+}
+
 /// 1 px rounded outline with a transparent interior.
 pub fn outline(
     width: u32,

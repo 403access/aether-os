@@ -41,18 +41,17 @@ impl App {
             ) {
                 panels.push((buffer, bounds.x, bounds.y));
             }
-            let rim = accent_f;
-            let rim_soft = [rim[0], rim[1], rim[2], 0.47];
-            chrome.push((AetherRect::new(bounds.x, bounds.y, bounds.width, 1), rim_soft));
-            chrome.push((
-                AetherRect::new(bounds.x, bounds.y + height - 1, bounds.width, 1),
-                rim_soft,
-            ));
-            chrome.push((AetherRect::new(bounds.x, bounds.y, 1, bounds.height), rim_soft));
-            chrome.push((
-                AetherRect::new(bounds.x + width - 1, bounds.y, 1, bounds.height),
-                rim_soft,
-            ));
+            // Accent rim: one 14 px-radius outline so the window reads as the
+            // same rounded panel as `.os-window.is-focused`.
+            let accent = tokens.accent(255);
+            if let Some(buffer) = self.chrome_outline(
+                bounds.width.max(1),
+                bounds.height.max(1),
+                14,
+                [accent[0], accent[1], accent[2], 120],
+            ) {
+                panels.push((buffer, bounds.x, bounds.y));
+            }
             chrome.push((
                 AetherRect::new(bounds.x, bounds.y + 39, bounds.width, 1),
                 tokens.surface_a(120).map(|value| value as f32 / 255.0),
@@ -163,12 +162,12 @@ impl App {
             let pane_icon = pane.x + 16;
             let pane_y = pane.y + 14;
             display_icons.push(("folder".into(), 22, tokens.accent(255), pane_icon, pane_y));
-            labels.push(("Files".into(), pane.x + 48, pane.y + 14, 3, tokens.text));
+            labels.push(("Local index".into(), pane.x + 48, pane.y + 14, 3, tokens.text));
             labels.push((
                 "All indexed roots".into(),
                 pane.x + 48,
                 pane.y + 34,
-                0,
+                4,
                 tokens.dim,
             ));
             let count = format!("{} files", self.shell.explorer_match_count());
@@ -295,6 +294,13 @@ impl App {
             ));
             // Status bar.
             let status_y = bounds.y + height - 32;
+            // Status strip: square top edge, rounded bottom corners so the
+            // window rim reads as one rounded panel.
+            if let Some(buffer) =
+                self.chrome_round_bottom(bounds.width.max(1), 32, 13, tokens.surface_a(242))
+            {
+                panels.push((buffer, bounds.x, status_y));
+            }
             let selected_file = self.shell.explorer_selected_file();
             if let Some(file) = selected_file {
                 labels.push((

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Workspace picker: start the compositor under Xvfb, click the second
-# workspace indicator with xdotool and assert the shell switched workspace.
+# Workspace switching: start the compositor under Xvfb, switch workspaces
+# from the keyboard and assert the shell moved and came back.
 #
 #   nix develop .#smithay -c ./os/compositor/aether-shell-smithay/smoke-picker-xvfb.sh
 #
@@ -46,15 +46,24 @@ DISPLAY=":${DISPLAY_NUM}" "${BIN}" >"${OUT}/picker-app.log" 2>&1 &
 APP_PID=$!
 sleep "${SETTLE}"
 
-# The second workspace chip starts at x=86 and spans 66x26. Clicking it
-# switches to the empty "code" workspace.
+# Workspace indicators moved out of the chrome with the Water menu bar.
+# Switching stays on Super+1..3 and in the palette.
 export DISPLAY=":${DISPLAY_NUM}"
-xdotool mousemove 100 20 click 1
+xdotool windowfocus "$(xdotool search --name "Aether OS" | head -1)"
+xdotool key super+2
 sleep 1
 DISPLAY=":${DISPLAY_NUM}" import -window root "${OUT}/workspace-picker.png"
 
 if ! grep -q "workspace -> 1" "${OUT}/picker-app.log"; then
-  echo "error: picker click did not switch to workspace 1" >&2
+  echo "error: Super+2 did not switch to workspace 1" >&2
+  cat "${OUT}/picker-app.log" >&2
+  exit 1
+fi
+
+xdotool key super+1
+sleep 1
+if ! grep -q "workspace -> 0" "${OUT}/picker-app.log"; then
+  echo "error: Super+1 did not switch back to workspace 0" >&2
   cat "${OUT}/picker-app.log" >&2
   exit 1
 fi

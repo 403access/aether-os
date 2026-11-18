@@ -39,10 +39,19 @@ impl App {
     }
 
     pub(crate) fn task_rect(&self) -> AetherRect {
-        self.shell
+        let bounds = self
+            .shell
             .primary_output()
             .map(|output| output.rect)
-            .unwrap_or_else(|| AetherRect::new(0, 0, 1280, 800))
+            .unwrap_or_else(|| AetherRect::new(0, 0, 1280, 800));
+        // Below the menu bar and above the dock: the panel used to own the
+        // full output when the top dock hid itself for overlays.
+        AetherRect::new(
+            bounds.x,
+            bounds.y + 38,
+            bounds.width,
+            bounds.height.saturating_sub(38 + 74),
+        )
     }
 
     pub(crate) fn task_pane_rect(&self) -> AetherRect {

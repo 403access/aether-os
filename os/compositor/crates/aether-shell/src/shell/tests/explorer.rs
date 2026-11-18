@@ -19,11 +19,14 @@ fn shell_with_files(count: usize) -> Shell {
 fn virtualises_ten_thousand_rows() {
     let mut shell = shell_with_files(10_000);
     let visible = shell.explorer_visible_rows();
-    assert!(visible >= 14);
+    // The floating explorer window is 610 px tall at 1280 x 800, which leaves
+    // eleven 30 px rows below the app bar, pane header and column header.
+    assert!(visible >= 11);
     assert_eq!(shell.visible_explorer_rows().len(), visible);
     assert_eq!(shell.explorer_match_count(), 10_000);
-    assert!(shell.explorer_move(13));
-    assert_eq!(shell.explorer_selected(), 13);
+    let last = visible as isize - 1;
+    assert!(shell.explorer_move(last));
+    assert_eq!(shell.explorer_selected(), last as usize);
     assert!(shell.explorer_move(1));
     assert_eq!(shell.explorer_scroll(), 1);
     assert!(shell.explorer_page(1));

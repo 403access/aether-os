@@ -239,7 +239,7 @@ impl Shell {
                 action: PaletteAction::OpenCalendar,
             };
             if let Some(score) = palette_score(&query, &calendar.title) {
-                scored.push((score, window_offset + self.windows.len() + 2, calendar));
+                scored.push((score, window_offset + self.windows.len() + 1, calendar));
             }
             let close = PaletteEntry {
                 title: "Close palette".to_string(),
@@ -247,7 +247,7 @@ impl Shell {
                 action: PaletteAction::Close,
             };
             if let Some(score) = palette_score(&query, &close.title) {
-                scored.push((score, window_offset + self.windows.len() + 1, close));
+                scored.push((score, window_offset + self.windows.len() + 2, close));
             }
         }
 

@@ -102,27 +102,28 @@ impl Shell {
     }
 
     fn refresh_explorer(&self, explorer: &mut ExplorerState) {
-        if !explorer.dirty {
-            return;
+        // The row window follows the current pane height, not the default the
+        // state was created with: the explorer window is resizable.
+        explorer.visible = self.explorer_visible_rows();
+        if explorer.dirty {
+            let query = explorer.query.to_lowercase();
+            explorer.matches = self
+                .files
+                .iter()
+                .enumerate()
+                .filter_map(|(index, file)| {
+                    palette_score(&query, &file.name).map(|score| (score, index))
+                })
+                .collect::<Vec<_>>()
+                .into_iter()
+                .map(|(_, index)| index)
+                .collect();
+            explorer.dirty = false;
+            if explorer.selected >= explorer.matches.len() {
+                explorer.selected = explorer.matches.len().saturating_sub(1);
+            }
         }
-        let query = explorer.query.to_lowercase();
-        explorer.matches = self
-            .files
-            .iter()
-            .enumerate()
-            .filter_map(|(index, file)| {
-                palette_score(&query, &file.name).map(|score| (score, index))
-            })
-            .collect::<Vec<_>>()
-            .into_iter()
-            .map(|(_, index)| index)
-            .collect();
-        explorer.dirty = false;
-        if explorer.selected >= explorer.matches.len() {
-            explorer.selected = explorer.matches.len().saturating_sub(1);
-        }
-        let visible = self.explorer_visible_rows();
-        let max_scroll = explorer.matches.len().saturating_sub(visible);
+        let max_scroll = explorer.matches.len().saturating_sub(explorer.visible);
         explorer.scroll = explorer.scroll.min(max_scroll);
     }
 

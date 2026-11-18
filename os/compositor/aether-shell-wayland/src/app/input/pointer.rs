@@ -378,6 +378,19 @@ impl App {
                             println!("aether-shell: window close requested id={id}");
                         }
                     }
+                    FrameHit::Minimize => {
+                        if mouse_button == Some(MouseButton::Left) {
+                            println!("aether-shell: window minimize requested id={id}");
+                        }
+                    }
+                    FrameHit::Maximize => {
+                        if mouse_button == Some(MouseButton::Left)
+                            && self.shell.toggle_maximized(id)
+                        {
+                            self.configure_all();
+                            println!("aether-shell: window maximize toggled id={id}");
+                        }
+                    }
                     FrameHit::Title => {
                         if mouse_button == Some(MouseButton::Left) {
                             self.title_drag = Some(TitleDrag {

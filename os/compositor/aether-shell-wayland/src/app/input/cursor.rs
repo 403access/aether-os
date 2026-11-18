@@ -97,7 +97,7 @@ pub(crate) fn cursor_for(state: &App) -> CursorShape {
     }
     if let Some((_, hit)) = state.window_frame_hit(point) {
         return match hit {
-            FrameHit::Close => CursorShape::Pointer,
+            FrameHit::Close | FrameHit::Minimize | FrameHit::Maximize => CursorShape::Pointer,
             FrameHit::Title => CursorShape::Arrow,
         };
     }

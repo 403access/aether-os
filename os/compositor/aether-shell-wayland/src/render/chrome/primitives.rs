@@ -353,10 +353,28 @@ pub fn icon_svg(name: &str, color: &str) -> Option<String> {
         "remote" => {
             r#"<rect x="2.5" y="3.5" width="15" height="10" rx="2"/><path d="M7 16.5h6M10 13.5v3"/><path d="m15 8 2 2-2 2"/>"#
         }
+        "calendar" => {
+            r#"<rect x="2.8" y="4.2" width="14.4" height="13" rx="2.2"/><path d="M2.8 8h14.4M6.6 2.6v3M13.4 2.6v3"/><path d="M6.2 11h1.6M9.2 11h1.6M12.2 11h1.6M6.2 14h1.6M9.2 14h1.6"/>"#
+        }
+        "wifi" => {
+            r#"<path d="M2.8 7.4a11 11 0 0 1 14.4 0M5.4 10.4a7 7 0 0 1 9.2 0M8 13.4a3.2 3.2 0 0 1 4 0"/><circle cx="10" cy="16.2" r="1" fill="{color}" stroke="none"/>"#
+        }
+        "bluetooth" => {
+            r#"<path d="M10 2.5v15l-4-3.2M10 2.5l4 3.2-8 6.4M6 7.4l8 6.4"/>"#
+        }
+        "battery" => {
+            r#"<rect x="2.2" y="6.6" width="13.6" height="6.8" rx="1.8"/><path d="M18 8.8v2.4"/><rect x="4" y="8.2" width="9.4" height="3.6" rx="0.9" fill="{color}" stroke="none"/>"#
+        }
+        "moon" => r#"<path d="M16.8 12A7 7 0 0 1 8 3.2a7 7 0 1 0 8.8 8.8z"/>"#,
+        "drop" => r#"<path d="M10 2.4s-5 5.2-5 8.7a5 5 0 0 0 10 0C15 7.6 10 2.4 10 2.4z"/>"#,
+        "sliders" => {
+            r#"<path d="M3.5 6h13M3.5 14h13"/><circle cx="7.5" cy="6" r="2"/><circle cx="12.5" cy="14" r="2"/>"#
+        }
         _ => return None,
     };
     Some(format!(
-        r#"<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="{color}" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">{body}</svg>"#
+        r#"<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="{color}" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">{}</svg>"#,
+        body.replace("{color}", color)
     ))
 }
 

@@ -1,9 +1,10 @@
-//! Compositor-drawn Aether frame around every client toplevel.
+//! Compositor-drawn Water frame around every client toplevel.
 //!
-//! Client apps only own their content surface. The title bar, app mark, title,
-//! focus emphasis and close affordance are drawn by the shell, so a foot
+//! Client apps only own their content surface. The title bar, traffic lights,
+//! app mark, title and focus emphasis are drawn by the shell, so a foot
 //! terminal looks like the first-party surfaces instead of arriving with its
-//! own window chrome.
+//! own window chrome. Geometry mirrors `.os-titlebar`, `.os-lights` and
+//! `.os-app-mark` in `design-system/os/os.css`.
 
 use aether_geometry::Rect as AetherRect;
 use aether_shell::theme::ThemeTokens;
@@ -17,8 +18,17 @@ use crate::app::{App, WINDOW_FRAME_HEIGHT};
 use crate::render::element::AetherRenderElement;
 use crate::render::helpers::truncate;
 
-const TITLE_RADIUS: u32 = 8;
-const CLOSE_RADIUS: u32 = 6;
+/// `.os-window { border-radius: var(--ds-radius-lg) }`.
+const TITLE_RADIUS: u32 = 14;
+/// `.os-app-mark` is a 23 px tile; `.os-app-mark .icon` is 13 px.
+const APP_MARK: u32 = 23;
+const APP_MARK_GLYPH: u32 = 13;
+/// `.os-light` colours, left to right.
+const LIGHT_COLORS: [[u8; 4]; 3] = [
+    [0xff, 0x8a, 0x92, 255],
+    [0xff, 0xd2, 0x7a, 255],
+    [0x5e, 0xf2, 0xb0, 255],
+];
 
 impl App {
     /// Draw the frame above one client surface. Called from the window
@@ -40,10 +50,12 @@ impl App {
         let width = rect.width.max(1);
         let height = WINDOW_FRAME_HEIGHT as u32;
 
+        // Title bar fill: focused windows are brighter, unfocused ones sit
+        // back. `.os-window:not(.is-focused) .os-titlebar { opacity: .78 }`.
         let fill = if focused {
-            tokens.header
+            [10, 51, 66, 255]
         } else {
-            tokens.surface
+            [8, 42, 55, 255]
         };
         if let Some(buffer) = self.chrome_round_top(width, height, TITLE_RADIUS, fill) {
             if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
@@ -59,12 +71,15 @@ impl App {
             }
         }
 
-        // A thin accent rule marks the focused window without adding a full
-        // border around the client content.
-        let rule = tokens
-            .accent(if focused { 120 } else { 36 })
-            .map(|value| value as f32 / 255.0);
-        let rule_buffer = SolidColorBuffer::new((width as i32, 1), rule);
+        // Focused windows carry the accent rim along the top edge and down the
+        // sides; unfocused windows use the neutral line.
+        let rim = if focused {
+            tokens.accent(120)
+        } else {
+            tokens.border(56)
+        };
+        let rim_f = rim.map(|value| value as f32 / 255.0);
+        let rule_buffer = SolidColorBuffer::new((width as i32, 1), rim_f);
         elements.push(AetherRenderElement::from(
             SolidColorRenderElement::from_buffer(
                 &rule_buffer,
@@ -74,70 +89,28 @@ impl App {
                 Kind::Unspecified,
             ),
         ));
-
-        let icon = window_icon(title);
-        if let Some(buffer) = self.chrome_icon(
-            icon,
-            15,
-            if focused {
-                tokens.accent(255)
-            } else {
-                tokens.dim
-            },
-        ) {
-            if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
-                renderer,
-                ((x + 10) as f64, (y + 9) as f64),
-                &buffer,
-                None,
-                None,
-                None,
-                Kind::Unspecified,
-            ) {
-                elements.push(AetherRenderElement::from(element));
-            }
-        }
-
-        let available = (width as i32 - 78).max(28);
-        let mut label = title.to_string();
-        if self.text_width(&label, 0) as i32 > available {
-            let mut limit = title.chars().count();
-            while limit > 4 && self.text_width(&truncate(title, limit), 0) as i32 > available {
-                limit -= 1;
-            }
-            label = truncate(title, limit);
-        }
-        self.push_label(
-            renderer,
-            elements,
-            &label,
-            (x + 34, y + 11),
-            0,
-            if focused { tokens.text } else { tokens.soft },
-        );
-
-        if let Some(close) = self.window_close_rect(id) {
-            let close_x = close.x - offset.0;
-            let close_y = close.y - offset.1;
-            if let Some(buffer) =
-                self.chrome_round(close.width, close.height, CLOSE_RADIUS, tokens.base_a(200))
-            {
-                if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
-                    renderer,
-                    (close_x as f64, close_y as f64),
-                    &buffer,
-                    None,
-                    None,
-                    None,
+        let side = SolidColorBuffer::new((1, height as i32), rim_f);
+        for side_x in [x, x + width as i32 - 1] {
+            elements.push(AetherRenderElement::from(
+                SolidColorRenderElement::from_buffer(
+                    &side,
+                    (side_x, y),
+                    1.0f64,
+                    1.0,
                     Kind::Unspecified,
-                ) {
-                    elements.push(AetherRenderElement::from(element));
-                }
-                if let Some(icon) = self.chrome_icon("close", 12, tokens.dim) {
+                ),
+            ));
+        }
+
+        // Traffic lights. `.os-light` is an 11 px disc with a dark hairline.
+        if let Some(lights) = self.window_light_rects(id) {
+            for (light, color) in lights.iter().zip(LIGHT_COLORS) {
+                let dot = self.chrome_round(light.width, light.height, light.width / 2, color);
+                if let Some(buffer) = dot {
                     if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
                         renderer,
-                        ((close_x + 4) as f64, (close_y + 4) as f64),
-                        &icon,
+                        ((light.x - offset.0) as f64, (light.y - offset.1) as f64),
+                        &buffer,
                         None,
                         None,
                         None,
@@ -148,14 +121,84 @@ impl App {
                 }
             }
         }
+
+        // App mark: 23 px rounded tile, 30% accent border over a 14% wash.
+        let mark_x = x + 66;
+        let mark_y = y + (height as i32 - APP_MARK as i32) / 2;
+        let accent = tokens.accent(255);
+        if let Some(buffer) = self.chrome_round(
+            APP_MARK,
+            APP_MARK,
+            5,
+            [accent[0], accent[1], accent[2], 36],
+        ) {
+            if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
+                renderer,
+                (mark_x as f64, mark_y as f64),
+                &buffer,
+                None,
+                None,
+                None,
+                Kind::Unspecified,
+            ) {
+                elements.push(AetherRenderElement::from(element));
+            }
+        }
+        if let Some(buffer) = self.chrome_icon(app_icon(title), APP_MARK_GLYPH, accent) {
+            if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
+                renderer,
+                (
+                    (mark_x + (APP_MARK as i32 - APP_MARK_GLYPH as i32) / 2) as f64,
+                    (mark_y + (APP_MARK as i32 - APP_MARK_GLYPH as i32) / 2) as f64,
+                ),
+                &buffer,
+                None,
+                None,
+                None,
+                Kind::Unspecified,
+            ) {
+                elements.push(AetherRenderElement::from(element));
+            }
+        }
+
+        // Title and subtitle: `<b>title</b><span class="os-titlebar__sub">sub</span>`.
+        let text_x = mark_x + APP_MARK as i32 + 8;
+        let text_y = y + (height as i32 - 14) / 2;
+        let subtitle = app_subtitle(title);
+        let subtitle_width = subtitle
+            .map(|sub| self.text_width(sub, 0) as i32 + 8)
+            .unwrap_or(0);
+        let available = (x + width as i32 - 12 - subtitle_width - text_x).max(28);
+        let mut label = title.to_string();
+        if self.text_width(&label, 1) as i32 > available {
+            let mut limit = title.chars().count();
+            while limit > 4 && self.text_width(&truncate(title, limit), 1) as i32 > available {
+                limit -= 1;
+            }
+            label = truncate(title, limit);
+        }
+        self.push_label(
+            renderer,
+            elements,
+            &label,
+            (text_x, text_y),
+            0x100,
+            if focused { tokens.text } else { tokens.soft },
+        );
+        if let Some(subtitle) = subtitle {
+            let sub_x = text_x + self.text_width(&label, 1) as i32 + 8;
+            self.push_label(renderer, elements, subtitle, (sub_x, text_y), 0, tokens.dim);
+        }
     }
 }
 
 /// Pick a design-system mark for a client. Titles are the only metadata the
 /// compositor has today, so this is intentionally a coarse mapping.
-fn window_icon(title: &str) -> &'static str {
+fn app_icon(title: &str) -> &'static str {
     let title = title.to_ascii_lowercase();
-    if title.contains("term") {
+    if title.contains("calendar") {
+        "calendar"
+    } else if title.contains("term") {
         "terminal"
     } else if title.contains("browser")
         || title.contains("firefox")
@@ -170,14 +213,43 @@ fn window_icon(title: &str) -> &'static str {
     }
 }
 
+/// The dim second line in `.os-titlebar__title`. First-party windows describe
+/// themselves; a bare client title has no subtitle.
+fn app_subtitle(title: &str) -> Option<&'static str> {
+    let title = title.to_ascii_lowercase();
+    if title.contains("calendar") {
+        Some("Month at a glance")
+    } else if title.contains("term") {
+        Some("Shell session")
+    } else if title.contains("task") {
+        Some("Live system processes")
+    } else if title.contains("file") || title.contains("explor") {
+        Some("Two-pane filesystem explorer")
+    } else if title.contains("water settings") {
+        Some("Water theme and effects")
+    } else if title.contains("audio") {
+        Some("Outputs, inputs and presets")
+    } else {
+        None
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::window_icon;
+    use super::{app_icon, app_subtitle};
 
     #[test]
     fn terminal_titles_get_the_terminal_mark() {
-        assert_eq!(window_icon("Wayland Terminal"), "terminal");
-        assert_eq!(window_icon("bash"), "grid");
-        assert_eq!(window_icon("Files"), "folder");
+        assert_eq!(app_icon("Wayland Terminal"), "terminal");
+        assert_eq!(app_icon("bash"), "grid");
+        assert_eq!(app_icon("Files"), "folder");
+        assert_eq!(app_icon("Calendar"), "calendar");
+    }
+
+    #[test]
+    fn first_party_windows_have_a_subtitle() {
+        assert_eq!(app_subtitle("Calendar"), Some("Month at a glance"));
+        assert_eq!(app_subtitle("Wayland Terminal"), Some("Shell session"));
+        assert_eq!(app_subtitle("bash"), None);
     }
 }

@@ -8,15 +8,21 @@ use smithay::utils::Size as SSize;
 use super::App;
 
 /// Height of the compositor-drawn title bar above a client surface.
-pub(crate) const WINDOW_FRAME_HEIGHT: i32 = 34;
-/// Close affordance size inside the title bar.
-const WINDOW_CLOSE_SIZE: i32 = 20;
+/// Matches `.os-titlebar` in the Water OS demo.
+pub(crate) const WINDOW_FRAME_HEIGHT: i32 = 40;
+/// Traffic-light diameter and the gap between them (`.os-light`).
+pub(crate) const WINDOW_LIGHT_SIZE: i32 = 11;
+const WINDOW_LIGHT_GAP: i32 = 6;
+/// Distance from the window edge to the first light (`.os-titlebar` padding).
+const WINDOW_LIGHT_INSET: i32 = 11;
 
 /// Which part of a client window frame a pointer landed on.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum FrameHit {
     Title,
     Close,
+    Minimize,
+    Maximize,
 }
 
 impl App {
@@ -43,32 +49,52 @@ impl App {
         ))
     }
 
-    /// Close affordance inside the frame, if the window has a frame.
-    pub(crate) fn window_close_rect(&self, id: WindowId) -> Option<AetherRect> {
+    /// The three traffic lights of a framed window, left to right:
+    /// close, minimise, maximise.
+    pub(crate) fn window_light_rects(&self, id: WindowId) -> Option<[AetherRect; 3]> {
         let window = self.window_info(id)?;
         if window.fullscreen {
             return None;
         }
-        Some(AetherRect::new(
-            window.rect.right() as i32 - WINDOW_CLOSE_SIZE - 10,
-            window.rect.y + (WINDOW_FRAME_HEIGHT - WINDOW_CLOSE_SIZE) / 2,
-            WINDOW_CLOSE_SIZE as u32,
-            WINDOW_CLOSE_SIZE as u32,
-        ))
+        let y = window.rect.y + (WINDOW_FRAME_HEIGHT - WINDOW_LIGHT_SIZE) / 2;
+        let size = WINDOW_LIGHT_SIZE as u32;
+        let step = WINDOW_LIGHT_SIZE + WINDOW_LIGHT_GAP;
+        Some([
+            AetherRect::new(window.rect.x + WINDOW_LIGHT_INSET, y, size, size),
+            AetherRect::new(window.rect.x + WINDOW_LIGHT_INSET + step, y, size, size),
+            AetherRect::new(
+                window.rect.x + WINDOW_LIGHT_INSET + step * 2,
+                y,
+                size,
+                size,
+            ),
+        ])
     }
 
-    /// Whether a point is on a client window's title bar or its close button.
+    /// Whether a point is on a client window's title bar or one of its lights.
     pub(crate) fn window_frame_hit(&self, point: AetherPoint) -> Option<(WindowId, FrameHit)> {
         let id = self.shell.window_at(point)?;
         let window = self.window_info(id)?;
         if window.fullscreen {
             return None;
         }
-        if self
-            .window_close_rect(id)
-            .is_some_and(|rect| rect.contains(point))
-        {
-            return Some((id, FrameHit::Close));
+        if let Some(lights) = self.window_light_rects(id) {
+            for (rect, hit) in lights
+                .iter()
+                .zip([FrameHit::Close, FrameHit::Minimize, FrameHit::Maximize])
+            {
+                // A light is a small target: grow it by 3 px on every side so
+                // it is reachable without changing the drawn size.
+                let target = AetherRect::new(
+                    rect.x - 3,
+                    rect.y - 3,
+                    rect.width + 6,
+                    rect.height + 6,
+                );
+                if target.contains(point) {
+                    return Some((id, hit));
+                }
+            }
         }
         (point.y < window.rect.y + WINDOW_FRAME_HEIGHT).then_some((id, FrameHit::Title))
     }

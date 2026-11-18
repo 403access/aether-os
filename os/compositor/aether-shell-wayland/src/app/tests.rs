@@ -78,14 +78,26 @@ fn client_frames_inset_content_and_hit_the_title_bar() {
         rect.height.saturating_sub(WINDOW_FRAME_HEIGHT as u32)
     );
 
-    let title = AetherPoint::new(rect.x + 20, rect.y + 5);
+    let title = AetherPoint::new(rect.x + 120, rect.y + 5);
     assert_eq!(app.window_frame_hit(title), Some((id, FrameHit::Title)));
     let body = AetherPoint::new(rect.x + 20, content.y + 5);
     assert_eq!(app.window_frame_hit(body), None);
 
-    let close = app.window_close_rect(id).expect("close rect");
-    let center = AetherPoint::new(close.x + 2, close.y + 2);
-    assert_eq!(app.window_frame_hit(center), Some((id, FrameHit::Close)));
+    let lights = app.window_light_rects(id).expect("light rects");
+    assert_eq!(lights[0].width, 11);
+    let at = |rect: AetherRect| AetherPoint::new(rect.x + rect.width as i32 / 2, rect.y + 5);
+    assert_eq!(app.window_frame_hit(at(lights[0])), Some((id, FrameHit::Close)));
+    assert_eq!(
+        app.window_frame_hit(at(lights[1])),
+        Some((id, FrameHit::Minimize))
+    );
+    assert_eq!(
+        app.window_frame_hit(at(lights[2])),
+        Some((id, FrameHit::Maximize))
+    );
+    // Lights are 11 px, spaced 17 px apart inside the 40 px title bar.
+    assert_eq!(lights[1].x - lights[0].x, 17);
+    assert_eq!(lights[0].x, rect.x + 11);
 }
 
 #[test]

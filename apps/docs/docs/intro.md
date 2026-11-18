@@ -59,7 +59,7 @@ not need. Aether removes them:
 | Smithay winit backend | ✅ clients, palette + index + live agents, desktop actions, clipboard, outputs, text-input, window mgmt, cursors, partial damage | `os/compositor/aether-shell-smithay` |
 | Native DRM backend | ✅ libseat + KMS page-flips, libinput, udev hotplug, per-output workspaces | `os/compositor/aether-shell-drm` |
 | Compositor core + shell state + preview | ✅ 110 core + 19 shared + 4 DRM + 6 index Rust tests | `os/compositor` |
-| Shell surfaces | ✅ palette, explorer, chat, audio, themes, keymap, status bar | `os/compositor` |
+| Shell surfaces | ✅ menu bar, dock, palette, explorer, chat, calendar, audio, themes, task manager, keymap | `os/compositor` |
 | System index daemon | ✅ inotify + socket queries + event ring | `os/index/aether-index` |
 | Remote display | ✅ capture + H.264 + str0m + WebCodecs client + `Super+R` overlay; target capture binding and latency gate pending | `os/compositor/crates/aether-remote`, `packages/remote` |
 

@@ -59,7 +59,7 @@ const PHASES: Array<{
       "Rust aether-index: recursive inotify, Unix-socket queries and a file-backed event ring.",
       "Palette parity: prefix modes, subsequence ranking, shared TS/Rust fixture; 10k p95 1.11 ms.",
       "Virtualised explorer at 10k rows (scroll p95 0.004 ms); streaming markdown chat drawer.",
-      "Central keymap, MRU focus stack, status bar and screenshot-checked design parity.",
+      "Central keymap, MRU focus stack, menu bar and dock, and screenshot-checked design parity against the Water OS demo.",
     ],
     gate: "Palette p95 < 10 ms at 10k documents; explorer 10k rows at 120 Hz.",
   },
@@ -95,7 +95,7 @@ const PHASES: Array<{
     bullets: [
       "WebKitGTK shell with per-tab sandboxing and a minimal permission model.",
       "libmpv frontend with hardware decode and zero-copy frame handoff.",
-      "File operations with copy/move progress on the status bar.",
+      "File operations with copy/move progress in the menu bar.",
     ],
     gate: "4K60 video at < 6% CPU; browser tab crash cannot take down the shell.",
   },

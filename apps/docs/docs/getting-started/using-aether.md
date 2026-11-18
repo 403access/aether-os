@@ -127,7 +127,6 @@ Themes layers are mutually exclusive; there is never a hidden modal stealing key
 | `Alt+Left drag` | Move a window; promotes a tile to floating |
 | `Alt+Right drag` | Resize a floating window from the nearest corner |
 | Release at edge | Snap to left/right half; top edge maximizes |
-| Click a workspace pill | Switch that output's workspace |
 
 ### Workspaces and outputs
 
@@ -137,9 +136,10 @@ Themes layers are mutually exclusive; there is never a hidden modal stealing key
 | `Ctrl+Alt+Shift+1/2/3` (`Super+Shift+1/2/3`) | Move the focused window to a workspace |
 | `Super+Alt+1/2/3` | Switch the workspace on the output under the pointer |
 
-Each output has its own active workspace. The pills at the top-left show the
-output under the pointer; the active pill is cyan. On a multi-output desktop,
-`Super+Alt+1/2/3` targets the output containing the pointer.
+Each output has its own active workspace. The menu bar names the active
+application; workspaces are keyboard- and palette-driven (`Super+1/2/3`, or the
+palette's workspace rows). On a multi-output desktop, `Super+Alt+1/2/3` targets
+the output containing the pointer.
 
 ### Layout
 
@@ -191,7 +191,7 @@ is installed on the target and live images.
 | `Esc` | Close |
 
 The explorer only composes visible rows. The footer shows the visible count; the
-status bar keeps the selected path and live system facts in view.
+status strip keeps the selected path and live system facts in view.
 
 ## Chat
 

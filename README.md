@@ -41,7 +41,7 @@ NixOS system, live installer ISO and install path are real, tested code.
 
 | Layer | What is in the repo | State |
 | --- | --- | --- |
-| **Shell** | Compositor core, Smithay and native DRM backends, palette, explorer, chat, status bar, task manager, themes, audio, agent sandboxes, remote overlay; window management, clipboard, text input, cursors, damage tracking | ✅ Built; 10k palette p95 1.11 ms, explorer scroll p95 0.004 ms |
+| **Shell** | Compositor core, Smithay and native DRM backends, menu bar, dock, palette, explorer, chat, calendar, task manager, themes, audio, agent sandboxes, remote overlay; window management, clipboard, text input, cursors, damage tracking | ✅ Built; 10k palette p95 1.11 ms, explorer scroll p95 0.004 ms |
 | **Services** | `aether-index` (inotify + socket queries), `aether-mcp` (13 audited tools), `aether-chat` model loop, `aether-remote` (H.264/WebRTC), `aether-sandbox` (Landlock + seccomp + per-agent UID) | ✅ Built and screenshot-tested |
 | **Libraries** | Domain protocol, BM25F/fuzzy/prefix indexer, SPSC rings + capabilities, agent policy, palette state machine, React UI kit, remote client, benchmark gate | ✅ Unit-tested and typechecked |
 | **Web** | Marketing site with the live palette and explorer, documentation site, live browser remote viewer | ✅ Built; Playwright e2e suite, live host pairing |

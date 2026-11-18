@@ -76,7 +76,7 @@ plans and uses Landlock processes instead.
 ## Use the compositor
 
 Switch to tty7 (`Ctrl+Alt+F7`). The session starts the native DRM backend and
-draws the workspace pills, status bar and shell surfaces directly on the output.
+draws the menu bar, dock and shell surfaces directly on the output.
 
 Try the fast paths:
 

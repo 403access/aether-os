@@ -12,7 +12,8 @@ arguments before they start.
 
 ## 1. One surface, one shortcut
 
-The compositor owns the palette, chat, explorer chrome and status bar. There is no
+The compositor owns the menu bar, dock, palette, chat, explorer and app windows.
+There is no
 “app switcher plus launcher plus spotlight plus settings search.” `⌘K` opens one
 surface, and that surface can reach everything.
 
@@ -35,7 +36,8 @@ Every action has a key path. The pointer is an accelerator, not a requirement.
 
 ## 3. Density is a feature
 
-13 px base type, 30 px rows, 62 px chrome. A file list shows 25 rows, not 12.
+13 px base type, 30 px rows, a 38 px menu bar (62 px on the web). A file list
+shows 25 rows, not 12.
 Whitespace is used to group, not to decorate.
 
 **Consequence:** no marketing-sized headings inside the shell; no card grids where
@@ -67,7 +69,7 @@ disableable. `prefers-reduced-motion` disables all of it.
 ## 7. Every claim has a source
 
 Numbers in the UI are either measured live, a budget from the ledger, or absent.
-No “blazing fast” copy. The status bar says `1.65 ms` or nothing.
+No “blazing fast” copy. A surface says `1.65 ms` or nothing.
 
 ## 8. Failure is explicit
 
@@ -79,7 +81,7 @@ No “blazing fast” copy. The status bar says `1.65 ms` or nothing.
 ## 9. No hidden state
 
 Agent state, audio routes, mounted roots and index coverage are inspectable from
-the palette (`~` mode) and the status bar. If the system is doing something
+the palette (`~` mode) and the menu bar. If the system is doing something
 expensive, the user can see it and stop it.
 
 ## 10. The user is the only tenant

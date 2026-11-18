@@ -57,14 +57,19 @@ Badges always carry a label and a dot. A greyscale screenshot remains readable.
 
 ## Layout
 
-The compositor explorer is a **full-output workspace**, not a floating dialog:
+The compositor explorer is a **floating window**, sized like
+`.os-window--explorer` in the Water OS demo: 16 px from the left and below the
+38 px menu bar, full width under 1360 px and 610 px tall at 1280 × 800 so the
+dock stays visible.
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│ ◉ Aether          Files  Palette  Chat        ⌕ Search  ⌘K  │ 62 px app bar
-│   Files · indexed system                                     │
+│ ◉◉◉  ▣ Files  Indexed system                            Live │ 40 px title bar
 ├──────────────────────────────────────────────────────────────┤
-│  ▣ Files                                    2 files      ×  │ 56 px pane header
+│  ▣ Files                                      ⌕ Search files │ 52 px app bar
+│    All indexed roots                                         │
+├──────────────────────────────────────────────────────────────┤
+│  ▣ Local index                                     2 files × │ 56 px pane header
 │    All indexed roots                                         │
 │  NAME                         TYPE              LOCATION     │ 30 px column header
 │  ▌ alpha.md                   MD                   notes     │ 30 px rows
@@ -72,19 +77,22 @@ The compositor explorer is a **full-output workspace**, not a floating dialog:
 │                                                              │
 │  2 of 2 files                  Enter open  Esc close  PgUp…  │ 30 px footer
 ├──────────────────────────────────────────────────────────────┤
-│ alpha.md  /srv/…    0 agents  12%  1.7/12 GB  audio  0.0 ms  │ 36 px status bar
+│ alpha.md  /srv/…    0 agents  12%  1.7/12 GB  audio  0.0 ms  │ 32 px status strip
 └──────────────────────────────────────────────────────────────┘
 ```
 
-![Explorer full-output layout](/img/smithay-explorer.png)
+![Explorer window over the desktop](/img/smithay-explorer.png)
 
 ![Explorer filtered to one file](/img/smithay-explorer-filtered.png)
 
 - 30 px rows, sticky column header, 56 px pane header, 16 px pane inset.
-- App bar tabs switch Files / Palette / Chat without losing the explorer query.
+- The window has one accent rim, rounded bottom corners and a dim subtitle, so it
+  reads as the same `.os-window` panel as the Calendar and client windows.
 - Path is read-only in the pane; editing paths is a palette command, not a text field.
-- Footer shows the visible count and pane shortcuts; the shell status bar spans the output.
-- Type scale is Inter 11/13/16/20 px; icons are the Water SVG set, not emoji.
+- Footer shows the visible count and pane shortcuts; the status strip spans the
+  window and carries the selection plus the live badges (agents, CPU, memory,
+  audio, frame time).
+- Type scale is Inter 8/9/10/11/13/16/20 px; icons are the Water SVG set, not emoji.
 
 ## Interactions
 

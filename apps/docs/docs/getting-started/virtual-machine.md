@@ -186,7 +186,7 @@ VM_GUI_DISPLAY=cocoa ./scripts/vm-run.sh --gui
 
 ![Aether VM desktop over VNC](/img/vm-gui.png)
 
-*Verified capture from `--gui`: workspace pills and the status bar are rendered by
+*Verified capture from `--gui`: the menu bar and dock are rendered by
 `aether-shell-drm` on tty8; `Super+Space` opens the same palette as the nested
 compositor.*
 

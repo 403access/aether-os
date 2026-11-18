@@ -16,7 +16,7 @@ resemble a general-purpose distribution.
 | --- | --- |
 | Base | NixOS minimal, custom Kaby Lake kernel, XFS root, systemd, PipeWire |
 | Display | Smithay compositor, tiling layout, 120 Hz pacing, floating overlays |
-| Shell | Palette, chat, explorer, status bar, notification toasts |
+| Shell | Menu bar, dock, palette, chat, explorer, calendar, notification toasts |
 | Search | Apps, files, content, commands, agents, settings; in-memory BM25 + fuzzy |
 | Agents | Isolation planner, admission control, capability broker, audit chain |
 | Apps | WebKitGTK browser shell, libmpv player, two-pane explorer |

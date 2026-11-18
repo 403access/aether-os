@@ -42,6 +42,7 @@ const gallery: Copy[] = [
   { source: "shell/themes.png", target: "apps/web/public/screenshots/themes.png" },
   { source: "shell/task-manager.png", target: "apps/web/public/screenshots/task-manager.png" },
   { source: "shell/shortcuts.png", target: "apps/web/public/screenshots/shortcuts.png" },
+  { source: "shell/calendar.png", target: "apps/web/public/screenshots/calendar.png" },
   { source: "web/remote-window.png", target: "apps/web/public/screenshots/remote.png" },
 ];
 
@@ -57,6 +58,7 @@ const docsImages: Copy[] = [
   { source: "shell/themes.png", target: "apps/docs/static/img/smithay-themes.png" },
   { source: "shell/themes-tone.png", target: "apps/docs/static/img/smithay-themes-tone.png" },
   { source: "shell/shortcuts.png", target: "apps/docs/static/img/smithay-shortcuts.png" },
+  { source: "shell/calendar.png", target: "apps/docs/static/img/smithay-calendar.png" },
   { source: "shell/topbar.png", target: "apps/docs/static/img/smithay-topbar.png" },
   { source: "shell/topbar-terminal.png", fallback: "shell/topbar.png", target: "apps/docs/static/img/smithay-terminal.png" },
   { source: "shell/client-window.png", target: "apps/docs/static/img/smithay-client.png" },

@@ -111,7 +111,7 @@ Aether prefers **fail-closed and degrade visibly** over fail-open:
 
 | Failure | Behaviour |
 | --- | --- |
-| Index daemon dies | Palette falls back to app/command providers; status bar shows index stale |
+| Index daemon dies | Palette falls back to app/command providers while the index is unavailable |
 | Audio daemon dies | Existing streams continue via PipeWire; route changes disabled |
 | Agent exceeds memory | Cgroup OOM kills the agent; audit records the event |
 | Browser tab crashes | Tab shows crash state; shell unaffected |

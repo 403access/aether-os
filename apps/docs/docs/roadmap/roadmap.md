@@ -83,9 +83,8 @@ Deliverables:
 - ✅ xdg-shell/shm clients map into shell windows, tile and are configured to
   their rects; keyboard/pointer focus, buttons and axis; two terminals verified.
 - ✅ Workspace shortcuts (`Super+1/2/3`, `Super+Alt+1/2/3` per output),
-  window moves, close, labelled indicators, a clickable workspace picker, an
-  interactive command palette (typed query, filtering, workspace/window
-  providers, row clicks, actions), equal-column tiling, Alt+drag move,
+  window moves, close, an interactive command palette (typed query, filtering,
+  workspace/window providers, row clicks, actions), equal-column tiling, Alt+drag move,
   Alt+right-drag corner resize, edge snapping, half-snap on release,
   `Super+M` maximize with restore, hover cursor feedback, a `New terminal`
   command, XDG `.desktop` app discovery and a bounded filename index with
@@ -93,14 +92,15 @@ Deliverables:
   via focus forwarding. Picker, palette input/commands, desktop/file
   launch, clipboard, window management, DnD and cursor mapping are verified by
   xdotool smokes. Idle frames are skipped; client commits use surface/buffer
-  damage when available.
+  damage when available. The P6 chrome pass replaced the top shortcut dock,
+  workspace chips and status pill with the Water menu bar, dock and Calendar.
 - ✅ Native `aether-shell-drm`: libseat session, KMS page-flips, libinput,
   udev hotplug, per-output workspaces and multi-output composition, with cage as
   the fallback session ([ADR-0017](/adr/0017-native-drm-first)). Validated on a
   virtio-gpu VM.
 - ✅ Live agent-session IPC, native inotify indexing, clipboard persistence,
   client-to-client DnD, IME candidate popups, client cursor surfaces and
-  per-output workspace indicators/palette.
+  per-output menu bar/palette.
 - ✅ Renderer is GLES/EGL (wgpu deferred, [ADR-0016](/adr/0016-gles-vs-wgpu)).
 - ⏳ Fractional scaling, screenshot/capture protocol, per-output status data
   (one shared sample today), and the measured 120 Hz gate metrics on the
@@ -130,7 +130,7 @@ Deliverables:
   (scroll p95 0.004 ms).
 - ✅ Design-system parity: shared token constants, `test:design`, screenshot
   pixel probes.
-- ✅ Central keyboard map, MRU focus stack and status bar.
+- ✅ Central keyboard map, MRU focus stack, menu bar and dock.
 
 **Gate.** Palette p95 < 10 ms at 10k documents; explorer scrolls 10k rows at 120 Hz;
 no dropped frames while streaming tokens.

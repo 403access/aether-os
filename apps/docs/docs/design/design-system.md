@@ -17,7 +17,8 @@ status, glass chrome and slow ambient motion.
 1. **Deep sea.** Dark, low-contrast surfaces with a single cyan current.
 2. **One accent.** `--ds-accent` marks interaction and live state. Status colours are
    separate and semantic.
-3. **Density first.** 13 px base type, 30 px rows, 62 px chrome.
+3. **Density first.** 13 px base type, 30 px rows, a 38 px menu bar in the shell
+   and a 62 px header on the web.
 4. **Motion explains.** Interface motion 160–340 ms; ambient 14–58 s; both
    disableable.
 5. **Colour never alone.** Every status pill is colour + label + dot.
@@ -115,19 +116,27 @@ premultiplied alpha, soft shadows, SVG icons and a deep-sea gradient.
 | Icon set | `chrome::icon_svg` + `resvg` (search, folder, file, terminal, chat, cpu, memory, audio, agents, palette, close, arrow) |
 | Type scale | `aether-text::font` — 8 / 9 / 10 / 11 / 13 / 16 / 20 px, semibold via double-blit |
 | Menu bar | 38 px full-width bar: brand, active app, five menus, sync pill, CPU/RAM/STORAGE meters, tray, clock |
-| Explorer | Floating 700-class window: 40 px title bar, 52 px app bar, 56 px pane header, 30 px columns and rows, 30 px footer, 32 px status bar |
+| Explorer | Floating window 16 px in from the work area: 40 px title bar, 52 px app bar, 56 px pane header, 30 px columns and rows, 30 px footer, 32 px status strip |
 | Palette | 680 × 420, 58 px search header, six 40 px rows at 46 px pitch, keycap footer |
 | Chat | 400 px drawer, header pill, assistant card with code strips, 38 px composer |
 | Client windows | 40 px compositor title bar: three 11 px traffic lights, 23 px app mark, bold title with dim subtitle, accent rim on focus |
 | Clock and Calendar | Pure civil-time formatter; 700 × 590 Calendar window with a six-row month grid and agenda |
 | Terminal | `aether-terminal` (foot) with Water ANSI palette, 11 px mono, framed by the compositor title bar |
 | Audio overlay | 660 × 560 glass panel, section labels, route rows, preset chips, input meter |
+| Calendar | 700 × 590 window, six-row month grid, agenda column, event dots |
 | Desktop dock | Centred 441 × 62 glass strip, eight 38 px tinted tiles, separator, running dots |
 
 ![Water explorer in the compositor](/img/smithay-explorer.png)
 
-*Explorer layer at 1280×800: app bar, Files/Palette/Chat tabs, search affordance,
-pane card, aligned columns and a status bar with icon badges.*
+*Explorer window at 1280×800: the menu bar above, a 40 px title bar with traffic
+lights, a 52 px app bar with search, the pane card with aligned columns and a
+32 px status strip with icon badges. The dock stays visible below.*
+
+![Calendar app](/img/smithay-calendar.png)
+
+*Calendar: 700 × 590 window, six-row month grid, weekday headers, accent-filled
+today, selected-day rim, event dots and an agenda column. Opened from the clock,
+Window ▸ Calendar or the palette.*
 
 ![Water command palette](/img/smithay-palette.png)
 
@@ -148,8 +157,9 @@ pass, not a different font.*
 input level meter, capability state and latency preset chips.*
 
 *`aether-terminal` runs foot with the Water ANSI palette and DejaVu Sans Mono at
-11 px. The compositor draws its 34 px title bar — mark, title and close pill —
-so a client app reads as a first-party surface.*
+11 px. The compositor draws its 40 px title bar — traffic lights, app mark, bold
+title with a dim subtitle and an accent rim on focus — so a client app reads as
+a first-party surface.*
 
 Font discovery order: `AETHER_FONT`, standard Inter paths, `/nix/store` scan,
 then the bitmap fallback. NixOS sets `AETHER_FONT` in the session service and

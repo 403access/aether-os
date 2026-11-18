@@ -82,7 +82,7 @@ Colour is never the only signal; the badge carries a label and a dot.
 | Operation | Semantics |
 | --- | --- |
 | Open | Folders navigate; files open in the owning application |
-| Copy | Streamed with `copy_file_range`; progress in the status bar |
+| Copy | Streamed with `copy_file_range`; progress in the menu bar |
 | Move | `renameat2` within a filesystem; copy+unlink across |
 | Rename | Atomic within the filesystem; refuses to clobber |
 | Delete | Moves to a per-root trash directory, not `unlink` |

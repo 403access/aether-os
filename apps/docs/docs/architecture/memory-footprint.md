@@ -37,7 +37,7 @@ pointer when the code moves.
 - **Two caches were unbounded.** Every unique text label and every geometry-keyed
   chrome panel used to be retained forever, as a CPU bitmap and a GPU texture.
   They are now byte-bounded LRUs (F1, F2).
-- **The status bar was the multiplier.** While anything animated, it sampled once
+- **The menu bar was the multiplier.** While anything animated, it sampled once
   per second and produced a new label, a new pill and new cache entries — with no
   keyboard input (F1). Bounding the caches makes that history collectable.
 - **The largest GPU item is invisible to PSS.** Two 1080p scan-out buffers are
@@ -155,7 +155,7 @@ creates a new entry; the budget decides how long it survives:
 | Chat (`chat.rs`) | every streamed token line | 1–2 per line |
 | Task manager (`task_manager.rs`) | process names, commands, CPU/mem columns | ~40 per one-second refresh |
 
-The status bar is the worst case because it is always visible and its text contains
+The menu bar is the worst case because it is always visible and its text contains
 `frame_ms` and CPU/memory counters. While *something else* animates — video, a
 streaming chat, a client repainting — a frame is due every second, `poll_status`
 samples (`app/status.rs:54`), the label changes, and a new bitmap plus a new
@@ -254,7 +254,7 @@ thread woke 5×/s for the life of the session once the socket was wired. It now
 blocks until a request arrives or the worker is dropped, so idle wakeups are zero
 in every session. The 30 ms debounce after a request is active-work only.
 
-### F9 — The status bar forks `wpctl` once per sampled frame
+### F9 — The bar forks `wpctl` once per sampled frame
 
 `StatusSnapshot::sample` calls `wpctl get-volume` (`status.rs:76`) on every status
 sample. During sustained activity this is a fork/exec + libpipewire initialisation
@@ -279,7 +279,7 @@ and a bitmap of `chars × 6–7 px`.
 
 Then:
 
-- **One hour of windowed animated content with the status bar visible** ≈
+- **One hour of windowed animated content with the menu bar visible** ≈
   3,600 status updates × ~100 KiB ≈ **350 MiB**, before pill-panel variants are
   counted. Fullscreen hides the bar and stops sampling; windowed video or a
   streaming chat does not.

@@ -30,9 +30,9 @@ use the Water ANSI palette and mono type.*
 
 *`Super+Space` toggles the modal command palette above clients. The search
 header, six result rows and keycap footer are rendered with Inter by
-`aether-text`, on rounded glass panels from `chrome.rs`; the labelled pills at
-top-left are workspace indicators (active is bright). Titles come from the
-xdg-shell clients.*
+`aether-text`, on rounded glass panels from `chrome.rs`. The 38 px menu bar above
+shows the active application, the File/View/Go/Window/Help menus, live CPU and
+memory meters, the tray and the clock. Titles come from the xdg-shell clients.*
 
 ![Filtering the palette by typing](/img/smithay-palette.png)
 
@@ -46,11 +46,13 @@ types `web`, captures this frame and clicks the row to switch workspace.*
 result focuses the window and switches to its workspace; the smoke test types
 `wayland`, presses `Enter` and asserts the return to workspace 0.*
 
-![Clicking the second workspace indicator](/img/smithay-workspace-picker.png)
+![Switching to the second workspace](/img/smithay-workspace-picker.png)
 
-*Clicking a labelled indicator switches workspace; the active chip is cyan. The
-capture is produced by `smoke-picker-xvfb.sh`, which drives the click with
-`xdotool` and asserts the shell log.*
+*`Super+2` switches to the empty `code` workspace, leaving the menu bar and dock
+in place. Workspace chips moved out of the chrome with the Water menu bar, so
+switching is keyboard- or palette-driven. The capture is produced by
+`smoke-picker-xvfb.sh`, which drives the key with `xdotool` and asserts the shell
+log.*
 
 ![Streaming chat drawer](/img/smithay-chat.png)
 
@@ -63,11 +65,12 @@ composed.*
 *`Super+E` opens the full-output explorer; typing filters, arrows/PgUp/PgDn
 move, Enter opens the selected file. Only the visible rows are composed.*
 
-![Status bar and two tiled terminal clients](/img/smithay-status.png)
+![Menu bar and two tiled terminal clients](/img/smithay-status.png)
 
-*The status bar shows agent sessions, CPU, memory, audio and frame time on the
-active output. Sampling stops when `AETHER_STATUS=0` or a fullscreen client is
-visible.*
+*The 38 px menu bar shows the active application, CPU, memory and storage on the
+active output. Agent sessions, audio and frame time live in the explorer status
+strip and the task manager. Sampling stops when `AETHER_STATUS=0` or a fullscreen
+client is visible.*
 
 ![Alt-dragging a tiled client into a floating window](/img/smithay-window-move.png)
 
@@ -136,7 +139,7 @@ asserts the reload count and launches the new entry.*
 ![A terminal in fullscreen with shell chrome hidden](/img/smithay-fullscreen.png)
 
 *`Super+F` sends `xdg_toplevel` fullscreen state, covers the output and hides the
-workspace indicators; `Esc`/`Super+F` restores the previous tiled or floating
+menu bar and dock; `Esc`/`Super+F` restores the previous tiled or floating
 state.*
 
 ![An external agent-session launcher in the palette](/img/smithay-agent-launcher.png)
@@ -234,12 +237,14 @@ drag and both toggles with `xdotool` and asserts each transition.*
   `Up/Down` wraps, `Enter` or a row click activates, `Backspace` edits and `Esc`
   closes. The list slides to keep the selection visible, and pointer hover
   selects a row.
-- Workspace switching and window moves via shortcuts, with three labelled
-  workspace indicator bars at the top-left:
-  `Super+1/2/3`, `Super+Shift+1/2/3`, `Super+Q` to close.
-- **Clickable workspace picker.** Clicking an indicator chip (bar or label)
-  switches workspace. Chrome consumes pointer motion/buttons, so clicks never
-  leak to a client underneath. The seat advertises `wl_pointer`.
+- Workspace switching and window moves via shortcuts:
+  `Super+1/2/3`, `Super+Shift+1/2/3`, `Super+Q` to close. The palette also lists
+  workspaces. There are no workspace chips in the chrome any more: the Water menu
+  bar owns that strip.
+- **Menu bar and dock pointer handling.** Menus open popovers, tray items map to
+  surfaces (clock → Calendar, resources → Task Manager, sound → Audio) and dock
+  tiles launch apps. Chrome consumes pointer motion/buttons, so clicks never leak
+  to a client underneath. The seat advertises `wl_pointer`.
 - **Equal-column tiling.** Each visible window gets one equal-width column;
   opening another window redistributes the work area. There is no master/stack
   divider.
@@ -353,8 +358,9 @@ The complete daily-use manual is [Using Aether](/getting-started/using-aether).
   a glyph atlas is still needed before text-heavy apps.
 - **Animated cursor frames.** Xcursor/theme and client cursor surfaces work; the
   first/current image is used, without timed animation frames.
-- **Status bar theming.** A status bar renders agents, CPU, memory, audio and
-  frame time on every output; configuration/theming is future work.
+- **Menu bar theming.** The bar renders CPU, memory, storage, tray state and the
+  clock on every output; per-output theming and tray popovers for Wi-Fi,
+  Bluetooth and battery are future work.
 - **Per-subsurface damage.** Top-level surface and buffer damage are used;
   Smithay also subtracts opaque regions when drawing the z-ordered element list,
   but nested subsurface damage is not tracked separately.

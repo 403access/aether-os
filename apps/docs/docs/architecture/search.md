@@ -197,7 +197,8 @@ The daemon persists a snapshot, not a write-ahead log:
 - On shutdown or every N minutes, write a JSON snapshot atomically.
 - On boot, load the snapshot and replay inotify events since the snapshot mtime.
 - If the snapshot is corrupt, discard it and rebuild from disk without blocking the
-  shell; the status bar shows “index rebuilding”.
+  shell; the palette falls back to app and command results while the index is
+  unavailable.
 
 SQLite FTS5 was considered for persistence. It is a good store but a worse hot path:
 the palette needs the index in memory anyway, and keeping one copy avoids a second

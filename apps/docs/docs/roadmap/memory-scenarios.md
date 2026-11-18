@@ -89,7 +89,7 @@ the pinned working set and the idle trim (S6).
 
 **Why.** F1 and F2 are the only findings that make a *quieter* session heavier.
 The caches were keyed by content and geometry and never evicted. A user who
-watches one hour of windowed video (status bar visible) can add hundreds of
+watches one hour of windowed video (menu bar visible) can add hundreds of
 megabytes (audit, "Growth arithmetic") without touching the keyboard.
 
 **How.**
@@ -107,7 +107,7 @@ megabytes (audit, "Growth arithmetic") without touching the keyboard.
    tops 2 MiB, icons 1 MiB. Keep `chrome_background` out of the generic cache;
    see S3.
 4. Make eviction **generation based**, not “clear everything on every frame”:
-   the palette and status bar re-render the same labels continuously and must keep
+   the palette and menu bar re-render the same labels continuously and must keep
    hitting the cache while visible.
 5. Keep a small “pinned” set for labels drawn on every frame (workspace names,
    static keycaps) so eviction does not cause per-frame rasterization.
@@ -361,7 +361,7 @@ a video?" into a number in the same panel that shows CPU.
 - **Do not add jemalloc/mimalloc as a memory fix.** The performance page explicitly
   defers custom allocators until profiling shows allocator time. Allocation churn
   in the index is better fixed by not allocating.
-- **Do not drop PipeWire, WirePlumber or the status bar** to fit a number. They
+- **Do not drop PipeWire, WirePlumber or the menu bar** to fit a number. They
   are product commitments; measure and budget, do not amputate.
 - **Do not enable swap/zram to hide F1.** It moves a leak to a latency problem.
 - **Do not replace the filename index with full-text BM25 before S4.** The memory

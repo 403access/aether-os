@@ -60,8 +60,18 @@ const SHOTS: Shot[] = [
     shortcut: "Super+E",
     category: "windows",
     caption:
-      "Local and archive roots side by side, 30-pixel rows and a status class per entry. Search runs against the index, not a directory walk.",
-    alt: "Aether explorer listing indexed files with name, type and location columns.",
+      "A floating Water window over the sea: 40-pixel title bar with traffic lights, a 30-pixel row grid and the menu bar and dock still in reach. Search runs against the index, not a directory walk.",
+    alt: "Aether desktop with the Files window open, showing a menu bar, indexed file rows and a dock.",
+  },
+  {
+    id: "calendar",
+    file: "screenshots/calendar.png",
+    title: "Calendar",
+    shortcut: "Menu bar clock",
+    category: "windows",
+    caption:
+      "A month grid and agenda composed from the same tokens: today is filled with the accent, selected days carry a rim, and days with entries show a dot. Arrow keys move the selection, Page Up/Down change months and t jumps to today.",
+    alt: "Aether Calendar window showing November 2026, a six-row month grid with today highlighted and a two-event agenda.",
   },
   {
     id: "chat",
@@ -100,7 +110,7 @@ const SHOTS: Shot[] = [
     shortcut: "Palette → task",
     category: "windows",
     caption:
-      "A full-output view over live /proc samples: the process tree, per-UID totals and per-core resource bars, refreshed once per second. CPU, network and disk rates are delta-based.",
+      "A full-width view below the menu bar over live /proc samples: the process tree, per-UID totals and per-core resource bars, refreshed once per second. CPU, network and disk rates are delta-based.",
     alt: "Aether task manager showing the Processes tab with PID, user, CPU, memory, state and command columns.",
   },
   {

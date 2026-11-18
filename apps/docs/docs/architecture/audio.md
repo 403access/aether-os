@@ -146,7 +146,7 @@ the trade-off; the policy ships conservative defaults.
 - Noise suppression and echo cancellation are PipeWire filters, off by default.
 - An agent cannot open the microphone with the legacy `audio` scope. Capture needs
   a short-lived `audio.capture` capability for `audio:input`, verified by
-  `MicrophoneGate` before the stream opens. The status bar shows a recording
+  `MicrophoneGate` before the stream opens. The audio overlay shows a recording
   indicator that cannot be hidden. The P5 supervisor wires the gate to the actual
   process launch; the denial/grant path is tested in `packages/agents`.
 

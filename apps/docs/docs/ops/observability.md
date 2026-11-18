@@ -14,7 +14,7 @@ doing, locally, without a network connection.
 
 1. **Local by default.** Metrics live in memory and local files.
 2. **Bounded.** Counters and ring buffers, not unbounded logs.
-3. **Visible.** If the system is doing expensive work, the status bar says so.
+3. **Visible.** If the system is doing expensive work, the menu bar says so.
 4. **Exportable on demand.** The user can dump a report; nothing is uploaded.
 5. **No PII in logs.** Paths are the user's business; logs are mode 0600.
 
@@ -31,15 +31,17 @@ doing, locally, without a network connection.
 | Boot timing | systemd | last 10 boots |
 | Crash dumps | shell/daemons | local, opt-in export |
 
-## The status bar
+## The menu bar
 
 Always visible, minimal:
 
 ```text
-aether@kestrel   2/6 agents   14% CPU   1.8 GiB   ♪ Speakers · Analog   7.2 ms
+Aether OS  File  View  Go  Window  Help    ● Synced  CPU ▬ 14%  RAM ▬ 38%  STORAGE ▬ 812 GB      Wed, Nov 18  04:47 PM
 ```
 
-It shows only live values. No graphs, no sparklines, no “health score”.
+It shows only live values. No graphs, no sparklines, no “health score”. Agent
+count, audio route and frame time sit in the explorer status strip and the task
+manager, so the bar stays readable at a glance.
 
 ## Admin overlay
 

@@ -93,9 +93,10 @@ and in the marketing site. Each row has a gate; a number without a gate is a wis
 
 ## Reporting to the user
 
-The status bar shows only live, local values: agent count, CPU, memory, audio route,
-frame time. No graphs by default; graphs are available in the admin overlay when
-the user asks for them.
+The menu bar shows only live, local values: CPU, memory and storage, plus the
+clock and tray state. Agent count, audio route and frame time live in the
+explorer status strip and the task manager. No graphs by default; graphs are
+available in the admin overlay when the user asks for them.
 
 This is the entire metrics strategy. If a future feature needs analytics, it needs
 an ADR that explains why local measurement is insufficient.

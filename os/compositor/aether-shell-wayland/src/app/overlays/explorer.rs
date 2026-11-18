@@ -6,6 +6,7 @@ use super::super::App;
 
 impl App {
     pub(crate) fn toggle_explorer(&mut self) {
+        self.close_system();
         if self.shell.explorer_open() {
             self.shell.close_explorer();
         } else {

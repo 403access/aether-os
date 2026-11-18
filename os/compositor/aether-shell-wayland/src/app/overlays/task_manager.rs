@@ -11,6 +11,7 @@ use super::super::App;
 
 impl App {
     pub(crate) fn open_task_manager(&mut self) {
+        self.close_system();
         self.shortcuts_open = false;
         self.shell.close_audio();
         self.shell.close_themes();

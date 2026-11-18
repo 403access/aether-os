@@ -22,6 +22,7 @@ mod launcher;
 mod outputs;
 pub(crate) mod overlays;
 pub(crate) mod status;
+pub(crate) mod system;
 mod windows;
 
 #[cfg(test)]
@@ -70,6 +71,7 @@ use self::overlays::menubar::MenuId;
 use self::overlays::sandboxes::SandboxPanelState;
 use self::overlays::task_manager::TaskManagerState;
 use self::status::StatusSnapshot;
+use self::system::SystemState;
 
 use self::handlers::ClientState;
 use self::input::{WindowDrag, WindowResize};
@@ -162,6 +164,8 @@ pub struct App {
     pub(crate) menu_open: Option<MenuId>,
     /// Open Calendar app, if any.
     pub(crate) calendar: Option<CalendarState>,
+    /// First-party app window (About, Network, Battery, ...).
+    pub(crate) system: SystemState,
     pub(crate) task_manager: Option<TaskManagerState>,
     pub(crate) sandboxes: Option<SandboxPanelState>,
     pub(crate) sandbox_last: std::time::Instant,
@@ -276,6 +280,7 @@ impl App {
             shortcuts_open: false,
             menu_open: None,
             calendar: None,
+            system: SystemState::new(),
             task_manager: None,
             sandboxes: None,
             sandbox_last: std::time::Instant::now(),

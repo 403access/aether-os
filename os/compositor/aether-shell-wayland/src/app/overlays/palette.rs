@@ -7,6 +7,7 @@ use super::super::App;
 
 impl App {
     pub fn toggle_overlay(&mut self) {
+        self.close_system();
         if self.shell.overlay().is_none() {
             self.shortcuts_open = false;
             self.close_task_manager();
@@ -74,6 +75,10 @@ impl App {
             PaletteAction::OpenCalendar => {
                 self.shell.close_overlay();
                 self.open_calendar();
+            }
+            PaletteAction::OpenAbout => {
+                self.shell.close_overlay();
+                self.open_system(crate::app::system::SystemApp::About);
             }
             PaletteAction::OpenExplorer => {
                 self.shell.close_overlay();

@@ -21,6 +21,7 @@ mod context;
 mod element;
 mod helpers;
 mod surfaces;
+pub(crate) mod ui;
 mod window_frame;
 
 pub(crate) use chrome::BackgroundStyle;

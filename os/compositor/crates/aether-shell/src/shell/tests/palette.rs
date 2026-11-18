@@ -26,6 +26,7 @@ fn palette_filters_workspaces_and_close() {
             "Keyboard shortcuts",
             "Task manager",
             "Calendar",
+            "About Aether OS",
             "Close palette"
         ]
     );
@@ -178,6 +179,7 @@ fn palette_lists_application_launchers() {
             "Keyboard shortcuts",
             "Task manager",
             "Calendar",
+            "About Aether OS",
             "Close palette"
         ]
     );
@@ -237,7 +239,7 @@ fn palette_rows_slide_with_selection() {
     }
     shell.open_overlay();
 
-    assert_eq!(shell.palette_entries().len(), 16);
+    assert_eq!(shell.palette_entries().len(), 17);
     assert_eq!(shell.palette_visible_start(), 0);
     let first = shell.palette_row_rect(0).expect("row 0");
     assert_eq!(first.x, 70);
@@ -259,7 +261,7 @@ fn palette_rows_slide_with_selection() {
     );
     assert!(shell.palette_select(7));
     assert_eq!(shell.palette_selected(), 7);
-    assert!(!shell.palette_select(16));
+    assert!(!shell.palette_select(17));
 }
 
 #[test]
@@ -270,7 +272,7 @@ fn palette_selection_wraps_and_activates() {
 
     assert_eq!(shell.palette_selected(), 0);
     assert!(shell.palette_move_selection(-1));
-    assert_eq!(shell.palette_selected(), 11);
+    assert_eq!(shell.palette_selected(), 12);
     assert_eq!(shell.palette_activate(), Some(PaletteAction::Close));
 
     assert!(shell.palette_move_selection(1));

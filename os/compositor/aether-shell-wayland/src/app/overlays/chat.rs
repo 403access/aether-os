@@ -7,6 +7,7 @@ use super::super::App;
 
 impl App {
     pub(crate) fn toggle_chat(&mut self) {
+        self.close_system();
         if self.shell.chat_open() {
             self.shell.close_chat();
         } else {

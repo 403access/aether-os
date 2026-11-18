@@ -241,13 +241,21 @@ impl Shell {
             if let Some(score) = palette_score(&query, &calendar.title) {
                 scored.push((score, window_offset + self.windows.len() + 1, calendar));
             }
+            let about = PaletteEntry {
+                title: "About Aether OS".to_string(),
+                detail: "Version · hardware · licence".to_string(),
+                action: PaletteAction::OpenAbout,
+            };
+            if let Some(score) = palette_score(&query, &about.title) {
+                scored.push((score, window_offset + self.windows.len() + 2, about));
+            }
             let close = PaletteEntry {
                 title: "Close palette".to_string(),
                 detail: "Esc".to_string(),
                 action: PaletteAction::Close,
             };
             if let Some(score) = palette_score(&query, &close.title) {
-                scored.push((score, window_offset + self.windows.len() + 2, close));
+                scored.push((score, window_offset + self.windows.len() + 3, close));
             }
         }
 

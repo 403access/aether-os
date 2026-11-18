@@ -101,6 +101,13 @@ pub enum MenuCommand {
     Shortcuts,
     CloseWindow,
     ToggleTheme,
+    About,
+    Network,
+    Battery,
+    Devices,
+    Radio,
+    Studio,
+    Compare,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -156,13 +163,20 @@ pub const WINDOW_MENU: &[MenuEntry] = &[
     entry!("Explorer", "folder", Explorer),
     entry!("Task Manager", "chart", TaskManager),
     entry!("Calendar", "calendar", Calendar),
+    entry!("Network", "wifi", Network),
+    entry!("Battery", "battery", Battery),
+    entry!("Devices", "bluetooth", Devices),
+    entry!("Tide Radio", "audio", Radio),
+    entry!("App Studio", "layers", Studio),
+    entry!("Data Cloud Compare", "explorer", Compare),
     entry!("Water settings", "drop", Themes),
+    entry!("About Aether OS", "drop", About),
     entry!("Keyboard shortcuts", "keyboard", Shortcuts),
 ];
 
 pub const HELP_MENU: &[MenuEntry] = &[
     entry!("Keyboard shortcuts", "keyboard", Shortcuts),
-    entry!("Water settings", "drop", Themes),
+    entry!("About Aether OS", "drop", About),
 ];
 
 pub fn menu_entries(id: MenuId) -> &'static [MenuEntry] {

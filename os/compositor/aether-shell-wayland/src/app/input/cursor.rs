@@ -24,6 +24,15 @@ pub(crate) fn cursor_for(state: &App) -> CursorShape {
         }
         return CursorShape::Arrow;
     }
+    if state.system_open() {
+        if state
+            .system_action_at(point)
+            .is_some_and(|action| action != crate::app::system::SystemAction::Outside)
+        {
+            return CursorShape::Pointer;
+        }
+        return CursorShape::Arrow;
+    }
     if state.calendar_open() {
         let rect = state.calendar_rect();
         if !rect.contains(point) {

@@ -218,6 +218,7 @@ impl App {
                 || self.sandbox_panel_open()
                 || self.task_manager_open()
                 || self.calendar_open()
+                || self.system_open()
                 || self.menu_open.is_some();
             if self.menu_open.is_some() {
                 self.pointer_captured = true;
@@ -244,6 +245,15 @@ impl App {
             if let Some(action) = self.menubar_action_at(point) {
                 self.pointer_captured = true;
                 self.activate_menubar(action);
+                self.cursor = cursor_for(self);
+                self.mark_cursor_damage(self.pointer_pos);
+                self.end_input(started);
+                return;
+            }
+            if self.system_open() {
+                if let Some(action) = self.system_action_at(point) {
+                    self.activate_system_action(action);
+                }
                 self.cursor = cursor_for(self);
                 self.mark_cursor_damage(self.pointer_pos);
                 self.end_input(started);

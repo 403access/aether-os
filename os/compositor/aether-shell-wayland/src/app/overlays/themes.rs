@@ -11,6 +11,7 @@ use super::super::App;
 
 impl App {
     pub(crate) fn toggle_themes(&mut self) {
+        self.close_system();
         if self.shell.themes_open() {
             self.shell.close_themes();
             self.mark_full_damage();

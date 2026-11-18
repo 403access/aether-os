@@ -146,6 +146,7 @@ impl App {
                         PaletteAction::SpawnTerminal => "terminal",
                         PaletteAction::OpenTaskManager => "chart",
                         PaletteAction::OpenCalendar => "calendar",
+                        PaletteAction::OpenAbout => "drop",
                         PaletteAction::OpenExplorer => "folder",
                         PaletteAction::OpenChat => "chat",
                         PaletteAction::OpenAudio => "audio",

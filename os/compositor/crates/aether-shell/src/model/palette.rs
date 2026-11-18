@@ -51,6 +51,7 @@ pub enum PaletteAction {
     SpawnTerminal,
     OpenTaskManager,
     OpenCalendar,
+    OpenAbout,
     OpenExplorer,
     OpenChat,
     OpenAudio,

@@ -241,6 +241,7 @@ const WEEKDAY_HEIGHT: i32 = 22;
 
 impl App {
     pub(crate) fn open_calendar(&mut self) {
+        self.close_system();
         self.shortcuts_open = false;
         self.close_task_manager();
         self.close_sandboxes();

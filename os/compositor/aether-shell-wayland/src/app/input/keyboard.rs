@@ -133,6 +133,7 @@ impl App {
         let mut theme_key = false;
         let mut remote_key = false;
         let mut calendar_key = false;
+        let mut system_key = false;
         keyboard.input::<(), _>(
             self,
             key_code,
@@ -156,6 +157,12 @@ impl App {
                 } else if state.task_manager_open() {
                     if pressed {
                         state.handle_task_key(sym);
+                    }
+                    FilterResult::Intercept(())
+                } else if state.system_open() {
+                    if pressed {
+                        state.handle_system_key(sym);
+                        system_key = true;
                     }
                     FilterResult::Intercept(())
                 } else if state.calendar_open() {
@@ -229,6 +236,8 @@ impl App {
             self.mark_shortcuts_damage();
         } else if self.task_manager_open() {
             self.mark_task_damage();
+        } else if self.system_open() || system_key {
+            self.mark_system_damage();
         } else if self.calendar_open() || calendar_key {
             self.mark_calendar_damage();
         } else if palette_key {

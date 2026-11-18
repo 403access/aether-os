@@ -10,5 +10,6 @@ mod remote;
 mod sandboxes;
 mod shortcuts;
 mod status;
+mod system_app;
 mod task_manager;
 mod themes;

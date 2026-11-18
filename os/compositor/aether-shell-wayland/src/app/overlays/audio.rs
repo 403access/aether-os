@@ -8,6 +8,7 @@ use super::super::App;
 
 impl App {
     pub(crate) fn toggle_audio(&mut self) {
+        self.close_system();
         if self.shell.audio_open() {
             self.shell.close_audio();
             self.mark_full_damage();

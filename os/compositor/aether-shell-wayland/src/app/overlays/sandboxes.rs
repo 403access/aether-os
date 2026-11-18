@@ -177,6 +177,7 @@ impl App {
     }
 
     pub(crate) fn toggle_sandboxes(&mut self) {
+        self.close_system();
         if self.sandbox_panel_open() {
             self.close_sandboxes();
         } else {

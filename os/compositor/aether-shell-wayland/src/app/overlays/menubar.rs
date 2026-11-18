@@ -17,6 +17,7 @@ pub(crate) use layout::{
 use aether_geometry::Point as AetherPoint;
 use aether_shell::OutputId;
 
+use super::super::system::SystemApp;
 use super::super::App;
 
 /// Label on the sync pill. The index worker owns the real state; the pill
@@ -84,6 +85,13 @@ impl App {
         if self.shell.explorer_open() {
             return "Files".to_string();
         }
+        if self.system_open() {
+            return self
+                .system
+                .app
+                .map(|app| app.title().to_string())
+                .unwrap_or_else(|| "Aether OS".to_string());
+        }
         if self.shell.themes_open() {
             return "Water settings".to_string();
         }
@@ -150,7 +158,7 @@ impl App {
         match action {
             MenubarAction::Logo => {
                 self.close_menu();
-                self.toggle_shortcuts();
+                self.open_system(SystemApp::About);
             }
             MenubarAction::App => {}
             MenubarAction::Menu(menu) => self.toggle_menu(menu),
@@ -170,15 +178,9 @@ impl App {
                     self.open_task_manager();
                 }
             }
-            TrayAction::Network => {
-                println!("aether-shell: tray network");
-            }
-            TrayAction::Devices => {
-                println!("aether-shell: tray devices");
-            }
-            TrayAction::Battery => {
-                println!("aether-shell: tray battery");
-            }
+            TrayAction::Network => self.open_system(SystemApp::Network),
+            TrayAction::Devices => self.open_system(SystemApp::Devices),
+            TrayAction::Battery => self.open_system(SystemApp::Battery),
             TrayAction::Sound => {
                 self.toggle_audio();
             }
@@ -213,6 +215,13 @@ impl App {
                 }
             }
             MenuCommand::Themes => self.toggle_themes(),
+            MenuCommand::About => self.open_system(SystemApp::About),
+            MenuCommand::Network => self.open_system(SystemApp::Network),
+            MenuCommand::Battery => self.open_system(SystemApp::Battery),
+            MenuCommand::Devices => self.open_system(SystemApp::Devices),
+            MenuCommand::Radio => self.open_system(SystemApp::Radio),
+            MenuCommand::Studio => self.open_system(SystemApp::Studio),
+            MenuCommand::Compare => self.open_system(SystemApp::Compare),
             MenuCommand::Shortcuts => self.toggle_shortcuts(),
             MenuCommand::CloseWindow => {
                 if let Some(id) = self.shell.focused_window() {

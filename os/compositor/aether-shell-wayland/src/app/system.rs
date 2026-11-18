@@ -340,12 +340,10 @@ impl App {
 
     pub(crate) fn radio_button_rect(&self, index: usize) -> AetherRect {
         let body = self.system_body_rect();
-        AetherRect::new(
-            body.x + body.width as i32 / 2 - 66 + index as i32 * 44,
-            body.y + 330,
-            40,
-            40,
-        )
+        // Controls sit under the track text, which starts after the 96 px art.
+        let text_x = body.x + 16 + 8 + 96 + 20;
+        let row_y = body.y + body.height as i32 / 2 - 60 + 152;
+        AetherRect::new(text_x + index as i32 * 56, row_y, 44, 40)
     }
 
     pub(crate) fn settings_tab_at(&self, point: AetherPoint) -> Option<usize> {

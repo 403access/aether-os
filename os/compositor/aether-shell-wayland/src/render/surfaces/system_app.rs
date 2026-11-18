@@ -53,7 +53,7 @@ impl App {
                 },
                 tokens.green,
             )),
-            SystemApp::Radio => Some(("Live", tokens.accent(255))),
+            SystemApp::Radio => Some(("Live", [0xff, 0x9a, 0xd5, 255])),
             SystemApp::Compare => Some(("Live", tokens.green)),
             SystemApp::Studio => Some(("4 nodes", tokens.text_soft)),
             _ => None,
@@ -71,6 +71,9 @@ impl App {
         }
         if app == SystemApp::Devices {
             self.devices_body(&mut ui, body, tokens);
+        }
+        if app == SystemApp::Radio {
+            self.radio_body(&mut ui, body, tokens);
         }
 
         RenderChunk {
@@ -713,5 +716,86 @@ impl App {
             ui.label("Connected", x + 56, row_y + 24, 4, tokens.dim);
             self.inline_badge(ui, x + width - 16, row_y + 14, "Connected", tokens.green, tokens);
         }
+    }
+}
+
+impl App {
+    // ----------------------------------------------------------------- radio
+
+    fn radio_body(&mut self, ui: &mut Ui, body: AetherRect, tokens: ThemeTokens) {
+        let tint = [0xff, 0x9a, 0xd5];
+        const TRACKS: [(&str, &str, &str); 5] = [
+            ("Deep Current", "Tide Ensemble", "04:32"),
+            ("Harbour Lights", "Tide Ensemble", "03:58"),
+            ("Sandbar", "Low Tide", "05:12"),
+            ("Lighthouse", "Tide Ensemble", "04:06"),
+            ("Old Pier", "Low Tide", "03:21"),
+        ];
+        let track = self.system.track.min(TRACKS.len() - 1);
+        let (title, artist, duration) = TRACKS[track];
+        let x = body.x + 24;
+        let center_y = body.y + body.height as i32 / 2;
+
+        let art = AetherRect::new(x, center_y - 60, 96, 96);
+        if let Some(buffer) = self.chrome_round(96, 96, 14, [255, 255, 255, 10]) {
+            ui.panel(Some(buffer), art.x, art.y);
+        }
+        if let Some(buffer) = self.chrome_outline(96, 96, 14, [tint[0], tint[1], tint[2], 90]) {
+            ui.panel(Some(buffer), art.x, art.y);
+        }
+        for (size, alpha) in [(64u32, 26u8), (40, 46), (16, 220)] {
+            let offset = (96 - size as i32) / 2;
+            if let Some(buffer) = self.chrome_round(size, size, size / 2, [tint[0], tint[1], tint[2], alpha]) {
+                ui.panel(Some(buffer), art.x + offset, art.y + offset);
+            }
+        }
+
+        let text_x = art.x + 96 + 20;
+        ui.label("AETHER OS SESSIONS", text_x, center_y - 44, 6, tokens.dim);
+        ui.label(title, text_x, center_y - 26, 3, tokens.text);
+        ui.label(
+            format!("{artist} · {duration}"),
+            text_x,
+            center_y + 2,
+            4,
+            tokens.dim,
+        );
+
+        let progress = AetherRect::new(text_x, center_y + 30, (body.width as i32 - 320) as u32, 4);
+        if let Some(buffer) = self.chrome_round(progress.width, progress.height, 2, [255, 255, 255, 24]) {
+            ui.panel(Some(buffer), progress.x, progress.y);
+        }
+        let fill = (progress.width as f32 * 0.38) as u32;
+        if let Some(buffer) = self.chrome_round(fill.max(4), progress.height, 2, [tint[0], tint[1], tint[2], 255]) {
+            ui.panel(Some(buffer), progress.x, progress.y);
+        }
+
+        for (index, glyph) in ["prev", "pause", "next"].into_iter().enumerate() {
+            let rect = self.radio_button_rect(index);
+            let is_play = index == 1;
+            if is_play {
+                if let Some(buffer) = self.chrome_round(40, 40, 20, [tint[0], tint[1], tint[2], 255]) {
+                    ui.panel(Some(buffer), rect.x + 2, rect.y);
+                }
+                ui.icon(
+                    if self.system.playing { "pause" } else { "play" },
+                    16,
+                    [3, 25, 34, 255],
+                    rect.x + 14,
+                    rect.y + 12,
+                );
+            } else {
+                ui.icon(glyph, 16, tokens.text_soft, rect.x + 14, rect.y + 12);
+            }
+        }
+        let elapsed = "1:43 / 4:32";
+        let width = self.text_width(elapsed, 4) as i32;
+        ui.label(
+            elapsed,
+            body.x + body.width as i32 - 24 - width,
+            center_y + 62,
+            4,
+            tokens.dim,
+        );
     }
 }

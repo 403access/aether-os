@@ -35,8 +35,8 @@ impl App {
                 self.spawn_terminal();
                 println!("aether-shell: dock terminal");
             }
-            DockAction::Radio => self.toggle_audio(),
-            DockAction::About => self.toggle_shortcuts(),
+            DockAction::Radio => self.open_system(crate::app::system::SystemApp::Radio),
+            DockAction::About => self.open_system(crate::app::system::SystemApp::About),
             DockAction::Trash => println!("aether-shell: dock trash"),
             DockAction::Gallery => println!("aether-shell: dock gallery"),
         }

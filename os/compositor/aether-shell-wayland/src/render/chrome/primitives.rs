@@ -423,6 +423,10 @@ pub fn icon_svg(name: &str, color: &str) -> Option<String> {
         "remote" => {
             r#"<rect x="2.5" y="3.5" width="15" height="10" rx="2"/><path d="M7 16.5h6M10 13.5v3"/><path d="m15 8 2 2-2 2"/>"#
         }
+        "play" => r#"<path d="M7 4.6 16.4 10 7 15.4z" fill="{color}" stroke="none"/>"#,
+        "pause" => r#"<rect x="6" y="4.4" width="3" height="11.2" rx="1" fill="{color}" stroke="none"/><rect x="11" y="4.4" width="3" height="11.2" rx="1" fill="{color}" stroke="none"/>"#,
+        "prev" => r#"<path d="M14 4.6 6 10l8 5.4z" fill="{color}" stroke="none"/><path d="M4 4.6v10.8"/>"#,
+        "next" => r#"<path d="M6 4.6 14 10l-8 5.4z" fill="{color}" stroke="none"/><path d="M16 4.6v10.8"/>"#,
         "globe" => {
             r#"<circle cx="10" cy="10" r="7.4"/><path d="M2.8 7.6h14.4M2.8 12.4h14.4"/><path d="M10 2.6c2 2 3 4.6 3 7.4s-1 5.4-3 7.4c-2-2-3-4.6-3-7.4s1-5.4 3-7.4Z"/>"#
         }

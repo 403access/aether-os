@@ -866,7 +866,7 @@ impl App {
     // -------------------------------------------------------------- settings
 
     fn settings_body(&mut self, ui: &mut Ui, body: AetherRect, tokens: ThemeTokens) {
-        // Sidebar: search affordance and 14 tabs.
+        // Sidebar: search affordance and 13 tabs.
         let sidebar_width = 220;
         ui.solid(
             AetherRect::new(

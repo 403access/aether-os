@@ -81,7 +81,7 @@ useful.
 
 Shell surfaces: menu bar, dock, palette, explorer, chat, audio, themes, task manager,
 calendar, the first-party apps (About, Network, Battery, Devices, Tide Radio,
-Settings) and their menu-bar trays,
+Settings — every pane) and their menu-bar trays,
 remote overlay, shortcuts, window move/resize/snap/maximize, fullscreen,
 workspace picker, cursor, clipboard, desktop/file/agent/index providers and the
 partial-damage probe.
@@ -89,6 +89,10 @@ partial-damage probe.
 Browser surfaces: the full marketing page and each section, the screenshot
 lightbox, the remote viewer idle/live/error states, the docs pages, the Water
 component gallery and a mobile viewport.
+
+The compositor boots with the dock hidden, matching the demo. The `topbar` and
+`os-parity` smokes set `AETHER_SHOW_DOCK=1` because they click the dock;
+`AETHER_HIDE_DOCK` still force-hides it for app-only crops.
 
 The index/agent-IPC/indexer smokes need Bun and the JavaScript indexer. The
 native Nix shell and the Docker image both provide them. Clipboard persistence is

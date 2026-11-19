@@ -91,6 +91,19 @@ const AETHER_CROPS = {
   devices: { file: "app-devices.png", rect: [16, 54, 1248, 730] },
   radio: { file: "app-radio.png", rect: [16, 54, 1248, 730] },
   settings: { file: "app-settings.png", rect: [16, 54, 1248, 730] },
+  "settings-general": { file: "app-settings-general.png", rect: [16, 54, 1248, 730] },
+  "settings-appearance": { file: "app-settings-appearance.png", rect: [16, 54, 1248, 730] },
+  "settings-displays": { file: "app-settings-displays.png", rect: [16, 54, 1248, 730] },
+  "settings-desktop": { file: "app-settings-desktop.png", rect: [16, 54, 1248, 730] },
+  "settings-commands": { file: "app-settings-commands.png", rect: [16, 54, 1248, 730] },
+  "settings-accessibility": { file: "app-settings-accessibility.png", rect: [16, 54, 1248, 730] },
+  "settings-network": { file: "app-settings-network.png", rect: [16, 54, 1248, 730] },
+  "settings-bluetooth": { file: "app-settings-bluetooth.png", rect: [16, 54, 1248, 730] },
+  "settings-sound": { file: "app-settings-sound.png", rect: [16, 54, 1248, 730] },
+  "settings-battery": { file: "app-settings-battery.png", rect: [16, 54, 1248, 730] },
+  "settings-notifications": { file: "app-settings-notifications.png", rect: [16, 54, 1248, 730] },
+  "settings-security": { file: "app-settings-security.png", rect: [16, 54, 1248, 730] },
+  "settings-storage": { file: "app-settings-storage.png", rect: [16, 54, 1248, 730] },
   calendar: { file: "calendar.png", rect: [16, 54, 1248, 730] },
   taskmanager: { file: "app-task-manager.png", rect: [16, 54, 1248, 730] },
   terminal: { file: "client-window.png", rect: [16, 54, 619, 730] },
@@ -105,6 +118,26 @@ const AETHER_CROPS = {
   "tray-sound": { file: "tray-sound.png", rect: [766, 42, 292, 256] },
   "tray-calendar": { file: "tray-calendar.png", rect: [900, 42, 308, 351] },
 };
+
+/**
+ * Settings panes in the demo's order. A single window screenshot hides twelve
+ * of them, so each pane is captured and reviewed on its own.
+ */
+const SETTINGS_PANES = [
+  { id: "general", title: "General", notes: "Host, software update and language/region sections." },
+  { id: "appearance", title: "Appearance", notes: "Theme and Water effect switches drive the shell live." },
+  { id: "displays", title: "Displays", notes: "Output name, resolution, refresh rate and scale." },
+  { id: "desktop", title: "Desktop & Dock", notes: "Working Show dock switch (off by default, like the demo), running indicators, clock and meters." },
+  { id: "commands", title: "Search & Commands", notes: "Palette shortcut, prefixes and the search provider." },
+  { id: "accessibility", title: "Accessibility", notes: "Reduce motion, text size, focus ring and contrast." },
+  { id: "network", title: "Network", notes: "Interface, MAC, IP, router and DNS from the host." },
+  { id: "bluetooth", title: "Bluetooth", notes: "Adapter, discoverable switch and paired devices." },
+  { id: "sound", title: "Sound", notes: "Output, presets and microphone input." },
+  { id: "battery", title: "Battery", notes: "Charge, condition and energy mode." },
+  { id: "notifications", title: "Notifications", notes: "Allow/preview/Do Not Disturb plus per-app rows. Aether now ships the demo's 13 panes in the demo order." },
+  { id: "security", title: "Privacy & Security", notes: "Agent isolation, telemetry and the audit log." },
+  { id: "storage", title: "Storage", notes: "Root filesystem, index and free space." },
+];
 
 /** The checklist that drives the report. `aether` names a crop key. */
 const SURFACES = [
@@ -174,17 +207,16 @@ const SURFACES = [
     notes:
       "Sidebar (favourites, locations, read-only notice), toolbar with breadcrumb and hidden switch, in-pane search row, Name/Type/Size/Modified columns, footer and status strip. Hidden/Everywhere/Filter are still visual-only.",
   },
-  {
+  ...SETTINGS_PANES.map((pane) => ({
     group: "Apps",
-    title: "Settings",
+    title: `Settings · ${pane.title}`,
     priority: "P1",
     where: "`app/system.rs` + `render/surfaces/system_app.rs`",
-    source: "settings",
-    aether: "settings",
-    status: "implemented",
-    notes:
-      "Fourteen tabs with section cards. General/Network/Bluetooth/Sound/Battery read live host facts; Appearance switches drive the Water theme. Widgets is folded into Desktop & Dock.",
-  },
+    source: `settings-${pane.id}`,
+    aether: `settings-${pane.id}`,
+    status: "partial",
+    notes: `${pane.notes} Shared chrome gaps: the demo's sidebar profile card, nav group labels, pane-header icon/subtitle, per-row descriptions and footer are not drawn yet.`,
+  })),
   {
     group: "Apps",
     title: "Network",
@@ -303,7 +335,7 @@ const SURFACES = [
     aether: "tray-network",
     status: "implemented",
     notes:
-      "Wi-Fi switch, connected interface, network list and a Network Settings link. Panel size matches the demo (301 x 329).",
+      "Wi-Fi switch, connected interface, network list and a Network Settings link. Panel size matches the demo (300 x 328).",
   },
   {
     group: "System trays",
@@ -314,7 +346,7 @@ const SURFACES = [
     aether: "tray-devices",
     status: "implemented",
     notes:
-      "Bluetooth switch, paired-device area and a Bluetooth Settings link (301 x 253).",
+      "Bluetooth switch, paired-device area and a Bluetooth Settings link (300 x 253).",
   },
   {
     group: "System trays",
@@ -325,7 +357,7 @@ const SURFACES = [
     aether: "tray-battery",
     status: "implemented",
     notes:
-      "Charge, estimate, level bar, three-way energy mode and a Battery Settings link (287 x 271).",
+      "Charge, estimate, level bar, three-way energy mode and a Battery Settings link (286 x 270).",
   },
   {
     group: "System trays",
@@ -336,7 +368,7 @@ const SURFACES = [
     aether: "tray-sound",
     status: "implemented",
     notes:
-      "Output name, volume bar and a Sound Settings link (293 x 256). Preset switching stays in the audio overlay.",
+      "Output name, volume bar and a Sound Settings link (292 x 256). Preset switching stays in the audio overlay.",
   },
   {
     group: "System trays",
@@ -572,6 +604,20 @@ async function captureSource(origin) {
     }
   }
 
+  // Settings is one window with thirteen panes; capture each pane.
+  await closeAll();
+  await clickVisible('[data-cmd="open-settings"]');
+  await page.waitForTimeout(500);
+  for (const pane of SETTINGS_PANES) {
+    await page.evaluate((id) => {
+      document.querySelector(`[data-settings-tab="${id}"]`)?.click();
+    }, pane.id);
+    await page.waitForTimeout(220);
+    await shot("#win-settings", `settings-${pane.id}`);
+    console.log(`source: settings ${pane.id}`);
+  }
+  await closeAll();
+
   // Chrome elements are captured with every window hidden so the dock is
   // never occluded by a maximised window.
   await closeAll();
@@ -587,6 +633,12 @@ async function captureSource(origin) {
   // comparison still shows the design, and note the breakpoint.
   try {
     await page.setViewportSize({ width: 1440, height: 900 });
+    // The demo ships the dock disabled; enable it for the capture.
+    await page.evaluate(() => {
+      document.documentElement.dataset.dock = "on";
+      const dock = document.querySelector(".os-dock-wrap");
+      if (dock) dock.hidden = false;
+    });
     await page.waitForTimeout(500);
     await shot(".os-dock-wrap", "dock");
   } catch (error) {

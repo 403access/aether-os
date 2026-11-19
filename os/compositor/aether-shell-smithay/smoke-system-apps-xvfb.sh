@@ -35,7 +35,12 @@ sleep "${SETTLE}"
 export DISPLAY=":${DISPLAY_NUM}"
 WINDOW_ID="$(xdotool search --name "Aether OS" | head -1)"
 xdotool windowfocus "${WINDOW_ID}"
-shot() { xdotool mousemove 5 795; sleep 0.3; import -window root "${OUT}/$1.png"; }
+shot() {
+  # Park the pointer off the window and jiggle once so the compositor drops
+  # the hand cursor from the previous click before the frame is captured.
+  xdotool mousemove 5 795; sleep 0.2; xdotool mousemove 6 795; sleep 0.4
+  import -window root "${OUT}/$1.png"
+}
 
 xdotool mousemove 20 19; sleep 0.3; xdotool click 1; sleep 0.8; shot app-about
 xdotool key Escape; sleep 0.4
@@ -71,6 +76,12 @@ window_item() {
   xdotool mousemove 300 $((66 + $1 * 32)); sleep 0.3; xdotool click 1; sleep 1.0
 }
 window_item 7; shot app-settings
+# Settings has thirteen panes; capture each one at (127, 164 + i * 30).
+SETTINGS_TABS=(general appearance displays desktop commands accessibility network bluetooth sound battery notifications security storage)
+for i in "${!SETTINGS_TABS[@]}"; do
+  xdotool mousemove 127 $((164 + i * 30)); sleep 0.25; xdotool click 1; sleep 0.45
+  shot "app-settings-${SETTINGS_TABS[$i]}"
+done
 xdotool key Escape; sleep 0.4
 window_item 8; shot app-radio
 xdotool key Escape; sleep 0.4

@@ -3,9 +3,9 @@
 Source: `e86b239 Add drag-and-drop tile swapping to split layout` (local design-system/ checkout)
 Visual spec (source vs target, difference register): [`VISUAL-SPEC.md`](VISUAL-SPEC.md).
 
-Aether: `403b2f0 fix(parity): catch empty captures and fix the blank app screenshots`
+Aether: `76f938c chore(web): republish the recaptured shell surfaces`
 
-Implemented **18** · partial **2** · missing **0** · out of scope **2** · Aether-only **4**.
+Implemented **17** · partial **15** · missing **0** · out of scope **2** · Aether-only **4**.
 
 **Status key** — implemented: matches the source surface · partial: present but a different scope or layout · missing: no Aether surface · out of scope: intentionally not an Aether app · Aether only: no source counterpart.
 
@@ -17,7 +17,19 @@ Implemented **18** · partial **2** · missing **0** · out of scope **2** · Ae
 | Command overlay | System chrome | Partial | P2 | `crates/aether-shell/src/shell/palette.rs` | Both are ⌘K surfaces. The demo uses the explorer's command palette (groups, filters, previews); Aether uses its own providers and row language. |
 | Data Cloud Compare | Apps | Out of scope | — | product-specific | Ignored by decision: the Data Cloud Compare product surface (cloud-vs-index comparator) is not an Aether app. |
 | Explorer | Apps | Implemented | P1 | `render/surfaces/explorer.rs` | Sidebar (favourites, locations, read-only notice), toolbar with breadcrumb and hidden switch, in-pane search row, Name/Type/Size/Modified columns, footer and status strip. Hidden/Everywhere/Filter are still visual-only. |
-| Settings | Apps | Implemented | P1 | `app/system.rs` + `render/surfaces/system_app.rs` | Fourteen tabs with section cards. General/Network/Bluetooth/Sound/Battery read live host facts; Appearance switches drive the Water theme. Widgets is folded into Desktop & Dock. |
+| Settings · General | Apps | Partial | P1 | `app/system.rs` + `render/surfaces/system_app.rs` | Host, software update and language/region sections. Shared chrome gaps: the demo's sidebar profile card, nav group labels, pane-header icon/subtitle, per-row descriptions and footer are not drawn yet. |
+| Settings · Appearance | Apps | Partial | P1 | `app/system.rs` + `render/surfaces/system_app.rs` | Theme and Water effect switches drive the shell live. Shared chrome gaps: the demo's sidebar profile card, nav group labels, pane-header icon/subtitle, per-row descriptions and footer are not drawn yet. |
+| Settings · Displays | Apps | Partial | P1 | `app/system.rs` + `render/surfaces/system_app.rs` | Output name, resolution, refresh rate and scale. Shared chrome gaps: the demo's sidebar profile card, nav group labels, pane-header icon/subtitle, per-row descriptions and footer are not drawn yet. |
+| Settings · Desktop & Dock | Apps | Partial | P1 | `app/system.rs` + `render/surfaces/system_app.rs` | Working Show dock switch (off by default, like the demo), running indicators, clock and meters. Shared chrome gaps: the demo's sidebar profile card, nav group labels, pane-header icon/subtitle, per-row descriptions and footer are not drawn yet. |
+| Settings · Search & Commands | Apps | Partial | P1 | `app/system.rs` + `render/surfaces/system_app.rs` | Palette shortcut, prefixes and the search provider. Shared chrome gaps: the demo's sidebar profile card, nav group labels, pane-header icon/subtitle, per-row descriptions and footer are not drawn yet. |
+| Settings · Accessibility | Apps | Partial | P1 | `app/system.rs` + `render/surfaces/system_app.rs` | Reduce motion, text size, focus ring and contrast. Shared chrome gaps: the demo's sidebar profile card, nav group labels, pane-header icon/subtitle, per-row descriptions and footer are not drawn yet. |
+| Settings · Network | Apps | Partial | P1 | `app/system.rs` + `render/surfaces/system_app.rs` | Interface, MAC, IP, router and DNS from the host. Shared chrome gaps: the demo's sidebar profile card, nav group labels, pane-header icon/subtitle, per-row descriptions and footer are not drawn yet. |
+| Settings · Bluetooth | Apps | Partial | P1 | `app/system.rs` + `render/surfaces/system_app.rs` | Adapter, discoverable switch and paired devices. Shared chrome gaps: the demo's sidebar profile card, nav group labels, pane-header icon/subtitle, per-row descriptions and footer are not drawn yet. |
+| Settings · Sound | Apps | Partial | P1 | `app/system.rs` + `render/surfaces/system_app.rs` | Output, presets and microphone input. Shared chrome gaps: the demo's sidebar profile card, nav group labels, pane-header icon/subtitle, per-row descriptions and footer are not drawn yet. |
+| Settings · Battery | Apps | Partial | P1 | `app/system.rs` + `render/surfaces/system_app.rs` | Charge, condition and energy mode. Shared chrome gaps: the demo's sidebar profile card, nav group labels, pane-header icon/subtitle, per-row descriptions and footer are not drawn yet. |
+| Settings · Notifications | Apps | Partial | P1 | `app/system.rs` + `render/surfaces/system_app.rs` | Allow/preview/Do Not Disturb plus per-app rows. Aether now ships the demo's 13 panes in the demo order. Shared chrome gaps: the demo's sidebar profile card, nav group labels, pane-header icon/subtitle, per-row descriptions and footer are not drawn yet. |
+| Settings · Privacy & Security | Apps | Partial | P1 | `app/system.rs` + `render/surfaces/system_app.rs` | Agent isolation, telemetry and the audit log. Shared chrome gaps: the demo's sidebar profile card, nav group labels, pane-header icon/subtitle, per-row descriptions and footer are not drawn yet. |
+| Settings · Storage | Apps | Partial | P1 | `app/system.rs` + `render/surfaces/system_app.rs` | Root filesystem, index and free space. Shared chrome gaps: the demo's sidebar profile card, nav group labels, pane-header icon/subtitle, per-row descriptions and footer are not drawn yet. |
 | Network | Apps | Implemented | P0 · done | `app/system.rs` + `app/system_info.rs` | Interfaces from /sys/class/net, IP from fib_trie, router from /proc/net/route and DNS from resolv.conf, in the demo's header/switch/list/details card layout. |
 | Battery | Apps | Implemented | P0 · done | `app/system.rs` + `app/system_info.rs` | Charge and estimate, energy mode, low-power and optimised-charging switches, health table and largest CPU consumers. Shows an AC-power state when no battery exists. |
 | Devices | Apps | Implemented | P0 · done | `app/system.rs` + `app/system_info.rs` | Bluetooth summary, accessory switches and paired-device list over /sys/class/bluetooth, with an explicit no-adapter state. |
@@ -28,10 +40,10 @@ Implemented **18** · partial **2** · missing **0** · out of scope **2** · Ae
 | Keyboard shortcuts | Apps | Partial | P2 | `app/overlays/shortcuts.rs` | Both are Super+/ cheatsheets. The demo groups the explorer key map; Aether lists the compositor's own surfaces and window actions. |
 | About Aether OS | Apps | Implemented | P0 · done | `app/system.rs` + `render/surfaces/system_app.rs` | Version, build, hardware and licence. The menu-bar logo currently opens the cheatsheet. |
 | App Studio | Apps | Out of scope | — | product-specific | Ignored by decision: the demo's GUI builder is a product surface, not part of the Aether desktop. |
-| Wi-Fi tray | System trays | Implemented | P0 · done | `render/surfaces/tray.rs` | Wi-Fi switch, connected interface, network list and a Network Settings link. Panel size matches the demo (301 x 329). |
-| Bluetooth tray | System trays | Implemented | P0 · done | `render/surfaces/tray.rs` | Bluetooth switch, paired-device area and a Bluetooth Settings link (301 x 253). |
-| Battery tray | System trays | Implemented | P0 · done | `render/surfaces/tray.rs` | Charge, estimate, level bar, three-way energy mode and a Battery Settings link (287 x 271). |
-| Sound tray | System trays | Implemented | P0 · done | `render/surfaces/tray.rs` | Output name, volume bar and a Sound Settings link (293 x 256). Preset switching stays in the audio overlay. |
+| Wi-Fi tray | System trays | Implemented | P0 · done | `render/surfaces/tray.rs` | Wi-Fi switch, connected interface, network list and a Network Settings link. Panel size matches the demo (300 x 328). |
+| Bluetooth tray | System trays | Implemented | P0 · done | `render/surfaces/tray.rs` | Bluetooth switch, paired-device area and a Bluetooth Settings link (300 x 253). |
+| Battery tray | System trays | Implemented | P0 · done | `render/surfaces/tray.rs` | Charge, estimate, level bar, three-way energy mode and a Battery Settings link (286 x 270). |
+| Sound tray | System trays | Implemented | P0 · done | `render/surfaces/tray.rs` | Output name, volume bar and a Sound Settings link (292 x 256). Preset switching stays in the audio overlay. |
 | Calendar tray | System trays | Implemented | P0 · done | `render/surfaces/tray.rs` | Month popover from the clock with today filled and an Open Calendar link (308 x 351). |
 | Audio routes | Aether-only | Aether only | P0 · done | `render/surfaces/audio.rs` | 660 x 560 overlay for outputs, inputs, presets and the input meter. |
 | Chat drawer | Aether-only | Aether only | P0 · done | `render/surfaces/chat.rs` | Streaming markdown with MCP tool traces. |

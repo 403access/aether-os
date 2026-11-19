@@ -101,7 +101,7 @@ pub struct SystemState {
     pub energy: usize,
     pub charging_optimised: bool,
     /// Switches that are view state only (automatic updates, indicators, clock).
-    pub settings_toggles: [bool; 5],
+    pub settings_toggles: [bool; 7],
     pub settings_scroll: usize,
     /// Open menu-bar tray popover.
     pub tray: Option<TrayId>,
@@ -124,7 +124,7 @@ impl SystemState {
             playing: true,
             energy: 1,
             charging_optimised: true,
-            settings_toggles: [true, true, false, false, false],
+            settings_toggles: [true, true, false, false, false, true, false],
             ..Default::default()
         }
     }
@@ -436,7 +436,7 @@ impl App {
     }
 }
 
-pub const SETTINGS_TABS: [&str; 14] = [
+pub const SETTINGS_TABS: [&str; 13] = [
     "General",
     "Appearance",
     "Displays",
@@ -447,10 +447,9 @@ pub const SETTINGS_TABS: [&str; 14] = [
     "Bluetooth",
     "Sound",
     "Battery",
+    "Notifications",
     "Privacy & Security",
-    "Screen Time",
     "Storage",
-    "About",
 ];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -485,9 +484,10 @@ mod tests {
 
     #[test]
     fn settings_tabs_match_the_demo() {
-        assert_eq!(SETTINGS_TABS.len(), 14);
+        assert_eq!(SETTINGS_TABS.len(), 13);
         assert_eq!(SETTINGS_TABS[0], "General");
-        assert_eq!(SETTINGS_TABS[13], "About");
+        assert_eq!(SETTINGS_TABS[10], "Notifications");
+        assert_eq!(SETTINGS_TABS[12], "Storage");
     }
 }
 
@@ -517,6 +517,8 @@ pub struct SettingsSection {
 pub enum SettingsAction {
     Theme(aether_shell::theme::ThemeField),
     State(usize),
+    /// Show or hide the desktop dock (off by default, like the demo).
+    Dock,
 }
 
 impl App {
@@ -696,7 +698,15 @@ impl App {
             3 => {
                 let dock = start_section(&mut sections, "Desktop & Dock");
                 push(&mut sections, dock, "Position", "Bottom".into());
-                push(&mut sections, dock, "Size", "441 × 62".into());
+                push(&mut sections, dock, "Size", "439 × 62".into());
+                toggle(
+                    &mut sections,
+                    dock,
+                    "Show dock",
+                    "Applications along the bottom edge",
+                    self.dock_enabled,
+                    SettingsAction::Dock,
+                );
                 toggle(
                     &mut sections,
                     dock,
@@ -868,6 +878,40 @@ impl App {
                 );
             }
             10 => {
+                let notifications = start_section(&mut sections, "Notifications");
+                toggle(
+                    &mut sections,
+                    notifications,
+                    "Allow notifications",
+                    "Show banners and alerts from apps",
+                    self.system.settings_toggles[5],
+                    SettingsAction::State(5),
+                );
+                push(
+                    &mut sections,
+                    notifications,
+                    "Show previews",
+                    "Always".into(),
+                );
+                toggle(
+                    &mut sections,
+                    notifications,
+                    "Do Not Disturb",
+                    "Silence all notifications until turned off",
+                    self.system.settings_toggles[6],
+                    SettingsAction::State(6),
+                );
+                let apps = start_section(&mut sections, "Application notifications");
+                push(
+                    &mut sections,
+                    apps,
+                    "Data Cloud Compare",
+                    "Alerts on".into(),
+                );
+                push(&mut sections, apps, "Tide Radio", "Playback changes".into());
+                push(&mut sections, apps, "Calendar", "Event invites".into());
+            }
+            11 => {
                 let security = start_section(&mut sections, "Privacy & Security");
                 push(
                     &mut sections,
@@ -883,16 +927,6 @@ impl App {
                     "~/.local/share/aether".into(),
                 );
             }
-            11 => {
-                let time = start_section(&mut sections, "Screen Time");
-                push(
-                    &mut sections,
-                    time,
-                    "Uptime",
-                    crate::render::helpers::format_uptime(self.system_uptime()),
-                );
-                push(&mut sections, time, "Sessions", "1".into());
-            }
             12 => {
                 let storage = start_section(&mut sections, "Storage");
                 push(&mut sections, storage, "Root filesystem", "XFS".into());
@@ -904,23 +938,9 @@ impl App {
                 );
                 push(&mut sections, storage, "Free space", "—".into());
             }
-            _ => {
-                let about = start_section(&mut sections, "About");
-                push(&mut sections, about, "Aether OS", "0.1.0-alpha".into());
-                push(&mut sections, about, "Rust compositor", "Smithay".into());
-                push(&mut sections, about, "Design system", "Water".into());
-                push(&mut sections, about, "Licence", "MIT".into());
-            }
+            _ => {}
         }
         sections
-    }
-
-    fn system_uptime(&self) -> u64 {
-        std::fs::read_to_string("/proc/uptime")
-            .ok()
-            .and_then(|text| text.split_whitespace().next()?.parse::<f64>().ok())
-            .map(|seconds| seconds as u64)
-            .unwrap_or(0)
     }
 
     pub(crate) fn toggle_settings_action(&mut self, action: SettingsAction) {
@@ -933,6 +953,12 @@ impl App {
             SettingsAction::State(index) => {
                 if index < self.system.settings_toggles.len() {
                     self.system.settings_toggles[index] = !self.system.settings_toggles[index];
+                }
+            }
+            SettingsAction::Dock => {
+                self.dock_enabled = !self.dock_enabled;
+                if !self.dock_enabled {
+                    self.dock_hover = None;
                 }
             }
         }

@@ -62,7 +62,7 @@
     "menubar.tray.icon": 15,
     "structure.dock-items": 8,
     "structure.menus": 5,
-    "structure.settings-tabs": 14,
+    "structure.settings-tabs": 13,
     "token.accent": "#38d6ff",
     "token.bg": "#031922",
     "token.green": "#5ef2b0",
@@ -114,5 +114,5 @@
     "width": 1280
   },
   "project": "Aether compositor",
-  "revision": "403b2f0 fix(parity): catch empty captures and fix the blank app screenshots"
+  "revision": "76f938c chore(web): republish the recaptured shell surfaces"
 }

@@ -5,13 +5,13 @@
   },
   "aether": {
     "project": "Aether compositor",
-    "revision": "403b2f0 fix(parity): catch empty captures and fix the blank app screenshots"
+    "revision": "76f938c chore(web): republish the recaptured shell surfaces"
   },
   "summary": {
     "compared": 107,
-    "matched": 97,
-    "mismatched": 10,
-    "accepted": 10,
+    "matched": 98,
+    "mismatched": 9,
+    "accepted": 9,
     "aetherOnly": 0,
     "sourceOnly": 0,
     "failures": 0
@@ -79,14 +79,6 @@
       "kind": "value",
       "delta": -2,
       "reason": "The demo has ten dock tiles including Projects and App Studio. App Studio is out of scope by decision and Projects is a demo-only surface, so Aether ships eight."
-    },
-    {
-      "key": "structure.settings-tabs",
-      "source": 13,
-      "aether": 14,
-      "kind": "value",
-      "delta": 1,
-      "reason": "The demo has 13 panes: Aether adds Screen Time and About and folds Notifications elsewhere (14). Reconciling the settings information architecture is a separate app-parity task, not chrome drift."
     },
     {
       "key": "token.surface",

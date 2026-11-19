@@ -2,7 +2,6 @@
   "menubar.menu.weight": "The compositor's text renderer has regular and bold faces only. The demo's menu buttons are 550 (medium); Aether paints regular. Add a medium face before tightening this.",
   "menubar.resources.value-weight": "The demo's resource values are 600 (medium). With regular/bold only, bold is the nearer match and keeps the values legible at 9.69 px.",
   "structure.dock-items": "The demo has ten dock tiles including Projects and App Studio. App Studio is out of scope by decision and Projects is a demo-only surface, so Aether ships eight.",
-  "structure.settings-tabs": "The demo has 13 panes: Aether adds Screen Time and About and folds Notifications elsewhere (14). Reconciling the settings information architecture is a separate app-parity task, not chrome drift.",
   "token.surface": "Aether's window fill is 98% opaque; the demo uses color-mix(surface-solid 92%, transparent). The remaining difference belongs to the open backdrop-blur item (V8 in VISUAL-SPEC.md).",
   "dock.item": "Aether ships a deliberately tighter dock (46 px items, 38 px tiles, 7 px inner padding) than the demo's 48/39/7. Changing it moves every dock hit target and capture crop, so it belongs with the dock parity work rather than a token tweak.",
   "dock.tile": "See dock.item: the tile is 0.82x the 46 px item (37.7, rounded to 38) instead of 0.82x the demo's 48 px (39.36).",

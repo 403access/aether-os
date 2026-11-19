@@ -64,15 +64,19 @@ xdotool mousemove 1130 19; sleep 0.3; xdotool click 1; sleep 0.8; shot tray-cale
 xdotool mousemove 1054 375; sleep 0.3; xdotool click 1; sleep 0.8; shot calendar
 xdotool key Escape; sleep 0.4
 
-# Settings and Tide Radio from the dock.
-xdotool mousemove 533 760; sleep 0.3; xdotool click 1; sleep 0.8; shot app-settings
+# Settings, Tide Radio, Explorer and Task Manager from the Window menu.
+# The dock is hidden for these captures, so it cannot be used to open apps.
+window_item() {
+  xdotool mousemove 285 19; sleep 0.3; xdotool click 1; sleep 0.5
+  xdotool mousemove 300 $((65 + $1 * 30)); sleep 0.3; xdotool click 1; sleep 1.0
+}
+window_item 7; shot app-settings
 xdotool key Escape; sleep 0.4
-xdotool mousemove 640 760; sleep 0.3; xdotool click 1; sleep 0.8; shot app-radio
+window_item 8; shot app-radio
 xdotool key Escape; sleep 0.4
-
-# Task Manager from Window.
-xdotool mousemove 280 19; sleep 0.3; xdotool click 1; sleep 0.5
-xdotool mousemove 300 104; sleep 0.3; xdotool click 1; sleep 1.0; shot app-task-manager
+window_item 1; shot app-explorer
+xdotool key Escape; sleep 0.4
+window_item 2; shot app-task-manager
 
 # Explorer with a real fixture, dock hidden.
 xdotool windowfocus "${WINDOW_ID}"

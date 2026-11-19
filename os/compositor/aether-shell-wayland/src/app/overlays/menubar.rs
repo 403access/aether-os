@@ -222,6 +222,7 @@ impl App {
             MenuCommand::Radio => self.open_system(SystemApp::Radio),
             MenuCommand::Studio => self.open_system(SystemApp::Studio),
             MenuCommand::Compare => self.open_system(SystemApp::Compare),
+            MenuCommand::Settings => self.open_system(SystemApp::Settings),
             MenuCommand::Shortcuts => self.toggle_shortcuts(),
             MenuCommand::CloseWindow => {
                 if let Some(id) = self.shell.focused_window() {

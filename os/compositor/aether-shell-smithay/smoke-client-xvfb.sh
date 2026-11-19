@@ -45,5 +45,10 @@ APP_PID=$!
 sleep "${SETTLE}"
 
 DISPLAY=":${DISPLAY_NUM}" import -window root "${OUT}/client-window.png"
+if ! grep -q "client connected" "${OUT}/client-app.log"; then
+  echo "error: no Wayland client connected; the capture would be empty" >&2
+  cat "${OUT}/client-app.log" >&2
+  exit 1
+fi
 cat "${OUT}/client-app.log"
 echo "wrote ${OUT}/client-window.png"

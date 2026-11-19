@@ -22,7 +22,7 @@
  * whole desktop.
  */
 import { createReadStream } from "node:fs";
-import { mkdir, readFile, writeFile, access, stat } from "node:fs/promises";
+import { mkdir, readFile, writeFile, access, stat, unlink } from "node:fs/promises";
 import { createServer } from "node:http";
 import { execFileSync } from "node:child_process";
 import { dirname, extname, join, normalize, resolve } from "node:path";
@@ -644,6 +644,44 @@ function readPng(path) {
   return readFile(path).then((buffer) => PNG.sync.read(buffer));
 }
 
+/**
+ * A crop that contains only the sea gradient means the app never opened (or a
+ * stale frame was captured). Real chrome has text/edges: >= 0.4 % pixels with a
+ * local gradient and a stddev >= 9. The empty sea measures ~0.19 % / 6.6.
+ */
+function blankStats(png) {
+  const { width, height, data } = png;
+  let sum = 0;
+  let sumSq = 0;
+  let bright = 0;
+  let lights = 0;
+  let pixels = 0;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const index = (y * width + x) * 4;
+      const r = data[index];
+      const g = data[index + 1];
+      const b = data[index + 2];
+      const value = (r + g + b) / 3;
+      sum += value;
+      sumSq += value * value;
+      if (value > 110) bright += 1;
+      // Traffic lights: the only strongly red/amber pixels in the chrome.
+      if (r > 150 && g < 170 && b < 170) lights += 1;
+      pixels += 1;
+    }
+  }
+  const mean = sum / pixels;
+  const stddev = Math.sqrt(Math.max(0, sumSq / pixels - mean * mean));
+  return {
+    stddev,
+    brightRatio: bright / pixels,
+    lights,
+    // The empty sea is a smooth teal gradient: no bright text and no lights.
+    blank: bright / pixels < 0.002 && lights === 0,
+  };
+}
+
 function crop(png, rect) {
   const [x, y, width, height] = rect;
   const out = new PNG({ width, height });
@@ -654,6 +692,7 @@ function crop(png, rect) {
 async function cropAether() {
   await mkdir(aetherDir, { recursive: true });
   const cache = new Map();
+  const blanks = [];
   for (const [name, spec] of Object.entries(AETHER_CROPS)) {
     const path = join(shellDir, spec.file);
     if (!(await exists(path))) {
@@ -670,9 +709,27 @@ async function cropAether() {
       console.warn(`skip ${name}: crop outside ${spec.file}`);
       continue;
     }
-    await writeFile(join(aetherDir, `${name}.png`), crop(png, spec.rect));
+    const cropped = crop(png, spec.rect);
+    const stats = blankStats(PNG.sync.read(cropped));
+    const target = join(aetherDir, `${name}.png`);
+    if (stats.blank) {
+      blanks.push(`${name} (${spec.file})`);
+      await unlink(target).catch(() => {});
+      console.warn(
+        `blank capture: ${name} from ${spec.file} ` +
+          `(stddev ${stats.stddev.toFixed(1)}, bright ${(stats.brightRatio * 100).toFixed(2)}%)`,
+      );
+      continue;
+    }
+    await writeFile(target, cropped);
   }
   console.log(`aether: ${aetherDir}`);
+  if (blanks.length > 0) {
+    console.error(
+      `error: ${blanks.length} capture(s) contained no UI: ${blanks.join(", ")}`,
+    );
+    process.exitCode = 1;
+  }
 }
 
 function imageSize(buffer) {
@@ -707,7 +764,9 @@ async function buildReport() {
       : `<figure class="empty"><div>No source surface</div><figcaption>—</figcaption></figure>`;
     const right = hasAether
       ? `<figure><img src="${aetherFile}" alt="Aether ${surface.title}"><figcaption>Aether · ${await imageSize(await readFile(join(outDir, aetherFile)))}</figcaption></figure>`
-      : `<figure class="empty"><div>Not implemented yet</div><figcaption>roadmap</figcaption></figure>`;
+      : surface.aether
+        ? `<figure class="empty"><div>Capture missing — rerun <code>bun run parity:apps</code></div><figcaption>invalid capture</figcaption></figure>`
+        : `<figure class="empty"><div>Not implemented yet</div><figcaption>roadmap</figcaption></figure>`;
     cards.push(`
       <section class="surface">
         <header>

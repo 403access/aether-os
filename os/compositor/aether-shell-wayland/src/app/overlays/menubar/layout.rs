@@ -108,6 +108,7 @@ pub enum MenuCommand {
     Radio,
     Studio,
     Compare,
+    Settings,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -166,6 +167,7 @@ pub const WINDOW_MENU: &[MenuEntry] = &[
     entry!("Network", "wifi", Network),
     entry!("Battery", "battery", Battery),
     entry!("Devices", "bluetooth", Devices),
+    entry!("Settings", "gear", Settings),
     entry!("Tide Radio", "audio", Radio),
     entry!("App Studio", "layers", Studio),
     entry!("Data Cloud Compare", "explorer", Compare),

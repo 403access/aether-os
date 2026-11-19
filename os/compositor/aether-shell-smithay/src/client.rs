@@ -166,6 +166,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
             println!("aether-shell-smithay: cursor -> {applied_cursor:?}");
         }
 
+        state.tick_waves();
         if let Some((full, damage)) = state.output_damage(None) {
             let size = backend.window_size();
             let full_rect = Rectangle::from_size(size);

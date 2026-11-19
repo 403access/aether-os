@@ -709,6 +709,7 @@ impl DrmState {
             stats_path,
             ..
         } = self;
+        app.tick_waves();
         let mut presented = false;
         let mut attempted = false;
         let mut deferred = false;

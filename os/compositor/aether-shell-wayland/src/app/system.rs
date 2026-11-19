@@ -328,6 +328,52 @@ impl App {
         rows
     }
 
+    /// Advance the tide rim while any animated surface is visible. The winit
+    /// event loop polls continuously but only presents when damage exists, so
+    /// this caps the animation at ~12 fps instead of redrawing every frame.
+    pub fn tick_waves(&mut self) {
+        if !self.shell.theme_settings().effects {
+            return;
+        }
+        let animated = self.system_open()
+            || self.calendar_open()
+            || self.shell.explorer_open()
+            || self.task_manager_open()
+            || self.shell.overlay().is_some()
+            || self.shell.focused_window().is_some();
+        if !animated {
+            return;
+        }
+        let now = std::time::Instant::now();
+        if self
+            .wave_last
+            .is_some_and(|last| now.duration_since(last).as_millis() < 83)
+        {
+            return;
+        }
+        self.wave_last = Some(now);
+        if self.system_open() {
+            self.mark_system_damage();
+        }
+        if self.calendar_open() {
+            self.mark_calendar_damage();
+        }
+        if self.shell.explorer_open() {
+            self.mark_damage_rect(self.shell.explorer_rect());
+        }
+        if self.task_manager_open() {
+            self.mark_task_damage();
+        }
+        if self.shell.overlay().is_some() {
+            self.mark_overlay_damage();
+        }
+        if let Some(id) = self.shell.focused_window() {
+            if let Some(rect) = self.window_rect(id) {
+                self.mark_damage_rect(rect);
+            }
+        }
+    }
+
     pub(crate) fn mark_system_damage(&mut self) {
         if self.system_open() {
             self.mark_damage_rect(self.system_rect());

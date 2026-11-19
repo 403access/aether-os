@@ -1,3 +1,13 @@
+## v0.1.0-alpha.82
+
+- Finish the design-system chrome pass: exact OS type sizes (12.54 / 11.4 /
+  9.69 / 7.98 px) with the source tracking, dock tile gradients and a hover
+  lift + label, window resize grips, brighter focused rims with a hover state,
+  and the tide rim animated at ~12 fps from the winit and DRM loops.
+- Measured ink bands for the menu bar: File/View 13–22 in both, app title
+  12–21 vs 12–24. Difference register now closes V1–V7 and V9–V14, V16; only
+  backdrop blur, hover shadow growth and command-overlay grouping remain.
+
 ## v0.1.0-alpha.81
 
 - Formalise the design-system gap: `reports/os-app-parity/VISUAL-SPEC.md`

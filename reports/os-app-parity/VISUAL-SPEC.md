@@ -105,7 +105,7 @@ technique), **open** (visible gap, not implemented).
 | V3 | Brand mark | 21 px svg, ink at (16, 8) | 20 px at (14, 3) | **fixed** (`07c8216`) |
 | V4 | Window shadow | 34 px/90 px, 62 % | no shadow | **fixed** (`8c02033`) |
 | V5 | Tide rim | 2.5 px conic ring + noise displacement | sine-displaced ring, two lobes | **approximated** (`8c02033`) |
-| V6 | Tide motion | continuous 8 s rotation | phase advances on rendered frames only | **open** |
+| V6 | Tide motion | continuous 8 s rotation | wall-clock phase, ~12 fps tick in the winit and DRM loops | **fixed (12 fps cap)** |
 | V7 | Menu popover geometry | top +7, min-width 244, padding 5, pop shadow | matched | **fixed** (`8c02033`) |
 | V8 | Glass blur | `backdrop-filter: blur(22px) saturate(160%)` | flat translucent fills | **open** |
 | V9 | Window inset highlight | `inset 0 1px 0 rgba(255,255,255,.07)` | 1 px white 7 % line inside the top edge | **fixed** (`65564da`) |
@@ -128,10 +128,7 @@ technique), **open** (visible gap, not implemented).
 
 ## 6. Next tasks (visual)
 
-1. **V6** — schedule the tide phase at ~12 fps while a window is focused
-   (needs a deadline in the winit dispatch loop, which currently blocks on
-   events).
-2. **V8** — backdrop blur for the bar, popovers and windows (read the backdrop
+1. **V8** — backdrop blur for the bar, popovers and windows (read the backdrop
    region into a buffer and blur it before compositing).
-3. **V10** — shadow growth on hover (rim and dock hover are done).
-4. **V15** — regroup the palette to the demo's command surface.
+2. **V10** — shadow growth on hover (rim and dock hover are done).
+3. **V15** — regroup the palette to the demo's command surface.

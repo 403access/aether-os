@@ -1,7 +1,7 @@
 ---
 id: using-aether
 title: Using Aether
-sidebar_position: 5
+sidebar_position: 6
 description: "The daily-use manual: global hotkeys, palette modes, windows, workspaces, explorer, chat, audio and recovery."
 ---
 

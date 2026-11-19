@@ -28,6 +28,7 @@ os/nixos/
 ├── filesystem.nix            XFS root, ext4 scratch, tmpfs index
 ├── disko.nix                 GPT layout (ESP, root, nix, scratch, home)
 ├── disk.nix                  the ONE disk device you edit
+├── headless.nix              opt-in no-UI server profile (off by default)
 ├── installer.nix             live ISO: git, disko, helix, probe tools
 ├── services.nix              PipeWire, WirePlumber, udev, journald
 └── users.nix                 operator, service user, agent UID range

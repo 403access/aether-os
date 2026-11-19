@@ -14,6 +14,7 @@
     ./kernel.nix
     ./filesystem.nix
     ./input-method.nix
+    ./headless.nix
     ./services.nix
     ./users.nix
   ];

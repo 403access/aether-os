@@ -1,11 +1,11 @@
 {
   "summary": {
     "surfaces": 29,
-    "complete": 2,
+    "complete": 3,
     "textRuns": 841,
-    "matched": 424,
-    "coverage": 0.504,
-    "alignedRatio": 0.259,
+    "matched": 425,
+    "coverage": 0.505,
+    "alignedRatio": 0.567,
     "missingScenes": 0,
     "regressions": 0
   },
@@ -365,8 +365,8 @@
         "High performance",
         "aether-shell-sm",
         "Xvfb",
-        "sleep",
-        "bash"
+        "bash",
+        "sleep"
       ]
     },
     {
@@ -685,11 +685,11 @@
       "aether": 46,
       "matched": 37,
       "coverage": 0.841,
-      "baseline": 0.727,
-      "alignedRatio": 0.243,
+      "baseline": 0.841,
+      "alignedRatio": 0.514,
       "geometry": {
         "matched": 37,
-        "aligned": 9,
+        "aligned": 19,
         "worst": [
           {
             "text": "Language & Region",
@@ -769,11 +769,11 @@
       "aether": 42,
       "matched": 27,
       "coverage": 0.563,
-      "baseline": 0.521,
-      "alignedRatio": 0.259,
+      "baseline": 0.563,
+      "alignedRatio": 0.63,
       "geometry": {
         "matched": 27,
-        "aligned": 7,
+        "aligned": 17,
         "worst": [
           {
             "text": "Master switch for ripples, shimmer, and window waves.",
@@ -874,10 +874,10 @@
       "matched": 23,
       "coverage": 0.548,
       "baseline": 0.548,
-      "alignedRatio": 0.304,
+      "alignedRatio": 0.739,
       "geometry": {
         "matched": 23,
-        "aligned": 7,
+        "aligned": 17,
         "worst": [
           {
             "text": "OM",
@@ -965,11 +965,11 @@
       "aether": 38,
       "matched": 25,
       "coverage": 0.543,
-      "baseline": 0.522,
-      "alignedRatio": 0.28,
+      "baseline": 0.543,
+      "alignedRatio": 0.68,
       "geometry": {
         "matched": 25,
-        "aligned": 7,
+        "aligned": 17,
         "worst": [
           {
             "text": "Show dock",
@@ -1068,10 +1068,10 @@
       "matched": 24,
       "coverage": 0.511,
       "baseline": 0.511,
-      "alignedRatio": 0.292,
+      "alignedRatio": 0.708,
       "geometry": {
         "matched": 24,
-        "aligned": 7,
+        "aligned": 17,
         "worst": [
           {
             "text": "Command palette",
@@ -1169,10 +1169,10 @@
       "matched": 25,
       "coverage": 0.543,
       "baseline": 0.543,
-      "alignedRatio": 0.28,
+      "alignedRatio": 0.68,
       "geometry": {
         "matched": 25,
-        "aligned": 7,
+        "aligned": 17,
         "worst": [
           {
             "text": "Vision",
@@ -1268,10 +1268,10 @@
       "matched": 23,
       "coverage": 0.511,
       "baseline": 0.511,
-      "alignedRatio": 0.304,
+      "alignedRatio": 0.739,
       "geometry": {
         "matched": 23,
-        "aligned": 7,
+        "aligned": 17,
         "worst": [
           {
             "text": "OM",
@@ -1364,10 +1364,10 @@
       "matched": 25,
       "coverage": 0.641,
       "baseline": 0.641,
-      "alignedRatio": 0.28,
+      "alignedRatio": 0.68,
       "geometry": {
         "matched": 25,
-        "aligned": 7,
+        "aligned": 17,
         "worst": [
           {
             "text": "Bluetooth",
@@ -1450,10 +1450,10 @@
       "matched": 24,
       "coverage": 0.649,
       "baseline": 0.649,
-      "alignedRatio": 0.292,
+      "alignedRatio": 0.708,
       "geometry": {
         "matched": 24,
-        "aligned": 7,
+        "aligned": 17,
         "worst": [
           {
             "text": "Output",
@@ -1538,10 +1538,10 @@
       "matched": 24,
       "coverage": 0.571,
       "baseline": 0.571,
-      "alignedRatio": 0.292,
+      "alignedRatio": 0.708,
       "geometry": {
         "matched": 24,
-        "aligned": 7,
+        "aligned": 17,
         "worst": [
           {
             "text": "Battery",
@@ -1630,10 +1630,10 @@
       "matched": 31,
       "coverage": 0.795,
       "baseline": 0.795,
-      "alignedRatio": 0.258,
+      "alignedRatio": 0.581,
       "geometry": {
         "matched": 31,
-        "aligned": 8,
+        "aligned": 18,
         "worst": [
           {
             "text": "Calendar",
@@ -1711,10 +1711,10 @@
       "matched": 23,
       "coverage": 0.489,
       "baseline": 0.489,
-      "alignedRatio": 0.304,
+      "alignedRatio": 0.739,
       "geometry": {
         "matched": 23,
-        "aligned": 7,
+        "aligned": 17,
         "worst": [
           {
             "text": "OM",
@@ -1811,10 +1811,10 @@
       "matched": 24,
       "coverage": 0.632,
       "baseline": 0.632,
-      "alignedRatio": 0.292,
+      "alignedRatio": 0.708,
       "geometry": {
         "matched": 24,
-        "aligned": 7,
+        "aligned": 17,
         "worst": [
           {
             "text": "Free space",
@@ -1929,47 +1929,47 @@
     },
     {
       "id": "menubar",
-      "status": "missing-text",
+      "status": "complete",
       "source": 10,
       "dynamic": 6,
       "aether": 10,
-      "matched": 9,
-      "coverage": 0.9,
+      "matched": 10,
+      "coverage": 1,
       "baseline": 0.9,
-      "alignedRatio": 0.111,
+      "alignedRatio": 0.2,
       "geometry": {
-        "matched": 9,
-        "aligned": 1,
+        "matched": 10,
+        "aligned": 2,
         "worst": [
           {
-            "text": "View",
-            "dx": -18.8,
+            "text": "Help",
+            "dx": 4.3,
             "dy": 5.5,
-            "distance": 24.3
-          },
-          {
-            "text": "File",
-            "dx": -18.5,
-            "dy": 5.5,
-            "distance": 24
+            "distance": 9.8
           },
           {
             "text": "Go",
-            "dx": -18.2,
+            "dx": 3.8,
             "dy": 5.5,
-            "distance": 23.7
+            "distance": 9.3
           },
           {
             "text": "Window",
-            "dx": -18.2,
+            "dx": 3.8,
             "dy": 5.5,
-            "distance": 23.7
+            "distance": 9.3
           },
           {
-            "text": "Help",
-            "dx": -17.7,
+            "text": "File",
+            "dx": 3.5,
             "dy": 5.5,
-            "distance": 23.2
+            "distance": 9
+          },
+          {
+            "text": "View",
+            "dx": 3.2,
+            "dy": 5.5,
+            "distance": 8.7
           }
         ]
       },
@@ -1979,12 +1979,8 @@
         "menu",
         "sync"
       ],
-      "missing": [
-        "Desktop"
-      ],
-      "extra": [
-        "Files"
-      ]
+      "missing": [],
+      "extra": []
     },
     {
       "id": "menu",
@@ -2002,33 +1998,33 @@
         "worst": [
           {
             "text": "Help",
-            "dx": 15.3,
+            "dx": 4.3,
             "dy": 5.5,
-            "distance": 20.8
+            "distance": 9.8
           },
           {
             "text": "Go",
-            "dx": 14.8,
+            "dx": 3.8,
             "dy": 5.5,
-            "distance": 20.3
+            "distance": 9.3
           },
           {
             "text": "Window",
-            "dx": 14.8,
+            "dx": 3.8,
             "dy": 5.5,
-            "distance": 20.3
+            "distance": 9.3
           },
           {
             "text": "File",
-            "dx": 14.5,
+            "dx": 3.5,
             "dy": 5.5,
-            "distance": 20
+            "distance": 9
           },
           {
             "text": "View",
-            "dx": 14.2,
+            "dx": 3.2,
             "dy": 5.5,
-            "distance": 19.7
+            "distance": 8.7
           }
         ]
       },

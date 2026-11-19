@@ -81,7 +81,7 @@ const SOURCE_TRAYS = [
  * output, 38 px menu bar, dock 8 px above the bottom edge.
  */
 const AETHER_CROPS = {
-  menubar: { file: "desktop.png", rect: [0, 0, 1280, 38] },
+  menubar: { file: "menubar.png", rect: [0, 0, 1280, 38] },
   dock: { file: "desktop.png", rect: [420, 730, 439, 62] },
   menu: { file: "menu.png", rect: [110, 0, 250, 230] },
   command: { file: "palette-default.png", rect: [300, 190, 680, 420] },

@@ -51,7 +51,7 @@
   <p class="lede">Every surface from the Water OS demo next to the current Aether compositor. Captures are element or window crops only — no full-desktop frames.</p>
   <p class="meta">
     <span>Source · e86b239 Add drag-and-drop tile swapping to split layout</span>
-    <span>Aether · fe4f117 docs(parity): document the path to 100% parity</span>
+    <span>Aether · a7d0b69 feat(parity): gate geometry and pixels, add Settings descriptions</span>
     <span>1280×800 · clock pinned to 2026-11-18 16:47 UTC</span>
   </p>
   <div class="stats">
@@ -64,11 +64,11 @@
     <div class="stat"><b>99/108</b><span>State matches</span></div>
     <div class="stat"><b>0</b><span>State to fix</span></div>
     
-    <div class="stat"><b>50%</b><span>UI text coverage</span></div>
+    <div class="stat"><b>51%</b><span>UI text coverage</span></div>
     
     <div class="stat"><b>0</b><span>Contract drift</span></div>
     
-    <div class="stat"><b>6.8%</b><span>Pixels differ</span></div>
+    <div class="stat"><b>6.9%</b><span>Pixels differ</span></div>
   </div>
   
   <section class="state">
@@ -112,10 +112,10 @@
       <h3>Painted pixels</h3>
       <span class="priority">pixelmatch · same-size crops</span>
     </header>
-    <p class="notes">Actual pixels, not layout: each source/Aether crop is compared with pixelmatch and baselined. Overall 6.84% of 20,199,628 pixels differ across 24 same-size surfaces; 13 pairs were skipped because their crops differ in size. Raw: <a href="state/pixel-diff.md">state/pixel-diff.md</a>.</p>
+    <p class="notes">Actual pixels, not layout: each source/Aether crop is compared with pixelmatch and baselined. Overall 6.87% of 20,199,628 pixels differ across 24 same-size surfaces; 13 pairs were skipped because their crops differ in size. Raw: <a href="state/pixel-diff.md">state/pixel-diff.md</a>.</p>
     <table>
       <thead><tr><th>surface</th><th>size</th><th>diff</th><th>baseline</th></tr></thead>
-      <tbody><tr><td><code>tray-calendar</code></td><td>308×351</td><td>90.37%</td><td>90.37%</td></tr><tr><td><code>taskmanager</code></td><td>1248×730</td><td>10.50%</td><td>10.50%</td></tr><tr><td><code>battery</code></td><td>1248×730</td><td>9.94%</td><td>9.94%</td></tr><tr><td><code>network</code></td><td>1248×730</td><td>9.43%</td><td>9.43%</td></tr><tr><td><code>menubar</code></td><td>1280×38</td><td>8.94%</td><td>8.94%</td></tr><tr><td><code>explorer</code></td><td>1248×730</td><td>8.70%</td><td>8.70%</td></tr><tr><td><code>settings-appearance</code></td><td>1248×730</td><td>8.64%</td><td>8.64%</td></tr><tr><td><code>settings-commands</code></td><td>1248×730</td><td>8.61%</td><td>8.61%</td></tr><tr><td><code>settings-network</code></td><td>1248×730</td><td>7.64%</td><td>7.64%</td></tr><tr><td><code>settings-general</code></td><td>1248×730</td><td>6.69%</td><td>6.69%</td></tr><tr><td><code>settings</code></td><td>1248×730</td><td>6.60%</td><td>6.60%</td></tr><tr><td><code>settings-desktop</code></td><td>1248×730</td><td>6.33%</td><td>6.33%</td></tr></tbody>
+      <tbody><tr><td><code>tray-calendar</code></td><td>308×351</td><td>90.37%</td><td>90.37%</td></tr><tr><td><code>taskmanager</code></td><td>1248×730</td><td>10.49%</td><td>10.50%</td></tr><tr><td><code>battery</code></td><td>1248×730</td><td>9.89%</td><td>9.94%</td></tr><tr><td><code>network</code></td><td>1248×730</td><td>9.39%</td><td>9.43%</td></tr><tr><td><code>settings-appearance</code></td><td>1248×730</td><td>9.00%</td><td>8.64%</td></tr><tr><td><code>menubar</code></td><td>1280×38</td><td>8.94%</td><td>8.94%</td></tr><tr><td><code>explorer</code></td><td>1248×730</td><td>8.72%</td><td>8.70%</td></tr><tr><td><code>settings-commands</code></td><td>1248×730</td><td>8.55%</td><td>8.61%</td></tr><tr><td><code>settings-network</code></td><td>1248×730</td><td>7.73%</td><td>7.64%</td></tr><tr><td><code>settings-general</code></td><td>1248×730</td><td>6.89%</td><td>6.69%</td></tr><tr><td><code>settings</code></td><td>1248×730</td><td>6.84%</td><td>6.60%</td></tr><tr><td><code>settings-desktop</code></td><td>1248×730</td><td>6.43%</td><td>6.33%</td></tr></tbody>
     </table>
   </section>
   <h2 class="group">System chrome</h2>
@@ -124,7 +124,7 @@
         <header>
           <h3>Menu bar</h3>
           <span class="priority">P0 · done</span>
-          <span class="pill pill--coverage">text 90%</span>
+          <span class="pill pill--coverage">text 100%</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/menubar.png" alt="Demo Menu bar"><figcaption>Source · 1280x38</figcaption></figure><figure><img src="aether/menubar.png" alt="Aether Menu bar"><figcaption>Aether · 1280x38</figcaption></figure></div>

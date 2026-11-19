@@ -62,7 +62,7 @@ const SURFACES = [
   // Audio, Chat, Agent sandboxes and Remote are Aether-only surfaces, so they
   // have no source scene; the report compares their captures only.
   { id: "command", source: "command", aether: "palette-default", rect: [300, 190, 680, 420] },
-  { id: "menubar", source: "menubar", aether: "desktop", rect: [0, 0, 1280, 38] },
+  { id: "menubar", source: "menubar", aether: "menubar", rect: [0, 0, 1280, 38] },
   { id: "menu", source: "menu", aether: "menu", rect: [110, 0, 250, 230] },
   ...Object.entries(TRAY).map(([id, rect]) => ({
     id,
@@ -250,8 +250,10 @@ async function main() {
       dx: Math.round((pair.aether.x - pair.source.x) * 10) / 10,
       dy: Math.round((pair.aether.y - pair.source.y) * 10) / 10,
     }));
+    // Source boxes are CSS line boxes; Aether nodes are text draw origins.
+    // Compare x tightly and allow half a line for the vertical origin.
     const aligned = offsets.filter(
-      (offset) => Math.abs(offset.dx) <= 2 && Math.abs(offset.dy) <= 3,
+      (offset) => Math.abs(offset.dx) <= 2 && Math.abs(offset.dy) <= 6,
     );
     const worst = offsets
       .map((offset) => ({ ...offset, distance: Math.abs(offset.dx) + Math.abs(offset.dy) }))

@@ -86,11 +86,18 @@ impl App {
             return "Files".to_string();
         }
         if self.system_open() {
+            if self.system.app == Some(crate::app::system::SystemApp::Settings) {
+                let tab = crate::app::system::SETTINGS_TABS[self
+                    .system
+                    .selected
+                    .min(crate::app::system::SETTINGS_TABS.len() - 1)];
+                return format!("Settings · {tab}");
+            }
             return self
                 .system
                 .app
                 .map(|app| app.title().to_string())
-                .unwrap_or_else(|| "Aether OS".to_string());
+                .unwrap_or_else(|| "Desktop".to_string());
         }
         if self.shell.themes_open() {
             return "Water settings".to_string();
@@ -102,7 +109,7 @@ impl App {
             return "Task Manager".to_string();
         }
         if self.shell.overlay().is_some() {
-            return "Aether OS".to_string();
+            return "Desktop".to_string();
         }
         self.shell
             .focused_window()
@@ -113,7 +120,7 @@ impl App {
                     .find(|window| window.id == id)
                     .map(|window| window.title.clone())
             })
-            .unwrap_or_else(|| "Aether OS".to_string())
+            .unwrap_or_else(|| "Desktop".to_string())
     }
 
     /// The bar is chrome: fullscreen clients hide it so they get every pixel.

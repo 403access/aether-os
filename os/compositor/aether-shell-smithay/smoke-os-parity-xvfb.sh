@@ -58,6 +58,9 @@ xdotool windowfocus "${WINDOW_ID}"
 # hand cursor/hover state from the previous click before the frame is captured.
 park() { xdotool mousemove 5 795; sleep 0.2; xdotool mousemove 6 795; sleep 0.4; }
 park
+# Clean menu bar with no window and no popover, matching the source capture.
+import -window root "${OUT}/menubar.png"
+snap menubar
 
 # File menu popover, captured before any window is open so the app name and
 # menu geometry are deterministic. The crop in app-parity.mjs is (110,0,250,215).

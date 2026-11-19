@@ -33,63 +33,63 @@
   },
   "settings-general": {
     "coverage": 0.841,
-    "alignedRatio": 0.243
+    "alignedRatio": 0.514
   },
   "settings-appearance": {
     "coverage": 0.563,
-    "alignedRatio": 0.259
+    "alignedRatio": 0.63
   },
   "settings-displays": {
     "coverage": 0.548,
-    "alignedRatio": 0.304
+    "alignedRatio": 0.739
   },
   "settings-desktop": {
     "coverage": 0.543,
-    "alignedRatio": 0.28
+    "alignedRatio": 0.68
   },
   "settings-commands": {
     "coverage": 0.511,
-    "alignedRatio": 0.292
+    "alignedRatio": 0.708
   },
   "settings-accessibility": {
     "coverage": 0.543,
-    "alignedRatio": 0.28
+    "alignedRatio": 0.68
   },
   "settings-network": {
     "coverage": 0.511,
-    "alignedRatio": 0.304
+    "alignedRatio": 0.739
   },
   "settings-bluetooth": {
     "coverage": 0.641,
-    "alignedRatio": 0.28
+    "alignedRatio": 0.68
   },
   "settings-sound": {
     "coverage": 0.649,
-    "alignedRatio": 0.292
+    "alignedRatio": 0.708
   },
   "settings-battery": {
     "coverage": 0.571,
-    "alignedRatio": 0.292
+    "alignedRatio": 0.708
   },
   "settings-notifications": {
     "coverage": 0.795,
-    "alignedRatio": 0.258
+    "alignedRatio": 0.581
   },
   "settings-security": {
     "coverage": 0.489,
-    "alignedRatio": 0.304
+    "alignedRatio": 0.739
   },
   "settings-storage": {
     "coverage": 0.632,
-    "alignedRatio": 0.292
+    "alignedRatio": 0.708
   },
   "command": {
     "coverage": 0,
     "alignedRatio": null
   },
   "menubar": {
-    "coverage": 0.9,
-    "alignedRatio": 0.111
+    "coverage": 1,
+    "alignedRatio": 0.2
   },
   "menu": {
     "coverage": 0.5,

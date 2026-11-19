@@ -14,27 +14,32 @@ Measured with `bun run parity:scene`, `bun run parity:state` and
 | Metric | Current | Target |
 | --- | ---: | ---: |
 | Paired surfaces | 29 | all in scope |
-| Surfaces complete by text | 2 (`radio`, `calendar`) | all |
-| Text runs matched | 424 / 841 (50.4 %) | 100 % minus a declared data allowlist |
-| Matched text correctly positioned | 108 / 424 (25.9 %) | 100 % within 1 px |
+| Surfaces complete by text | 3 (`radio`, `calendar`, `menubar`) | all |
+| Text runs matched | 425 / 841 (50.5 %) | 100 % minus a declared data allowlist |
+| Matched text within tolerance | 241 / 425 (56.7 %) | 100 % within 1 px |
 | Design-state keys matching | 99 / 108 | 100 % |
 | State differences accepted | 9 | 0 outside out-of-scope |
 | DESIGN.md paths accepted | 12 | 0 outside out-of-scope |
 | DESIGN.md paths open | 0 | 0 |
-| Pixel comparison | 6.84 % differ across 24 same-size surfaces; 13 size mismatches | per-surface pixel threshold |
+| Pixel comparison | 6.87 % differ across 24 same-size surfaces; 13 size mismatches | per-surface pixel threshold |
 
 The first two gates from the plan are now in place: the scene baseline stores
 both text coverage and geometry alignment, and `parity:pixels` compares every
 same-size crop with pixelmatch and fails on a regression. The overall pixel
-ratio is **6.84 %**; the 13 skipped pairs are crops whose source and Aether
+ratio is **6.87 %**; the 13 skipped pairs are crops whose source and Aether
 sizes still differ (dock, menu, command and the Aether-only overlays).
+
+Geometry uses x ≤ 2 px and y ≤ 6 px for text boxes, because the source box is
+a CSS line box while the Aether node is a text draw origin. The 1 px target in
+the rubric applies once those coordinate systems are normalised.
 
 Two examples show why text coverage alone is not parity:
 
 - **Calendar** matches 100 % of its text, but only **2 of 12** runs are within
   tolerance; weekday columns are **~43 px** off.
-- **Menu bar** matches 90 % of its text, but `File` and `View` are **~18 px**
-  off because text measurement/weight differs.
+- **Menu bar** now matches 100 % of its text, but only **2 of 10** runs are
+  within tolerance; the menus are **3–4 px** off because variable font widths
+  differ.
 
 ## 1. What “100 %” must mean
 
@@ -61,8 +66,8 @@ variable fonts, backdrop blur and demo data; Aether is a real OS with live data.
 | No z-order or clipping | Overlap, occlusion and scroll clipping are unverified |
 | No client-surface comparison | Terminal/client content is invisible to the scene tree |
 | No icon/asset diff | Logo, tray glyphs and tab icons differ but score nothing |
-| ~~Geometry is reported, not gated~~ | **Done:** `state/scene-baseline.json` now stores coverage and aligned ratio; a drop fails |
-| ~~No per-surface pixel diff~~ | **Done:** `parity:pixels` compares same-size crops and baselines the ratio |
+| ~~Geometry is reported, not gated~~ | **Done:** `state/scene-baseline.json` stores coverage and aligned ratio; a drop fails. Current: 56.7 % aligned |
+| ~~No per-surface pixel diff~~ | **Done:** `parity:pixels` compares same-size crops and baselines the ratio. Current: 6.87 % pixels differ |
 | No state matrix | Hover/focus/themes/font sizes/breakpoints are not captured |
 | Live data pollutes content | Process/file/IP/user differences are counted as missing text |
 

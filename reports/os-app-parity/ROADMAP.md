@@ -4,7 +4,7 @@ Source: `e86b239 Add drag-and-drop tile swapping to split layout` (local design-
 Visual spec (source vs target, difference register): [`VISUAL-SPEC.md`](VISUAL-SPEC.md).
 Parity target and remaining work: [`PARITY-100.md`](PARITY-100.md).
 
-Aether: `fe4f117 docs(parity): document the path to 100% parity`
+Aether: `a7d0b69 feat(parity): gate geometry and pixels, add Settings descriptions`
 
 Implemented **17** · partial **15** · missing **0** · out of scope **2** · Aether-only **4**.
 

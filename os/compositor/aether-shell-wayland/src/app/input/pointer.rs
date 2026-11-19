@@ -1,6 +1,6 @@
 //! Pointer motion, button and axis routing, including compositor drag/resize.
 
-use aether_geometry::Point as AetherPoint;
+use aether_geometry::{Point as AetherPoint, Rect as AetherRect};
 use aether_shell::audio::AudioAction;
 use aether_shell::theme::ThemeField;
 use aether_shell::{SnapZone, WindowId, MIN_FLOATING_HEIGHT, MIN_FLOATING_WIDTH};
@@ -19,6 +19,20 @@ impl App {
         let old_position = self.pointer_pos;
         let old_cursor = self.cursor;
         self.pointer_pos = position;
+        let point = AetherPoint::new(position.x.round() as i32, position.y.round() as i32);
+        let hover = self.dock_action_at(point);
+        if hover != self.dock_hover {
+            self.dock_hover = hover;
+            if let Some(output) = self.shell.output_at(point) {
+                let dock = self.dock(output);
+                self.mark_damage_rect(AetherRect::new(
+                    dock.rect.x,
+                    dock.rect.y - 36,
+                    dock.rect.width,
+                    dock.rect.height + 36,
+                ));
+            }
+        }
         let new_cursor = cursor_for(self);
         self.cursor = new_cursor;
 

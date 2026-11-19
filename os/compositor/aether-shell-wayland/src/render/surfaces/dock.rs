@@ -22,6 +22,7 @@ impl App {
         }
         let mut panels: Vec<(Arc<MemoryRenderBuffer>, i32, i32)> = Vec::new();
         let mut display_icons: Vec<(String, u32, [u8; 4], i32, i32)> = Vec::new();
+        let mut labels: Vec<(String, i32, i32, u32, [u8; 4])> = Vec::new();
         let chrome: Vec<(AetherRect, [f32; 4])> = Vec::new();
 
         let dock = self.dock(chrome_output);
@@ -41,8 +42,11 @@ impl App {
         }
 
         for (action, item) in &dock.items {
-            let tile_x = item.x + 4;
-            let tile_y = item.y + 4;
+            let hovered = self.dock_hover == Some(*action);
+            let lift = if hovered { 7 } else { 0 };
+            let size = if hovered { 41 } else { 38 };
+            let tile_x = item.x + (46 - size) / 2;
+            let tile_y = item.y + (46 - size) / 2 - lift;
             let [r, g, b] = action.color();
             // `linear-gradient(160deg, color-mix(tile 34%), transparent)` over
             // the surface fill, flattened to one translucent tile.
@@ -60,12 +64,13 @@ impl App {
             if let Some(buffer) = self.chrome_outline(38, 38, 10, [r, g, b, 92]) {
                 panels.push((buffer, tile_x, tile_y));
             }
+            let glyph = if hovered { 21 } else { 19 };
             display_icons.push((
                 action.icon().into(),
-                19,
+                glyph,
                 [r, g, b, 255],
-                tile_x + 9,
-                tile_y + 9,
+                tile_x + (size - glyph as i32) / 2,
+                tile_y + (size - glyph as i32) / 2,
             ));
             // Running indicator: explorer, terminal and audio mirror open state.
             let running = match action {
@@ -85,9 +90,26 @@ impl App {
             }
         }
 
+        // Hover label, like `.os-dock__item::before`.
+        if let Some(action) = self.dock_hover {
+            if let Some((_, item)) = dock.items.iter().find(|(a, _)| *a == action) {
+                let label = action.label();
+                let width = self.text_width(label, 0) + 18;
+                let x = item.x + 23 - width as i32 / 2;
+                let y = dock.rect.y - 28;
+                if let Some(buffer) = self.chrome_round(width, 22, 5, [13, 61, 75, 245]) {
+                    panels.push((buffer, x, y));
+                }
+                if let Some(buffer) = self.chrome_outline(width, 22, 5, ctx.tokens.border(76)) {
+                    panels.push((buffer, x, y));
+                }
+                labels.push((label.into(), x + 9, y + 6, 9, ctx.tokens.text));
+            }
+        }
+
         RenderChunk {
             chrome,
-            labels: Vec::new(),
+            labels,
             icons: Vec::new(),
             panels,
             display_icons,

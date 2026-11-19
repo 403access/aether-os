@@ -173,6 +173,8 @@ pub struct App {
     pub(crate) calendar: Option<CalendarState>,
     /// First-party app window (About, Network, Battery, ...).
     pub(crate) system: SystemState,
+    /// Dock item under the pointer, for the hover lift and label.
+    pub(crate) dock_hover: Option<overlays::dock::DockAction>,
     /// Cached size and mtime for indexed paths shown by the explorer.
     pub(crate) file_meta: HashMap<String, (u64, Option<u64>)>,
     pub(crate) task_manager: Option<TaskManagerState>,
@@ -293,6 +295,7 @@ impl App {
             menu_open: None,
             calendar: None,
             system: SystemState::new(),
+            dock_hover: None,
             file_meta: HashMap::new(),
             task_manager: None,
             sandboxes: None,

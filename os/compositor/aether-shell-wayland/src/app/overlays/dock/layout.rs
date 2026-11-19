@@ -37,6 +37,19 @@ impl DockAction {
     ];
     pub const SECOND_GROUP: [Self; 2] = [Self::Trash, Self::Gallery];
 
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Explorer => "Explorer",
+            Self::Search => "Search",
+            Self::Settings => "Settings",
+            Self::Terminal => "Terminal",
+            Self::Radio => "Tide Radio",
+            Self::About => "About",
+            Self::Trash => "Trash",
+            Self::Gallery => "Design system",
+        }
+    }
+
     pub fn icon(self) -> &'static str {
         match self {
             Self::Explorer => "folder",

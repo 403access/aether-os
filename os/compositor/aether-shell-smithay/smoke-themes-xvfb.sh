@@ -21,6 +21,10 @@ command -v xdotool >/dev/null || {
 }
 
 mkdir -p "${OUT}"
+# Debug scene recorder (capture builds only).
+export AETHER_SCENE_DUMP="${AETHER_SCENE_DUMP:-${OUT}/scene.json}"
+SCENES="${OUT}/scenes"; mkdir -p "${SCENES}"
+snap() { cp "${AETHER_SCENE_DUMP}" "${SCENES}/aether-$1.json" 2>/dev/null || true; }
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-$(mktemp -d)}"
 chmod 700 "${XDG_RUNTIME_DIR}"
 export AETHER_THEME_CONFIG="${AETHER_THEME_CONFIG:-${OUT}/themes-fixture.json}"
@@ -49,6 +53,7 @@ xdotool windowfocus "${WINDOW_ID}"
 xdotool key super+t
 sleep 1
 import -window root "${OUT}/themes.png"
+snap themes
 
 # Theme, water effects, drips, ripples, caustics, row motion, speed, drip
 # energy, background, tone. Walk to the tone row and cycle Ocean -> Deep.
@@ -59,6 +64,7 @@ done
 xdotool key Right
 sleep 0.8
 import -window root "${OUT}/themes-tone.png"
+snap themes-tone
 
 grep -q "themes opened" "${OUT}/themes-app.log" || {
   echo "error: themes overlay did not open" >&2

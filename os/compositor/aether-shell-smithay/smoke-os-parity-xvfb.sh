@@ -92,7 +92,7 @@ xdotool click 1
 sleep 1.2
 park
 import -window root "${OUT}/calendar.png"
-snap calendar
+snap tray-calendar
 
 # Agent sandboxes (Super+B) is Aether-only; close the Calendar first.
 xdotool key Escape

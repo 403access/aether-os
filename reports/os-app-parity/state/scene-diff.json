@@ -1,10 +1,10 @@
 {
   "summary": {
-    "surfaces": 28,
+    "surfaces": 29,
     "complete": 2,
-    "textRuns": 824,
+    "textRuns": 841,
     "matched": 416,
-    "coverage": 0.505,
+    "coverage": 0.495,
     "missingScenes": 0,
     "regressions": 0
   },
@@ -1870,6 +1870,65 @@
       ]
     },
     {
+      "id": "command",
+      "status": "missing-text",
+      "source": 17,
+      "dynamic": 0,
+      "aether": 17,
+      "matched": 0,
+      "coverage": 0,
+      "baseline": 0,
+      "geometry": {
+        "matched": 0,
+        "aligned": 0,
+        "worst": []
+      },
+      "roles": [
+        "command-detail",
+        "command-title",
+        "label",
+        "placeholder"
+      ],
+      "missing": [
+        "Focus local pane",
+        "Move keyboard focus to the local index",
+        "Focus Jottacloud pane",
+        "Move keyboard focus to the remote snapshot",
+        "Go to local root",
+        "/mnt/tank",
+        "Go to Jottacloud root",
+        "Archive",
+        "Go back",
+        "Local index · /mnt/tank",
+        "Go forward",
+        "Local index · /mnt/tank",
+        "Go up one folder",
+        "Already at the root",
+        "Show this path in the other pane",
+        "Mirror /mnt/tank",
+        "Search"
+      ],
+      "extra": [
+        "Search workspaces, windows, files…",
+        "main",
+        "code",
+        "web",
+        "Foot",
+        "A wayland native terminal emulator",
+        "Foot Client",
+        "A wayland native terminal emulator (client)",
+        "Foot Server",
+        "A wayland native terminal emulator (server)",
+        "esc",
+        "navigate",
+        "run",
+        "close",
+        "↑↓",
+        "esc",
+        "> commands   @ agents   / files"
+      ]
+    },
+    {
       "id": "menubar",
       "status": "missing-text",
       "source": 10,
@@ -1915,7 +1974,10 @@
         ]
       },
       "roles": [
-        "label"
+        "app-title",
+        "label",
+        "menu",
+        "sync"
       ],
       "missing": [
         "Desktop"
@@ -1970,7 +2032,8 @@
         ]
       },
       "roles": [
-        "label"
+        "menu",
+        "menu-row"
       ],
       "missing": [
         "New Explorer window",

@@ -20,6 +20,7 @@
   "settings-notifications": 0.795,
   "settings-security": 0.489,
   "settings-storage": 0.632,
+  "command": 0,
   "menubar": 0.9,
   "menu": 0.5,
   "tray-network": 0.4,

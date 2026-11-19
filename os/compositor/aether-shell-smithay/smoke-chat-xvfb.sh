@@ -11,6 +11,10 @@ CHAT_SECONDS="${CHAT_SECONDS:-5}"
 MIN_FRAMES="${MIN_FRAMES:-2}"
 [ -x "${BIN}" ] || { echo "error: ${BIN} not built" >&2; exit 1; }
 mkdir -p "${OUT}"
+# Debug scene recorder (capture builds only).
+export AETHER_SCENE_DUMP="${AETHER_SCENE_DUMP:-${OUT}/scene.json}"
+SCENES="${OUT}/scenes"; mkdir -p "${SCENES}"
+snap() { cp "${AETHER_SCENE_DUMP}" "${SCENES}/aether-$1.json" 2>/dev/null || true; }
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-$(mktemp -d)}"
 chmod 700 "${XDG_RUNTIME_DIR}"
 STATS="${OUT}/chat-frames.ndjson"
@@ -31,6 +35,7 @@ DISPLAY=":${DISPLAY_NUM}" AETHER_CHAT_DEMO=1 AETHER_FRAME_STATS="${STATS}" \
 APP_PID=$!
 sleep "${CHAT_SECONDS}"
 DISPLAY=":${DISPLAY_NUM}" import -window root "${OUT}/chat.png"
+snap chat
 FRAMES="$(grep -c '"kind":"present"' "${STATS}" || true)"
 [ "${FRAMES}" -ge "${MIN_FRAMES}" ] || {
   echo "error: only ${FRAMES} frames in ${CHAT_SECONDS}s while streaming (need ${MIN_FRAMES})" >&2

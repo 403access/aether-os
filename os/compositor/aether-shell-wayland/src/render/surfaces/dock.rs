@@ -7,6 +7,7 @@ use smithay::backend::renderer::element::memory::MemoryRenderBuffer;
 
 use crate::app::App;
 use crate::render::context::{FrameContext, RenderChunk};
+use crate::{scene_box, scene_text};
 
 /// `.os-dock` glass fill and its stronger rim.
 const DOCK_FILL: [u8; 4] = [7, 39, 51, 145];
@@ -26,6 +27,19 @@ impl App {
         let chrome: Vec<(AetherRect, [f32; 4])> = Vec::new();
 
         let dock = self.dock(chrome_output);
+        let dock_node = scene_box!((), None, "dock", dock.rect, DOCK_FILL, 17.0);
+        for (action, item) in &dock.items {
+            scene_box!((), Some(dock_node), "dock-item", *item, TILE_FILL, 10.0);
+            scene_text!(
+                (),
+                Some(dock_node),
+                "dock-label",
+                action.label(),
+                AetherRect::new(item.x, item.y, item.width, item.height),
+                0,
+                ctx.tokens.text_soft
+            );
+        }
         if let Some(buffer) = self.chrome_round(dock.rect.width, dock.rect.height, 17, DOCK_FILL) {
             panels.push((buffer, dock.rect.x, dock.rect.y));
         }
@@ -103,6 +117,15 @@ impl App {
                 if let Some(buffer) = self.chrome_outline(width, 22, 5, ctx.tokens.border(76)) {
                     panels.push((buffer, x, y));
                 }
+                scene_text!(
+                    (),
+                    Some(dock_node),
+                    "dock-tooltip",
+                    label,
+                    AetherRect::new(x + 9, y + 6, self.text_width(label, 9), 18),
+                    9,
+                    ctx.tokens.text
+                );
                 labels.push((label.into(), x + 9, y + 6, 9, ctx.tokens.text));
             }
         }

@@ -1,5 +1,6 @@
 //! Themes surface composition.
 
+use aether_geometry::Rect as AetherRect;
 use std::sync::Arc;
 
 use aether_shell::theme::{ThemeField, ThemeMode};
@@ -7,6 +8,7 @@ use smithay::backend::renderer::element::memory::MemoryRenderBuffer;
 
 use crate::app::App;
 use crate::render::context::{FrameContext, RenderChunk};
+use crate::{scene_box, scene_node, scene_text};
 
 impl App {
     pub(crate) fn compose_themes(&mut self, ctx: &FrameContext) -> RenderChunk {
@@ -20,6 +22,13 @@ impl App {
 
         if themes_here {
             let rect = self.shell.theme_rect();
+            let panel = scene_box!((), None, "overlay", rect, panel_fill, 14.0);
+            let header = scene_node!(
+                (),
+                Some(panel),
+                "header",
+                AetherRect::new(rect.x, rect.y, rect.width, 58)
+            );
             let width = rect.width as i32;
             let settings = *self.shell.theme_settings();
             let selected = self
@@ -42,6 +51,15 @@ impl App {
                 panels.push((buffer, rect.x + 1, rect.y + 1));
             }
             display_icons.push(("palette".into(), 20, accent4(255), rect.x + 18, rect.y + 18));
+            scene_text!(
+                (),
+                Some(header),
+                "title",
+                &"Themes",
+                AetherRect::new(rect.x + 50, rect.y + 12, self.text_width("Themes", 2), 24),
+                2,
+                tokens.text
+            );
             labels.push(("Themes".into(), rect.x + 50, rect.y + 12, 2, tokens.text));
             labels.push((
                 format!(

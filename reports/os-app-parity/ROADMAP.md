@@ -3,7 +3,7 @@
 Source: `e86b239 Add drag-and-drop tile swapping to split layout` (local design-system/ checkout)
 Visual spec (source vs target, difference register): [`VISUAL-SPEC.md`](VISUAL-SPEC.md).
 
-Aether: `c563e0c feat(parity): record a debug-only semantic scene tree`
+Aether: `6e84362 feat(parity): record scene nodes for Explorer, Task Manager, Calendar and trays`
 
 Implemented **17** · partial **15** · missing **0** · out of scope **2** · Aether-only **4**.
 

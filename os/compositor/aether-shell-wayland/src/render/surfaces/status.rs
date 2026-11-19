@@ -8,6 +8,7 @@ use smithay::backend::renderer::element::memory::MemoryRenderBuffer;
 use crate::app::overlays::menubar::{menu_layout, MenuId, Menubar, TrayAction, MENUBAR_HEIGHT};
 use crate::app::App;
 use crate::render::context::{FrameContext, RenderChunk};
+use crate::{scene_box, scene_node, scene_text};
 
 /// Bar fill: `color-mix(in srgb, var(--ds-bg-soft) 72%, transparent)`.
 pub(crate) const BAR_FILL: [u8; 4] = [5, 37, 48, 184];
@@ -30,6 +31,7 @@ impl App {
         let bar = self.menubar(chrome_output);
         let x = bar.rect.x;
         let y = bar.rect.y;
+        let bar_node = scene_node!((), None, "menubar", bar.rect);
 
         // Bar surface plus its bottom hairline.
         if let Some(buffer) = self.chrome_round(bar.rect.width, MENUBAR_HEIGHT, 0, BAR_FILL) {
@@ -55,6 +57,20 @@ impl App {
         ));
 
         // Application title (`.os-menubar__app`), 12.5 px semibold.
+        scene_text!(
+            (),
+            Some(bar_node),
+            "app-title",
+            &bar.app_title,
+            aether_geometry::Rect::new(
+                bar.app.x + 2,
+                y + 10,
+                self.text_width(&bar.app_title, 0x100 | 10),
+                20
+            ),
+            0x100 | 10,
+            tokens.text
+        );
         labels.push((
             bar.app_title.clone(),
             bar.app.x + 2,
@@ -73,6 +89,15 @@ impl App {
                     panels.push((buffer, rect.x, rect.y));
                 }
             }
+            scene_text!(
+                (),
+                Some(bar_node),
+                "menu",
+                id.label(),
+                aether_geometry::Rect::new(rect.x + 9, y + 11, self.text_width(id.label(), 10), 18),
+                10,
+                if open { tokens.text } else { tokens.soft }
+            );
             labels.push((
                 id.label().into(),
                 rect.x + 9,
@@ -96,6 +121,20 @@ impl App {
         if let Some(buffer) = self.chrome_round(6, 6, 3, tokens.green) {
             panels.push((buffer, bar.sync.x + 8, bar.sync.y + 10));
         }
+        scene_text!(
+            (),
+            Some(bar_node),
+            "sync",
+            &bar.sync_label,
+            aether_geometry::Rect::new(
+                bar.sync.x + 20,
+                y + 11,
+                self.text_width(&bar.sync_label, 9),
+                18
+            ),
+            9,
+            tokens.soft
+        );
         labels.push((
             bar.sync_label.clone(),
             bar.sync.x + 20,
@@ -183,8 +222,36 @@ impl App {
 
         // Clock: dim date, bright time.
         let clock_date_x = bar.clock.x + 8;
+        scene_text!(
+            (),
+            Some(bar_node),
+            "clock-date",
+            &bar.clock_date,
+            aether_geometry::Rect::new(
+                clock_date_x,
+                y + 11,
+                self.text_width(&bar.clock_date, 9),
+                18
+            ),
+            9,
+            tokens.dim
+        );
         labels.push((bar.clock_date.clone(), clock_date_x, y + 11, 9, tokens.dim));
         let time_x = clock_date_x + self.text_width(&bar.clock_date, 0) as i32 + 7;
+        scene_text!(
+            (),
+            Some(bar_node),
+            "clock-time",
+            &bar.clock_time,
+            aether_geometry::Rect::new(
+                time_x,
+                y + 11,
+                self.text_width(&bar.clock_time, 0x100 | 9),
+                18
+            ),
+            0x100 | 9,
+            tokens.text
+        );
         labels.push((
             bar.clock_time.clone(),
             time_x,
@@ -226,6 +293,7 @@ impl App {
         let tokens = ctx.tokens;
         let measure = |text: &str, scale: u32| self.text_width(text, scale);
         let panel = menu_layout(bar, menu, &measure);
+        let popover = scene_box!((), None, "menu-popover", panel.rect, POPOVER_FILL, 10.0);
         if let Some(buffer) =
             self.chrome_round(panel.rect.width, panel.rect.height, 10, POPOVER_FILL)
         {
@@ -244,6 +312,20 @@ impl App {
                 }
             }
             display_icons.push((entry.icon.into(), 15, tokens.dim, rect.x + 8, rect.y + 7));
+            scene_text!(
+                (),
+                Some(popover),
+                "menu-row",
+                entry.label,
+                aether_geometry::Rect::new(
+                    rect.x + 31,
+                    rect.y + 8,
+                    self.text_width(entry.label, 12),
+                    20
+                ),
+                12,
+                tokens.text_soft
+            );
             labels.push((
                 entry.label.into(),
                 rect.x + 31,

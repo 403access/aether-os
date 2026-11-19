@@ -1,6 +1,6 @@
 # Scene diff · source DOM vs Aether render chunk
 
-Text coverage: **416/824** runs across 28 surfaces (50.5 %).
+Text coverage: **416/841** runs across 29 surfaces (49.5 %).
 
 | Surface | Source runs | Aether runs | Matched | Coverage | Missing (first) |
 | --- | ---: | ---: | ---: | ---: | --- |
@@ -25,6 +25,7 @@ Text coverage: **416/824** runs across 28 surfaces (50.5 %).
 | `settings-notifications` | 39 | 37 | 31 | 80 % | `Notifications`, `Demo device`, `Show banners and alerts from apps.`, `What appears before you unlock the screen.`, `Silence all notifications until turned off.` |
 | `settings-security` | 47 | 32 | 23 | 49 % | `Privacy & Security`, `Demo device`, `Security`, `FileVault`, `Encrypt the startup disk. Recovery key is stored in Aether ID.` |
 | `settings-storage` | 38 | 31 | 24 | 63 % | `Storage`, `Demo device`, `Macintosh HD`, `Archive snapshots`, `Applications` |
+| `command` | 17 | 17 | 0 | 0 % | `Focus local pane`, `Move keyboard focus to the local index`, `Focus Jottacloud pane`, `Move keyboard focus to the remote snapshot`, `Go to local root` |
 | `menubar` | 10 | 10 | 9 | 90 % | `Desktop` |
 | `menu` | 10 | 10 | 5 | 50 % | `New Explorer window`, `New Data Cloud Compare window`, `Verify snapshot`, `Toggle dotfiles`, `Settings` |
 | `tray-network` | 10 | 9 | 4 | 40 % | `Connected`, `Known`, `Lighthouse`, `Known`, `VPN` |

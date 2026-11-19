@@ -11,6 +11,7 @@ use smithay::backend::renderer::element::memory::MemoryRenderBuffer;
 
 use crate::app::App;
 use crate::render::context::{FrameContext, RenderChunk};
+use crate::{scene_box, scene_node, scene_text};
 
 impl App {
     pub(crate) fn compose_palette(&mut self, ctx: &FrameContext) -> RenderChunk {
@@ -28,6 +29,7 @@ impl App {
             if let Some(rect) = self.shell.overlay_rect() {
                 let width = rect.width as i32;
                 let height = rect.height as i32;
+                let panel = scene_box!((), None, "command-overlay", rect, panel_fill, 14.0);
                 if let Some(buffer) =
                     self.chrome_panel(rect.width, rect.height, 14, panel_fill, panel_border)
                 {
@@ -49,8 +51,28 @@ impl App {
                     rect.x + 18,
                     rect.y + 20,
                 ));
+                let search = scene_node!(
+                    (),
+                    Some(panel),
+                    "search",
+                    AetherRect::new(rect.x + 1, rect.y + 1, rect.width.saturating_sub(2), 58)
+                );
                 let query = self.shell.palette_query();
                 if query.is_empty() {
+                    scene_text!(
+                        (),
+                        Some(search),
+                        "placeholder",
+                        "Search workspaces, windows, files…",
+                        AetherRect::new(
+                            rect.x + 46,
+                            rect.y + 18,
+                            self.text_width("Search workspaces, windows, files…", 1),
+                            20
+                        ),
+                        1,
+                        tokens.dim
+                    );
                     labels.push((
                         "Search workspaces, windows, files…".into(),
                         rect.x + 46,
@@ -59,13 +81,22 @@ impl App {
                         tokens.dim,
                     ));
                 } else {
-                    labels.push((
-                        format!("{query}_"),
-                        rect.x + 46,
-                        rect.y + 18,
+                    let query_text = format!("{query}_");
+                    scene_text!(
+                        (),
+                        Some(search),
+                        "query",
+                        &query_text,
+                        AetherRect::new(
+                            rect.x + 46,
+                            rect.y + 18,
+                            self.text_width(&query_text, 1),
+                            20
+                        ),
                         1,
-                        tokens.text,
-                    ));
+                        tokens.text
+                    );
+                    labels.push((query_text, rect.x + 46, rect.y + 18, 1, tokens.text));
                 }
                 let esc = AetherRect::new(rect.x + width - 54, rect.y + 17, 36, 22);
                 if let Some(buffer) = self.chrome_round(36, 22, 6, tokens.base) {
@@ -171,6 +202,41 @@ impl App {
                             tile.y + 5,
                         ));
                     }
+                    let row_node = scene_node!((), Some(panel), "command-row", row_rect);
+                    scene_text!(
+                        (),
+                        Some(row_node),
+                        "command-title",
+                        &entry.title,
+                        AetherRect::new(
+                            row_rect.x + 48,
+                            row_rect.y + 11,
+                            self.text_width(&entry.title, 1),
+                            20
+                        ),
+                        1,
+                        if active {
+                            tokens.text
+                        } else {
+                            tokens.text_soft
+                        }
+                    );
+                    scene_text!(
+                        (),
+                        Some(row_node),
+                        "command-detail",
+                        &entry.detail,
+                        AetherRect::new(
+                            row_rect.x + row_rect.width as i32
+                                - self.text_width(&entry.detail, 0) as i32
+                                - 12,
+                            row_rect.y + 12,
+                            self.text_width(&entry.detail, 0),
+                            16
+                        ),
+                        0,
+                        tokens.dim
+                    );
                     labels.push((
                         entry.title.clone(),
                         row_rect.x + 48,

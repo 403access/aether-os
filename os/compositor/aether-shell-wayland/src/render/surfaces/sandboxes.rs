@@ -9,6 +9,7 @@ use crate::app::overlays::sandboxes::SandboxStatus;
 use crate::app::App;
 use crate::render::context::{FrameContext, RenderChunk};
 use crate::render::helpers::truncate;
+use crate::{scene_box, scene_node, scene_text};
 
 impl App {
     pub(crate) fn compose_sandboxes(&mut self, ctx: &FrameContext) -> RenderChunk {
@@ -39,6 +40,8 @@ impl App {
                 )
             };
             let visible = self.sandbox_visible_rows();
+            let panel = scene_box!((), None, "overlay", bounds, tokens.surface_a(236), 0.0);
+            let list_node = scene_node!((), Some(panel), "agent-list", list);
 
             if let Some(buffer) =
                 self.chrome_round(bounds.width.max(1), 62, 0, tokens.surface_a(236))
@@ -102,6 +105,20 @@ impl App {
             ));
 
             // List header.
+            scene_text!(
+                (),
+                Some(list_node),
+                "title",
+                "Sandboxes",
+                AetherRect::new(
+                    list.x + 14,
+                    list.y + 12,
+                    self.text_width("Sandboxes", 1),
+                    20
+                ),
+                1,
+                tokens.text
+            );
             labels.push(("Sandboxes".into(), list.x + 14, list.y + 12, 1, tokens.text));
             let count = format!("{} records", records.len());
             labels.push((

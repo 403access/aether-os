@@ -59,6 +59,9 @@ const SURFACES = [
       rect: WINDOW,
     }),
   ),
+  // Audio, Chat, Agent sandboxes and Remote are Aether-only surfaces, so they
+  // have no source scene; the report compares their captures only.
+  { id: "command", source: "command", aether: "palette-default", rect: [300, 190, 680, 420] },
   { id: "menubar", source: "menubar", aether: "desktop", rect: [0, 0, 1280, 38] },
   { id: "menu", source: "menu", aether: "menu", rect: [110, 0, 250, 230] },
   ...Object.entries(TRAY).map(([id, rect]) => ({

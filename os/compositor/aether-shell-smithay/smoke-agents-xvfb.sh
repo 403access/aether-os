@@ -25,6 +25,10 @@ command -v xdotool >/dev/null || {
 }
 
 mkdir -p "${OUT}"
+# Debug scene recorder (capture builds only).
+export AETHER_SCENE_DUMP="${AETHER_SCENE_DUMP:-${OUT}/scene.json}"
+SCENES="${OUT}/scenes"; mkdir -p "${SCENES}"
+snap() { cp "${AETHER_SCENE_DUMP}" "${SCENES}/aether-$1.json" 2>/dev/null || true; }
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-$(mktemp -d)}"
 chmod 700 "${XDG_RUNTIME_DIR}"
 export AETHER_TEST_CLIENT="${AETHER_TEST_CLIENT:-weston-terminal}"
@@ -76,6 +80,7 @@ sleep 1
 xdotool type --delay 120 "agent"
 sleep 1
 import -window root "${OUT}/provider-agent.png"
+snap provider-agent
 xdotool key Return
 sleep 2
 

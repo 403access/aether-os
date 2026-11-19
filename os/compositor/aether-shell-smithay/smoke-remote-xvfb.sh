@@ -21,6 +21,10 @@ command -v xdotool >/dev/null || {
 }
 
 mkdir -p "${OUT}"
+# Debug scene recorder (capture builds only).
+export AETHER_SCENE_DUMP="${AETHER_SCENE_DUMP:-${OUT}/scene.json}"
+SCENES="${OUT}/scenes"; mkdir -p "${SCENES}"
+snap() { cp "${AETHER_SCENE_DUMP}" "${SCENES}/aether-$1.json" 2>/dev/null || true; }
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-$(mktemp -d)}"
 chmod 700 "${XDG_RUNTIME_DIR}"
 export AETHER_REMOTE_FIXTURE=1
@@ -48,6 +52,7 @@ xdotool windowfocus "${WINDOW_ID}"
 xdotool key super+r
 sleep 1
 import -window root "${OUT}/remote.png"
+snap remote
 
 xdotool key Down
 xdotool key Return
@@ -56,10 +61,12 @@ xdotool key i
 xdotool key c
 sleep 0.4
 import -window root "${OUT}/remote-toggles.png"
+snap remote-toggles
 
 xdotool key s
 sleep 0.4
 import -window root "${OUT}/remote-stopped.png"
+snap remote-stopped
 
 grep -q "remote overlay opened" "${OUT}/remote-app.log" || {
   echo "error: remote overlay did not open" >&2

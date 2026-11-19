@@ -7,6 +7,7 @@ use smithay::backend::renderer::element::memory::MemoryRenderBuffer;
 
 use crate::app::App;
 use crate::render::context::{FrameContext, RenderChunk};
+use crate::{scene_box, scene_node, scene_text};
 
 impl App {
     pub(crate) fn compose_chat(&mut self, ctx: &FrameContext) -> RenderChunk {
@@ -20,6 +21,13 @@ impl App {
 
         if chat_here {
             let rect = self.shell.chat_rect();
+            let panel = scene_box!((), None, "overlay", rect, panel_fill_soft, 14.0);
+            let header = scene_node!(
+                (),
+                Some(panel),
+                "header",
+                AetherRect::new(rect.x, rect.y, rect.width, 58)
+            );
             let width = rect.width as i32;
             let height = rect.height as i32;
             if let Some(buffer) = self.chrome_panel(
@@ -47,6 +55,15 @@ impl App {
                 rect.x + 20,
                 rect.y + 21,
             ));
+            scene_text!(
+                (),
+                Some(header),
+                "title",
+                &"Aether",
+                AetherRect::new(rect.x + 52, rect.y + 13, self.text_width("Aether", 2), 24),
+                2,
+                tokens.text
+            );
             labels.push(("Aether".into(), rect.x + 52, rect.y + 13, 2, tokens.text));
             labels.push((
                 "Streaming markdown".into(),

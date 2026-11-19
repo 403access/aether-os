@@ -21,6 +21,10 @@ command -v xdotool >/dev/null || {
 }
 
 mkdir -p "${OUT}"
+# Debug scene recorder (capture builds only).
+export AETHER_SCENE_DUMP="${AETHER_SCENE_DUMP:-${OUT}/scene.json}"
+SCENES="${OUT}/scenes"; mkdir -p "${SCENES}"
+snap() { cp "${AETHER_SCENE_DUMP}" "${SCENES}/aether-$1.json" 2>/dev/null || true; }
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-$(mktemp -d)}"
 chmod 700 "${XDG_RUNTIME_DIR}"
 export AETHER_AUDIO_FIXTURE="${AETHER_AUDIO_FIXTURE:-${ROOT}/audio-fixture.json}"
@@ -48,6 +52,7 @@ xdotool windowfocus "${WINDOW_ID}"
 xdotool key super+a
 sleep 1
 import -window root "${OUT}/audio.png"
+snap audio
 
 xdotool key Down
 xdotool key Return
@@ -55,6 +60,7 @@ sleep 0.5
 xdotool key p
 sleep 0.5
 import -window root "${OUT}/audio-preset.png"
+snap audio-preset
 
 grep -q "audio overlay opened" "${OUT}/audio-app.log" || {
   echo "error: audio overlay did not open" >&2

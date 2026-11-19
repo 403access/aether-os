@@ -7,6 +7,7 @@ use smithay::backend::renderer::element::memory::MemoryRenderBuffer;
 
 use crate::app::App;
 use crate::render::context::{FrameContext, RenderChunk};
+use crate::{scene_box, scene_node, scene_text};
 
 impl App {
     pub(crate) fn compose_audio(&mut self, ctx: &FrameContext) -> RenderChunk {
@@ -20,6 +21,13 @@ impl App {
 
         if audio_here {
             let rect = self.shell.audio_rect();
+            let panel = scene_box!((), None, "overlay", rect, panel_fill, 14.0);
+            let header = scene_node!(
+                (),
+                Some(panel),
+                "header",
+                AetherRect::new(rect.x, rect.y, rect.width, 58)
+            );
             let width = rect.width as i32;
             let height = rect.height as i32;
             let routes: Vec<aether_audio::AudioRoute> = self.shell.audio_routes().to_vec();
@@ -60,6 +68,15 @@ impl App {
                 rect.x + 18,
                 rect.y + 18,
             ));
+            scene_text!(
+                (),
+                Some(header),
+                "title",
+                &"Audio",
+                AetherRect::new(rect.x + 50, rect.y + 12, self.text_width("Audio", 2), 24),
+                2,
+                tokens.text
+            );
             labels.push(("Audio".into(), rect.x + 50, rect.y + 12, 2, tokens.text));
             let subtitle = if xruns > 0 {
                 format!("PipeWire · 48 kHz · {xruns} xruns")

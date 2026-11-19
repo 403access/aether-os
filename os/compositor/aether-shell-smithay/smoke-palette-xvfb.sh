@@ -25,6 +25,10 @@ command -v xdotool >/dev/null || {
 }
 
 mkdir -p "${OUT}"
+# Debug scene recorder (capture builds only).
+export AETHER_SCENE_DUMP="${AETHER_SCENE_DUMP:-${OUT}/scene.json}"
+SCENES="${OUT}/scenes"; mkdir -p "${SCENES}"
+snap() { cp "${AETHER_SCENE_DUMP}" "${SCENES}/aether-$1.json" 2>/dev/null || true; }
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-$(mktemp -d)}"
 chmod 700 "${XDG_RUNTIME_DIR}"
 export AETHER_TEST_CLIENT="${AETHER_TEST_CLIENT:-${ROOT}/aether-terminal.sh}"
@@ -53,9 +57,11 @@ xdotool mousemove 0 0
 xdotool key Up Up
 sleep 1
 import -window root "${OUT}/palette-default.png"
+snap palette-default
 xdotool type --delay 120 "web"
 sleep 1
 import -window root "${OUT}/palette-query.png"
+snap palette-query
 
 # Click the first result row (workspace "web") instead of pressing Enter.
 xdotool mousemove 600 300 click 1
@@ -83,6 +89,7 @@ sleep 1
 xdotool type --delay 120 "wayland"
 sleep 1
 import -window root "${OUT}/palette-window.png"
+snap palette-window
 xdotool key Return
 sleep 1
 

@@ -643,7 +643,6 @@ async function main() {
   const baseline = await loadBaseline();
   const diff = compare(source, aether, baseline);
   const document = {
-    generated: new Date().toISOString(),
     source: { project: source.project, revision: source.revision },
     aether: { project: aether.project, revision: aether.revision },
     ...diff,

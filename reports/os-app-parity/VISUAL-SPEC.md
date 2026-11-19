@@ -49,6 +49,38 @@ reason and still appear in `state/diff.md`; anything unpinned exits non-zero.
 The same summary is embedded in `reports/os-app-parity/index.html`, next to the
 pixel pairs.
 
+### 1.2 Scene extraction
+
+Pixels show *that* something is different; the design-state manifest only knows
+the values someone enumerated. The scene pass records what each side laid out:
+
+| Side | Document |
+| --- | --- |
+| Source | `app-parity.mjs` walks every visible DOM element and writes `elements[{path,text,x,y,w,h,font,background,color,radius,border,shadow}]` |
+| Target | `AETHER_SCENE_DUMP` makes the compositor write its render chunk per frame: `chrome[]`, `labels[{text,x,y,px,weight,tracking,color}]`, `icons[]`, `panels[]` |
+
+`scene-diff.mjs` clips both to the surface rectangle, matches non-numeric text
+runs (live data is excluded), and writes per-surface coverage plus the missing
+runs. Coverage is baselined in `state/scene-baseline.json`, so losing a label is
+a regression. This is what exposed the missing Settings profile card, nav group
+labels, row descriptions and footer.
+
+### 1.3 DESIGN.md contract
+
+Both sides also publish a standard
+[`DESIGN.md`](https://github.com/google-labs-code/design.md) file:
+
+- `design/source/DESIGN.md` is the contract: colours, typography, rounded,
+  spacing and named components measured from the demo.
+- `design/aether/DESIGN.md` is the same schema generated from the compositor's
+  design manifest.
+- `bun run parity:design:check` lints both and diffs the token paths. Deliberate
+  differences live in `design/accepted.json` with a reason; known missing
+  components live in `design/open.json` as tracked debt, not accepted parity.
+
+The contract cannot express layout geometry or effects, so it complements the
+scene tree rather than replacing it.
+
 ## 2. Source model
 
 ### 2.1 Tokens

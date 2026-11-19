@@ -41,6 +41,7 @@ const shellDir = join(root, "artifacts", "screenshots", "shell");
 const outDir = join(root, "reports", "os-app-parity");
 const sourceDir = join(outDir, "source");
 const aetherDir = join(outDir, "aether");
+const sceneDir = join(shellDir, "scenes");
 
 /** Demo apps and the command that opens each one. */
 const SOURCE_APPS = [
@@ -521,9 +522,86 @@ async function serveSource() {
   };
 }
 
+/**
+ * Runs in the page: serialise every visible element's box, text and computed
+ * style. The Aether side emits the same information from its render chunk, so
+ * missing labels/boxes show up as data instead of being invisible.
+ */
+function collectDomScene() {
+  const round = (value) => Math.round(value * 100) / 100;
+  const skipClass = /(^|\s)(ds-sea|ds-wave|os-water|os-vignette|sprite|skip-link)(\s|$)/;
+  const skipTag = new Set(["SCRIPT", "STYLE", "HEAD", "META", "LINK", "CANVAS", "SVG"]);
+  const elements = [];
+
+  const walk = (element, depth, path) => {
+    if (elements.length >= 4000) return;
+    if (skipTag.has(element.tagName)) return;
+    if (skipClass.test(typeof element.className === "string" ? element.className : "")) return;
+    if (element.closest("[hidden]")) return;
+    const style = getComputedStyle(element);
+    if (style.display === "none" || style.visibility === "hidden" || Number(style.opacity) === 0) {
+      return;
+    }
+    const rect = element.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) return;
+    if (
+      rect.bottom < 0 ||
+      rect.right < 0 ||
+      rect.left > window.innerWidth ||
+      rect.top > window.innerHeight
+    ) {
+      return;
+    }
+    const ownText = [...element.childNodes]
+      .filter((node) => node.nodeType === Node.TEXT_NODE)
+      .map((node) => node.textContent)
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+    const fontSize = Number.parseFloat(style.fontSize);
+    elements.push({
+      path,
+      tag: element.tagName.toLowerCase(),
+      id: element.id || "",
+      role: element.getAttribute("role") || "",
+      classes:
+        typeof element.className === "string"
+          ? element.className.split(/\s+/).filter(Boolean)
+          : [],
+      text: ownText,
+      x: round(rect.x),
+      y: round(rect.y),
+      w: round(rect.width),
+      h: round(rect.height),
+      font: Number.isFinite(fontSize)
+        ? {
+            px: round(fontSize),
+            weight: Number(style.fontWeight) || null,
+            tracking: style.letterSpacing,
+            lineHeight: style.lineHeight,
+          }
+        : null,
+      background: style.backgroundColor,
+      color: style.color,
+      radius: style.borderTopLeftRadius,
+      border: `${style.borderTopWidth} ${style.borderTopColor}`,
+      shadow: style.boxShadow === "none" ? "" : style.boxShadow,
+      opacity: Number(style.opacity),
+      depth,
+    });
+    [...element.children].forEach((child, index) =>
+      walk(child, depth + 1, `${path}/${child.tagName.toLowerCase()}[${index}]`),
+    );
+  };
+
+  walk(document.body, 0, "body");
+  return { viewport: { width: window.innerWidth, height: window.innerHeight }, elements };
+}
+
 async function captureSource(origin) {
   const { chromium } = await import("@playwright/test");
   await mkdir(sourceDir, { recursive: true });
+  await mkdir(sceneDir, { recursive: true });
   const browser = await chromium.launch();
   const page = await browser.newPage({
     viewport: { width: 1280, height: 800 },
@@ -580,6 +658,11 @@ async function captureSource(origin) {
     if (!clicked) throw new Error(`no target for ${selector}`);
   };
 
+  const scene = async (file) => {
+    const snapshot = await page.evaluate(collectDomScene);
+    await writeFile(join(sceneDir, `source-${file}.json`), JSON.stringify(snapshot));
+  };
+
   const shot = async (selector, file) => {
     const locator = page.locator(selector).first();
     await locator.waitFor({ state: "visible", timeout: 5000 });
@@ -588,6 +671,7 @@ async function captureSource(origin) {
       path: join(sourceDir, `${file}.png`),
       animations: "disabled",
     });
+    await scene(file);
     const box = await locator.boundingBox();
     return box;
   };
@@ -676,6 +760,7 @@ async function captureSource(origin) {
       },
     });
   }
+  await scene("menu");
   await page.keyboard.press("Escape");
 
   for (const tray of SOURCE_TRAYS) {
@@ -820,6 +905,79 @@ async function designState() {
   return { stats, section };
 }
 
+/**
+ * Scene coverage from `state/scene-diff.json`: how many source text runs each
+ * surface's Aether frame actually paints.
+ */
+async function sceneState() {
+  const file = join(outDir, "state", "scene-diff.json");
+  if (!(await exists(file))) return { stats: "", section: "", bySurface: new Map() };
+  const diff = JSON.parse(await readFile(file, "utf8"));
+  const bySurface = new Map(diff.surfaces.map((surface) => [surface.id, surface]));
+  const worst = diff.surfaces
+    .filter((surface) => surface.coverage !== null)
+    .sort((left, right) => left.coverage - right.coverage)
+    .slice(0, 12);
+  const stats = `
+    <div class="stat"><b>${Math.round(diff.summary.coverage * 100)}%</b><span>UI text coverage</span></div>`;
+  const rows = worst.map((surface) => {
+    const missing = surface.missing
+      .slice(0, 4)
+      .map((text) => `<code>${text.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</code>`)
+      .join(", ");
+    return `<tr><td><code>${surface.id}</code></td><td>${surface.matched}/${surface.source}</td><td>${Math.round(surface.coverage * 100)}%</td><td>${missing}</td></tr>`;
+  });
+  const section = `
+  <section class="state">
+    <header>
+      <h3>UI scene</h3>
+      <span class="priority">source DOM vs Aether render chunk</span>
+    </header>
+    <p class="notes">Every visible text run is matched between the demo's DOM and the labels the compositor actually painted. Numbers are excluded because they are live data (CPU %, IPs, dates). Missing runs are real content the frame does not draw. Raw: <a href="state/scene-diff.md">state/scene-diff.md</a>.</p>
+    <table>
+      <thead><tr><th>surface</th><th>matched</th><th>coverage</th><th>missing (first)</th></tr></thead>
+      <tbody>${rows.join("")}</tbody>
+    </table>
+  </section>`;
+  return { stats, section, bySurface };
+}
+
+/**
+ * DESIGN.md contract diff: token/component paths that differ between the
+ * source contract and the compositor's.
+ */
+async function designContract() {
+  const file = join(outDir, "state", "design-md-diff.json");
+  if (!(await exists(file))) return { stats: "", section: "" };
+  const document = JSON.parse(await readFile(file, "utf8"));
+  const rows = document.paths.map((entry) => {
+    const accepted = document.accepted?.[entry.path];
+    const open = document.open?.[entry.path];
+    const note = accepted
+      ? `accepted — ${accepted}`
+      : open
+        ? `open — ${open}`
+        : "unaccounted";
+    return `<tr><td><code>${entry.path}</code></td><td>${entry.state}</td><td>${note}</td></tr>`;
+  });
+  const open = document.paths.filter((entry) => document.open?.[entry.path]).length;
+  const stats = `
+    <div class="stat"><b>${document.unaccounted?.length ?? 0}</b><span>Contract drift</span></div>`;
+  const section = `
+  <section class="state">
+    <header>
+      <h3>Design contract</h3>
+      <span class="priority">DESIGN.md · source vs Aether</span>
+    </header>
+    <p class="notes">Both sides publish a DESIGN.md token and component contract. Source is measured from the demo; Aether is generated from the compositor manifest. ${open} path(s) are open implementation debt; accepted paths carry a reason and bound. Raw: <a href="state/design-md-diff.md">state/design-md-diff.md</a> · <a href="../../design/source/DESIGN.md">source</a> · <a href="../../design/aether/DESIGN.md">Aether</a>.</p>
+    <table>
+      <thead><tr><th>path</th><th>state</th><th>note</th></tr></thead>
+      <tbody>${rows.join("")}</tbody>
+    </table>
+  </section>`;
+  return { stats, section };
+}
+
 async function buildReport() {
   await mkdir(outDir, { recursive: true });
   const counts = {
@@ -831,6 +989,8 @@ async function buildReport() {
   };
   for (const surface of SURFACES) counts[surface.status] += 1;
   const state = await designState();
+  const scene = await sceneState();
+  const contract = await designContract();
 
   const cards = [];
   let group = "";
@@ -851,11 +1011,16 @@ async function buildReport() {
       : surface.aether
         ? `<figure class="empty"><div>Capture missing — rerun <code>bun run parity:apps</code></div><figcaption>invalid capture</figcaption></figure>`
         : `<figure class="empty"><div>Not implemented yet</div><figcaption>roadmap</figcaption></figure>`;
+    const sceneMatch = surface.aether ? scene.bySurface.get(surface.aether) : null;
+    const coveragePill = sceneMatch?.coverage != null
+      ? `<span class="pill pill--coverage">text ${Math.round(sceneMatch.coverage * 100)}%</span>`
+      : "";
     cards.push(`
       <section class="surface">
         <header>
           <h3>${surface.title}</h3>
           <span class="priority">${surface.priority}</span>
+          ${coveragePill}
           <span class="pill pill--${surface.status}">${STATUS_LABEL[surface.status]}</span>
         </header>
         <div class="pair">${left}${right}</div>
@@ -892,6 +1057,7 @@ async function buildReport() {
   .pill--missing { color:var(--red); border-color:color-mix(in srgb,var(--red) 40%,transparent); background:color-mix(in srgb,var(--red) 12%,transparent); }
   .pill--aether-only { color:var(--violet); border-color:color-mix(in srgb,var(--violet) 40%,transparent); background:color-mix(in srgb,var(--violet) 12%,transparent); }
   .pill--out-of-scope { color:var(--mute); border-color:color-mix(in srgb,var(--mute) 40%,transparent); background:color-mix(in srgb,var(--mute) 12%,transparent); }
+  .pill--coverage { color:var(--accent); border-color:color-mix(in srgb,var(--accent) 40%,transparent); background:color-mix(in srgb,var(--accent) 10%,transparent); font-variant-numeric:tabular-nums; }
   .pair { display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:14px; align-items:start; }
   figure { margin:0; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:#041c26; display:flex; flex-direction:column; }
   figure img { flex:1 1 auto; object-fit:contain; }
@@ -925,8 +1091,12 @@ async function buildReport() {
     <div class="stat"><b>${counts["out-of-scope"]}</b><span>Out of scope</span></div>
     <div class="stat"><b>${counts["aether-only"]}</b><span>Aether only</span></div>
     ${state.stats}
+    ${scene.stats}
+    ${contract.stats}
   </div>
   ${state.section}
+  ${scene.section}
+  ${contract.section}
   ${cards.join("\n")}
   <footer>Generated by <code>scripts/screenshots/app-parity.mjs</code>. Roadmap: <code>ROADMAP.md</code> · Visual spec: <code>VISUAL-SPEC.md</code> · Design state: <code>state/diff.md</code>.</footer>
 </body>

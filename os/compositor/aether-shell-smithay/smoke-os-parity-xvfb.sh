@@ -30,6 +30,10 @@ export AETHER_TEST_CLIENT_COUNT="${AETHER_TEST_CLIENT_COUNT:-0}"
 export AETHER_FIXED_UNIX="${AETHER_FIXED_UNIX:-1795020420}"
 # The dock is off by default; this capture exercises it.
 export AETHER_SHOW_DOCK="${AETHER_SHOW_DOCK:-1}"
+# Emit the composed layout for the scene differ.
+export AETHER_SCENE_DUMP="${AETHER_SCENE_DUMP:-${OUT}/scene.json}"
+SCENES="${OUT}/scenes"; mkdir -p "${SCENES}"
+snap() { cp "${AETHER_SCENE_DUMP}" "${SCENES}/aether-$1.json" 2>/dev/null || true; }
 
 Xvfb ":${DISPLAY_NUM}" -screen 0 "${WIDTH}x${HEIGHT}x24" -ac >"${OUT}/xvfb-parity.log" 2>&1 &
 XVFB_PID=$!
@@ -63,6 +67,7 @@ xdotool click 1
 sleep 0.8
 park
 import -window root "${OUT}/menu.png"
+snap menu
 xdotool key Escape
 sleep 0.5
 xdotool mousemove 5 795
@@ -76,6 +81,7 @@ xdotool click 1
 sleep 1.5
 park
 import -window root "${OUT}/desktop.png"
+snap desktop
 
 # Escape closes the explorer overlay, then the clock opens the Calendar.
 xdotool key Escape
@@ -86,6 +92,7 @@ xdotool click 1
 sleep 1.2
 park
 import -window root "${OUT}/calendar.png"
+snap calendar
 
 # Agent sandboxes (Super+B) is Aether-only; close the Calendar first.
 xdotool key Escape
@@ -95,5 +102,6 @@ xdotool key super+b
 sleep 1.2
 park
 import -window root "${OUT}/sandboxes.png"
+snap sandboxes
 
 echo "wrote ${OUT}/desktop.png, ${OUT}/calendar.png and ${OUT}/sandboxes.png"

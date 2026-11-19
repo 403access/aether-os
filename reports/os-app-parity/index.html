@@ -27,6 +27,7 @@
   .pill--missing { color:var(--red); border-color:color-mix(in srgb,var(--red) 40%,transparent); background:color-mix(in srgb,var(--red) 12%,transparent); }
   .pill--aether-only { color:var(--violet); border-color:color-mix(in srgb,var(--violet) 40%,transparent); background:color-mix(in srgb,var(--violet) 12%,transparent); }
   .pill--out-of-scope { color:var(--mute); border-color:color-mix(in srgb,var(--mute) 40%,transparent); background:color-mix(in srgb,var(--mute) 12%,transparent); }
+  .pill--coverage { color:var(--accent); border-color:color-mix(in srgb,var(--accent) 40%,transparent); background:color-mix(in srgb,var(--accent) 10%,transparent); font-variant-numeric:tabular-nums; }
   .pair { display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:14px; align-items:start; }
   figure { margin:0; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:#041c26; display:flex; flex-direction:column; }
   figure img { flex:1 1 auto; object-fit:contain; }
@@ -50,7 +51,7 @@
   <p class="lede">Every surface from the Water OS demo next to the current Aether compositor. Captures are element or window crops only — no full-desktop frames.</p>
   <p class="meta">
     <span>Source · e86b239 Add drag-and-drop tile swapping to split layout</span>
-    <span>Aether · 76f938c chore(web): republish the recaptured shell surfaces</span>
+    <span>Aether · 68dd677 feat(settings): capture and compare every settings pane</span>
     <span>1280×800 · clock pinned to 2026-11-18 16:47 UTC</span>
   </p>
   <div class="stats">
@@ -62,6 +63,10 @@
     
     <div class="stat"><b>98/107</b><span>State matches</span></div>
     <div class="stat"><b>0</b><span>State to fix</span></div>
+    
+    <div class="stat"><b>44%</b><span>UI text coverage</span></div>
+    
+    <div class="stat"><b>0</b><span>Contract drift</span></div>
   </div>
   
   <section class="state">
@@ -75,12 +80,37 @@
       <tbody><tr><td><code>dock.height</code></td><td><code>64</code></td><td><code>62</code></td><td>accepted — Follows from dock.item (46 + 2 x 8 px padding) versus the demo's 48 + 2 x (7 + 1 border).</td></tr><tr><td><code>dock.item</code></td><td><code>48</code></td><td><code>46</code></td><td>accepted — Aether ships a deliberately tighter dock (46 px items, 38 px tiles, 7 px inner padding) than the demo's 48/39/7. Changing it moves every dock hit target and capture crop, so it belongs with the dock parity work rather than a token tweak.</td></tr><tr><td><code>dock.pad</code></td><td><code>7</code></td><td><code>8</code></td><td>accepted — Aether paints 8 px of inner padding; the demo's 7 px plus a 1 px border gives 8 px outside. The visible inset is the same.</td></tr><tr><td><code>dock.tile</code></td><td><code>39.36</code></td><td><code>38</code></td><td>accepted — See dock.item: the tile is 0.82x the 46 px item (37.7, rounded to 38) instead of 0.82x the demo's 48 px (39.36).</td></tr><tr><td><code>dock.width</code></td><td><code>565</code></td><td><code>439</code></td><td>accepted — Dock width is a consequence of the eight tiles at 46 px versus the demo's ten at 48 px (see structure.dock-items).</td></tr><tr><td><code>menubar.menu.weight</code></td><td><code>medium</code></td><td><code>regular</code></td><td>accepted — The compositor's text renderer has regular and bold faces only. The demo's menu buttons are 550 (medium); Aether paints regular. Add a medium face before tightening this.</td></tr><tr><td><code>menubar.resources.value-weight</code></td><td><code>medium</code></td><td><code>bold</code></td><td>accepted — The demo's resource values are 600 (medium). With regular/bold only, bold is the nearer match and keeps the values legible at 9.69 px.</td></tr><tr><td><code>structure.dock-items</code></td><td><code>10</code></td><td><code>8</code></td><td>accepted — The demo has ten dock tiles including Projects and App Studio. App Studio is out of scope by decision and Projects is a demo-only surface, so Aether ships eight.</td></tr><tr><td><code>token.surface</code></td><td><code>#072733eb</code></td><td><code>#072733fa</code></td><td>accepted — Aether's window fill is 98% opaque; the demo uses color-mix(surface-solid 92%, transparent). The remaining difference belongs to the open backdrop-blur item (V8 in VISUAL-SPEC.md).</td></tr></tbody>
     </table>
   </section>
+  
+  <section class="state">
+    <header>
+      <h3>UI scene</h3>
+      <span class="priority">source DOM vs Aether render chunk</span>
+    </header>
+    <p class="notes">Every visible text run is matched between the demo's DOM and the labels the compositor actually painted. Numbers are excluded because they are live data (CPU %, IPs, dates). Missing runs are real content the frame does not draw. Raw: <a href="state/scene-diff.md">state/scene-diff.md</a>.</p>
+    <table>
+      <thead><tr><th>surface</th><th>matched</th><th>coverage</th><th>missing (first)</th></tr></thead>
+      <tbody><tr><td><code>taskmanager</code></td><td>4/49</td><td>8%</td><td><code>Live</code>, <code>Memory</code>, <code>Storage</code>, <code>Usage over time</code></td></tr><tr><td><code>tray-calendar</code></td><td>1/9</td><td>11%</td><td><code>Sun</code>, <code>Mon</code>, <code>Tue</code>, <code>Wed</code></td></tr><tr><td><code>explorer</code></td><td>13/57</td><td>23%</td><td><code>/mnt/tank</code>, <code>Local</code>, <code>Local index</code>, <code>Projects</code></td></tr><tr><td><code>tray-sound</code></td><td>3/10</td><td>30%</td><td><code>Now playing</code>, <code>Deep Current</code>, <code>Harbour Speakers</code>, <code>Analog · analog-stereo</code></td></tr><tr><td><code>devices</code></td><td>7/21</td><td>33%</td><td><code>Let nearby devices find this Mac.</code>, <code>Tide Mouse</code>, <code>Connected</code>, <code>Battery</code></td></tr><tr><td><code>settings-security</code></td><td>17/47</td><td>36%</td><td><code>Demo device</code>, <code>OM</code>, <code>Oliver Molnar</code>, <code>Aether ID · Administrator</code></td></tr><tr><td><code>settings-commands</code></td><td>19/47</td><td>40%</td><td><code>Demo device</code>, <code>OM</code>, <code>Oliver Molnar</code>, <code>Aether ID · Administrator</code></td></tr><tr><td><code>settings-displays</code></td><td>17/42</td><td>41%</td><td><code>Demo device</code>, <code>OM</code>, <code>Oliver Molnar</code>, <code>Aether ID · Administrator</code></td></tr><tr><td><code>settings-desktop</code></td><td>19/46</td><td>41%</td><td><code>Demo device</code>, <code>OM</code>, <code>Oliver Molnar</code>, <code>Aether ID · Administrator</code></td></tr><tr><td><code>settings-accessibility</code></td><td>19/46</td><td>41%</td><td><code>Demo device</code>, <code>OM</code>, <code>Oliver Molnar</code>, <code>Aether ID · Administrator</code></td></tr><tr><td><code>tray-devices</code></td><td>3/7</td><td>43%</td><td><code>Connected</code>, <code>Tide Mouse</code>, <code>Harbour Keyboard</code>, <code>Wireless</code></td></tr><tr><td><code>settings-battery</code></td><td>19/42</td><td>45%</td><td><code>Demo device</code>, <code>OM</code>, <code>Oliver Molnar</code>, <code>Aether ID · Administrator</code></td></tr></tbody>
+    </table>
+  </section>
+  
+  <section class="state">
+    <header>
+      <h3>Design contract</h3>
+      <span class="priority">DESIGN.md · source vs Aether</span>
+    </header>
+    <p class="notes">Both sides publish a DESIGN.md token and component contract. Source is measured from the demo; Aether is generated from the compositor manifest. 4 path(s) are open implementation debt; accepted paths carry a reason and bound. Raw: <a href="state/design-md-diff.md">state/design-md-diff.md</a> · <a href="../../design/source/DESIGN.md">source</a> · <a href="../../design/aether/DESIGN.md">Aether</a>.</p>
+    <table>
+      <thead><tr><th>path</th><th>state</th><th>note</th></tr></thead>
+      <tbody><tr><td><code>colors.surface</code></td><td>modified</td><td>accepted — Aether's window fill is 98% opaque; the demo uses color-mix(surface-solid 92%, transparent). This is the open backdrop-blur item (V8).</td></tr><tr><td><code>colors.line-strong</code></td><td>modified</td><td>accepted — The demo's computed hairline is 77/255 after color-mix; Aether paints 76/255. A 1/255 rounding difference.</td></tr><tr><td><code>typography.label-caps</code></td><td>removed</td><td>open — Sidebar group labels are not drawn yet; the token exists only on the source side.</td></tr><tr><td><code>typography.menubar-menu</code></td><td>modified</td><td>accepted — The demo's menu buttons are 550; the compositor has regular and bold faces only, so it paints 400.</td></tr><tr><td><code>typography.resource-value</code></td><td>modified</td><td>accepted — The demo's resource values are 600; with regular/bold only, 700 is the nearer face.</td></tr><tr><td><code>spacing.dock</code></td><td>modified</td><td>accepted — Aether paints 8px of inner padding; the demo's 7px plus its 1px border gives the same visible inset.</td></tr><tr><td><code>components.settings-profile</code></td><td>removed</td><td>open — The demo's sidebar profile card (name, role, status) is not drawn yet.</td></tr><tr><td><code>components.settings-nav-group-label</code></td><td>removed</td><td>open — The demo groups Settings navigation into System / Connectivity / Power & privacy; Aether is still a flat list.</td></tr><tr><td><code>components.settings-footer</code></td><td>removed</td><td>open — The demo's sidebar footer (version/build) is not drawn yet.</td></tr><tr><td><code>components.menubar-menu</code></td><td>modified</td><td>accepted — Cascades from typography.menubar-menu (550 vs 400).</td></tr><tr><td><code>components.window</code></td><td>modified</td><td>accepted — Cascades from colors.surface (92% vs 98% opacity).</td></tr><tr><td><code>components.divider</code></td><td>modified</td><td>accepted — Cascades from colors.line-strong (77/255 vs 76/255).</td></tr><tr><td><code>components.dock</code></td><td>modified</td><td>accepted — Cascades from spacing.dock and the dock height difference (62 vs 64).</td></tr><tr><td><code>components.dock-item</code></td><td>modified</td><td>accepted — Aether ships 46px dock items; the demo uses 48px. Tracked with the dock parity work.</td></tr><tr><td><code>components.dock-tile</code></td><td>modified</td><td>accepted — Aether ships 38px tiles; the demo uses 48 x 0.82 = 39.36px.</td></tr><tr><td><code>components.tray-calendar</code></td><td>modified</td><td>accepted — Whole-pixel rounding: the demo computes 350.41px, Aether 351px.</td></tr></tbody>
+    </table>
+  </section>
   <h2 class="group">System chrome</h2>
 
       <section class="surface">
         <header>
           <h3>Menu bar</h3>
           <span class="priority">P0 · done</span>
+          <span class="pill pill--coverage">text 90%</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/menubar.png" alt="Demo Menu bar"><figcaption>Source · 1280x38</figcaption></figure><figure><img src="aether/menubar.png" alt="Aether Menu bar"><figcaption>Aether · 1280x38</figcaption></figure></div>
@@ -91,6 +121,7 @@
         <header>
           <h3>Dock</h3>
           <span class="priority">P0 · done</span>
+          
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/dock.png" alt="Demo Dock"><figcaption>Source · 566x64</figcaption></figure><figure><img src="aether/dock.png" alt="Aether Dock"><figcaption>Aether · 439x62</figcaption></figure></div>
@@ -101,6 +132,7 @@
         <header>
           <h3>App menus</h3>
           <span class="priority">P0 · done</span>
+          <span class="pill pill--coverage">text 50%</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/menu.png" alt="Demo App menus"><figcaption>Source · 264x286</figcaption></figure><figure><img src="aether/menu.png" alt="Aether App menus"><figcaption>Aether · 250x230</figcaption></figure></div>
@@ -111,6 +143,7 @@
         <header>
           <h3>Command overlay</h3>
           <span class="priority">P2</span>
+          
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/command.png" alt="Demo Command overlay"><figcaption>Source · 680x576</figcaption></figure><figure><img src="aether/command.png" alt="Aether Command overlay"><figcaption>Aether · 680x420</figcaption></figure></div>
@@ -122,6 +155,7 @@
         <header>
           <h3>Data Cloud Compare</h3>
           <span class="priority">—</span>
+          
           <span class="pill pill--out-of-scope">Out of scope</span>
         </header>
         <div class="pair"><figure><img src="source/compare.png" alt="Demo Data Cloud Compare"><figcaption>Source · 1248x730</figcaption></figure><figure class="empty"><div>Not implemented yet</div><figcaption>roadmap</figcaption></figure></div>
@@ -132,6 +166,7 @@
         <header>
           <h3>Explorer</h3>
           <span class="priority">P1</span>
+          <span class="pill pill--coverage">text 23%</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/explorer.png" alt="Demo Explorer"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/explorer.png" alt="Aether Explorer"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -142,6 +177,7 @@
         <header>
           <h3>Settings · General</h3>
           <span class="priority">P1</span>
+          <span class="pill pill--coverage">text 57%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-general.png" alt="Demo Settings · General"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-general.png" alt="Aether Settings · General"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -152,6 +188,7 @@
         <header>
           <h3>Settings · Appearance</h3>
           <span class="priority">P1</span>
+          <span class="pill pill--coverage">text 46%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-appearance.png" alt="Demo Settings · Appearance"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-appearance.png" alt="Aether Settings · Appearance"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -162,6 +199,7 @@
         <header>
           <h3>Settings · Displays</h3>
           <span class="priority">P1</span>
+          <span class="pill pill--coverage">text 41%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-displays.png" alt="Demo Settings · Displays"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-displays.png" alt="Aether Settings · Displays"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -172,6 +210,7 @@
         <header>
           <h3>Settings · Desktop & Dock</h3>
           <span class="priority">P1</span>
+          <span class="pill pill--coverage">text 41%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-desktop.png" alt="Demo Settings · Desktop & Dock"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-desktop.png" alt="Aether Settings · Desktop & Dock"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -182,6 +221,7 @@
         <header>
           <h3>Settings · Search & Commands</h3>
           <span class="priority">P1</span>
+          <span class="pill pill--coverage">text 40%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-commands.png" alt="Demo Settings · Search & Commands"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-commands.png" alt="Aether Settings · Search & Commands"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -192,6 +232,7 @@
         <header>
           <h3>Settings · Accessibility</h3>
           <span class="priority">P1</span>
+          <span class="pill pill--coverage">text 41%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-accessibility.png" alt="Demo Settings · Accessibility"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-accessibility.png" alt="Aether Settings · Accessibility"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -202,6 +243,7 @@
         <header>
           <h3>Settings · Network</h3>
           <span class="priority">P1</span>
+          <span class="pill pill--coverage">text 47%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-network.png" alt="Demo Settings · Network"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-network.png" alt="Aether Settings · Network"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -212,6 +254,7 @@
         <header>
           <h3>Settings · Bluetooth</h3>
           <span class="priority">P1</span>
+          <span class="pill pill--coverage">text 46%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-bluetooth.png" alt="Demo Settings · Bluetooth"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-bluetooth.png" alt="Aether Settings · Bluetooth"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -222,6 +265,7 @@
         <header>
           <h3>Settings · Sound</h3>
           <span class="priority">P1</span>
+          <span class="pill pill--coverage">text 49%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-sound.png" alt="Demo Settings · Sound"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-sound.png" alt="Aether Settings · Sound"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -232,6 +276,7 @@
         <header>
           <h3>Settings · Battery</h3>
           <span class="priority">P1</span>
+          <span class="pill pill--coverage">text 45%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-battery.png" alt="Demo Settings · Battery"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-battery.png" alt="Aether Settings · Battery"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -242,6 +287,7 @@
         <header>
           <h3>Settings · Notifications</h3>
           <span class="priority">P1</span>
+          <span class="pill pill--coverage">text 62%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-notifications.png" alt="Demo Settings · Notifications"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-notifications.png" alt="Aether Settings · Notifications"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -252,6 +298,7 @@
         <header>
           <h3>Settings · Privacy & Security</h3>
           <span class="priority">P1</span>
+          <span class="pill pill--coverage">text 36%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-security.png" alt="Demo Settings · Privacy & Security"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-security.png" alt="Aether Settings · Privacy & Security"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -262,6 +309,7 @@
         <header>
           <h3>Settings · Storage</h3>
           <span class="priority">P1</span>
+          <span class="pill pill--coverage">text 47%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-storage.png" alt="Demo Settings · Storage"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-storage.png" alt="Aether Settings · Storage"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -272,6 +320,7 @@
         <header>
           <h3>Network</h3>
           <span class="priority">P0 · done</span>
+          <span class="pill pill--coverage">text 68%</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/network.png" alt="Demo Network"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/network.png" alt="Aether Network"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -282,6 +331,7 @@
         <header>
           <h3>Battery</h3>
           <span class="priority">P0 · done</span>
+          <span class="pill pill--coverage">text 68%</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/battery.png" alt="Demo Battery"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/battery.png" alt="Aether Battery"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -292,6 +342,7 @@
         <header>
           <h3>Devices</h3>
           <span class="priority">P0 · done</span>
+          <span class="pill pill--coverage">text 33%</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/devices.png" alt="Demo Devices"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/devices.png" alt="Aether Devices"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -302,6 +353,7 @@
         <header>
           <h3>Calendar</h3>
           <span class="priority">P0 · done</span>
+          <span class="pill pill--coverage">text 100%</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/calendar.png" alt="Demo Calendar"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/calendar.png" alt="Aether Calendar"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -312,6 +364,7 @@
         <header>
           <h3>Task Manager</h3>
           <span class="priority">P1</span>
+          <span class="pill pill--coverage">text 8%</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/taskmanager.png" alt="Demo Task Manager"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/taskmanager.png" alt="Aether Task Manager"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -322,6 +375,7 @@
         <header>
           <h3>Terminal</h3>
           <span class="priority">P0 · done</span>
+          
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/terminal.png" alt="Demo Terminal"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/terminal.png" alt="Aether Terminal"><figcaption>Aether · 619x730</figcaption></figure></div>
@@ -332,6 +386,7 @@
         <header>
           <h3>Tide Radio</h3>
           <span class="priority">P0 · done</span>
+          <span class="pill pill--coverage">text 100%</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/music.png" alt="Demo Tide Radio"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/radio.png" alt="Aether Tide Radio"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -342,6 +397,7 @@
         <header>
           <h3>Keyboard shortcuts</h3>
           <span class="priority">P2</span>
+          
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/shortcuts.png" alt="Demo Keyboard shortcuts"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/shortcuts.png" alt="Aether Keyboard shortcuts"><figcaption>Aether · 760x560</figcaption></figure></div>
@@ -352,6 +408,7 @@
         <header>
           <h3>About Aether OS</h3>
           <span class="priority">P0 · done</span>
+          <span class="pill pill--coverage">text 56%</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/about.png" alt="Demo About Aether OS"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/about.png" alt="Aether About Aether OS"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -362,6 +419,7 @@
         <header>
           <h3>App Studio</h3>
           <span class="priority">—</span>
+          
           <span class="pill pill--out-of-scope">Out of scope</span>
         </header>
         <div class="pair"><figure><img src="source/builder.png" alt="Demo App Studio"><figcaption>Source · 1248x730</figcaption></figure><figure class="empty"><div>Not implemented yet</div><figcaption>roadmap</figcaption></figure></div>
@@ -373,6 +431,7 @@
         <header>
           <h3>Wi-Fi tray</h3>
           <span class="priority">P0 · done</span>
+          <span class="pill pill--coverage">text 50%</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/tray-network.png" alt="Demo Wi-Fi tray"><figcaption>Source · 301x329</figcaption></figure><figure><img src="aether/tray-network.png" alt="Aether Wi-Fi tray"><figcaption>Aether · 300x328</figcaption></figure></div>
@@ -383,6 +442,7 @@
         <header>
           <h3>Bluetooth tray</h3>
           <span class="priority">P0 · done</span>
+          <span class="pill pill--coverage">text 43%</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/tray-devices.png" alt="Demo Bluetooth tray"><figcaption>Source · 301x253</figcaption></figure><figure><img src="aether/tray-devices.png" alt="Aether Bluetooth tray"><figcaption>Aether · 300x253</figcaption></figure></div>
@@ -393,6 +453,7 @@
         <header>
           <h3>Battery tray</h3>
           <span class="priority">P0 · done</span>
+          <span class="pill pill--coverage">text 60%</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/tray-battery.png" alt="Demo Battery tray"><figcaption>Source · 287x271</figcaption></figure><figure><img src="aether/tray-battery.png" alt="Aether Battery tray"><figcaption>Aether · 286x270</figcaption></figure></div>
@@ -403,6 +464,7 @@
         <header>
           <h3>Sound tray</h3>
           <span class="priority">P0 · done</span>
+          <span class="pill pill--coverage">text 30%</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/tray-sound.png" alt="Demo Sound tray"><figcaption>Source · 293x256</figcaption></figure><figure><img src="aether/tray-sound.png" alt="Aether Sound tray"><figcaption>Aether · 292x256</figcaption></figure></div>
@@ -413,6 +475,7 @@
         <header>
           <h3>Calendar tray</h3>
           <span class="priority">P0 · done</span>
+          <span class="pill pill--coverage">text 11%</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/tray-calendar.png" alt="Demo Calendar tray"><figcaption>Source · 308x351</figcaption></figure><figure><img src="aether/tray-calendar.png" alt="Aether Calendar tray"><figcaption>Aether · 308x351</figcaption></figure></div>
@@ -424,6 +487,7 @@
         <header>
           <h3>Audio routes</h3>
           <span class="priority">P0 · done</span>
+          
           <span class="pill pill--aether-only">Aether only</span>
         </header>
         <div class="pair"><figure class="empty"><div>No source surface</div><figcaption>—</figcaption></figure><figure><img src="aether/audio.png" alt="Aether Audio routes"><figcaption>Aether · 660x560</figcaption></figure></div>
@@ -434,6 +498,7 @@
         <header>
           <h3>Chat drawer</h3>
           <span class="priority">P0 · done</span>
+          
           <span class="pill pill--aether-only">Aether only</span>
         </header>
         <div class="pair"><figure class="empty"><div>No source surface</div><figcaption>—</figcaption></figure><figure><img src="aether/chat.png" alt="Aether Chat drawer"><figcaption>Aether · 400x660</figcaption></figure></div>
@@ -444,6 +509,7 @@
         <header>
           <h3>Agent sandboxes</h3>
           <span class="priority">P0 · done</span>
+          
           <span class="pill pill--aether-only">Aether only</span>
         </header>
         <div class="pair"><figure class="empty"><div>No source surface</div><figcaption>—</figcaption></figure><figure><img src="aether/agents.png" alt="Aether Agent sandboxes"><figcaption>Aether · 1280x688</figcaption></figure></div>
@@ -454,6 +520,7 @@
         <header>
           <h3>Remote display</h3>
           <span class="priority">P0 · done</span>
+          
           <span class="pill pill--aether-only">Aether only</span>
         </header>
         <div class="pair"><figure class="empty"><div>No source surface</div><figcaption>—</figcaption></figure><figure><img src="aether/remote.png" alt="Aether Remote display"><figcaption>Aether · 620x420</figcaption></figure></div>

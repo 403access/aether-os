@@ -37,12 +37,16 @@
     "lint:workflows": "bash scripts/lint-workflows.sh",
     "os:test": "cargo test --manifest-path os/compositor/Cargo.toml",
     "verify": "bun run typecheck && bun run test:unit && bun run test:design && bun run build",
+    "parity:design": "node scripts/screenshots/design-docs.mjs",
+    "parity:design:check": "node scripts/screenshots/design-docs.mjs --check",
+    "parity:scene": "node scripts/screenshots/scene-diff.mjs",
     "parity:state": "node scripts/screenshots/design-state.mjs",
     "parity:state:diff": "node scripts/screenshots/design-state.mjs --diff-only",
     "parity:apps": "node scripts/screenshots/app-parity.mjs",
     "parity:apps:report": "node scripts/screenshots/app-parity.mjs --report-only"
   },
   "devDependencies": {
+    "@google/design.md": "^0.4.0",
     "@happy-dom/global-registrator": "^21.0.4",
     "@playwright/test": "^1.56.0",
     "@testing-library/dom": "^10.4.2",

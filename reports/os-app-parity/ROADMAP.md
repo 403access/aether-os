@@ -3,7 +3,7 @@
 Source: `e86b239 Add drag-and-drop tile swapping to split layout` (local design-system/ checkout)
 Visual spec (source vs target, difference register): [`VISUAL-SPEC.md`](VISUAL-SPEC.md).
 
-Aether: `76f938c chore(web): republish the recaptured shell surfaces`
+Aether: `68dd677 feat(settings): capture and compare every settings pane`
 
 Implemented **17** · partial **15** · missing **0** · out of scope **2** · Aether-only **4**.
 

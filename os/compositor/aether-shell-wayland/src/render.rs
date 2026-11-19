@@ -17,7 +17,7 @@
 
 mod chrome;
 mod compose;
-mod context;
+pub(crate) mod context;
 mod element;
 pub(crate) mod helpers;
 pub(crate) mod surfaces;

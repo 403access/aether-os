@@ -1,0 +1,187 @@
+{
+  "lint": {
+    "source": {
+      "findings": [
+        {
+          "severity": "info",
+          "message": "Design system defines 12 colors, 11 typography scales, 5 rounding levels, 3 spacing tokens, 29 components.",
+          "rule": "token-summary"
+        }
+      ],
+      "summary": {
+        "errors": 0,
+        "warnings": 0,
+        "infos": 1
+      }
+    },
+    "aether": {
+      "findings": [
+        {
+          "severity": "info",
+          "message": "Design system defines 12 colors, 10 typography scales, 5 rounding levels, 3 spacing tokens, 26 components.",
+          "rule": "token-summary"
+        }
+      ],
+      "summary": {
+        "errors": 0,
+        "warnings": 0,
+        "infos": 1
+      }
+    }
+  },
+  "diff": {
+    "tokens": {
+      "colors": {
+        "added": [],
+        "removed": [],
+        "modified": [
+          "surface",
+          "line-strong"
+        ]
+      },
+      "typography": {
+        "added": [],
+        "removed": [
+          "label-caps"
+        ],
+        "modified": [
+          "menubar-menu",
+          "resource-value"
+        ]
+      },
+      "rounded": {
+        "added": [],
+        "removed": [],
+        "modified": []
+      },
+      "spacing": {
+        "added": [],
+        "removed": [],
+        "modified": [
+          "dock"
+        ]
+      },
+      "components": {
+        "added": [],
+        "removed": [
+          "settings-profile",
+          "settings-nav-group-label",
+          "settings-footer"
+        ],
+        "modified": [
+          "menubar-menu",
+          "window",
+          "divider",
+          "dock",
+          "dock-item",
+          "dock-tile",
+          "tray-calendar"
+        ]
+      }
+    },
+    "findings": {
+      "before": {
+        "errors": 0,
+        "warnings": 0,
+        "infos": 1
+      },
+      "after": {
+        "errors": 0,
+        "warnings": 0,
+        "infos": 1
+      },
+      "delta": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "regression": false
+  },
+  "paths": [
+    {
+      "path": "colors.surface",
+      "state": "modified"
+    },
+    {
+      "path": "colors.line-strong",
+      "state": "modified"
+    },
+    {
+      "path": "typography.label-caps",
+      "state": "removed"
+    },
+    {
+      "path": "typography.menubar-menu",
+      "state": "modified"
+    },
+    {
+      "path": "typography.resource-value",
+      "state": "modified"
+    },
+    {
+      "path": "spacing.dock",
+      "state": "modified"
+    },
+    {
+      "path": "components.settings-profile",
+      "state": "removed"
+    },
+    {
+      "path": "components.settings-nav-group-label",
+      "state": "removed"
+    },
+    {
+      "path": "components.settings-footer",
+      "state": "removed"
+    },
+    {
+      "path": "components.menubar-menu",
+      "state": "modified"
+    },
+    {
+      "path": "components.window",
+      "state": "modified"
+    },
+    {
+      "path": "components.divider",
+      "state": "modified"
+    },
+    {
+      "path": "components.dock",
+      "state": "modified"
+    },
+    {
+      "path": "components.dock-item",
+      "state": "modified"
+    },
+    {
+      "path": "components.dock-tile",
+      "state": "modified"
+    },
+    {
+      "path": "components.tray-calendar",
+      "state": "modified"
+    }
+  ],
+  "unaccounted": [],
+  "open": {
+    "typography.label-caps": "Sidebar group labels are not drawn yet; the token exists only on the source side.",
+    "components.settings-profile": "The demo's sidebar profile card (name, role, status) is not drawn yet.",
+    "components.settings-nav-group-label": "The demo groups Settings navigation into System / Connectivity / Power & privacy; Aether is still a flat list.",
+    "components.settings-footer": "The demo's sidebar footer (version/build) is not drawn yet."
+  },
+  "accepted": {
+    "colors.surface": "Aether's window fill is 98% opaque; the demo uses color-mix(surface-solid 92%, transparent). This is the open backdrop-blur item (V8).",
+    "typography.menubar-menu": "The demo's menu buttons are 550; the compositor has regular and bold faces only, so it paints 400.",
+    "typography.resource-value": "The demo's resource values are 600; with regular/bold only, 700 is the nearer face.",
+    "spacing.dock": "Aether paints 8px of inner padding; the demo's 7px plus its 1px border gives the same visible inset.",
+    "components.menubar-menu": "Cascades from typography.menubar-menu (550 vs 400).",
+    "components.window": "Cascades from colors.surface (92% vs 98% opacity).",
+    "components.dock": "Cascades from spacing.dock and the dock height difference (62 vs 64).",
+    "components.dock-item": "Aether ships 46px dock items; the demo uses 48px. Tracked with the dock parity work.",
+    "components.dock-tile": "Aether ships 38px tiles; the demo uses 48 x 0.82 = 39.36px.",
+    "components.tray-calendar": "Whole-pixel rounding: the demo computes 350.41px, Aether 351px.",
+    "colors.line-strong": "The demo's computed hairline is 77/255 after color-mix; Aether paints 76/255. A 1/255 rounding difference.",
+    "components.divider": "Cascades from colors.line-strong (77/255 vs 76/255)."
+  }
+}

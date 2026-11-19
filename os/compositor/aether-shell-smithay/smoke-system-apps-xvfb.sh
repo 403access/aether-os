@@ -22,6 +22,9 @@ printf 'alpha\n' >"${FILES}/notes/alpha.md"
 printf 'beta\n' >"${FILES}/beta.txt"
 printf 'gamma\n' >"${FILES}/archive/gamma.json"
 export AETHER_FILE_ROOTS="${FILES}"
+# Emit the composed layout for the scene differ; shot() snapshots it per surface.
+export AETHER_SCENE_DUMP="${AETHER_SCENE_DUMP:-${OUT}/scene.json}"
+SCENES="${OUT}/scenes"; mkdir -p "${SCENES}"
 
 Xvfb ":${DISPLAY_NUM}" -screen 0 "${WIDTH}x${HEIGHT}x24" -ac >"${OUT}/xvfb-system.log" 2>&1 &
 XVFB_PID=$!
@@ -40,6 +43,7 @@ shot() {
   # the hand cursor from the previous click before the frame is captured.
   xdotool mousemove 5 795; sleep 0.2; xdotool mousemove 6 795; sleep 0.4
   import -window root "${OUT}/$1.png"
+  cp "${AETHER_SCENE_DUMP}" "${SCENES}/aether-$1.json" 2>/dev/null || true
 }
 
 xdotool mousemove 20 19; sleep 0.3; xdotool click 1; sleep 0.8; shot app-about
@@ -66,7 +70,7 @@ xdotool key Escape; sleep 0.4
 
 # Calendar tray, then the app.
 xdotool mousemove 1130 19; sleep 0.3; xdotool click 1; sleep 0.8; shot tray-calendar
-xdotool mousemove 1054 375; sleep 0.3; xdotool click 1; sleep 0.8; shot calendar
+xdotool mousemove 1160 375; sleep 0.3; xdotool click 1; sleep 0.8; shot calendar
 xdotool key Escape; sleep 0.4
 
 # Settings, Tide Radio, Explorer and Task Manager from the Window menu.

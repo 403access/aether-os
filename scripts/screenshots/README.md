@@ -10,6 +10,8 @@ Two capture pipelines feed the gallery, the docs and the README:
 | `os-parity.sh` + `os-parity.mjs` | live Water OS demo vs compositor (full frame + regions) | `artifacts/os-parity` |
 | `app-parity.mjs` | source checkout vs compositor, per app/window element | `reports/os-app-parity` |
 | `design-state.mjs` | source computed styles vs `design-manifest` (tokens, type, geometry) | `reports/os-app-parity/state` |
+| `scene-diff.mjs` | source DOM text runs vs the Aether render chunk | `artifacts/screenshots/shell/scenes`, `state/scene-*` |
+| `design-docs.mjs` | DESIGN.md token/component contract for both sides | `design/`, `state/design-md-*` |
 
 ## Run everything
 
@@ -66,6 +68,27 @@ bun run parity:state:diff  # re-diff existing JSON (no browser/container)
 - Numbers allow 0.75 px, colours 2/255 per channel.
 - Deliberate differences are pinned in `state/baseline.json` with a reason.
   Anything else exits non-zero, so drift fails the check.
+
+## Scene and contract
+
+The state pass compares values; the scene pass compares what was laid out:
+
+```bash
+bun run parity:scene   # diff source DOM text runs against the Aether scene
+bun run parity:design  # regenerate both DESIGN.md files and diff the contract
+```
+
+- Source scenes are written by `app-parity.mjs` from a visible-element walk of
+  the demo (`getBoundingClientRect` + `getComputedStyle` per element).
+- Aether scenes are written by the compositor when `AETHER_SCENE_DUMP` is set:
+  the render chunk's chrome rectangles, labels (text, px, weight, colour),
+  icons and panels. The smokes snapshot one file per surface.
+- `scene-diff.mjs` matches non-numeric text runs and stores per-surface
+  coverage in `state/scene-baseline.json`; a drop fails the run.
+- `design-docs.mjs` writes `design/source/DESIGN.md` (the contract) and
+  `design/aether/DESIGN.md`, lints both, and diffs them. Deliberate differences
+  live in `design/accepted.json`; known missing UI lives in `design/open.json`
+  and is reported as debt, not parity.
 
 ## Publish without recapturing
 

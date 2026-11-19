@@ -15,6 +15,7 @@
 mod app;
 pub mod design_manifest;
 mod render;
+mod scene;
 mod stats;
 
 pub use app::index_worker::{should_apply, IndexWorker};

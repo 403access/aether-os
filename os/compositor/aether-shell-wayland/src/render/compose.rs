@@ -53,6 +53,10 @@ impl App {
         chunk.merge(self.compose_dock(&ctx));
         chunk.merge(self.compose_status_chrome(&ctx));
 
+        if let Ok(path) = std::env::var("AETHER_SCENE_DUMP") {
+            crate::scene::write(std::path::Path::new(&path), ctx.width, ctx.height, &chunk);
+        }
+
         self.compose_flush(&ctx, renderer, &chunk, &mut elements);
         self.compose_ime(&ctx, renderer, &mut elements);
         self.compose_cursor(&ctx, renderer, &mut elements);

@@ -14,6 +14,8 @@ mkdir -p "${OUT}"
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-$(mktemp -d)}"
 chmod 700 "${XDG_RUNTIME_DIR}"
 export AETHER_FIXED_UNIX="${AETHER_FIXED_UNIX:-1795020420}"
+# The demo's profile card shows this account; pin it for visual parity.
+export AETHER_USER_NAME="${AETHER_USER_NAME:-Oliver Molnar}"
 # App-only captures: keep the floating dock out of the window crops.
 export AETHER_HIDE_DOCK="${AETHER_HIDE_DOCK:-1}"
 FILES="${OUT}/system-fixture"
@@ -82,8 +84,11 @@ window_item() {
 window_item 7; shot app-settings
 # Settings has thirteen panes; capture each one at (127, 164 + i * 30).
 SETTINGS_TABS=(general appearance displays desktop commands accessibility network bluetooth sound battery notifications security storage)
+# Tab centres after the profile card and group labels:
+# 6 System, 3 Connectivity, 4 Power & privacy.
+SETTINGS_Y=(230 260 290 320 350 380 444 474 504 568 598 628 658)
 for i in "${!SETTINGS_TABS[@]}"; do
-  xdotool mousemove 127 $((164 + i * 30)); sleep 0.25; xdotool click 1; sleep 0.45
+  xdotool mousemove 136 "${SETTINGS_Y[$i]}"; sleep 0.25; xdotool click 1; sleep 0.45
   shot "app-settings-${SETTINGS_TABS[$i]}"
 done
 xdotool key Escape; sleep 0.4

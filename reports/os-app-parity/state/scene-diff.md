@@ -1,6 +1,6 @@
 # Scene diff · source DOM vs Aether render chunk
 
-Text coverage: **364/824** runs across 28 surfaces (44.2 %).
+Text coverage: **455/824** runs across 28 surfaces (55.2 %).
 
 | Surface | Source runs | Aether runs | Matched | Coverage | Missing (first) |
 | --- | ---: | ---: | ---: | ---: | --- |
@@ -12,19 +12,19 @@ Text coverage: **364/824** runs across 28 surfaces (44.2 %).
 | `radio` | 3 | 5 | 3 | 100 % |  |
 | `calendar` | 12 | 12 | 12 | 100 % |  |
 | `taskmanager` | 49 | 47 | 4 | 8 % | `Live`, `Memory`, `Storage`, `Usage over time`, `CPU` |
-| `settings-general` | 44 | 33 | 25 | 57 % | `Demo device`, `OM`, `Oliver Molnar`, `Aether ID · Administrator`, `System` |
-| `settings-appearance` | 48 | 31 | 22 | 46 % | `Demo device`, `OM`, `Oliver Molnar`, `Aether ID · Administrator`, `System` |
-| `settings-displays` | 42 | 22 | 17 | 41 % | `Demo device`, `OM`, `Oliver Molnar`, `Aether ID · Administrator`, `System` |
-| `settings-desktop` | 46 | 28 | 19 | 41 % | `Demo device`, `OM`, `Oliver Molnar`, `Aether ID · Administrator`, `System` |
-| `settings-commands` | 47 | 27 | 19 | 40 % | `Demo device`, `OM`, `Oliver Molnar`, `Aether ID · Administrator`, `System` |
-| `settings-accessibility` | 46 | 26 | 19 | 41 % | `Demo device`, `OM`, `Oliver Molnar`, `Aether ID · Administrator`, `System` |
-| `settings-network` | 45 | 23 | 21 | 47 % | `Demo device`, `OM`, `Oliver Molnar`, `Aether ID · Administrator`, `System` |
-| `settings-bluetooth` | 39 | 22 | 18 | 46 % | `Demo device`, `OM`, `Oliver Molnar`, `Aether ID · Administrator`, `System` |
-| `settings-sound` | 37 | 24 | 18 | 49 % | `Demo device`, `OM`, `Oliver Molnar`, `Aether ID · Administrator`, `System` |
-| `settings-battery` | 42 | 23 | 19 | 45 % | `Demo device`, `OM`, `Oliver Molnar`, `Aether ID · Administrator`, `System` |
-| `settings-notifications` | 39 | 29 | 24 | 62 % | `Demo device`, `OM`, `Oliver Molnar`, `Aether ID · Administrator`, `System` |
-| `settings-security` | 47 | 24 | 17 | 36 % | `Demo device`, `OM`, `Oliver Molnar`, `Aether ID · Administrator`, `System` |
-| `settings-storage` | 38 | 23 | 18 | 47 % | `Demo device`, `OM`, `Oliver Molnar`, `Aether ID · Administrator`, `System` |
+| `settings-general` | 44 | 41 | 32 | 73 % | `Demo device`, `Concept build · Water design system`, `Chip`, `Unified memory`, `Serial number` |
+| `settings-appearance` | 48 | 39 | 29 | 60 % | `Demo device`, `System`, `Light`, `Dark`, `Water effects are active. Drips follow your cursor.` |
+| `settings-displays` | 42 | 30 | 24 | 57 % | `Demo device`, `Displays`, `Aether Display`, `Brightness`, `Adjust the built-in display.` |
+| `settings-desktop` | 46 | 36 | 26 | 56 % | `Demo device`, `Windows`, `Window layout`, `Split shares the desktop between open apps; drag a title bar onto another tile to swap places. Overlap keeps their own positions and sizes.`, `Stage Manager` |
+| `settings-commands` | 47 | 35 | 26 | 55 % | `Demo device`, `Search & Commands`, `Show commands`, `Navigation, view, appearance, and system actions.`, `Search local files` |
+| `settings-accessibility` | 46 | 34 | 26 | 56 % | `Demo device`, `Accessibility`, `Scale the desktop and every app.`, `Increase contrast`, `Strengthen borders and secondary text.` |
+| `settings-network` | 45 | 31 | 28 | 62 % | `Demo device`, `Connection`, `Connected`, `Wi-Fi`, `Discover and join nearby networks.` |
+| `settings-bluetooth` | 39 | 30 | 25 | 64 % | `Demo device`, `Bluetooth`, `Bluetooth`, `Let nearby devices find this Mac.`, `My devices` |
+| `settings-sound` | 37 | 32 | 25 | 68 % | `Demo device`, `Output device`, `Where sound should play.`, `Volume`, `Currently using .` |
+| `settings-battery` | 42 | 31 | 26 | 62 % | `Demo device`, `Battery`, `Energy`, `Low power`, `High performance` |
+| `settings-notifications` | 39 | 37 | 31 | 80 % | `Demo device`, `Allow notifications`, `Show banners and alerts from apps.`, `What appears before you unlock the screen.`, `Silence all notifications until turned off.` |
+| `settings-security` | 47 | 32 | 24 | 51 % | `Demo device`, `Security`, `FileVault`, `Encrypt the startup disk. Recovery key is stored in Aether ID.`, `Firewall` |
+| `settings-storage` | 38 | 31 | 25 | 66 % | `Demo device`, `Macintosh HD`, `Archive snapshots`, `Applications`, `Media` |
 | `menubar` | 10 | 10 | 9 | 90 % | `Desktop` |
 | `menu` | 10 | 10 | 5 | 50 % | `New Explorer window`, `New Data Cloud Compare window`, `Verify snapshot`, `Toggle dotfiles`, `Settings` |
 | `tray-network` | 10 | 9 | 5 | 50 % | `Connected`, `Known`, `Lighthouse`, `Known`, `VPN` |

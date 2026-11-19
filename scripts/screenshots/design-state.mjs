@@ -200,6 +200,7 @@ function collectSource(trays) {
   type(9, ".os-clock");
   type(10, ".os-menu");
   type(11, "body");
+  type(13, ".os-settings-nav__label");
 
   // Menu bar.
   add("menubar.height", box(".os-menubar")?.height);

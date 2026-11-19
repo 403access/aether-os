@@ -216,7 +216,7 @@ const SURFACES = [
     source: `settings-${pane.id}`,
     aether: `settings-${pane.id}`,
     status: "partial",
-    notes: `${pane.notes} Shared chrome gaps: the demo's sidebar profile card, nav group labels, pane-header icon/subtitle, per-row descriptions and footer are not drawn yet.`,
+    notes: `${pane.notes} Remaining gap: per-row descriptions. The sidebar profile card, nav groups, pane header and footer are drawn.`,
   })),
   {
     group: "Apps",

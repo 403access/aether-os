@@ -1,6 +1,1 @@
-{
-  "typography.label-caps": "Sidebar group labels are not drawn yet; the token exists only on the source side.",
-  "components.settings-profile": "The demo's sidebar profile card (name, role, status) is not drawn yet.",
-  "components.settings-nav-group-label": "The demo groups Settings navigation into System / Connectivity / Power & privacy; Aether is still a flat list.",
-  "components.settings-footer": "The demo's sidebar footer (version/build) is not drawn yet."
-}
+{}

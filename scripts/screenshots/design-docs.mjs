@@ -130,14 +130,12 @@ function tokensFor(side) {
     },
   };
 
-  if (side === "source") {
-    type["label-caps"] = {
-      fontFamily: "Inter",
-      fontSize: "9.12px",
-      fontWeight: 650,
-      letterSpacing: "0.82px",
-    };
-  }
+  type["label-caps"] = {
+    fontFamily: "Inter",
+    fontSize: px(get(side, "type.13.px")),
+    fontWeight: 650,
+    letterSpacing: "0.82px",
+  };
 
   const rounded = {
     xs: "5px",
@@ -275,8 +273,20 @@ const COMPONENTS = [
     }),
   },
   {
+    name: "settings-profile",
+    props: () => ({ width: "217px", height: "48px" }),
+  },
+  {
+    name: "settings-nav-group-label",
+    props: () => ({ typography: "{typography.label-caps}" }),
+  },
+  {
     name: "settings-nav-item",
     props: () => ({ height: "30px", rounded: "{rounded.md}" }),
+  },
+  {
+    name: "settings-footer",
+    props: () => ({ width: "237px", height: "35px" }),
   },
   {
     name: "traffic-light",
@@ -336,11 +346,7 @@ const COMPONENTS = [
  * Settings chrome the demo draws around every pane. The Aether document omits
  * these until the compositor paints them; they are tracked as open debt.
  */
-const SOURCE_ONLY_COMPONENTS = [
-  { name: "settings-profile", props: { width: "217px", height: "48px" } },
-  { name: "settings-nav-group-label", props: { typography: "{typography.label-caps}" } },
-  { name: "settings-footer", props: { width: "237px", height: "35px" } },
-];
+const SOURCE_ONLY_COMPONENTS = [];
 
 function componentsFor(side) {
   const out = [];

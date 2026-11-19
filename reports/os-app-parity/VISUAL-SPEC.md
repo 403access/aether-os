@@ -77,6 +77,9 @@ Both sides also publish a standard
 - `bun run parity:design:check` lints both and diffs the token paths. Deliberate
   differences live in `design/accepted.json` with a reason; known missing
   components live in `design/open.json` as tracked debt, not accepted parity.
+  The first open entries were the Settings profile card, nav group labels, pane
+  header and footer; all four are now drawn, so the open list is empty. Per-row
+  descriptions remain the main Settings gap.
 
 The contract cannot express layout geometry or effects, so it complements the
 scene tree rather than replacing it.

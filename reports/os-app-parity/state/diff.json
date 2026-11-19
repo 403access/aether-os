@@ -5,18 +5,25 @@
   },
   "aether": {
     "project": "Aether compositor",
-    "revision": "76f938c chore(web): republish the recaptured shell surfaces"
+    "revision": "4a7acea feat(parity): extract UI scenes and DESIGN.md contracts"
   },
   "summary": {
-    "compared": 107,
-    "matched": 98,
+    "compared": 108,
+    "matched": 99,
     "mismatched": 9,
     "accepted": 9,
-    "aetherOnly": 0,
+    "aetherOnly": 1,
     "sourceOnly": 0,
     "failures": 0
   },
-  "differences": [],
+  "differences": [
+    {
+      "key": "type.12.px",
+      "source": null,
+      "aether": 13.68,
+      "kind": "aether-only"
+    }
+  ],
   "accepted": [
     {
       "key": "dock.height",

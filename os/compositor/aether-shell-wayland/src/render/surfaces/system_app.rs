@@ -285,7 +285,7 @@ impl App {
     }
 
     fn section(&mut self, ui: &mut Ui, x: i32, y: i32, text: &str, tokens: ThemeTokens) {
-        ui.label(text.to_uppercase(), x, y, 6, tokens.dim);
+        ui.label(text.to_uppercase(), x, y, 0x100 | 13, tokens.dim);
     }
 
     fn switch(&mut self, ui: &mut Ui, rect: AetherRect, on: bool, tokens: ThemeTokens) {
@@ -865,16 +865,12 @@ impl App {
 impl App {
     // -------------------------------------------------------------- settings
 
-    fn settings_body(&mut self, ui: &mut Ui, body: AetherRect, tokens: ThemeTokens) {
-        // Sidebar: search affordance and 13 tabs.
-        let sidebar_width = 220;
+    fn settings_body(&mut self, ui: &mut Ui, _body: AetherRect, tokens: ThemeTokens) {
+        let nav = self.settings_nav();
+
+        // Sidebar divider.
         ui.solid(
-            AetherRect::new(
-                body.x + sidebar_width,
-                body.y + 12,
-                1,
-                body.height.saturating_sub(24),
-            ),
+            nav.divider,
             [
                 RULE[0] as f32 / 255.0,
                 RULE[1] as f32 / 255.0,
@@ -882,20 +878,70 @@ impl App {
                 0.15,
             ],
         );
-        let search = AetherRect::new(body.x + 12, body.y + 14, 196, 30);
-        if let Some(buffer) = self.chrome_round(search.width, search.height, 7, [255, 255, 255, 10])
+
+        // Search affordance.
+        if let Some(buffer) =
+            self.chrome_round(nav.search.width, nav.search.height, 7, [255, 255, 255, 10])
         {
-            ui.panel(Some(buffer), search.x, search.y);
+            ui.panel(Some(buffer), nav.search.x, nav.search.y);
         }
-        ui.icon("search", 13, tokens.dim, search.x + 9, search.y + 8);
+        ui.icon("search", 13, tokens.dim, nav.search.x + 9, nav.search.y + 8);
         ui.label(
             "Search settings",
-            search.x + 28,
-            search.y + 8,
-            4,
+            nav.search.x + 32,
+            nav.search.y + 7,
+            5,
             tokens.dim,
         );
 
+        // Profile card: avatar, real account name and status dot.
+        if let Some(buffer) =
+            self.chrome_round(nav.profile.width, nav.profile.height, 9, tokens.base_a(61))
+        {
+            ui.panel(Some(buffer), nav.profile.x, nav.profile.y);
+        }
+        let (name, initials) = self.settings_user();
+        let avatar = AetherRect::new(nav.profile.x + 8, nav.profile.y + 9, 30, 30);
+        if let Some(buffer) = self.chrome_round_gradient(
+            avatar.width,
+            avatar.height,
+            15,
+            tokens.accent(255),
+            [0xc3, 0xa8, 0xff, 255],
+        ) {
+            ui.panel(Some(buffer), avatar.x, avatar.y);
+        }
+        let initials_width = self.text_width(&initials, 0x100 | 9) as i32;
+        ui.label(
+            initials,
+            avatar.x + (avatar.width as i32 - initials_width) / 2,
+            avatar.y + 5,
+            0x100 | 9,
+            [4, 32, 42, 255],
+        );
+        ui.label(
+            name,
+            nav.profile.x + 46,
+            nav.profile.y + 7,
+            0x100 | 9,
+            tokens.text,
+        );
+        ui.label(
+            "Aether ID · Administrator",
+            nav.profile.x + 46,
+            nav.profile.y + 24,
+            13,
+            tokens.dim,
+        );
+        let status = AetherRect::new(nav.profile.right() as i32 - 18, nav.profile.y + 21, 6, 6);
+        if let Some(buffer) = self.chrome_round(12, 12, 6, tokens.green_a(40)) {
+            ui.panel(Some(buffer), status.x - 3, status.y - 3);
+        }
+        if let Some(buffer) = self.chrome_round(6, 6, 3, tokens.green) {
+            ui.panel(Some(buffer), status.x, status.y);
+        }
+
+        // Navigation groups and tabs.
         let tabs = crate::app::system::SETTINGS_TABS;
         let icons = [
             "gear",
@@ -908,37 +954,60 @@ impl App {
             "bluetooth",
             "audio",
             "battery",
+            "bell",
             "shield",
-            "chart",
             "layers",
-            "drop",
         ];
+        let colors: [[u8; 3]; 13] = [
+            [0x38, 0xd6, 0xff],
+            [0xff, 0xd2, 0x7a],
+            [0xc3, 0xa8, 0xff],
+            [0x5e, 0xf2, 0xb0],
+            [0x6f, 0xd5, 0xff],
+            [0xff, 0x9a, 0xd5],
+            [0x38, 0xd6, 0xff],
+            [0x6f, 0xd5, 0xff],
+            [0xff, 0x9a, 0xd5],
+            [0x5e, 0xf2, 0xb0],
+            [0xff, 0xd2, 0x7a],
+            [0x5e, 0xf2, 0xb0],
+            [0xff, 0xb0, 0x72],
+        ];
+        for (label, rect, _) in &nav.groups {
+            ui.label(label.to_uppercase(), rect.x, rect.y, 0x100 | 13, tokens.dim);
+        }
         for (index, label) in tabs.iter().enumerate() {
-            let rect = AetherRect::new(body.x + 12, body.y + 56 + index as i32 * 30, 196, 28);
+            let rect = nav.tabs[index];
             let active = index == self.system.selected;
             if active {
                 if let Some(buffer) =
-                    self.chrome_round(rect.width, rect.height, 6, tokens.accent(38))
+                    self.chrome_round(rect.width, rect.height, 7, tokens.accent(38))
                 {
                     ui.panel(Some(buffer), rect.x, rect.y);
                 }
             }
+            let color = colors[index];
+            let tile = AetherRect::new(rect.x + 8, rect.y + 5, 20, 20);
+            if let Some(buffer) = self.chrome_round(
+                tile.width,
+                tile.height,
+                5,
+                [color[0], color[1], color[2], if active { 61 } else { 36 }],
+            ) {
+                ui.panel(Some(buffer), tile.x, tile.y);
+            }
             ui.icon(
                 icons[index],
-                14,
-                if active {
-                    tokens.accent(255)
-                } else {
-                    tokens.dim
-                },
-                rect.x + 8,
-                rect.y + 7,
+                12,
+                [color[0], color[1], color[2], 255],
+                tile.x + 4,
+                tile.y + 4,
             );
             ui.label(
                 *label,
-                rect.x + 30,
-                rect.y + 7,
-                4,
+                rect.x + 36,
+                rect.y + 8,
+                9,
                 if active {
                     tokens.text
                 } else {
@@ -947,26 +1016,84 @@ impl App {
             );
         }
 
-        // Content: title + sections.
-        let content = self.settings_content_rect();
+        // Sidebar footer: version and build, like `.os-settings-sidebar__foot`.
+        ui.solid(
+            AetherRect::new(
+                nav.footer.x + 14,
+                nav.footer.y,
+                nav.footer.width.saturating_sub(28),
+                1,
+            ),
+            [
+                RULE[0] as f32 / 255.0,
+                RULE[1] as f32 / 255.0,
+                RULE[2] as f32 / 255.0,
+                0.15,
+            ],
+        );
         ui.label(
-            tabs[self.system.selected.min(tabs.len() - 1)],
-            content.x,
-            content.y + 2,
-            3,
+            "Aether OS 0.1.0-alpha",
+            nav.footer.x + 14,
+            nav.footer.y + 12,
+            8,
+            tokens.dim,
+        );
+        let build = "Build dev";
+        let build_width = self.text_width(build, 6) as i32;
+        ui.label(
+            build,
+            nav.footer.right() as i32 - 14 - build_width,
+            nav.footer.y + 13,
+            6,
+            tokens.dim,
+        );
+
+        // Content: pane header + sections, centred at the demo's 640 px.
+        let pane = self.settings_pane_rect();
+        let selected = self.system.selected.min(tabs.len() - 1);
+        let mark = AetherRect::new(pane.x + 2, pane.y + 3, 42, 42);
+        let color = colors[selected];
+        if let Some(buffer) = self.chrome_round(
+            mark.width,
+            mark.height,
+            10,
+            [color[0], color[1], color[2], 36],
+        ) {
+            ui.panel(Some(buffer), mark.x, mark.y);
+        }
+        ui.icon(
+            icons[selected],
+            21,
+            [color[0], color[1], color[2], 255],
+            mark.x + 10,
+            mark.y + 10,
+        );
+        ui.label(
+            tabs[selected],
+            pane.x + 56,
+            pane.y + 2,
+            0x100 | 2,
             tokens.text,
         );
-        let mut y = content.y + 44;
+        ui.label(
+            crate::app::system::SETTINGS_SUBTITLES[selected],
+            pane.x + 56,
+            pane.y + 27,
+            9,
+            tokens.dim,
+        );
+
+        let mut y = pane.y + 61;
         for section in self.settings_sections() {
             let height = 36 + section.rows.len() as i32 * 34;
-            let card = AetherRect::new(content.x, y, content.width, height as u32);
+            let card = AetherRect::new(pane.x, y, pane.width, height as u32);
             self.card(ui, card, tokens);
-            self.section(ui, content.x + 14, y + 12, section.title, tokens);
+            self.section(ui, pane.x + 14, y + 10, section.title, tokens);
             for (index, row) in section.rows.iter().enumerate() {
                 let row_y = y + 36 + index as i32 * 34;
                 if index > 0 {
                     ui.solid(
-                        AetherRect::new(content.x + 1, row_y, content.width.saturating_sub(2), 1),
+                        AetherRect::new(pane.x + 1, row_y, pane.width.saturating_sub(2), 1),
                         [
                             RULE[0] as f32 / 255.0,
                             RULE[1] as f32 / 255.0,
@@ -975,24 +1102,20 @@ impl App {
                         ],
                     );
                 }
-                ui.label(row.label, content.x + 14, row_y + 9, 0x100, tokens.text);
+                ui.label(row.label, pane.x + 14, row_y + 8, 0x100 | 9, tokens.text);
                 match row.switch {
                     Some((on, _)) => {
-                        let switch = AetherRect::new(
-                            content.x + content.width as i32 - 50,
-                            row_y + 7,
-                            34,
-                            20,
-                        );
+                        let switch =
+                            AetherRect::new(pane.x + pane.width as i32 - 50, row_y + 7, 34, 20);
                         self.switch(ui, switch, on, tokens);
                     }
                     None => {
-                        let width = self.text_width(&row.value, 4) as i32;
+                        let width = self.text_width(&row.value, 5) as i32;
                         ui.label(
                             &row.value,
-                            content.x + content.width as i32 - 14 - width,
-                            row_y + 9,
-                            4,
+                            pane.x + pane.width as i32 - 14 - width,
+                            row_y + 8,
+                            5,
                             tokens.text_soft,
                         );
                     }

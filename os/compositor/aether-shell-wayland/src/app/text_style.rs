@@ -21,6 +21,7 @@ pub fn text_px(scale: u32) -> f32 {
         10 => font::OS_XS_PX,
         11 => font::OS_SM_PX,
         12 => font::OS_MENU_PX,
+        13 => font::OS_LABEL_CAPS_PX,
         _ => font::HEADING_PX,
     }
 }
@@ -40,6 +41,7 @@ pub fn text_spacing(scale: u32) -> f32 {
     match base {
         7 => 0.32,
         10 if bold => -0.13,
+        13 if bold => 0.82,
         _ => 0.0,
     }
 }

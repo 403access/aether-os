@@ -28,6 +28,8 @@ pub const OS_XS_PX: f32 = 12.54;
 pub const OS_SM_PX: f32 = 14.82;
 /// Popover rows: `.os-menu__pop button` (`--ds-text-sm`).
 pub const OS_MENU_PX: f32 = 13.68;
+/// Sidebar group labels: `.os-settings-nav__label` (`8px * 1.14`).
+pub const OS_LABEL_CAPS_PX: f32 = 9.12;
 
 pub struct FontRenderer {
     font: Font,

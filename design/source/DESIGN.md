@@ -166,9 +166,17 @@ components:
     backgroundColor: "{colors.line-strong}"
     width: "1248px"
     height: "1px"
+  settings-profile:
+    width: "217px"
+    height: "48px"
+  settings-nav-group-label:
+    typography: "{typography.label-caps}"
   settings-nav-item:
     height: "30px"
     rounded: "{rounded.md}"
+  settings-footer:
+    width: "237px"
+    height: "35px"
   traffic-light:
     size: "11px"
     rounded: "{rounded.pill}"
@@ -215,14 +223,6 @@ components:
     width: "308px"
     height: "350px"
     rounded: "{rounded.lg}"
-  settings-profile:
-    width: "217px"
-    height: "48px"
-  settings-nav-group-label:
-    typography: "{typography.label-caps}"
-  settings-footer:
-    width: "237px"
-    height: "35px"
 ```
 
 ## Do's and Don'ts

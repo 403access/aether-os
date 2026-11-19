@@ -140,7 +140,7 @@ pub fn manifest() -> Value {
 
     // The fractional OS type ramp shared with the renderer. The legacy
     // integer scales are not part of the OS design state.
-    for scale in 7..=11u32 {
+    for scale in 7..=13u32 {
         set(
             &mut values,
             &format!("type.{scale}.px"),

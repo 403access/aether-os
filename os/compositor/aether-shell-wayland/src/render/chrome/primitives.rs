@@ -661,6 +661,9 @@ pub fn icon_svg(name: &str, color: &str) -> Option<String> {
         }
         "moon" => r#"<path d="M16.8 12A7 7 0 0 1 8 3.2a7 7 0 1 0 8.8 8.8z"/>"#,
         "drop" => r#"<path d="M10 2.4s-5 5.2-5 8.7a5 5 0 0 0 10 0C15 7.6 10 2.4 10 2.4z"/>"#,
+        "bell" => {
+            r#"<path d="M10 2.5a4.5 4.5 0 0 0-4.5 4.5v3l-1.5 2h12l-1.5-2V7A4.5 4.5 0 0 0 10 2.5z"/><path d="M8.2 15.5a1.8 1.8 0 0 0 3.6 0"/>"#
+        }
         "water" => {
             r#"<rect x="1.2" y="4.4" width="10.6" height="9.4" rx="2.6"/><rect x="8.2" y="6.2" width="10.6" height="9.4" rx="2.6"/><path d="m9.4 11.4 1.6 1.6 3-3.4"/>"#
         }

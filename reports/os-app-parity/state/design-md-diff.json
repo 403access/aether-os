@@ -18,7 +18,7 @@
       "findings": [
         {
           "severity": "info",
-          "message": "Design system defines 12 colors, 10 typography scales, 5 rounding levels, 3 spacing tokens, 26 components.",
+          "message": "Design system defines 12 colors, 11 typography scales, 5 rounding levels, 3 spacing tokens, 29 components.",
           "rule": "token-summary"
         }
       ],
@@ -41,9 +41,7 @@
       },
       "typography": {
         "added": [],
-        "removed": [
-          "label-caps"
-        ],
+        "removed": [],
         "modified": [
           "menubar-menu",
           "resource-value"
@@ -63,11 +61,7 @@
       },
       "components": {
         "added": [],
-        "removed": [
-          "settings-profile",
-          "settings-nav-group-label",
-          "settings-footer"
-        ],
+        "removed": [],
         "modified": [
           "menubar-menu",
           "window",
@@ -107,10 +101,6 @@
       "state": "modified"
     },
     {
-      "path": "typography.label-caps",
-      "state": "removed"
-    },
-    {
       "path": "typography.menubar-menu",
       "state": "modified"
     },
@@ -121,18 +111,6 @@
     {
       "path": "spacing.dock",
       "state": "modified"
-    },
-    {
-      "path": "components.settings-profile",
-      "state": "removed"
-    },
-    {
-      "path": "components.settings-nav-group-label",
-      "state": "removed"
-    },
-    {
-      "path": "components.settings-footer",
-      "state": "removed"
     },
     {
       "path": "components.menubar-menu",
@@ -164,12 +142,7 @@
     }
   ],
   "unaccounted": [],
-  "open": {
-    "typography.label-caps": "Sidebar group labels are not drawn yet; the token exists only on the source side.",
-    "components.settings-profile": "The demo's sidebar profile card (name, role, status) is not drawn yet.",
-    "components.settings-nav-group-label": "The demo groups Settings navigation into System / Connectivity / Power & privacy; Aether is still a flat list.",
-    "components.settings-footer": "The demo's sidebar footer (version/build) is not drawn yet."
-  },
+  "open": {},
   "accepted": {
     "colors.surface": "Aether's window fill is 98% opaque; the demo uses color-mix(surface-solid 92%, transparent). This is the open backdrop-blur item (V8).",
     "typography.menubar-menu": "The demo's menu buttons are 550; the compositor has regular and bold faces only, so it paints 400.",

@@ -414,12 +414,94 @@ impl App {
         AetherRect::new(text_x + index as i32 * 56, row_y, 44, 40)
     }
 
-    pub(crate) fn settings_tab_at(&self, point: AetherPoint) -> Option<usize> {
+    /// Centred settings pane: the demo caps it at 640 px inside the content.
+    pub(crate) fn settings_pane_rect(&self) -> AetherRect {
+        let content = self.settings_content_rect();
+        let width = content.width.min(640);
+        AetherRect::new(
+            content.x + (content.width as i32 - width as i32) / 2,
+            content.y,
+            width,
+            content.height,
+        )
+    }
+
+    /// Settings sidebar geometry, shared by rendering and hit-testing.
+    pub(crate) fn settings_nav(&self) -> SettingsNav {
         let body = self.system_body_rect();
-        let x = body.x + 12;
-        (0..SETTINGS_TABS.len()).find(|index| {
-            AetherRect::new(x, body.y + 56 + *index as i32 * 30, 196, 28).contains(point)
-        })
+        let sidebar = body.width.min(238) as i32;
+        let mut y = body.y + 103;
+        let mut tabs = vec![AetherRect::new(0, 0, 0, 0); SETTINGS_TABS.len()];
+        let mut groups = Vec::new();
+        for (label, indices) in SETTINGS_GROUPS {
+            let label_rect = AetherRect::new(body.x + 16, y, (sidebar - 24) as u32, 15);
+            y += 18;
+            let first = tabs.len();
+            for index in indices {
+                tabs[*index] = AetherRect::new(body.x + 8, y, (sidebar - 16) as u32, 30);
+                y += 30;
+            }
+            groups.push((label, label_rect, first));
+            y += 16;
+        }
+        SettingsNav {
+            search: AetherRect::new(body.x + 10, body.y + 11, 217, 30),
+            profile: AetherRect::new(body.x + 10, body.y + 49, 217, 48),
+            footer: AetherRect::new(
+                body.x,
+                body.y + body.height as i32 - 35,
+                sidebar.saturating_sub(1) as u32,
+                35,
+            ),
+            divider: AetherRect::new(
+                body.x + sidebar,
+                body.y + 12,
+                1,
+                body.height.saturating_sub(24),
+            ),
+            groups,
+            tabs,
+        }
+    }
+
+    pub(crate) fn settings_tab_at(&self, point: AetherPoint) -> Option<usize> {
+        self.settings_nav()
+            .tabs
+            .iter()
+            .position(|rect| rect.contains(point))
+    }
+
+    /// Real account shown in the Settings profile card.
+    pub(crate) fn settings_user(&self) -> (String, String) {
+        let raw = std::env::var("AETHER_USER_NAME")
+            .ok()
+            .or_else(|| std::env::var("USER").ok())
+            .or_else(|| std::env::var("LOGNAME").ok())
+            .unwrap_or_else(|| "aether".into());
+        let name = raw
+            .split(['_', '-'])
+            .filter(|part| !part.is_empty())
+            .map(|part| {
+                let mut chars = part.chars();
+                match chars.next() {
+                    Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+                    None => String::new(),
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(" ");
+        let name = if name.is_empty() {
+            "Aether".into()
+        } else {
+            name
+        };
+        let initials: String = name
+            .split_whitespace()
+            .filter_map(|part| part.chars().next())
+            .take(2)
+            .collect::<String>()
+            .to_uppercase();
+        (name, initials)
     }
 
     pub(crate) fn studio_node_at(&self, point: AetherPoint) -> Option<usize> {
@@ -435,6 +517,41 @@ impl App {
         })
     }
 }
+
+/// Rects for the Settings sidebar, derived once per interaction/frame.
+pub(crate) struct SettingsNav {
+    pub search: AetherRect,
+    pub profile: AetherRect,
+    pub footer: AetherRect,
+    pub divider: AetherRect,
+    /// (label, label rect, first tab index)
+    pub groups: Vec<(&'static str, AetherRect, usize)>,
+    pub tabs: Vec<AetherRect>,
+}
+
+/// Sidebar groups, matching `.os-settings-nav__group` in the demo.
+pub(crate) const SETTINGS_GROUPS: [(&str, &[usize]); 3] = [
+    ("System", &[0, 1, 2, 3, 4, 5]),
+    ("Connectivity", &[6, 7, 8]),
+    ("Power & privacy", &[9, 10, 11, 12]),
+];
+
+/// One-line description under each pane title, mirroring the demo.
+pub(crate) const SETTINGS_SUBTITLES: [&str; 13] = [
+    "System version, updates, language, and startup.",
+    "Pick a theme, then shape the current and the calm.",
+    "Resolution, brightness, colour, and arrangement.",
+    "Window layout, the dock, and what the desktop shows.",
+    "Choose the sources, groups, and conditions the command bar uses.",
+    "Vision, motion, hearing, and keyboard comfort.",
+    "Wi-Fi, VPN, and the local archive route.",
+    "Wireless accessories and nearby devices.",
+    "Output, volume, and alert sounds.",
+    "Charge, health, and energy mode.",
+    "Alerts, previews, and focus.",
+    "Encryption, firewall, location, and app access.",
+    "What fills the archive volume and how to reclaim space.",
+];
 
 pub const SETTINGS_TABS: [&str; 13] = [
     "General",
@@ -967,8 +1084,8 @@ impl App {
 
     /// Switch under the pointer in the selected Settings tab.
     pub(crate) fn settings_switch_at(&self, point: AetherPoint) -> Option<SettingsAction> {
-        let content = self.settings_content_rect();
-        let mut y = content.y + 44;
+        let content = self.settings_pane_rect();
+        let mut y = content.y + 61;
         for section in self.settings_sections() {
             y += 28 + 8;
             for row in &section.rows {
@@ -986,9 +1103,9 @@ impl App {
     pub(crate) fn settings_content_rect(&self) -> AetherRect {
         let body = self.system_body_rect();
         AetherRect::new(
-            body.x + 236,
+            body.x + 238,
             body.y + 16,
-            body.width.saturating_sub(252),
+            body.width.saturating_sub(238),
             body.height.saturating_sub(32),
         )
     }

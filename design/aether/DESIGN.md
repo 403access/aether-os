@@ -59,6 +59,11 @@ typography:
     fontFamily: "Inter"
     fontSize: "13.68px"
     fontWeight: 400
+  label-caps:
+    fontFamily: "Inter"
+    fontSize: "9.12px"
+    fontWeight: 650
+    letterSpacing: "0.82px"
 rounded:
   xs: "5px"
   md: "10px"
@@ -161,9 +166,17 @@ components:
     backgroundColor: "{colors.line-strong}"
     width: "1248px"
     height: "1px"
+  settings-profile:
+    width: "217px"
+    height: "48px"
+  settings-nav-group-label:
+    typography: "{typography.label-caps}"
   settings-nav-item:
     height: "30px"
     rounded: "{rounded.md}"
+  settings-footer:
+    width: "237px"
+    height: "35px"
   traffic-light:
     size: "11px"
     rounded: "{rounded.pill}"

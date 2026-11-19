@@ -1,9 +1,9 @@
 # Water OS app parity · roadmap
 
-Source: `a72f82d Give dropdown chevrons more breathing room (+ local changes)` (local design-system/ checkout)
+Source: `7c08677 Add Audio app to Aether OS` (local design-system/ checkout)
 Visual spec (source vs target, difference register): [`VISUAL-SPEC.md`](VISUAL-SPEC.md).
 
-Aether: `93b753c docs(parity): record the fixed effects in the visual spec`
+Aether: `09aa929 feat(shell): lift dock tiles and label them on hover`
 
 Implemented **18** · partial **2** · missing **0** · out of scope **2** · Aether-only **4**.
 

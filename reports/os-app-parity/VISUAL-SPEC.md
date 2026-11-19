@@ -109,13 +109,13 @@ technique), **open** (visible gap, not implemented).
 | V7 | Menu popover geometry | top +7, min-width 244, padding 5, pop shadow | matched | **fixed** (`8c02033`) |
 | V8 | Glass blur | `backdrop-filter: blur(22px) saturate(160%)` | flat translucent fills | **open** |
 | V9 | Window inset highlight | `inset 0 1px 0 rgba(255,255,255,.07)` | 1 px white 7 % line inside the top edge | **fixed** (`65564da`) |
-| V10 | Hover states | rim 34 % → 80 %, shadow grows, dock lift + label | focus-only rim, no hover | **open** |
-| V11 | Dock tiles | gradient + 1 px tile border | flat tint + border | **approximated** |
-| V12 | Type scale | 12.54 / 11.4 px from a 1.14 scale | 13 / 11 px integer sizes | **approximated** |
-| V13 | Letter spacing | −0.01em titles, 0.04em captions | none | **open** |
-| V14 | Menu row type | 14.82 px (`--ds-text-sm`) | 13 px | **open** |
+| V10 | Hover states | rim 34 % → 80 %, shadow grows, dock lift + label | dock lifts to 41 px with a label; window rim hover still missing | **partial** (`09aa929`) |
+| V11 | Dock tiles | gradient + 1 px tile border | cached 160° gradient + border | **fixed** (`e978f96`) |
+| V12 | Type scale | 12.54 / 11.4 / 9.69 / 7.98 px | exact OS scales in chrome; other surfaces still integer | **fixed (chrome)** (`2125be4`) |
+| V13 | Letter spacing | −0.01em titles, 0.04em captions | renderer supports spacing; applied to titles/captions | **fixed** (`2125be4`) |
+| V14 | Menu row type | 14.82 px (`--ds-text-sm`) | 14.82 px | **fixed** (`2125be4`) |
 | V15 | Command overlay | grouped command surface | provider palette with rim | **open** |
-| V16 | Resize handles / grip | 24 px grip icon | corner resize hit area only | **open** |
+| V16 | Resize handles / grip | 24 px grip icon | three diagonal ticks at the bottom-right | **fixed** (`6782bf3`) |
 
 ## 5. Verification
 
@@ -129,9 +129,9 @@ technique), **open** (visible gap, not implemented).
 ## 6. Next tasks (visual)
 
 1. **V6** — schedule the tide phase at ~12 fps while a window is focused
-   (pacer deadline instead of per-frame quantisation).
+   (needs a deadline in the winit dispatch loop, which currently blocks on
+   events).
 2. **V8** — backdrop blur for the bar, popovers and windows (read the backdrop
    region into a buffer and blur it before compositing).
-3. **V10** — pointer hover state per window/dock item (rim, lift, tooltip).
-4. **V13 / V14** — letter spacing and the 14.82 px menu row type.
-5. **V15** — regroup the palette to the demo's command surface.
+3. **V10** — window hover rim and shadow growth (dock hover is done).
+4. **V15** — regroup the palette to the demo's command surface.

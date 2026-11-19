@@ -33,6 +33,15 @@ impl App {
                 ));
             }
         }
+        if self.system_open() && self.pointer_in(self.system_rect()) {
+            self.mark_system_damage();
+        }
+        if self.calendar_open() && self.pointer_in(self.calendar_rect()) {
+            self.mark_calendar_damage();
+        }
+        if self.shell.explorer_open() && self.pointer_in(self.shell.explorer_rect()) {
+            self.mark_damage_rect(self.shell.explorer_rect());
+        }
         let new_cursor = cursor_for(self);
         self.cursor = new_cursor;
 

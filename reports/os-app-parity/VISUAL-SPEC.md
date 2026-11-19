@@ -109,7 +109,7 @@ technique), **open** (visible gap, not implemented).
 | V7 | Menu popover geometry | top +7, min-width 244, padding 5, pop shadow | matched | **fixed** (`8c02033`) |
 | V8 | Glass blur | `backdrop-filter: blur(22px) saturate(160%)` | flat translucent fills | **open** |
 | V9 | Window inset highlight | `inset 0 1px 0 rgba(255,255,255,.07)` | 1 px white 7 % line inside the top edge | **fixed** (`65564da`) |
-| V10 | Hover states | rim 34 % → 80 %, shadow grows, dock lift + label | dock lifts to 41 px with a label; window rim hover still missing | **partial** (`09aa929`) |
+| V10 | Hover states | rim 34 % → 80 %, shadow grows, dock lift + label | dock lifts to 41 px with a label; window rims brighten to 84 % on hover | **fixed (rim + dock)** (`09aa929`, `HEAD`) |
 | V11 | Dock tiles | gradient + 1 px tile border | cached 160° gradient + border | **fixed** (`e978f96`) |
 | V12 | Type scale | 12.54 / 11.4 / 9.69 / 7.98 px | exact OS scales in chrome; other surfaces still integer | **fixed (chrome)** (`2125be4`) |
 | V13 | Letter spacing | −0.01em titles, 0.04em captions | renderer supports spacing; applied to titles/captions | **fixed** (`2125be4`) |
@@ -133,5 +133,5 @@ technique), **open** (visible gap, not implemented).
    events).
 2. **V8** — backdrop blur for the bar, popovers and windows (read the backdrop
    region into a buffer and blur it before compositing).
-3. **V10** — window hover rim and shadow growth (dock hover is done).
+3. **V10** — shadow growth on hover (rim and dock hover are done).
 4. **V15** — regroup the palette to the demo's command surface.

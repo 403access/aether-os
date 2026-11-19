@@ -170,6 +170,15 @@ impl App {
         }
     }
 
+    /// True when the pointer is inside `rect` (chrome hover state).
+    pub(crate) fn pointer_in(&self, rect: AetherRect) -> bool {
+        let point = AetherPoint::new(
+            self.pointer_pos.x.round() as i32,
+            self.pointer_pos.y.round() as i32,
+        );
+        rect.contains(point)
+    }
+
     pub(crate) fn system_rect(&self) -> AetherRect {
         let bounds = self
             .shell

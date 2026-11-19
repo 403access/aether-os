@@ -49,7 +49,8 @@ impl App {
         let y = rect.y - offset.1;
         let width = rect.width.max(1);
         let height = WINDOW_FRAME_HEIGHT as u32;
-        let effects = self.window_effects(rect, TITLE_RADIUS, focused);
+        let hover = self.pointer_in(rect);
+        let effects = self.window_effects(rect, TITLE_RADIUS, focused, hover);
         if let Some((buffer, ex, ey)) = effects.shadow {
             if let Ok(element) = MemoryRenderBufferRenderElement::from_buffer(
                 renderer,
@@ -98,8 +99,10 @@ impl App {
                 Kind::Unspecified,
             ),
         ));
-        let rim = if focused {
-            tokens.accent(120)
+        let rim = if hover {
+            tokens.accent(215)
+        } else if focused {
+            tokens.accent(170)
         } else {
             tokens.border(56)
         };

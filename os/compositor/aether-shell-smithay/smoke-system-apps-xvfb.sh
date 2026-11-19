@@ -35,7 +35,7 @@ sleep "${SETTLE}"
 export DISPLAY=":${DISPLAY_NUM}"
 WINDOW_ID="$(xdotool search --name "Aether OS" | head -1)"
 xdotool windowfocus "${WINDOW_ID}"
-shot() { xdotool mousemove 640 400; sleep 0.3; import -window root "${OUT}/$1.png"; }
+shot() { xdotool mousemove 5 795; sleep 0.3; import -window root "${OUT}/$1.png"; }
 
 xdotool mousemove 20 19; sleep 0.3; xdotool click 1; sleep 0.8; shot app-about
 xdotool key Escape; sleep 0.4

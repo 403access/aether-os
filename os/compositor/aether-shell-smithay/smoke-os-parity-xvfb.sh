@@ -48,7 +48,7 @@ sleep "${SETTLE}"
 export DISPLAY=":${DISPLAY_NUM}"
 WINDOW_ID="$(xdotool search --name "Aether OS" | head -1)"
 xdotool windowfocus "${WINDOW_ID}"
-xdotool mousemove 640 400
+xdotool mousemove 5 795
 sleep 0.4
 
 # File menu popover, captured before any window is open so the app name and
@@ -57,12 +57,12 @@ xdotool mousemove 125 19
 sleep 0.4
 xdotool click 1
 sleep 0.8
-xdotool mousemove 640 400
+xdotool mousemove 5 795
 sleep 0.4
 import -window root "${OUT}/menu.png"
 xdotool key Escape
 sleep 0.5
-xdotool mousemove 640 400
+xdotool mousemove 5 795
 sleep 0.3
 
 # Explorer from the dock's first tile, then move the pointer off the chrome so
@@ -71,7 +71,7 @@ xdotool mousemove 445 760
 sleep 0.3
 xdotool click 1
 sleep 1.5
-xdotool mousemove 640 400
+xdotool mousemove 5 795
 sleep 0.4
 import -window root "${OUT}/desktop.png"
 
@@ -82,7 +82,7 @@ xdotool mousemove 1130 19
 sleep 0.3
 xdotool click 1
 sleep 1.2
-xdotool mousemove 640 400
+xdotool mousemove 5 795
 sleep 0.4
 import -window root "${OUT}/calendar.png"
 
@@ -92,7 +92,7 @@ sleep 0.6
 xdotool windowfocus "${WINDOW_ID}"
 xdotool key super+b
 sleep 1.2
-xdotool mousemove 640 400
+xdotool mousemove 5 795
 sleep 0.4
 import -window root "${OUT}/sandboxes.png"
 

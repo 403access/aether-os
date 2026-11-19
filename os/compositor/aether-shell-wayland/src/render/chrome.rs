@@ -48,6 +48,7 @@ impl App {
         rect: aether_geometry::Rect,
         radius: u32,
         focused: bool,
+        hover: bool,
     ) -> WindowEffects {
         let shadow = self
             .chrome_shadow(rect.width, rect.height, radius)
@@ -60,7 +61,8 @@ impl App {
             });
         let wave = if focused && self.shell.theme_settings().effects {
             let phase = self.wave_phase_step();
-            self.chrome_wave(rect.width, rect.height, radius, phase, 217)
+            let opacity = if hover { 255 } else { 217 };
+            self.chrome_wave(rect.width, rect.height, radius, phase, opacity)
                 .map(|buffer| (buffer, rect.x - 6, rect.y - 6))
         } else {
             None

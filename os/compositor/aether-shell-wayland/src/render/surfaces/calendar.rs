@@ -37,7 +37,8 @@ impl App {
         let agenda = self.calendar_agenda_rect();
 
         // Window body and title bar.
-        let effects = self.window_effects(rect, 14, true);
+        let hover = self.pointer_in(rect);
+        let effects = self.window_effects(rect, 14, true, hover);
         if let Some(entry) = effects.shadow {
             panels.push(entry);
         }

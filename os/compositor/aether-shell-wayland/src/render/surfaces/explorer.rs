@@ -50,7 +50,8 @@ impl App {
 
     fn explorer_window(&mut self, ui: &mut Ui, rect: AetherRect, tokens: ThemeTokens) {
         let accent = tokens.accent(255);
-        let effects = self.window_effects(rect, 14, true);
+        let hover = self.pointer_in(rect);
+        let effects = self.window_effects(rect, 14, true, hover);
         ui.effect(effects.shadow);
         if let Some(buffer) = self.chrome_round(rect.width, rect.height, 14, WINDOW_FILL) {
             ui.panel(Some(buffer), rect.x, rect.y);
@@ -62,7 +63,12 @@ impl App {
             rect.width,
             rect.height,
             14,
-            [accent[0], accent[1], accent[2], 120],
+            [
+                accent[0],
+                accent[1],
+                accent[2],
+                if hover { 215 } else { 170 },
+            ],
         ) {
             ui.panel(Some(buffer), rect.x, rect.y);
         }

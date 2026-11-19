@@ -20,7 +20,8 @@ impl App {
         let mut panels: Vec<(Arc<MemoryRenderBuffer>, i32, i32)> = Vec::new();
         let mut display_icons: Vec<(String, u32, [u8; 4], i32, i32)> = Vec::new();
 
-        let effects = self.window_effects(self.task_rect(), 14, task_here);
+        let hover = self.pointer_in(self.task_rect());
+        let effects = self.window_effects(self.task_rect(), 14, task_here, hover);
         if task_here {
             if let Some(entry) = effects.shadow {
                 panels.push(entry);

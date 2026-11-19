@@ -13,6 +13,10 @@ Two capture pipelines feed the gallery, the docs and the README:
 | `scene-diff.mjs` | source DOM text runs vs the Aether render chunk | `artifacts/screenshots/shell/scenes`, `state/scene-*` |
 | `design-docs.mjs` | DESIGN.md token/component contract for both sides | `design/`, `state/design-md-*` |
 
+The measured distance to a strict parity target, the rubric and the remaining
+work are documented in
+[`reports/os-app-parity/PARITY-100.md`](../../reports/os-app-parity/PARITY-100.md).
+
 ## Run everything
 
 ```bash

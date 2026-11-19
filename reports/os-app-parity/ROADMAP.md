@@ -2,8 +2,9 @@
 
 Source: `e86b239 Add drag-and-drop tile swapping to split layout` (local design-system/ checkout)
 Visual spec (source vs target, difference register): [`VISUAL-SPEC.md`](VISUAL-SPEC.md).
+Parity target and remaining work: [`PARITY-100.md`](PARITY-100.md).
 
-Aether: `6e84362 feat(parity): record scene nodes for Explorer, Task Manager, Calendar and trays`
+Aether: `4feb824 fix(capture): poll the palette log instead of fixed sleeps`
 
 Implemented **17** · partial **15** · missing **0** · out of scope **2** · Aether-only **4**.
 

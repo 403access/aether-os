@@ -4,6 +4,9 @@ This document formalises both implementations of the Water desktop — the
 reference concept in `jottacloud-comparison/design-system/os` and the Aether
 compositor — and records the differences that remain after the parity work.
 
+The rubric for a strict parity target and the remaining work are in
+[`PARITY-100.md`](PARITY-100.md).
+
 Everything is measured at **1280 × 800**, with the demo clock pinned to
 `2026-11-18 16:47 UTC` (`AETHER_FIXED_UNIX` on the Aether side). The OS concept
 scales its type by `--os-font-scale: 1.14`, so a token like `--ds-text-xs`

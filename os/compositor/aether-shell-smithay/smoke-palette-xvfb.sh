@@ -51,6 +51,17 @@ APP_PID=$!
 sleep "${SETTLE}"
 
 export DISPLAY=":${DISPLAY_NUM}"
+# Poll the compositor log instead of guessing with fixed sleeps; the palette
+# and the test client are asynchronous under Xvfb.
+wait_for() {
+  local pattern="$1" timeout="${2:-6}" tick
+  for tick in $(seq 1 $((timeout * 10))); do
+    grep -q "${pattern}" "${OUT}/palette-app.log" && return 0
+    sleep 0.1
+  done
+  return 1
+}
+
 WINDOW_ID="$(xdotool search --name "Aether OS" | head -1)"
 xdotool windowfocus "${WINDOW_ID}"
 xdotool mousemove 0 0
@@ -59,46 +70,41 @@ sleep 1
 import -window root "${OUT}/palette-default.png"
 snap palette-default
 xdotool type --delay 120 "web"
-sleep 1
+wait_for 'palette query -> "web"' || true
+sleep 0.3
 import -window root "${OUT}/palette-query.png"
 snap palette-query
 
 # Click the first result row (workspace "web") instead of pressing Enter.
 xdotool mousemove 600 300 click 1
-sleep 1
-
-if ! grep -q 'palette query -> "web"' "${OUT}/palette-app.log"; then
-  echo "error: typed query did not reach the palette" >&2
-  cat "${OUT}/palette-app.log" >&2
-  exit 1
-fi
-if ! grep -q "palette action SwitchWorkspace(2)" "${OUT}/palette-app.log"; then
+if ! wait_for "palette action SwitchWorkspace(2)"; then
   echo "error: row click did not activate the web workspace" >&2
   cat "${OUT}/palette-app.log" >&2
   exit 1
 fi
-if ! grep -q "workspace -> 2" "${OUT}/palette-app.log"; then
+if ! wait_for "workspace -> 2"; then
   echo "error: palette activation did not switch workspace" >&2
   cat "${OUT}/palette-app.log" >&2
   exit 1
 fi
 
 # Reopen and filter to the client window provider, then activate with Enter.
+wait_for "client connected" 10 || true
 xdotool key super+space
 sleep 1
 xdotool type --delay 120 "wayland"
-sleep 1
+wait_for 'palette query -> "wayland"' || true
+sleep 0.3
 import -window root "${OUT}/palette-window.png"
 snap palette-window
 xdotool key Return
-sleep 1
 
-if ! grep -q "palette action FocusWindow(1)" "${OUT}/palette-app.log"; then
+if ! wait_for "palette action FocusWindow(1)"; then
   echo "error: Enter did not focus the filtered window" >&2
   cat "${OUT}/palette-app.log" >&2
   exit 1
 fi
-if ! grep -q "workspace -> 0" "${OUT}/palette-app.log"; then
+if ! wait_for "workspace -> 0"; then
   echo "error: focusing the window did not return to workspace 0" >&2
   cat "${OUT}/palette-app.log" >&2
   exit 1

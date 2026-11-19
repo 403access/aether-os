@@ -51,7 +51,7 @@
   <p class="lede">Every surface from the Water OS demo next to the current Aether compositor. Captures are element or window crops only — no full-desktop frames.</p>
   <p class="meta">
     <span>Source · e86b239 Add drag-and-drop tile swapping to split layout</span>
-    <span>Aether · 4feb824 fix(capture): poll the palette log instead of fixed sleeps</span>
+    <span>Aether · fe4f117 docs(parity): document the path to 100% parity</span>
     <span>1280×800 · clock pinned to 2026-11-18 16:47 UTC</span>
   </p>
   <div class="stats">
@@ -67,6 +67,8 @@
     <div class="stat"><b>50%</b><span>UI text coverage</span></div>
     
     <div class="stat"><b>0</b><span>Contract drift</span></div>
+    
+    <div class="stat"><b>6.8%</b><span>Pixels differ</span></div>
   </div>
   
   <section class="state">
@@ -102,6 +104,18 @@
     <table>
       <thead><tr><th>path</th><th>state</th><th>note</th></tr></thead>
       <tbody><tr><td><code>colors.surface</code></td><td>modified</td><td>accepted — Aether's window fill is 98% opaque; the demo uses color-mix(surface-solid 92%, transparent). This is the open backdrop-blur item (V8).</td></tr><tr><td><code>colors.line-strong</code></td><td>modified</td><td>accepted — The demo's computed hairline is 77/255 after color-mix; Aether paints 76/255. A 1/255 rounding difference.</td></tr><tr><td><code>typography.menubar-menu</code></td><td>modified</td><td>accepted — The demo's menu buttons are 550; the compositor has regular and bold faces only, so it paints 400.</td></tr><tr><td><code>typography.resource-value</code></td><td>modified</td><td>accepted — The demo's resource values are 600; with regular/bold only, 700 is the nearer face.</td></tr><tr><td><code>spacing.dock</code></td><td>modified</td><td>accepted — Aether paints 8px of inner padding; the demo's 7px plus its 1px border gives the same visible inset.</td></tr><tr><td><code>components.menubar-menu</code></td><td>modified</td><td>accepted — Cascades from typography.menubar-menu (550 vs 400).</td></tr><tr><td><code>components.window</code></td><td>modified</td><td>accepted — Cascades from colors.surface (92% vs 98% opacity).</td></tr><tr><td><code>components.divider</code></td><td>modified</td><td>accepted — Cascades from colors.line-strong (77/255 vs 76/255).</td></tr><tr><td><code>components.dock</code></td><td>modified</td><td>accepted — Cascades from spacing.dock and the dock height difference (62 vs 64).</td></tr><tr><td><code>components.dock-item</code></td><td>modified</td><td>accepted — Aether ships 46px dock items; the demo uses 48px. Tracked with the dock parity work.</td></tr><tr><td><code>components.dock-tile</code></td><td>modified</td><td>accepted — Aether ships 38px tiles; the demo uses 48 x 0.82 = 39.36px.</td></tr><tr><td><code>components.tray-calendar</code></td><td>modified</td><td>accepted — Whole-pixel rounding: the demo computes 350.41px, Aether 351px.</td></tr></tbody>
+    </table>
+  </section>
+  
+  <section class="state">
+    <header>
+      <h3>Painted pixels</h3>
+      <span class="priority">pixelmatch · same-size crops</span>
+    </header>
+    <p class="notes">Actual pixels, not layout: each source/Aether crop is compared with pixelmatch and baselined. Overall 6.84% of 20,199,628 pixels differ across 24 same-size surfaces; 13 pairs were skipped because their crops differ in size. Raw: <a href="state/pixel-diff.md">state/pixel-diff.md</a>.</p>
+    <table>
+      <thead><tr><th>surface</th><th>size</th><th>diff</th><th>baseline</th></tr></thead>
+      <tbody><tr><td><code>tray-calendar</code></td><td>308×351</td><td>90.37%</td><td>90.37%</td></tr><tr><td><code>taskmanager</code></td><td>1248×730</td><td>10.50%</td><td>10.50%</td></tr><tr><td><code>battery</code></td><td>1248×730</td><td>9.94%</td><td>9.94%</td></tr><tr><td><code>network</code></td><td>1248×730</td><td>9.43%</td><td>9.43%</td></tr><tr><td><code>menubar</code></td><td>1280×38</td><td>8.94%</td><td>8.94%</td></tr><tr><td><code>explorer</code></td><td>1248×730</td><td>8.70%</td><td>8.70%</td></tr><tr><td><code>settings-appearance</code></td><td>1248×730</td><td>8.64%</td><td>8.64%</td></tr><tr><td><code>settings-commands</code></td><td>1248×730</td><td>8.61%</td><td>8.61%</td></tr><tr><td><code>settings-network</code></td><td>1248×730</td><td>7.64%</td><td>7.64%</td></tr><tr><td><code>settings-general</code></td><td>1248×730</td><td>6.69%</td><td>6.69%</td></tr><tr><td><code>settings</code></td><td>1248×730</td><td>6.60%</td><td>6.60%</td></tr><tr><td><code>settings-desktop</code></td><td>1248×730</td><td>6.33%</td><td>6.33%</td></tr></tbody>
     </table>
   </section>
   <h2 class="group">System chrome</h2>
@@ -177,7 +191,7 @@
         <header>
           <h3>Settings · General</h3>
           <span class="priority">P1</span>
-          <span class="pill pill--coverage">text 73%</span>
+          <span class="pill pill--coverage">text 84%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-general.png" alt="Demo Settings · General"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-general.png" alt="Aether Settings · General"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -188,7 +202,7 @@
         <header>
           <h3>Settings · Appearance</h3>
           <span class="priority">P1</span>
-          <span class="pill pill--coverage">text 52%</span>
+          <span class="pill pill--coverage">text 56%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-appearance.png" alt="Demo Settings · Appearance"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-appearance.png" alt="Aether Settings · Appearance"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -210,7 +224,7 @@
         <header>
           <h3>Settings · Desktop & Dock</h3>
           <span class="priority">P1</span>
-          <span class="pill pill--coverage">text 52%</span>
+          <span class="pill pill--coverage">text 54%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-desktop.png" alt="Demo Settings · Desktop & Dock"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-desktop.png" alt="Aether Settings · Desktop & Dock"><figcaption>Aether · 1248x730</figcaption></figure></div>

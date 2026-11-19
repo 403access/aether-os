@@ -3,8 +3,9 @@
     "surfaces": 29,
     "complete": 2,
     "textRuns": 841,
-    "matched": 416,
-    "coverage": 0.495,
+    "matched": 424,
+    "coverage": 0.504,
+    "alignedRatio": 0.259,
     "missingScenes": 0,
     "regressions": 0
   },
@@ -18,6 +19,7 @@
       "matched": 5,
       "coverage": 0.556,
       "baseline": 0.556,
+      "alignedRatio": 0,
       "geometry": {
         "matched": 5,
         "aligned": 0,
@@ -82,6 +84,7 @@
       "matched": 8,
       "coverage": 0.14,
       "baseline": 0.14,
+      "alignedRatio": 0.125,
       "geometry": {
         "matched": 8,
         "aligned": 1,
@@ -216,6 +219,7 @@
       "matched": 8,
       "coverage": 0.364,
       "baseline": 0.364,
+      "alignedRatio": 0.25,
       "geometry": {
         "matched": 8,
         "aligned": 2,
@@ -296,6 +300,7 @@
       "matched": 14,
       "coverage": 0.56,
       "baseline": 0.56,
+      "alignedRatio": 0.071,
       "geometry": {
         "matched": 14,
         "aligned": 1,
@@ -373,6 +378,7 @@
       "matched": 7,
       "coverage": 0.333,
       "baseline": 0.333,
+      "alignedRatio": 0.286,
       "geometry": {
         "matched": 7,
         "aligned": 2,
@@ -447,6 +453,7 @@
       "matched": 3,
       "coverage": 1,
       "baseline": 1,
+      "alignedRatio": 0.333,
       "geometry": {
         "matched": 3,
         "aligned": 1,
@@ -492,6 +499,7 @@
       "matched": 12,
       "coverage": 1,
       "baseline": 1,
+      "alignedRatio": 0.167,
       "geometry": {
         "matched": 12,
         "aligned": 2,
@@ -547,6 +555,7 @@
       "matched": 2,
       "coverage": 0.041,
       "baseline": 0.041,
+      "alignedRatio": 1,
       "geometry": {
         "matched": 2,
         "aligned": 2,
@@ -673,43 +682,44 @@
       "status": "missing-text",
       "source": 44,
       "dynamic": 10,
-      "aether": 41,
-      "matched": 32,
-      "coverage": 0.727,
+      "aether": 46,
+      "matched": 37,
+      "coverage": 0.841,
       "baseline": 0.727,
+      "alignedRatio": 0.243,
       "geometry": {
-        "matched": 32,
-        "aligned": 7,
+        "matched": 37,
+        "aligned": 9,
         "worst": [
-          {
-            "text": "Region",
-            "dx": 1,
-            "dy": -95.1,
-            "distance": 96.1
-          },
           {
             "text": "Language & Region",
             "dx": 13,
-            "dy": -77.6,
-            "distance": 90.6
+            "dy": -47.6,
+            "distance": 60.6
           },
           {
             "text": "Language",
             "dx": 1,
-            "dy": -81.2,
-            "distance": 82.2
+            "dy": -56.2,
+            "distance": 57.2
           },
           {
-            "text": "Software Update",
-            "dx": 13,
-            "dy": -53.2,
-            "distance": 66.2
-          },
-          {
-            "text": "Automatic updates",
+            "text": "Unified memory",
             "dx": 1,
-            "dy": -56.8,
-            "distance": 57.8
+            "dy": 56.1,
+            "distance": 57.1
+          },
+          {
+            "text": "Region",
+            "dx": 1,
+            "dy": -56.1,
+            "distance": 57.1
+          },
+          {
+            "text": "Used across the desktop and apps.",
+            "dx": 1,
+            "dy": -54.8,
+            "distance": 55.8
           }
         ]
       },
@@ -722,6 +732,7 @@
         "pane-title",
         "placeholder",
         "role",
+        "row-description",
         "row-label",
         "row-value",
         "section",
@@ -731,17 +742,12 @@
       ],
       "missing": [
         "Demo device",
-        "Concept build · Water design system",
         "Chip",
-        "Unified memory",
         "Serial number",
         "Demo device",
         "About This Mac",
-        "Download and install security updates overnight.",
         "Your software is up to date.",
-        "Check for updates",
-        "Used across the desktop and apps.",
-        "Formats dates, numbers, and currency."
+        "Check for updates"
       ],
       "extra": [
         "Build dev",
@@ -760,43 +766,44 @@
       "status": "missing-text",
       "source": 48,
       "dynamic": 2,
-      "aether": 39,
-      "matched": 25,
-      "coverage": 0.521,
+      "aether": 42,
+      "matched": 27,
+      "coverage": 0.563,
       "baseline": 0.521,
+      "alignedRatio": 0.259,
       "geometry": {
-        "matched": 25,
+        "matched": 27,
         "aligned": 7,
         "worst": [
           {
+            "text": "Master switch for ripples, shimmer, and window waves.",
+            "dx": 1,
+            "dy": -72,
+            "distance": 73
+          },
+          {
+            "text": "Small, soft rings trail your pointer.",
+            "dx": 1,
+            "dy": -71.9,
+            "distance": 72.9
+          },
+          {
             "text": "Theme",
             "dx": 13,
-            "dy": 43,
-            "distance": 56
+            "dy": 37,
+            "distance": 50
           },
           {
             "text": "Water effects",
             "dx": 13,
-            "dy": -23,
-            "distance": 36
+            "dy": -29,
+            "distance": 42
           },
           {
             "text": "OM",
             "dx": 6,
             "dy": 4.8,
             "distance": 10.8
-          },
-          {
-            "text": "Search settings",
-            "dx": 6,
-            "dy": 2,
-            "distance": 8
-          },
-          {
-            "text": "Connectivity",
-            "dx": 0,
-            "dy": -6.7,
-            "distance": 6.7
           }
         ]
       },
@@ -809,6 +816,7 @@
         "pane-title",
         "placeholder",
         "role",
+        "row-description",
         "row-label",
         "row-value",
         "section",
@@ -825,9 +833,7 @@
         "Water",
         "Water effects are active. Drips follow your cursor.",
         "Water effects",
-        "Master switch for ripples, shimmer, and window waves.",
         "Drips follow the cursor",
-        "Small, soft rings trail your pointer.",
         "Ripples on click",
         "Clicking sends one larger ring outward.",
         "Caustic shimmer",
@@ -850,6 +856,7 @@
         "Effects",
         "Cursor drips",
         "Caustic shimmer",
+        "Slow light patterns drift behind the app.",
         "Glass surfaces",
         "Look",
         "Water tone",
@@ -867,6 +874,7 @@
       "matched": 23,
       "coverage": 0.548,
       "baseline": 0.548,
+      "alignedRatio": 0.304,
       "geometry": {
         "matched": 23,
         "aligned": 7,
@@ -954,19 +962,26 @@
       "status": "missing-text",
       "source": 46,
       "dynamic": 3,
-      "aether": 36,
-      "matched": 24,
-      "coverage": 0.522,
+      "aether": 38,
+      "matched": 25,
+      "coverage": 0.543,
       "baseline": 0.522,
+      "alignedRatio": 0.28,
       "geometry": {
-        "matched": 24,
+        "matched": 25,
         "aligned": 7,
         "worst": [
           {
             "text": "Show dock",
             "dx": 1,
-            "dy": -81.4,
-            "distance": 82.4
+            "dy": -72.4,
+            "distance": 73.4
+          },
+          {
+            "text": "Display the application dock on the desktop.",
+            "dx": 1,
+            "dy": -70.9,
+            "distance": 71.9
           },
           {
             "text": "OM",
@@ -985,12 +1000,6 @@
             "dx": 0,
             "dy": -6.7,
             "distance": 6.7
-          },
-          {
-            "text": "Power & privacy",
-            "dx": 0,
-            "dy": -6.3,
-            "distance": 6.3
           }
         ]
       },
@@ -1003,6 +1012,7 @@
         "pane-title",
         "placeholder",
         "role",
+        "row-description",
         "row-label",
         "row-value",
         "section",
@@ -1019,7 +1029,6 @@
         "Stage Manager",
         "Keep recent windows in a strip beside the active app.",
         "Dock",
-        "Display the application dock on the desktop.",
         "Size",
         "Scale the dock icons.",
         "Magnification",
@@ -1041,6 +1050,7 @@
         "Position",
         "Bottom",
         "Size",
+        "Scale the dock icons.",
         "Running indicators",
         "Workspaces",
         "Keyboard and palette",
@@ -1058,6 +1068,7 @@
       "matched": 24,
       "coverage": 0.511,
       "baseline": 0.511,
+      "alignedRatio": 0.292,
       "geometry": {
         "matched": 24,
         "aligned": 7,
@@ -1154,10 +1165,11 @@
       "status": "missing-text",
       "source": 46,
       "dynamic": 3,
-      "aether": 34,
+      "aether": 35,
       "matched": 25,
       "coverage": 0.543,
       "baseline": 0.543,
+      "alignedRatio": 0.28,
       "geometry": {
         "matched": 25,
         "aligned": 7,
@@ -1165,14 +1177,14 @@
           {
             "text": "Vision",
             "dx": 13,
-            "dy": 91,
-            "distance": 104
+            "dy": 99,
+            "distance": 112
           },
           {
             "text": "Text size",
             "dx": 1,
-            "dy": 87.4,
-            "distance": 88.4
+            "dy": 89.4,
+            "distance": 90.4
           },
           {
             "text": "OM",
@@ -1203,6 +1215,7 @@
         "pane-title",
         "placeholder",
         "role",
+        "row-description",
         "row-label",
         "row-value",
         "section",
@@ -1238,6 +1251,7 @@
         "Build dev",
         "Motion",
         "Reduce motion",
+        "Turn off window waves and animated transitions.",
         "Comfortable",
         "Focus ring",
         "Accent",
@@ -1254,6 +1268,7 @@
       "matched": 23,
       "coverage": 0.511,
       "baseline": 0.511,
+      "alignedRatio": 0.304,
       "geometry": {
         "matched": 23,
         "aligned": 7,
@@ -1349,6 +1364,7 @@
       "matched": 25,
       "coverage": 0.641,
       "baseline": 0.641,
+      "alignedRatio": 0.28,
       "geometry": {
         "matched": 25,
         "aligned": 7,
@@ -1360,16 +1376,16 @@
             "distance": 22
           },
           {
+            "text": "Discoverable",
+            "dx": 1,
+            "dy": -14.5,
+            "distance": 15.5
+          },
+          {
             "text": "OM",
             "dx": 6,
             "dy": 4.8,
             "distance": 10.8
-          },
-          {
-            "text": "Discoverable",
-            "dx": 1,
-            "dy": -8.5,
-            "distance": 9.5
           },
           {
             "text": "Search settings",
@@ -1434,6 +1450,7 @@
       "matched": 24,
       "coverage": 0.649,
       "baseline": 0.649,
+      "alignedRatio": 0.292,
       "geometry": {
         "matched": 24,
         "aligned": 7,
@@ -1441,8 +1458,8 @@
           {
             "text": "Output",
             "dx": 13,
-            "dy": 43,
-            "distance": 56
+            "dy": 37,
+            "distance": 50
           },
           {
             "text": "OM",
@@ -1521,6 +1538,7 @@
       "matched": 24,
       "coverage": 0.571,
       "baseline": 0.571,
+      "alignedRatio": 0.292,
       "geometry": {
         "matched": 24,
         "aligned": 7,
@@ -1612,39 +1630,40 @@
       "matched": 31,
       "coverage": 0.795,
       "baseline": 0.795,
+      "alignedRatio": 0.258,
       "geometry": {
         "matched": 31,
-        "aligned": 7,
+        "aligned": 8,
         "worst": [
           {
             "text": "Calendar",
             "dx": 1,
-            "dy": -60.7,
-            "distance": 61.7
+            "dy": -72.7,
+            "distance": 73.7
           },
           {
             "text": "Tide Radio",
             "dx": 1,
-            "dy": -46.8,
-            "distance": 47.8
+            "dy": -58.8,
+            "distance": 59.8
           },
           {
             "text": "Application notifications",
             "dx": 13,
-            "dy": -29.3,
-            "distance": 42.3
+            "dy": -35.3,
+            "distance": 48.3
           },
           {
             "text": "Data Cloud Compare",
             "dx": 1,
-            "dy": -32.9,
-            "distance": 33.9
+            "dy": -44.9,
+            "distance": 45.9
           },
           {
             "text": "Do Not Disturb",
             "dx": 1,
-            "dy": -22.4,
-            "distance": 23.4
+            "dy": -28.4,
+            "distance": 29.4
           }
         ]
       },
@@ -1692,6 +1711,7 @@
       "matched": 23,
       "coverage": 0.489,
       "baseline": 0.489,
+      "alignedRatio": 0.304,
       "geometry": {
         "matched": 23,
         "aligned": 7,
@@ -1791,6 +1811,7 @@
       "matched": 24,
       "coverage": 0.632,
       "baseline": 0.632,
+      "alignedRatio": 0.292,
       "geometry": {
         "matched": 24,
         "aligned": 7,
@@ -1798,8 +1819,8 @@
           {
             "text": "Free space",
             "dx": -13,
-            "dy": -57.2,
-            "distance": 70.2
+            "dy": -63.2,
+            "distance": 76.2
           },
           {
             "text": "OM",
@@ -1874,21 +1895,17 @@
       "status": "missing-text",
       "source": 17,
       "dynamic": 0,
-      "aether": 17,
+      "aether": 0,
       "matched": 0,
       "coverage": 0,
       "baseline": 0,
+      "alignedRatio": null,
       "geometry": {
         "matched": 0,
         "aligned": 0,
         "worst": []
       },
-      "roles": [
-        "command-detail",
-        "command-title",
-        "label",
-        "placeholder"
-      ],
+      "roles": [],
       "missing": [
         "Focus local pane",
         "Move keyboard focus to the local index",
@@ -1908,25 +1925,7 @@
         "Mirror /mnt/tank",
         "Search"
       ],
-      "extra": [
-        "Search workspaces, windows, files…",
-        "main",
-        "code",
-        "web",
-        "Foot",
-        "A wayland native terminal emulator",
-        "Foot Client",
-        "A wayland native terminal emulator (client)",
-        "Foot Server",
-        "A wayland native terminal emulator (server)",
-        "esc",
-        "navigate",
-        "run",
-        "close",
-        "↑↓",
-        "esc",
-        "> commands   @ agents   / files"
-      ]
+      "extra": []
     },
     {
       "id": "menubar",
@@ -1937,6 +1936,7 @@
       "matched": 9,
       "coverage": 0.9,
       "baseline": 0.9,
+      "alignedRatio": 0.111,
       "geometry": {
         "matched": 9,
         "aligned": 1,
@@ -1995,6 +1995,7 @@
       "matched": 5,
       "coverage": 0.5,
       "baseline": 0.5,
+      "alignedRatio": 0,
       "geometry": {
         "matched": 5,
         "aligned": 0,
@@ -2059,6 +2060,7 @@
       "matched": 4,
       "coverage": 0.4,
       "baseline": 0.4,
+      "alignedRatio": 0.25,
       "geometry": {
         "matched": 4,
         "aligned": 1,
@@ -2120,6 +2122,7 @@
       "matched": 3,
       "coverage": 0.429,
       "baseline": 0.429,
+      "alignedRatio": 0.333,
       "geometry": {
         "matched": 3,
         "aligned": 1,
@@ -2172,6 +2175,7 @@
       "matched": 6,
       "coverage": 0.6,
       "baseline": 0.6,
+      "alignedRatio": 0.167,
       "geometry": {
         "matched": 6,
         "aligned": 1,
@@ -2235,6 +2239,7 @@
       "matched": 2,
       "coverage": 0.2,
       "baseline": 0.2,
+      "alignedRatio": 0.5,
       "geometry": {
         "matched": 2,
         "aligned": 1,
@@ -2285,6 +2290,7 @@
       "matched": 1,
       "coverage": 0.111,
       "baseline": 0.111,
+      "alignedRatio": 0,
       "geometry": {
         "matched": 1,
         "aligned": 0,

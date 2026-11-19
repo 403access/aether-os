@@ -1,38 +1,38 @@
 # Scene diff · source DOM vs Aether render chunk
 
-Text coverage: **416/841** runs across 29 surfaces (49.5 %).
+Text coverage: **424/841** runs across 29 surfaces (50.4 %). Geometry: **25.9 %** of matched boxes within tolerance.
 
-| Surface | Source runs | Aether runs | Matched | Coverage | Missing (first) |
-| --- | ---: | ---: | ---: | ---: | --- |
-| `about` | 9 | 11 | 5 | 56 % | `A desktop concept drawn from the Data Cloud Compare design system. Every surface, badge, and control here is a token or component from the gallery.`, `Open the design system`, `Try the real Data Cloud Compare`, `Built with plain CSS and JavaScript. No images, no frameworks.` |
-| `explorer` | 57 | 30 | 8 | 14 % | `/mnt/tank`, `Local`, `Local index`, `Projects`, `_LikedSongs` |
-| `network` | 22 | 18 | 8 | 36 % | `Known`, `Lighthouse`, `Known`, `Tidepool Guest`, `Nearby` |
-| `battery` | 25 | 24 | 14 | 56 % | `On battery`, `Battery`, `Balanced`, `High performance`, `Low power mode` |
-| `devices` | 21 | 11 | 7 | 33 % | `Let nearby devices find this Mac.`, `Tide Mouse`, `Connected`, `Battery`, `Disconnect` |
-| `radio` | 3 | 5 | 3 | 100 % |  |
-| `calendar` | 12 | 12 | 12 | 100 % |  |
-| `taskmanager` | 49 | 47 | 2 | 4 % | `Live`, `CPU`, `Memory`, `Storage`, `Usage over time` |
-| `settings-general` | 44 | 41 | 32 | 73 % | `Demo device`, `Concept build · Water design system`, `Chip`, `Unified memory`, `Serial number` |
-| `settings-appearance` | 48 | 39 | 25 | 52 % | `Appearance`, `Demo device`, `System`, `Light`, `Dark` |
-| `settings-displays` | 42 | 30 | 23 | 55 % | `Displays`, `Demo device`, `Aether Display`, `Brightness`, `Adjust the built-in display.` |
-| `settings-desktop` | 46 | 36 | 24 | 52 % | `Desktop & Dock`, `Demo device`, `Windows`, `Window layout`, `Split shares the desktop between open apps; drag a title bar onto another tile to swap places. Overlap keeps their own positions and sizes.` |
-| `settings-commands` | 47 | 35 | 24 | 51 % | `Search & Commands`, `Demo device`, `Show commands`, `Navigation, view, appearance, and system actions.`, `Search local files` |
-| `settings-accessibility` | 46 | 34 | 25 | 54 % | `Accessibility`, `Demo device`, `Scale the desktop and every app.`, `Increase contrast`, `Strengthen borders and secondary text.` |
-| `settings-network` | 45 | 31 | 23 | 51 % | `Network`, `Demo device`, `Connection`, `Connected`, `Wi-Fi` |
-| `settings-bluetooth` | 39 | 30 | 25 | 64 % | `Bluetooth`, `Demo device`, `Bluetooth`, `Let nearby devices find this Mac.`, `My devices` |
-| `settings-sound` | 37 | 32 | 24 | 65 % | `Sound`, `Demo device`, `Output device`, `Where sound should play.`, `Volume` |
-| `settings-battery` | 42 | 31 | 24 | 57 % | `Battery`, `Demo device`, `Energy`, `Low power`, `Balanced` |
-| `settings-notifications` | 39 | 37 | 31 | 80 % | `Notifications`, `Demo device`, `Show banners and alerts from apps.`, `What appears before you unlock the screen.`, `Silence all notifications until turned off.` |
-| `settings-security` | 47 | 32 | 23 | 49 % | `Privacy & Security`, `Demo device`, `Security`, `FileVault`, `Encrypt the startup disk. Recovery key is stored in Aether ID.` |
-| `settings-storage` | 38 | 31 | 24 | 63 % | `Storage`, `Demo device`, `Macintosh HD`, `Archive snapshots`, `Applications` |
-| `command` | 17 | 17 | 0 | 0 % | `Focus local pane`, `Move keyboard focus to the local index`, `Focus Jottacloud pane`, `Move keyboard focus to the remote snapshot`, `Go to local root` |
-| `menubar` | 10 | 10 | 9 | 90 % | `Desktop` |
-| `menu` | 10 | 10 | 5 | 50 % | `New Explorer window`, `New Data Cloud Compare window`, `Verify snapshot`, `Toggle dotfiles`, `Settings` |
-| `tray-network` | 10 | 9 | 4 | 40 % | `Connected`, `Known`, `Lighthouse`, `Known`, `VPN` |
-| `tray-devices` | 7 | 7 | 3 | 43 % | `Connected`, `Tide Mouse`, `Harbour Keyboard`, `Wireless` |
-| `tray-battery` | 10 | 9 | 6 | 60 % | `On battery`, `Low power mode`, `Reduce background activity.`, `Health` |
-| `tray-sound` | 10 | 6 | 2 | 20 % | `Harbour Speakers`, `Now playing`, `Deep Current`, `Analog · analog-stereo`, `Output` |
-| `tray-calendar` | 9 | 3 | 1 | 11 % | `Sun`, `Mon`, `Tue`, `Wed`, `Thu` |
+| Surface | Source runs | Aether runs | Matched | Coverage | Aligned | Missing (first) |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| `about` | 9 | 11 | 5 | 56 % | 0 % | `A desktop concept drawn from the Data Cloud Compare design system. Every surface, badge, and control here is a token or component from the gallery.`, `Open the design system`, `Try the real Data Cloud Compare`, `Built with plain CSS and JavaScript. No images, no frameworks.` |
+| `explorer` | 57 | 30 | 8 | 14 % | 13 % | `/mnt/tank`, `Local`, `Local index`, `Projects`, `_LikedSongs` |
+| `network` | 22 | 18 | 8 | 36 % | 25 % | `Known`, `Lighthouse`, `Known`, `Tidepool Guest`, `Nearby` |
+| `battery` | 25 | 24 | 14 | 56 % | 7 % | `On battery`, `Battery`, `Balanced`, `High performance`, `Low power mode` |
+| `devices` | 21 | 11 | 7 | 33 % | 29 % | `Let nearby devices find this Mac.`, `Tide Mouse`, `Connected`, `Battery`, `Disconnect` |
+| `radio` | 3 | 5 | 3 | 100 % | 33 % |  |
+| `calendar` | 12 | 12 | 12 | 100 % | 17 % |  |
+| `taskmanager` | 49 | 47 | 2 | 4 % | 100 % | `Live`, `CPU`, `Memory`, `Storage`, `Usage over time` |
+| `settings-general` | 44 | 46 | 37 | 84 % | 24 % | `Demo device`, `Chip`, `Serial number`, `Demo device`, `About This Mac` |
+| `settings-appearance` | 48 | 42 | 27 | 56 % | 26 % | `Appearance`, `Demo device`, `System`, `Light`, `Dark` |
+| `settings-displays` | 42 | 30 | 23 | 55 % | 30 % | `Displays`, `Demo device`, `Aether Display`, `Brightness`, `Adjust the built-in display.` |
+| `settings-desktop` | 46 | 38 | 25 | 54 % | 28 % | `Desktop & Dock`, `Demo device`, `Windows`, `Window layout`, `Split shares the desktop between open apps; drag a title bar onto another tile to swap places. Overlap keeps their own positions and sizes.` |
+| `settings-commands` | 47 | 35 | 24 | 51 % | 29 % | `Search & Commands`, `Demo device`, `Show commands`, `Navigation, view, appearance, and system actions.`, `Search local files` |
+| `settings-accessibility` | 46 | 35 | 25 | 54 % | 28 % | `Accessibility`, `Demo device`, `Scale the desktop and every app.`, `Increase contrast`, `Strengthen borders and secondary text.` |
+| `settings-network` | 45 | 31 | 23 | 51 % | 30 % | `Network`, `Demo device`, `Connection`, `Connected`, `Wi-Fi` |
+| `settings-bluetooth` | 39 | 30 | 25 | 64 % | 28 % | `Bluetooth`, `Demo device`, `Bluetooth`, `Let nearby devices find this Mac.`, `My devices` |
+| `settings-sound` | 37 | 32 | 24 | 65 % | 29 % | `Sound`, `Demo device`, `Output device`, `Where sound should play.`, `Volume` |
+| `settings-battery` | 42 | 31 | 24 | 57 % | 29 % | `Battery`, `Demo device`, `Energy`, `Low power`, `Balanced` |
+| `settings-notifications` | 39 | 37 | 31 | 80 % | 26 % | `Notifications`, `Demo device`, `Show banners and alerts from apps.`, `What appears before you unlock the screen.`, `Silence all notifications until turned off.` |
+| `settings-security` | 47 | 32 | 23 | 49 % | 30 % | `Privacy & Security`, `Demo device`, `Security`, `FileVault`, `Encrypt the startup disk. Recovery key is stored in Aether ID.` |
+| `settings-storage` | 38 | 31 | 24 | 63 % | 29 % | `Storage`, `Demo device`, `Macintosh HD`, `Archive snapshots`, `Applications` |
+| `command` | 17 | 0 | 0 | 0 % | — | `Focus local pane`, `Move keyboard focus to the local index`, `Focus Jottacloud pane`, `Move keyboard focus to the remote snapshot`, `Go to local root` |
+| `menubar` | 10 | 10 | 9 | 90 % | 11 % | `Desktop` |
+| `menu` | 10 | 10 | 5 | 50 % | 0 % | `New Explorer window`, `New Data Cloud Compare window`, `Verify snapshot`, `Toggle dotfiles`, `Settings` |
+| `tray-network` | 10 | 9 | 4 | 40 % | 25 % | `Connected`, `Known`, `Lighthouse`, `Known`, `VPN` |
+| `tray-devices` | 7 | 7 | 3 | 43 % | 33 % | `Connected`, `Tide Mouse`, `Harbour Keyboard`, `Wireless` |
+| `tray-battery` | 10 | 9 | 6 | 60 % | 17 % | `On battery`, `Low power mode`, `Reduce background activity.`, `Health` |
+| `tray-sound` | 10 | 6 | 2 | 20 % | 50 % | `Harbour Speakers`, `Now playing`, `Deep Current`, `Analog · analog-stereo`, `Output` |
+| `tray-calendar` | 9 | 3 | 1 | 11 % | 0 % | `Sun`, `Mon`, `Tue`, `Wed`, `Thu` |
 
 Missing text is the actionable half: every entry is a source label, row
 description or group heading that the Aether frame does not paint.

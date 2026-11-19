@@ -257,9 +257,27 @@ async function main() {
       .map((offset) => ({ ...offset, distance: Math.abs(offset.dx) + Math.abs(offset.dy) }))
       .sort((left, right) => right.distance - left.distance)
       .slice(0, 5);
-    const accepted = baseline[surface.id] ?? coverage;
-    nextBaseline[surface.id] = Math.round(coverage * 1000) / 1000;
-    if (!update && coverage + 0.02 < accepted) regressions.push(surface.id);
+    const alignedRatio = pairs.length === 0 ? null : aligned.length / pairs.length;
+    const previous = baseline[surface.id];
+    const accepted =
+      typeof previous === "object" && previous !== null
+        ? previous
+        : { coverage: previous ?? coverage, alignedRatio: null };
+    nextBaseline[surface.id] = {
+      coverage: Math.round(coverage * 1000) / 1000,
+      alignedRatio:
+        alignedRatio === null ? null : Math.round(alignedRatio * 1000) / 1000,
+    };
+    if (!update) {
+      if (coverage + 0.02 < accepted.coverage) regressions.push(surface.id);
+      if (
+        alignedRatio !== null &&
+        accepted.alignedRatio !== null &&
+        alignedRatio + 0.02 < accepted.alignedRatio
+      ) {
+        regressions.push(`${surface.id} (geometry)`);
+      }
+    }
 
     surfaces.push({
       id: surface.id,
@@ -269,7 +287,9 @@ async function main() {
       aether: aetherList.length,
       matched: matched.length,
       coverage: Math.round(coverage * 1000) / 1000,
-      baseline: Math.round(accepted * 1000) / 1000,
+      baseline: Math.round(accepted.coverage * 1000) / 1000,
+      alignedRatio:
+        alignedRatio === null ? null : Math.round(alignedRatio * 1000) / 1000,
       geometry: {
         matched: pairs.length,
         aligned: aligned.length,
@@ -284,6 +304,14 @@ async function main() {
   const withScenes = surfaces.filter((surface) => surface.coverage !== null);
   const totalSource = withScenes.reduce((sum, surface) => sum + surface.source, 0);
   const totalMatched = withScenes.reduce((sum, surface) => sum + (surface.matched ?? 0), 0);
+  const totalPairs = withScenes.reduce(
+    (sum, surface) => sum + (surface.geometry?.matched ?? 0),
+    0,
+  );
+  const totalAligned = withScenes.reduce(
+    (sum, surface) => sum + (surface.geometry?.aligned ?? 0),
+    0,
+  );
   const document = {
     summary: {
       surfaces: withScenes.length,
@@ -291,6 +319,8 @@ async function main() {
       textRuns: totalSource,
       matched: totalMatched,
       coverage: totalSource === 0 ? 1 : Math.round((totalMatched / totalSource) * 1000) / 1000,
+      alignedRatio:
+        totalPairs === 0 ? 0 : Math.round((totalAligned / totalPairs) * 1000) / 1000,
       missingScenes: surfaces.filter((surface) => surface.coverage === null).length,
       regressions: regressions.length,
     },
@@ -304,14 +334,15 @@ async function main() {
     "",
     `Text coverage: **${document.summary.matched}/${document.summary.textRuns}** runs ` +
       `across ${document.summary.surfaces} surfaces ` +
-      `(${(document.summary.coverage * 100).toFixed(1)} %).`,
+      `(${(document.summary.coverage * 100).toFixed(1)} %). ` +
+      `Geometry: **${(document.summary.alignedRatio * 100).toFixed(1)} %** of matched boxes within tolerance.`,
     "",
-    "| Surface | Source runs | Aether runs | Matched | Coverage | Missing (first) |",
-    "| --- | ---: | ---: | ---: | ---: | --- |",
+    "| Surface | Source runs | Aether runs | Matched | Coverage | Aligned | Missing (first) |",
+    "| --- | ---: | ---: | ---: | ---: | ---: | --- |",
     ...surfaces.map((surface) =>
       surface.coverage === null
         ? `| \`${surface.id}\` | — | — | — | — | ${surface.status} |`
-        : `| \`${surface.id}\` | ${surface.source} | ${surface.aether} | ${surface.matched} | ${(surface.coverage * 100).toFixed(0)} % | ${surface.missing
+        : `| \`${surface.id}\` | ${surface.source} | ${surface.aether} | ${surface.matched} | ${(surface.coverage * 100).toFixed(0)} % | ${surface.alignedRatio === null ? "—" : `${(surface.alignedRatio * 100).toFixed(0)} %`} | ${surface.missing
             .slice(0, 5)
             .map((text) => `\`${text.replace(/\|/g, "\\|")}\``)
             .join(", ")} |`,

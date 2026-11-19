@@ -622,6 +622,8 @@ pub struct SettingsRow {
     pub label: &'static str,
     pub value: String,
     pub switch: Option<(bool, SettingsAction)>,
+    /// Optional second line, mirroring `.os-settings-row__text small`.
+    pub description: Option<&'static str>,
 }
 
 #[derive(Clone, Debug)]
@@ -655,6 +657,19 @@ impl App {
                 label,
                 value,
                 switch: None,
+                description: None,
+            });
+        };
+        let push_desc = |sections: &mut Vec<SettingsSection>,
+                         index: usize,
+                         label: &'static str,
+                         value: String,
+                         description: &'static str| {
+            sections[index].rows.push(SettingsRow {
+                label,
+                value,
+                switch: None,
+                description: Some(description),
             });
         };
         let toggle = |sections: &mut Vec<SettingsSection>,
@@ -667,13 +682,34 @@ impl App {
                 label,
                 value: value.to_string(),
                 switch: Some((on, action)),
+                description: None,
+            });
+        };
+        let toggle_desc = |sections: &mut Vec<SettingsSection>,
+                           index: usize,
+                           label: &'static str,
+                           value: &'static str,
+                           on: bool,
+                           action: SettingsAction,
+                           description: &'static str| {
+            sections[index].rows.push(SettingsRow {
+                label,
+                value: value.to_string(),
+                switch: Some((on, action)),
+                description: Some(description),
             });
         };
 
         match tab {
             0 => {
                 let about = start_section(&mut sections, "About");
-                push(&mut sections, about, "Aether OS", "0.1.0-alpha".into());
+                push_desc(
+                    &mut sections,
+                    about,
+                    "Aether OS",
+                    "0.1.0-alpha".into(),
+                    "Concept build · Water design system",
+                );
                 push(
                     &mut sections,
                     about,
@@ -686,7 +722,7 @@ impl App {
                 );
                 push(&mut sections, about, "Kernel", facts.kernel.clone());
                 push(&mut sections, about, "Processor", facts.cpu.clone());
-                push(
+                push_desc(
                     &mut sections,
                     about,
                     "Memory",
@@ -695,20 +731,34 @@ impl App {
                     } else {
                         "—".into()
                     },
+                    "Unified memory",
                 );
                 let update = start_section(&mut sections, "Software update");
-                toggle(
+                toggle_desc(
                     &mut sections,
                     update,
                     "Automatic updates",
                     "Check on session start",
                     self.system.settings_toggles[0],
                     SettingsAction::State(0),
+                    "Download and install security updates overnight.",
                 );
                 push(&mut sections, update, "Last checked", "Today".into());
                 let region = start_section(&mut sections, "Language & Region");
-                push(&mut sections, region, "Language", "English (UK)".into());
-                push(&mut sections, region, "Region", "Europe".into());
+                push_desc(
+                    &mut sections,
+                    region,
+                    "Language",
+                    "English (UK)".into(),
+                    "Used across the desktop and apps.",
+                );
+                push_desc(
+                    &mut sections,
+                    region,
+                    "Region",
+                    "Europe".into(),
+                    "Formats dates, numbers, and currency.",
+                );
             }
             1 => {
                 let appearance = start_section(&mut sections, "Appearance");
@@ -727,29 +777,32 @@ impl App {
                     SettingsAction::Theme(aether_shell::theme::ThemeField::Effects),
                 );
                 let effects = start_section(&mut sections, "Water effects");
-                toggle(
+                toggle_desc(
                     &mut sections,
                     effects,
                     "Effects",
                     "Ripples and shimmer",
                     theme.effects,
                     SettingsAction::Theme(aether_shell::theme::ThemeField::Effects),
+                    "Master switch for ripples, shimmer, and window waves.",
                 );
-                toggle(
+                toggle_desc(
                     &mut sections,
                     effects,
                     "Cursor drips",
                     "Soft rings follow the pointer",
                     theme.drips,
                     SettingsAction::Theme(aether_shell::theme::ThemeField::Drips),
+                    "Small, soft rings trail your pointer.",
                 );
-                toggle(
+                toggle_desc(
                     &mut sections,
                     effects,
                     "Caustic shimmer",
                     "Light patterns behind the app",
                     theme.caustics,
                     SettingsAction::Theme(aether_shell::theme::ThemeField::Caustics),
+                    "Slow light patterns drift behind the app.",
                 );
                 toggle(
                     &mut sections,
@@ -815,14 +868,21 @@ impl App {
             3 => {
                 let dock = start_section(&mut sections, "Desktop & Dock");
                 push(&mut sections, dock, "Position", "Bottom".into());
-                push(&mut sections, dock, "Size", "439 × 62".into());
-                toggle(
+                push_desc(
+                    &mut sections,
+                    dock,
+                    "Size",
+                    "439 × 62".into(),
+                    "Scale the dock icons.",
+                );
+                toggle_desc(
                     &mut sections,
                     dock,
                     "Show dock",
                     "Applications along the bottom edge",
                     self.dock_enabled,
                     SettingsAction::Dock,
+                    "Display the application dock on the desktop.",
                 );
                 toggle(
                     &mut sections,
@@ -839,13 +899,14 @@ impl App {
                     "Keyboard and palette".into(),
                 );
                 let bar = start_section(&mut sections, "Menu bar");
-                toggle(
+                toggle_desc(
                     &mut sections,
                     bar,
                     "24-hour clock",
                     "Show 17:47 instead of 05:47 PM",
                     self.system.settings_toggles[2],
                     SettingsAction::State(2),
+                    "Show 18:40 instead of 6:40 PM.",
                 );
                 push(&mut sections, bar, "Meters", "CPU · RAM · storage".into());
             }
@@ -866,13 +927,14 @@ impl App {
             }
             5 => {
                 let motion = start_section(&mut sections, "Motion");
-                toggle(
+                toggle_desc(
                     &mut sections,
                     motion,
                     "Reduce motion",
                     "Disable ambient and interface motion",
                     self.system.settings_toggles[3],
                     SettingsAction::State(3),
+                    "Turn off window waves and animated transitions.",
                 );
                 let vision = start_section(&mut sections, "Vision");
                 push(&mut sections, vision, "Text size", "Comfortable".into());
@@ -1087,15 +1149,18 @@ impl App {
         let content = self.settings_pane_rect();
         let mut y = content.y + 61;
         for section in self.settings_sections() {
-            y += 28 + 8;
+            y += 30;
             for row in &section.rows {
-                let switch = AetherRect::new(content.x + content.width as i32 - 50, y + 6, 34, 20);
+                let height = if row.description.is_some() { 48 } else { 34 };
+                let offset = if row.description.is_some() { 14 } else { 7 };
+                let switch =
+                    AetherRect::new(content.x + content.width as i32 - 50, y + offset, 34, 20);
                 if row.switch.is_some() && switch.contains(point) {
                     return row.switch.map(|(_, action)| action);
                 }
-                y += 34;
+                y += height;
             }
-            y += 8;
+            y += 12;
         }
         None
     }

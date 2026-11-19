@@ -1,31 +1,118 @@
 {
-  "about": 0.556,
-  "explorer": 0.14,
-  "network": 0.364,
-  "battery": 0.56,
-  "devices": 0.333,
-  "radio": 1,
-  "calendar": 1,
-  "taskmanager": 0.041,
-  "settings-general": 0.727,
-  "settings-appearance": 0.521,
-  "settings-displays": 0.548,
-  "settings-desktop": 0.522,
-  "settings-commands": 0.511,
-  "settings-accessibility": 0.543,
-  "settings-network": 0.511,
-  "settings-bluetooth": 0.641,
-  "settings-sound": 0.649,
-  "settings-battery": 0.571,
-  "settings-notifications": 0.795,
-  "settings-security": 0.489,
-  "settings-storage": 0.632,
-  "command": 0,
-  "menubar": 0.9,
-  "menu": 0.5,
-  "tray-network": 0.4,
-  "tray-devices": 0.429,
-  "tray-battery": 0.6,
-  "tray-sound": 0.2,
-  "tray-calendar": 0.111
+  "about": {
+    "coverage": 0.556,
+    "alignedRatio": 0
+  },
+  "explorer": {
+    "coverage": 0.14,
+    "alignedRatio": 0.125
+  },
+  "network": {
+    "coverage": 0.364,
+    "alignedRatio": 0.25
+  },
+  "battery": {
+    "coverage": 0.56,
+    "alignedRatio": 0.071
+  },
+  "devices": {
+    "coverage": 0.333,
+    "alignedRatio": 0.286
+  },
+  "radio": {
+    "coverage": 1,
+    "alignedRatio": 0.333
+  },
+  "calendar": {
+    "coverage": 1,
+    "alignedRatio": 0.167
+  },
+  "taskmanager": {
+    "coverage": 0.041,
+    "alignedRatio": 1
+  },
+  "settings-general": {
+    "coverage": 0.841,
+    "alignedRatio": 0.243
+  },
+  "settings-appearance": {
+    "coverage": 0.563,
+    "alignedRatio": 0.259
+  },
+  "settings-displays": {
+    "coverage": 0.548,
+    "alignedRatio": 0.304
+  },
+  "settings-desktop": {
+    "coverage": 0.543,
+    "alignedRatio": 0.28
+  },
+  "settings-commands": {
+    "coverage": 0.511,
+    "alignedRatio": 0.292
+  },
+  "settings-accessibility": {
+    "coverage": 0.543,
+    "alignedRatio": 0.28
+  },
+  "settings-network": {
+    "coverage": 0.511,
+    "alignedRatio": 0.304
+  },
+  "settings-bluetooth": {
+    "coverage": 0.641,
+    "alignedRatio": 0.28
+  },
+  "settings-sound": {
+    "coverage": 0.649,
+    "alignedRatio": 0.292
+  },
+  "settings-battery": {
+    "coverage": 0.571,
+    "alignedRatio": 0.292
+  },
+  "settings-notifications": {
+    "coverage": 0.795,
+    "alignedRatio": 0.258
+  },
+  "settings-security": {
+    "coverage": 0.489,
+    "alignedRatio": 0.304
+  },
+  "settings-storage": {
+    "coverage": 0.632,
+    "alignedRatio": 0.292
+  },
+  "command": {
+    "coverage": 0,
+    "alignedRatio": null
+  },
+  "menubar": {
+    "coverage": 0.9,
+    "alignedRatio": 0.111
+  },
+  "menu": {
+    "coverage": 0.5,
+    "alignedRatio": 0
+  },
+  "tray-network": {
+    "coverage": 0.4,
+    "alignedRatio": 0.25
+  },
+  "tray-devices": {
+    "coverage": 0.429,
+    "alignedRatio": 0.333
+  },
+  "tray-battery": {
+    "coverage": 0.6,
+    "alignedRatio": 0.167
+  },
+  "tray-sound": {
+    "coverage": 0.2,
+    "alignedRatio": 0.5
+  },
+  "tray-calendar": {
+    "coverage": 0.111,
+    "alignedRatio": 0
+  }
 }

@@ -79,6 +79,7 @@ The state pass compares values; the scene pass compares what was laid out:
 
 ```bash
 bun run parity:scene   # diff source DOM text runs against the Aether scene
+bun run parity:pixels  # compare painted crops with pixelmatch
 bun run parity:design  # regenerate both DESIGN.md files and diff the contract
 ```
 
@@ -90,8 +91,10 @@ bun run parity:design  # regenerate both DESIGN.md files and diff the contract
   chrome, labels, icons and panels. Capture images build with the feature;
   production builds leave it off, so none of the recorder ships.
 - `scene-diff.mjs` matches non-numeric text runs by text and nearest position,
-  records geometry offsets, and stores per-surface coverage in
-  `state/scene-baseline.json`; a drop fails the run.
+  records geometry offsets, and stores coverage plus the aligned ratio in
+  `state/scene-baseline.json`; a drop in either fails the run.
+- `pixel-diff.mjs` compares same-size source/Aether crops with pixelmatch,
+  writes heatmaps and baselines the diff ratio; a regression fails the run.
 - `design-docs.mjs` writes `design/source/DESIGN.md` (the contract) and
   `design/aether/DESIGN.md`, lints both, and diffs them. Deliberate differences
   live in `design/accepted.json`; known missing UI lives in `design/open.json`

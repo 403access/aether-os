@@ -40,6 +40,8 @@
     "parity:design": "node scripts/screenshots/design-docs.mjs",
     "parity:design:check": "node scripts/screenshots/design-docs.mjs --check",
     "parity:scene": "node scripts/screenshots/scene-diff.mjs",
+    "parity:pixels": "node scripts/screenshots/pixel-diff.mjs",
+    "parity:pixels:update": "node scripts/screenshots/pixel-diff.mjs --update",
     "parity:state": "node scripts/screenshots/design-state.mjs",
     "parity:state:diff": "node scripts/screenshots/design-state.mjs --diff-only",
     "parity:apps": "node scripts/screenshots/app-parity.mjs",

@@ -1347,7 +1347,12 @@ impl App {
 
         let mut y = pane.y + 61;
         for section in self.settings_sections() {
-            let height = 36 + section.rows.len() as i32 * 34;
+            let body_height: i32 = section
+                .rows
+                .iter()
+                .map(|row| if row.description.is_some() { 48 } else { 34 })
+                .sum();
+            let height = 30 + body_height;
             let card = AetherRect::new(pane.x, y, pane.width, height as u32);
             let card_node = scene_box!(ui, Some(pane_node), "card", card, CARD_FILL, 10.0);
             scene_text!(
@@ -1366,8 +1371,9 @@ impl App {
             );
             self.card(ui, card, tokens);
             self.section(ui, pane.x + 14, y + 10, section.title, tokens);
+            let mut row_y = y + 30;
             for (index, row) in section.rows.iter().enumerate() {
-                let row_y = y + 36 + index as i32 * 34;
+                let row_height = if row.description.is_some() { 48 } else { 34 };
                 if index > 0 {
                     ui.solid(
                         AetherRect::new(pane.x + 1, row_y, pane.width.saturating_sub(2), 1),
@@ -1383,8 +1389,18 @@ impl App {
                     ui,
                     Some(card_node),
                     "row",
-                    AetherRect::new(pane.x + 1, row_y, pane.width.saturating_sub(2), 34)
+                    AetherRect::new(
+                        pane.x + 1,
+                        row_y,
+                        pane.width.saturating_sub(2),
+                        row_height as u32
+                    )
                 );
+                let label_y = if row.description.is_some() {
+                    row_y + 9
+                } else {
+                    row_y + 8
+                };
                 scene_text!(
                     ui,
                     Some(row_node),
@@ -1392,18 +1408,40 @@ impl App {
                     row.label,
                     AetherRect::new(
                         pane.x + 14,
-                        row_y + 8,
+                        label_y,
                         self.text_width(row.label, 0x100 | 9),
                         18
                     ),
                     0x100 | 9,
                     tokens.text
                 );
-                ui.label(row.label, pane.x + 14, row_y + 8, 0x100 | 9, tokens.text);
+                ui.label(row.label, pane.x + 14, label_y, 0x100 | 9, tokens.text);
+                if let Some(description) = row.description {
+                    scene_text!(
+                        ui,
+                        Some(row_node),
+                        "row-description",
+                        description,
+                        AetherRect::new(
+                            pane.x + 14,
+                            row_y + 27,
+                            self.text_width(description, 5),
+                            16
+                        ),
+                        5,
+                        tokens.dim
+                    );
+                    ui.label(description, pane.x + 14, row_y + 27, 5, tokens.dim);
+                }
+                let control_offset = if row.description.is_some() { 14 } else { 7 };
                 match row.switch {
                     Some((on, _)) => {
-                        let switch =
-                            AetherRect::new(pane.x + pane.width as i32 - 50, row_y + 7, 34, 20);
+                        let switch = AetherRect::new(
+                            pane.x + pane.width as i32 - 50,
+                            row_y + control_offset,
+                            34,
+                            20,
+                        );
                         scene_box!(
                             ui,
                             Some(row_node),
@@ -1443,6 +1481,7 @@ impl App {
                         );
                     }
                 }
+                row_y += row_height;
             }
             y += height + 12;
         }

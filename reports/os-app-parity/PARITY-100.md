@@ -15,13 +15,19 @@ Measured with `bun run parity:scene`, `bun run parity:state` and
 | --- | ---: | ---: |
 | Paired surfaces | 29 | all in scope |
 | Surfaces complete by text | 2 (`radio`, `calendar`) | all |
-| Text runs matched | 416 / 841 (49.5 %) | 100 % minus a declared data allowlist |
-| Matched text correctly positioned | 107 / 416 (25.7 %) | 100 % within 1 px |
+| Text runs matched | 424 / 841 (50.4 %) | 100 % minus a declared data allowlist |
+| Matched text correctly positioned | 108 / 424 (25.9 %) | 100 % within 1 px |
 | Design-state keys matching | 99 / 108 | 100 % |
 | State differences accepted | 9 | 0 outside out-of-scope |
 | DESIGN.md paths accepted | 12 | 0 outside out-of-scope |
 | DESIGN.md paths open | 0 | 0 |
-| Pixel comparison | blank-capture guard only | per-surface pixel threshold |
+| Pixel comparison | 6.84 % differ across 24 same-size surfaces; 13 size mismatches | per-surface pixel threshold |
+
+The first two gates from the plan are now in place: the scene baseline stores
+both text coverage and geometry alignment, and `parity:pixels` compares every
+same-size crop with pixelmatch and fails on a regression. The overall pixel
+ratio is **6.84 %**; the 13 skipped pairs are crops whose source and Aether
+sizes still differ (dock, menu, command and the Aether-only overlays).
 
 Two examples show why text coverage alone is not parity:
 
@@ -55,8 +61,8 @@ variable fonts, backdrop blur and demo data; Aether is a real OS with live data.
 | No z-order or clipping | Overlap, occlusion and scroll clipping are unverified |
 | No client-surface comparison | Terminal/client content is invisible to the scene tree |
 | No icon/asset diff | Logo, tray glyphs and tab icons differ but score nothing |
-| Geometry is reported, not gated | Only text coverage fails CI today |
-| No per-surface pixel diff | Offsets and styling regressions pass as long as text exists |
+| ~~Geometry is reported, not gated~~ | **Done:** `state/scene-baseline.json` now stores coverage and aligned ratio; a drop fails |
+| ~~No per-surface pixel diff~~ | **Done:** `parity:pixels` compares same-size crops and baselines the ratio |
 | No state matrix | Hover/focus/themes/font sizes/breakpoints are not captured |
 | Live data pollutes content | Process/file/IP/user differences are counted as missing text |
 
@@ -133,8 +139,9 @@ out-of-scope demo products. A looser target — chrome structure and style withi
 ## 7. Commands
 
 ```bash
-bun run parity:scene        # text + geometry coverage
-bun run parity:state        # 108 design-state keys
-bun run parity:design:check # DESIGN.md contract
-bun run parity:apps         # source + Aether captures and the report
+bun run parity:scene         # text + geometry coverage, regressions fail
+bun run parity:pixels        # pixelmatch per surface, regressions fail
+bun run parity:state         # 108 design-state keys
+bun run parity:design:check  # DESIGN.md contract
+bun run parity:apps          # source + Aether captures and the report
 ```

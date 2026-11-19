@@ -4,7 +4,7 @@ Source: `e86b239 Add drag-and-drop tile swapping to split layout` (local design-
 Visual spec (source vs target, difference register): [`VISUAL-SPEC.md`](VISUAL-SPEC.md).
 Parity target and remaining work: [`PARITY-100.md`](PARITY-100.md).
 
-Aether: `4feb824 fix(capture): poll the palette log instead of fixed sleeps`
+Aether: `fe4f117 docs(parity): document the path to 100% parity`
 
 Implemented **17** · partial **15** · missing **0** · out of scope **2** · Aether-only **4**.
 

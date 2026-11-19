@@ -1,0 +1,360 @@
+{
+  "summary": {
+    "surfaces": 24,
+    "identical": 0,
+    "skipped": 13,
+    "diffPixels": 1381133,
+    "totalPixels": 20199628,
+    "ratio": 0.06837,
+    "regressions": 0
+  },
+  "surfaces": [
+    {
+      "id": "menubar",
+      "status": "different",
+      "source": "menubar",
+      "width": 1280,
+      "height": 38,
+      "pixels": 4349,
+      "total": 48640,
+      "ratio": 0.08941,
+      "baseline": 0.08941
+    },
+    {
+      "id": "dock",
+      "status": "size-mismatch",
+      "source": "566x64",
+      "aether": "439x62",
+      "ratio": null
+    },
+    {
+      "id": "menu",
+      "status": "size-mismatch",
+      "source": "264x286",
+      "aether": "250x230",
+      "ratio": null
+    },
+    {
+      "id": "command",
+      "status": "size-mismatch",
+      "source": "680x576",
+      "aether": "680x420",
+      "ratio": null
+    },
+    {
+      "id": "explorer",
+      "status": "different",
+      "source": "explorer",
+      "width": 1248,
+      "height": 730,
+      "pixels": 79232,
+      "total": 911040,
+      "ratio": 0.08697,
+      "baseline": 0.08697
+    },
+    {
+      "id": "settings",
+      "status": "different",
+      "source": "settings",
+      "width": 1248,
+      "height": 730,
+      "pixels": 60157,
+      "total": 911040,
+      "ratio": 0.06603,
+      "baseline": 0.06603
+    },
+    {
+      "id": "about",
+      "status": "different",
+      "source": "about",
+      "width": 1248,
+      "height": 730,
+      "pixels": 35767,
+      "total": 911040,
+      "ratio": 0.03926,
+      "baseline": 0.03926
+    },
+    {
+      "id": "network",
+      "status": "different",
+      "source": "network",
+      "width": 1248,
+      "height": 730,
+      "pixels": 85928,
+      "total": 911040,
+      "ratio": 0.09432,
+      "baseline": 0.09432
+    },
+    {
+      "id": "battery",
+      "status": "different",
+      "source": "battery",
+      "width": 1248,
+      "height": 730,
+      "pixels": 90581,
+      "total": 911040,
+      "ratio": 0.09943,
+      "baseline": 0.09943
+    },
+    {
+      "id": "devices",
+      "status": "different",
+      "source": "devices",
+      "width": 1248,
+      "height": 730,
+      "pixels": 43362,
+      "total": 911040,
+      "ratio": 0.0476,
+      "baseline": 0.0476
+    },
+    {
+      "id": "calendar",
+      "status": "different",
+      "source": "calendar",
+      "width": 1248,
+      "height": 730,
+      "pixels": 27917,
+      "total": 911040,
+      "ratio": 0.03064,
+      "baseline": 0.03064
+    },
+    {
+      "id": "taskmanager",
+      "status": "different",
+      "source": "taskmanager",
+      "width": 1248,
+      "height": 730,
+      "pixels": 95698,
+      "total": 911040,
+      "ratio": 0.10504,
+      "baseline": 0.10504
+    },
+    {
+      "id": "shortcuts",
+      "status": "size-mismatch",
+      "source": "1248x730",
+      "aether": "760x560",
+      "ratio": null
+    },
+    {
+      "id": "audio",
+      "status": "missing-crop",
+      "ratio": null
+    },
+    {
+      "id": "chat",
+      "status": "missing-crop",
+      "ratio": null
+    },
+    {
+      "id": "agents",
+      "status": "missing-crop",
+      "ratio": null
+    },
+    {
+      "id": "remote",
+      "status": "missing-crop",
+      "ratio": null
+    },
+    {
+      "id": "terminal",
+      "status": "size-mismatch",
+      "source": "1248x730",
+      "aether": "619x730",
+      "ratio": null
+    },
+    {
+      "id": "radio",
+      "status": "different",
+      "source": "music",
+      "width": 1248,
+      "height": 730,
+      "pixels": 24492,
+      "total": 911040,
+      "ratio": 0.02688,
+      "baseline": 0.02688
+    },
+    {
+      "id": "settings-general",
+      "status": "different",
+      "source": "settings-general",
+      "width": 1248,
+      "height": 730,
+      "pixels": 60986,
+      "total": 911040,
+      "ratio": 0.06694,
+      "baseline": 0.06694
+    },
+    {
+      "id": "settings-appearance",
+      "status": "different",
+      "source": "settings-appearance",
+      "width": 1248,
+      "height": 730,
+      "pixels": 78755,
+      "total": 911040,
+      "ratio": 0.08645,
+      "baseline": 0.08645
+    },
+    {
+      "id": "settings-displays",
+      "status": "different",
+      "source": "settings-displays",
+      "width": 1248,
+      "height": 730,
+      "pixels": 57393,
+      "total": 911040,
+      "ratio": 0.063,
+      "baseline": 0.063
+    },
+    {
+      "id": "settings-desktop",
+      "status": "different",
+      "source": "settings-desktop",
+      "width": 1248,
+      "height": 730,
+      "pixels": 57639,
+      "total": 911040,
+      "ratio": 0.06327,
+      "baseline": 0.06327
+    },
+    {
+      "id": "settings-commands",
+      "status": "different",
+      "source": "settings-commands",
+      "width": 1248,
+      "height": 730,
+      "pixels": 78430,
+      "total": 911040,
+      "ratio": 0.08609,
+      "baseline": 0.08609
+    },
+    {
+      "id": "settings-accessibility",
+      "status": "different",
+      "source": "settings-accessibility",
+      "width": 1248,
+      "height": 730,
+      "pixels": 50686,
+      "total": 911040,
+      "ratio": 0.05564,
+      "baseline": 0.05564
+    },
+    {
+      "id": "settings-network",
+      "status": "different",
+      "source": "settings-network",
+      "width": 1248,
+      "height": 730,
+      "pixels": 69601,
+      "total": 911040,
+      "ratio": 0.0764,
+      "baseline": 0.0764
+    },
+    {
+      "id": "settings-bluetooth",
+      "status": "different",
+      "source": "settings-bluetooth",
+      "width": 1248,
+      "height": 730,
+      "pixels": 44393,
+      "total": 911040,
+      "ratio": 0.04873,
+      "baseline": 0.04873
+    },
+    {
+      "id": "settings-sound",
+      "status": "different",
+      "source": "settings-sound",
+      "width": 1248,
+      "height": 730,
+      "pixels": 41773,
+      "total": 911040,
+      "ratio": 0.04585,
+      "baseline": 0.04585
+    },
+    {
+      "id": "settings-battery",
+      "status": "different",
+      "source": "settings-battery",
+      "width": 1248,
+      "height": 730,
+      "pixels": 47323,
+      "total": 911040,
+      "ratio": 0.05194,
+      "baseline": 0.05194
+    },
+    {
+      "id": "settings-notifications",
+      "status": "different",
+      "source": "settings-notifications",
+      "width": 1248,
+      "height": 730,
+      "pixels": 47612,
+      "total": 911040,
+      "ratio": 0.05226,
+      "baseline": 0.05226
+    },
+    {
+      "id": "settings-security",
+      "status": "different",
+      "source": "settings-security",
+      "width": 1248,
+      "height": 730,
+      "pixels": 52044,
+      "total": 911040,
+      "ratio": 0.05713,
+      "baseline": 0.05713
+    },
+    {
+      "id": "settings-storage",
+      "status": "different",
+      "source": "settings-storage",
+      "width": 1248,
+      "height": 730,
+      "pixels": 49318,
+      "total": 911040,
+      "ratio": 0.05413,
+      "baseline": 0.05413
+    },
+    {
+      "id": "tray-network",
+      "status": "size-mismatch",
+      "source": "301x329",
+      "aether": "300x328",
+      "ratio": null
+    },
+    {
+      "id": "tray-devices",
+      "status": "size-mismatch",
+      "source": "301x253",
+      "aether": "300x253",
+      "ratio": null
+    },
+    {
+      "id": "tray-battery",
+      "status": "size-mismatch",
+      "source": "287x271",
+      "aether": "286x270",
+      "ratio": null
+    },
+    {
+      "id": "tray-sound",
+      "status": "size-mismatch",
+      "source": "293x256",
+      "aether": "292x256",
+      "ratio": null
+    },
+    {
+      "id": "tray-calendar",
+      "status": "different",
+      "source": "tray-calendar",
+      "width": 308,
+      "height": 351,
+      "pixels": 97697,
+      "total": 108108,
+      "ratio": 0.9037,
+      "baseline": 0.9037
+    }
+  ]
+}

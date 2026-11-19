@@ -1,9 +1,9 @@
 # Water OS app parity · roadmap
 
-Source: `7c08677 Add Audio app to Aether OS (+ local changes)` (local design-system/ checkout)
+Source: `e86b239 Add drag-and-drop tile swapping to split layout` (local design-system/ checkout)
 Visual spec (source vs target, difference register): [`VISUAL-SPEC.md`](VISUAL-SPEC.md).
 
-Aether: `62c0393 feat(shell): brighten window rims on hover and off-window captures`
+Aether: `2014507 feat(shell): deepen the window shadow on hover`
 
 Implemented **18** · partial **2** · missing **0** · out of scope **2** · Aether-only **4**.
 

@@ -48,10 +48,10 @@ impl App {
         // Brand mark: two overlapping glass panels with a check, like `.os-logo`.
         display_icons.push((
             "water".into(),
-            18,
+            16,
             tokens.accent(255),
-            bar.logo.x + 5,
-            y + 8,
+            bar.logo.x + 6,
+            y + 10,
         ));
 
         // Application title (`.os-menubar__app`), 12.5 px semibold.
@@ -126,10 +126,10 @@ impl App {
                 ));
             }
             let label_x = rect.x + 8;
-            labels.push((meter.label.clone(), label_x, y + 14, 7, tokens.dim));
+            labels.push((meter.label.clone(), label_x, y + 13, 7, tokens.dim));
             let meter_x = label_x + self.text_width(&meter.label, 6) as i32 + 4;
             if let Some(buffer) = self.chrome_round(20, 3, 2, [255, 255, 255, 26]) {
-                panels.push((buffer, meter_x, y + 18));
+                panels.push((buffer, meter_x, y + 17));
             }
             let fill = (20.0 * meter.fraction.clamp(0.0, 1.0)).round() as u32;
             if fill > 0 {
@@ -139,10 +139,10 @@ impl App {
                     _ => tokens.green,
                 };
                 if let Some(buffer) = self.chrome_round(fill.max(2), 3, 2, color) {
-                    panels.push((buffer, meter_x, y + 18));
+                    panels.push((buffer, meter_x, y + 17));
                 }
             }
-            labels.push((meter.value.clone(), meter_x + 24, y + 14, 8, tokens.soft));
+            labels.push((meter.value.clone(), meter_x + 24, y + 13, 8, tokens.soft));
         }
 
         // Tray glyphs.
@@ -160,7 +160,12 @@ impl App {
             } else {
                 rect.x + (width as i32 - 15) / 2
             };
-            display_icons.push((glyph.into(), 15, tokens.text_soft, icon_x, y + 5));
+            let icon_y = if matches!(action, TrayAction::Appearance | TrayAction::Gallery) {
+                y + 11
+            } else {
+                y + 10
+            };
+            display_icons.push((glyph.into(), 15, tokens.text_soft, icon_x, icon_y));
         }
         if let Some((_, battery)) = bar
             .tray

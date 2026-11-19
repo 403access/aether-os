@@ -49,12 +49,16 @@ grep -q "cursor -> Pointer" "${OUT}/topbar-app.log" || {
   exit 1
 }
 
-# Clicking the clock opens the Calendar app.
+# Clicking the clock opens the Calendar tray; its footer opens the app.
 xdotool click 1
-sleep 1.2
+sleep 1.0
 import -window root "${OUT}/topbar-menu.png"
+xdotool mousemove 1054 375
+sleep 0.3
+xdotool click 1
+sleep 1.0
 grep -q "calendar opened" "${OUT}/topbar-app.log" || {
-  echo "error: clock did not open the Calendar" >&2
+  echo "error: clock tray did not open the Calendar" >&2
   tail -20 "${OUT}/topbar-app.log" >&2
   exit 1
 }

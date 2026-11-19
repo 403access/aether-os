@@ -16,16 +16,16 @@ scales its type by `--os-font-scale: 1.14`, so a token like `--ds-text-xs`
 | Source | Playwright at 1280 × 800: `getBoundingClientRect`, `Range.getBoundingClientRect` for text boxes, `getComputedStyle` for fonts/padding/effects, computed `::before` for the tide ring |
 | Target | Aether capture under Xvfb at 1280 × 800, plus the geometry constants in `aether-shell` / `aether-shell-wayland`; text is compared by **rasterised ink bands** (first/last row containing text pixels inside a known item rect) |
 
-The menu-bar table below is an example of the measurement used throughout:
+The menu-bar table below is an example of the measurement used throughout (final bands after the ink-box pass). Tray glyphs now sit at the source's 10–11 px icon origin, and the brand mark is 16 px at (16, 10).
 
 | Element | Source font / ink | Source ink rows | Aether ink rows (after fix) |
 | --- | --- | --- | --- |
-| App title | 12.54 px / 720 | 12–24 | 12–21 |
+| App title | 12.54 px / 720 | 12–24 | 12–22 (no descender) |
 | File, View | 12.54 px / 550 | 13–22 | 13–22 |
-| Synced | 11.4 px / 400 | 14–21 | 14–23 |
-| Clock date | 11.4 px / 400 | 14–21 | 14–23 |
-| CPU label | 7.98 px / 650 | 17–19 | 16–21 |
-| CPU value | 9.69 px / 600 | 15–20 | 16–22 |
+| Synced | 11.4 px / 400 | 14–23 | 13–24 |
+| Clock date | 11.4 px / 400 | 14–23 | 14–23 |
+| CPU label | 7.98 px / 650 | 15–20 | 15–20 |
+| CPU value | 9.69 px / 600 | 15–21 | 15–21 |
 
 ## 2. Source model
 

@@ -16,6 +16,8 @@ command -v xdotool >/dev/null || { echo "error: xdotool missing; use nix develop
 mkdir -p "${OUT}"
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-$(mktemp -d)}"
 chmod 700 "${XDG_RUNTIME_DIR}"
+# The dock is off by default; this smoke opens apps from it.
+export AETHER_SHOW_DOCK="${AETHER_SHOW_DOCK:-1}"
 
 Xvfb ":${DISPLAY_NUM}" -screen 0 "${WIDTH}x${HEIGHT}x24" -ac >"${OUT}/xvfb-topbar.log" 2>&1 &
 XVFB_PID=$!

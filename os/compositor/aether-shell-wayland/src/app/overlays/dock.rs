@@ -20,7 +20,8 @@ impl App {
         if std::env::var_os("AETHER_HIDE_DOCK").is_some() {
             return false;
         }
-        self.shell.fullscreen_window_on(output).is_none()
+        let enabled = self.dock_enabled || std::env::var_os("AETHER_SHOW_DOCK").is_some();
+        enabled && self.shell.fullscreen_window_on(output).is_none()
     }
 
     pub(crate) fn dock_action_at(&self, point: AetherPoint) -> Option<DockAction> {

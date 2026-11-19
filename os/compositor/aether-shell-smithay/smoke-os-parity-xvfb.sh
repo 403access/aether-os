@@ -28,6 +28,8 @@ export AETHER_TEST_CLIENT="${AETHER_TEST_CLIENT:-${ROOT}/aether-terminal.sh}"
 export AETHER_TEST_CLIENT_COUNT="${AETHER_TEST_CLIENT_COUNT:-0}"
 # Reproducible clock for comparisons: 2026-11-18 16:47 UTC.
 export AETHER_FIXED_UNIX="${AETHER_FIXED_UNIX:-1795020420}"
+# The dock is off by default; this capture exercises it.
+export AETHER_SHOW_DOCK="${AETHER_SHOW_DOCK:-1}"
 
 Xvfb ":${DISPLAY_NUM}" -screen 0 "${WIDTH}x${HEIGHT}x24" -ac >"${OUT}/xvfb-parity.log" 2>&1 &
 XVFB_PID=$!
@@ -48,8 +50,10 @@ sleep "${SETTLE}"
 export DISPLAY=":${DISPLAY_NUM}"
 WINDOW_ID="$(xdotool search --name "Aether OS" | head -1)"
 xdotool windowfocus "${WINDOW_ID}"
-xdotool mousemove 5 795
-sleep 0.4
+# Park the pointer off the window and jiggle once so the compositor drops the
+# hand cursor/hover state from the previous click before the frame is captured.
+park() { xdotool mousemove 5 795; sleep 0.2; xdotool mousemove 6 795; sleep 0.4; }
+park
 
 # File menu popover, captured before any window is open so the app name and
 # menu geometry are deterministic. The crop in app-parity.mjs is (110,0,250,215).
@@ -57,8 +61,7 @@ xdotool mousemove 125 19
 sleep 0.4
 xdotool click 1
 sleep 0.8
-xdotool mousemove 5 795
-sleep 0.4
+park
 import -window root "${OUT}/menu.png"
 xdotool key Escape
 sleep 0.5
@@ -71,8 +74,7 @@ xdotool mousemove 445 760
 sleep 0.3
 xdotool click 1
 sleep 1.5
-xdotool mousemove 5 795
-sleep 0.4
+park
 import -window root "${OUT}/desktop.png"
 
 # Escape closes the explorer overlay, then the clock opens the Calendar.
@@ -82,8 +84,7 @@ xdotool mousemove 1130 19
 sleep 0.3
 xdotool click 1
 sleep 1.2
-xdotool mousemove 5 795
-sleep 0.4
+park
 import -window root "${OUT}/calendar.png"
 
 # Agent sandboxes (Super+B) is Aether-only; close the Calendar first.
@@ -92,8 +93,7 @@ sleep 0.6
 xdotool windowfocus "${WINDOW_ID}"
 xdotool key super+b
 sleep 1.2
-xdotool mousemove 5 795
-sleep 0.4
+park
 import -window root "${OUT}/sandboxes.png"
 
 echo "wrote ${OUT}/desktop.png, ${OUT}/calendar.png and ${OUT}/sandboxes.png"

@@ -176,6 +176,9 @@ pub struct App {
     pub(crate) system: SystemState,
     /// Dock item under the pointer, for the hover lift and label.
     pub(crate) dock_hover: Option<overlays::dock::DockAction>,
+    /// The demo ships its dock disabled; Settings → Desktop & Dock can turn it
+    /// on. `AETHER_SHOW_DOCK` forces it on for captures that need the dock.
+    pub(crate) dock_enabled: bool,
     /// Last tide-frame tick, so the rim animates at ~12 fps.
     wave_last: Option<std::time::Instant>,
     /// Cached size and mtime for indexed paths shown by the explorer.
@@ -299,6 +302,7 @@ impl App {
             calendar: None,
             system: SystemState::new(),
             dock_hover: None,
+            dock_enabled: false,
             wave_last: None,
             file_meta: HashMap::new(),
             task_manager: None,

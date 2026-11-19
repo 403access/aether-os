@@ -4,6 +4,7 @@ use aether_geometry::Rect as AetherRect;
 use aether_shell::theme::ThemeTokens;
 
 use crate::app::system::{SystemApp, TITLEBAR_HEIGHT};
+use crate::app::text_style::{WEIGHT_650, WEIGHT_SEMIBOLD};
 use crate::app::App;
 use crate::render::context::{FrameContext, RenderChunk};
 use crate::render::ui::Ui;
@@ -176,14 +177,14 @@ impl App {
                 self.text_width(app.title(), 0x100 | 10),
                 22
             ),
-            0x100 | 10,
+            WEIGHT_650 | 10,
             tokens.text
         );
         ui.label(
             app.title(),
             mark_x + 31,
             rect.y + 13,
-            0x100 | 10,
+            WEIGHT_650 | 10,
             tokens.text,
         );
         if !app.subtitle().is_empty() {
@@ -1044,17 +1045,17 @@ impl App {
             AetherRect::new(
                 nav.profile.x + 46,
                 nav.profile.y + 7,
-                self.text_width(&name, 0x100 | 9),
+                self.text_width(&name, WEIGHT_650 | 9),
                 20
             ),
-            0x100 | 9,
+            WEIGHT_650 | 9,
             tokens.text
         );
         ui.label(
             name,
             nav.profile.x + 46,
             nav.profile.y + 7,
-            0x100 | 9,
+            WEIGHT_650 | 9,
             tokens.text,
         );
         scene_text!(
@@ -1126,10 +1127,16 @@ impl App {
                 "nav-group",
                 label,
                 AetherRect::new(rect.x, rect.y, rect.width, 16),
-                0x100 | 13,
+                WEIGHT_650 | 13,
                 tokens.dim
             );
-            ui.label(label.to_uppercase(), rect.x, rect.y, 0x100 | 13, tokens.dim);
+            ui.label(
+                label.to_uppercase(),
+                rect.x,
+                rect.y,
+                WEIGHT_650 | 13,
+                tokens.dim,
+            );
         }
         for (index, label) in tabs.iter().enumerate() {
             let rect = nav.tabs[index];
@@ -1363,10 +1370,10 @@ impl App {
                 AetherRect::new(
                     pane.x + 14,
                     y + 10,
-                    self.text_width(section.title, 0x100 | 13),
+                    self.text_width(section.title, WEIGHT_650 | 13),
                     16
                 ),
-                0x100 | 13,
+                WEIGHT_650 | 13,
                 tokens.dim
             );
             self.card(ui, card, tokens);
@@ -1409,13 +1416,19 @@ impl App {
                     AetherRect::new(
                         pane.x + 14,
                         label_y,
-                        self.text_width(row.label, 0x100 | 9),
+                        self.text_width(row.label, WEIGHT_SEMIBOLD | 9),
                         18
                     ),
-                    0x100 | 9,
+                    WEIGHT_SEMIBOLD | 9,
                     tokens.text
                 );
-                ui.label(row.label, pane.x + 14, label_y, 0x100 | 9, tokens.text);
+                ui.label(
+                    row.label,
+                    pane.x + 14,
+                    label_y,
+                    WEIGHT_SEMIBOLD | 9,
+                    tokens.text,
+                );
                 if let Some(description) = row.description {
                     scene_text!(
                         ui,

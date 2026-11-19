@@ -29,7 +29,7 @@
     "menubar.clock.height": 26,
     "menubar.clock.pad-x": 8,
     "menubar.clock.time-color": "#e9fbff",
-    "menubar.clock.time-weight": "bold",
+    "menubar.clock.time-weight": "semibold",
     "menubar.height": 38,
     "menubar.logo.height": 26,
     "menubar.logo.width": 28,
@@ -39,20 +39,20 @@
     "menubar.menu.item-height": 26,
     "menubar.menu.pad-x": 9,
     "menubar.menu.radius": 5,
-    "menubar.menu.weight": "regular",
+    "menubar.menu.weight": "medium",
     "menubar.pad-x": 10,
     "menubar.resources.gap": 6,
     "menubar.resources.height": 26,
     "menubar.resources.label-color": "#6ba9b6",
     "menubar.resources.label-px": 7.98,
     "menubar.resources.label-tracking": 0.32,
-    "menubar.resources.label-weight": "bold",
+    "menubar.resources.label-weight": "semibold",
     "menubar.resources.meter-h": 3,
     "menubar.resources.meter-w": 20,
     "menubar.resources.pad-x": 8,
     "menubar.resources.value-color": "#a5dbe5",
     "menubar.resources.value-px": 9.69,
-    "menubar.resources.value-weight": "bold",
+    "menubar.resources.value-weight": "medium",
     "menubar.sync.border": "#7fe6ff26",
     "menubar.sync.font-px": 11.4,
     "menubar.sync.height": 26,
@@ -108,7 +108,7 @@
     "window.title-color": "#e9fbff",
     "window.title-px": 12.54,
     "window.title-tracking": -0.13,
-    "window.title-weight": "bold",
+    "window.title-weight": "semibold",
     "window.titlebar-height": 40
   },
   "viewport": {
@@ -116,5 +116,5 @@
     "width": 1280
   },
   "project": "Aether compositor",
-  "revision": "4a7acea feat(parity): extract UI scenes and DESIGN.md contracts"
+  "revision": "99d9700 fix(parity): measure source text boxes, not full-width containers"
 }

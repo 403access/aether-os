@@ -1058,37 +1058,53 @@ impl App {
             }
             10 => {
                 let notifications = start_section(&mut sections, "Notifications");
-                toggle(
+                toggle_desc(
                     &mut sections,
                     notifications,
                     "Allow notifications",
                     "Show banners and alerts from apps",
                     self.system.settings_toggles[5],
                     SettingsAction::State(5),
+                    "Show banners and alerts from apps.",
                 );
-                push(
+                push_desc(
                     &mut sections,
                     notifications,
                     "Show previews",
                     "Always".into(),
+                    "What appears before you unlock the screen.",
                 );
-                toggle(
+                toggle_desc(
                     &mut sections,
                     notifications,
                     "Do Not Disturb",
                     "Silence all notifications until turned off",
                     self.system.settings_toggles[6],
                     SettingsAction::State(6),
+                    "Silence all notifications until turned off.",
                 );
                 let apps = start_section(&mut sections, "Application notifications");
-                push(
+                push_desc(
                     &mut sections,
                     apps,
                     "Data Cloud Compare",
                     "Alerts on".into(),
+                    "Verification and transfer alerts.",
                 );
-                push(&mut sections, apps, "Tide Radio", "Playback changes".into());
-                push(&mut sections, apps, "Calendar", "Event invites".into());
+                push_desc(
+                    &mut sections,
+                    apps,
+                    "Tide Radio",
+                    "Playback changes".into(),
+                    "Track changes and playback.",
+                );
+                push_desc(
+                    &mut sections,
+                    apps,
+                    "Calendar",
+                    "Event invites".into(),
+                    "Upcoming events and invites.",
+                );
             }
             11 => {
                 let security = start_section(&mut sections, "Privacy & Security");

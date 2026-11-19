@@ -3,9 +3,9 @@
     "surfaces": 29,
     "complete": 3,
     "textRuns": 842,
-    "matched": 428,
-    "coverage": 0.508,
-    "alignedRatio": 0.432,
+    "matched": 434,
+    "coverage": 0.515,
+    "alignedRatio": 0.454,
     "missingScenes": 0,
     "regressions": 0
   },
@@ -299,7 +299,7 @@
       "aether": 24,
       "matched": 17,
       "coverage": 0.68,
-      "baseline": 0.56,
+      "baseline": 0.68,
       "alignedRatio": 0.118,
       "geometry": {
         "matched": 17,
@@ -1620,44 +1620,44 @@
       "status": "missing-text",
       "source": 39,
       "dynamic": 2,
-      "aether": 37,
-      "matched": 31,
-      "coverage": 0.795,
-      "baseline": 0.795,
-      "alignedRatio": 0.452,
+      "aether": 43,
+      "matched": 37,
+      "coverage": 0.949,
+      "baseline": 0.949,
+      "alignedRatio": 0.703,
       "geometry": {
-        "matched": 31,
-        "aligned": 14,
+        "matched": 37,
+        "aligned": 26,
         "worst": [
           {
-            "text": "Calendar",
-            "dx": 1,
-            "dy": -72.7,
-            "distance": 73.7
+            "text": "Storage",
+            "dx": 0,
+            "dy": -8.3,
+            "distance": 8.3
           },
           {
-            "text": "Tide Radio",
-            "dx": 1,
-            "dy": -58.8,
-            "distance": 59.8
+            "text": "Accessibility",
+            "dx": 0,
+            "dy": -8.1,
+            "distance": 8.1
           },
           {
-            "text": "Application notifications",
-            "dx": 1,
-            "dy": -46.3,
-            "distance": 47.3
+            "text": "Connectivity",
+            "dx": 0,
+            "dy": -7.7,
+            "distance": 7.7
           },
           {
-            "text": "Data Cloud Compare",
-            "dx": 1,
-            "dy": -44.9,
-            "distance": 45.9
+            "text": "Sound",
+            "dx": 0,
+            "dy": -7.7,
+            "distance": 7.7
           },
           {
-            "text": "Do Not Disturb",
-            "dx": 1,
-            "dy": -28.4,
-            "distance": 29.4
+            "text": "Power & privacy",
+            "dx": 0,
+            "dy": -7.3,
+            "distance": 7.3
           }
         ]
       },
@@ -1670,6 +1670,7 @@
         "pane-title",
         "placeholder",
         "role",
+        "row-description",
         "row-label",
         "row-value",
         "section",
@@ -1679,13 +1680,7 @@
       ],
       "missing": [
         "Notifications",
-        "Demo device",
-        "Show banners and alerts from apps.",
-        "What appears before you unlock the screen.",
-        "Silence all notifications until turned off.",
-        "Verification and transfer alerts.",
-        "Track changes and playback.",
-        "Upcoming events and invites."
+        "Demo device"
       ],
       "extra": [
         "General",
@@ -2058,9 +2053,9 @@
         "worst": [
           {
             "text": "Network Settings…",
-            "dx": 25.4,
+            "dx": 26.4,
             "dy": 3.3,
-            "distance": 28.7
+            "distance": 29.7
           },
           {
             "text": "Known networks",
@@ -2120,9 +2115,9 @@
         "worst": [
           {
             "text": "Bluetooth Settings…",
-            "dx": 28.2,
+            "dx": 29.2,
             "dy": 3.8,
-            "distance": 32
+            "distance": 33
           },
           {
             "text": "Bluetooth",
@@ -2173,9 +2168,9 @@
         "worst": [
           {
             "text": "Battery Settings…",
-            "dx": 26.1,
+            "dx": 27.1,
             "dy": 3.2,
-            "distance": 29.3
+            "distance": 30.3
           },
           {
             "text": "Low",
@@ -2288,9 +2283,9 @@
         "worst": [
           {
             "text": "Open Calendar…",
-            "dx": 17.5,
+            "dx": 18.5,
             "dy": 5.5,
-            "distance": 23
+            "distance": 24
           }
         ]
       },

@@ -3,9 +3,9 @@
     "surfaces": 24,
     "identical": 0,
     "skipped": 13,
-    "diffPixels": 1387872,
+    "diffPixels": 1353431,
     "totalPixels": 20199628,
-    "ratio": 0.06871,
+    "ratio": 0.067,
     "regressions": 0
   },
   "surfaces": [
@@ -15,10 +15,10 @@
       "source": "menubar",
       "width": 1280,
       "height": 38,
-      "pixels": 4349,
+      "pixels": 6248,
       "total": 48640,
-      "ratio": 0.08941,
-      "baseline": 0.08941
+      "ratio": 0.12845,
+      "baseline": 0.12845
     },
     {
       "id": "dock",
@@ -47,10 +47,10 @@
       "source": "explorer",
       "width": 1248,
       "height": 730,
-      "pixels": 79410,
+      "pixels": 78336,
       "total": 911040,
-      "ratio": 0.08716,
-      "baseline": 0.08697
+      "ratio": 0.08599,
+      "baseline": 0.08599
     },
     {
       "id": "settings",
@@ -58,10 +58,10 @@
       "source": "settings",
       "width": 1248,
       "height": 730,
-      "pixels": 62285,
+      "pixels": 60054,
       "total": 911040,
-      "ratio": 0.06837,
-      "baseline": 0.06603
+      "ratio": 0.06592,
+      "baseline": 0.06592
     },
     {
       "id": "about",
@@ -69,10 +69,10 @@
       "source": "about",
       "width": 1248,
       "height": 730,
-      "pixels": 36298,
+      "pixels": 36462,
       "total": 911040,
-      "ratio": 0.03984,
-      "baseline": 0.03926
+      "ratio": 0.04002,
+      "baseline": 0.04002
     },
     {
       "id": "network",
@@ -80,10 +80,10 @@
       "source": "network",
       "width": 1248,
       "height": 730,
-      "pixels": 85522,
+      "pixels": 84960,
       "total": 911040,
-      "ratio": 0.09387,
-      "baseline": 0.09432
+      "ratio": 0.09326,
+      "baseline": 0.09326
     },
     {
       "id": "battery",
@@ -91,10 +91,10 @@
       "source": "battery",
       "width": 1248,
       "height": 730,
-      "pixels": 90105,
+      "pixels": 87895,
       "total": 911040,
-      "ratio": 0.0989,
-      "baseline": 0.09943
+      "ratio": 0.09648,
+      "baseline": 0.09648
     },
     {
       "id": "devices",
@@ -102,10 +102,10 @@
       "source": "devices",
       "width": 1248,
       "height": 730,
-      "pixels": 43680,
+      "pixels": 42619,
       "total": 911040,
-      "ratio": 0.04795,
-      "baseline": 0.0476
+      "ratio": 0.04678,
+      "baseline": 0.04678
     },
     {
       "id": "calendar",
@@ -113,10 +113,10 @@
       "source": "calendar",
       "width": 1248,
       "height": 730,
-      "pixels": 27826,
+      "pixels": 26377,
       "total": 911040,
-      "ratio": 0.03054,
-      "baseline": 0.03064
+      "ratio": 0.02895,
+      "baseline": 0.02895
     },
     {
       "id": "taskmanager",
@@ -124,10 +124,10 @@
       "source": "taskmanager",
       "width": 1248,
       "height": 730,
-      "pixels": 95577,
+      "pixels": 93990,
       "total": 911040,
-      "ratio": 0.10491,
-      "baseline": 0.10504
+      "ratio": 0.10317,
+      "baseline": 0.10317
     },
     {
       "id": "shortcuts",
@@ -169,10 +169,10 @@
       "source": "music",
       "width": 1248,
       "height": 730,
-      "pixels": 23805,
+      "pixels": 23055,
       "total": 911040,
-      "ratio": 0.02613,
-      "baseline": 0.02688
+      "ratio": 0.02531,
+      "baseline": 0.02531
     },
     {
       "id": "settings-general",
@@ -180,10 +180,10 @@
       "source": "settings-general",
       "width": 1248,
       "height": 730,
-      "pixels": 62754,
+      "pixels": 60126,
       "total": 911040,
-      "ratio": 0.06888,
-      "baseline": 0.06694
+      "ratio": 0.066,
+      "baseline": 0.066
     },
     {
       "id": "settings-appearance",
@@ -191,10 +191,10 @@
       "source": "settings-appearance",
       "width": 1248,
       "height": 730,
-      "pixels": 81946,
+      "pixels": 78290,
       "total": 911040,
-      "ratio": 0.08995,
-      "baseline": 0.08645
+      "ratio": 0.08593,
+      "baseline": 0.08593
     },
     {
       "id": "settings-displays",
@@ -202,10 +202,10 @@
       "source": "settings-displays",
       "width": 1248,
       "height": 730,
-      "pixels": 57380,
+      "pixels": 56488,
       "total": 911040,
-      "ratio": 0.06298,
-      "baseline": 0.063
+      "ratio": 0.062,
+      "baseline": 0.062
     },
     {
       "id": "settings-desktop",
@@ -213,10 +213,10 @@
       "source": "settings-desktop",
       "width": 1248,
       "height": 730,
-      "pixels": 58551,
+      "pixels": 58498,
       "total": 911040,
-      "ratio": 0.06427,
-      "baseline": 0.06327
+      "ratio": 0.06421,
+      "baseline": 0.06421
     },
     {
       "id": "settings-commands",
@@ -224,10 +224,10 @@
       "source": "settings-commands",
       "width": 1248,
       "height": 730,
-      "pixels": 77873,
+      "pixels": 57291,
       "total": 911040,
-      "ratio": 0.08548,
-      "baseline": 0.08609
+      "ratio": 0.06289,
+      "baseline": 0.06289
     },
     {
       "id": "settings-accessibility",
@@ -235,10 +235,10 @@
       "source": "settings-accessibility",
       "width": 1248,
       "height": 730,
-      "pixels": 49986,
+      "pixels": 52228,
       "total": 911040,
-      "ratio": 0.05487,
-      "baseline": 0.05564
+      "ratio": 0.05733,
+      "baseline": 0.05733
     },
     {
       "id": "settings-network",
@@ -246,10 +246,10 @@
       "source": "settings-network",
       "width": 1248,
       "height": 730,
-      "pixels": 70406,
+      "pixels": 71847,
       "total": 911040,
-      "ratio": 0.07728,
-      "baseline": 0.0764
+      "ratio": 0.07886,
+      "baseline": 0.07886
     },
     {
       "id": "settings-bluetooth",
@@ -257,10 +257,10 @@
       "source": "settings-bluetooth",
       "width": 1248,
       "height": 730,
-      "pixels": 44395,
+      "pixels": 44875,
       "total": 911040,
-      "ratio": 0.04873,
-      "baseline": 0.04873
+      "ratio": 0.04926,
+      "baseline": 0.04926
     },
     {
       "id": "settings-sound",
@@ -268,10 +268,10 @@
       "source": "settings-sound",
       "width": 1248,
       "height": 730,
-      "pixels": 41220,
+      "pixels": 39499,
       "total": 911040,
-      "ratio": 0.04524,
-      "baseline": 0.04585
+      "ratio": 0.04336,
+      "baseline": 0.04336
     },
     {
       "id": "settings-battery",
@@ -279,10 +279,10 @@
       "source": "settings-battery",
       "width": 1248,
       "height": 730,
-      "pixels": 46882,
+      "pixels": 45354,
       "total": 911040,
-      "ratio": 0.05146,
-      "baseline": 0.05194
+      "ratio": 0.04978,
+      "baseline": 0.04978
     },
     {
       "id": "settings-notifications",
@@ -290,10 +290,10 @@
       "source": "settings-notifications",
       "width": 1248,
       "height": 730,
-      "pixels": 47554,
+      "pixels": 44618,
       "total": 911040,
-      "ratio": 0.0522,
-      "baseline": 0.05226
+      "ratio": 0.04897,
+      "baseline": 0.04897
     },
     {
       "id": "settings-security",
@@ -301,10 +301,10 @@
       "source": "settings-security",
       "width": 1248,
       "height": 730,
-      "pixels": 52595,
+      "pixels": 52925,
       "total": 911040,
-      "ratio": 0.05773,
-      "baseline": 0.05713
+      "ratio": 0.05809,
+      "baseline": 0.05809
     },
     {
       "id": "settings-storage",
@@ -312,10 +312,10 @@
       "source": "settings-storage",
       "width": 1248,
       "height": 730,
-      "pixels": 49776,
+      "pixels": 49527,
       "total": 911040,
-      "ratio": 0.05464,
-      "baseline": 0.05413
+      "ratio": 0.05436,
+      "baseline": 0.05436
     },
     {
       "id": "tray-network",
@@ -351,10 +351,10 @@
       "source": "tray-calendar",
       "width": 308,
       "height": 351,
-      "pixels": 97697,
+      "pixels": 101869,
       "total": 108108,
-      "ratio": 0.9037,
-      "baseline": 0.9037
+      "ratio": 0.94229,
+      "baseline": 0.94229
     }
   ]
 }

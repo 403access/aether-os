@@ -5,13 +5,13 @@
   },
   "aether": {
     "project": "Aether compositor",
-    "revision": "4a7acea feat(parity): extract UI scenes and DESIGN.md contracts"
+    "revision": "99d9700 fix(parity): measure source text boxes, not full-width containers"
   },
   "summary": {
     "compared": 108,
-    "matched": 99,
-    "mismatched": 9,
-    "accepted": 9,
+    "matched": 101,
+    "mismatched": 7,
+    "accepted": 7,
     "aetherOnly": 1,
     "sourceOnly": 0,
     "failures": 0
@@ -64,20 +64,6 @@
       "kind": "value",
       "delta": -126,
       "reason": "Dock width is a consequence of the eight tiles at 46 px versus the demo's ten at 48 px (see structure.dock-items)."
-    },
-    {
-      "key": "menubar.menu.weight",
-      "source": "medium",
-      "aether": "regular",
-      "kind": "value",
-      "reason": "The compositor's text renderer has regular and bold faces only. The demo's menu buttons are 550 (medium); Aether paints regular. Add a medium face before tightening this."
-    },
-    {
-      "key": "menubar.resources.value-weight",
-      "source": "medium",
-      "aether": "bold",
-      "kind": "value",
-      "reason": "The demo's resource values are 600 (medium). With regular/bold only, bold is the nearer match and keeps the values legible at 9.69 px."
     },
     {
       "key": "structure.dock-items",

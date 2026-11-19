@@ -36,16 +36,9 @@ aether-damage = { path = "crates/aether-damage" }
 aether-layout = { path = "crates/aether-layout" }
 aether-pacing = { path = "crates/aether-pacing" }
 aether-scene = { path = "crates/aether-scene" }
-aether-cache = { path = "crates/aether-cache" }
 aether-shell = { path = "crates/aether-shell" }
 aether-text = { path = "crates/aether-text" }
-aether-desktop = { path = "crates/aether-desktop" }
-aether-files = { path = "crates/aether-files" }
-aether-cursor = { path = "crates/aether-cursor" }
 aether-audio = { path = "crates/aether-audio" }
-aether-sandbox = { path = "crates/aether-sandbox" }
-aether-system = { path = "crates/aether-system" }
-aether-remote = { path = "crates/aether-remote" }
 
 [profile.release]
 lto = "thin"

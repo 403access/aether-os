@@ -139,7 +139,7 @@ pub struct App {
     full_damage: bool,
     damage: Vec<Rectangle<i32, Physical>>,
     pub(crate) icons: HashMap<String, MemoryRenderBuffer>,
-    pub(crate) text_cache: BudgetCache<(String, u32, [u8; 4], bool, i32), MemoryRenderBuffer>,
+    pub(crate) text_cache: BudgetCache<(String, u32, [u8; 4], u16, i32), MemoryRenderBuffer>,
     pub(crate) text_rasterizations: u64,
     pub(crate) font: Option<FontRenderer>,
     pub(crate) chrome_icons: BudgetCache<(String, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,

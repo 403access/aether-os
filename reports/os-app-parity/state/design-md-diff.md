@@ -6,10 +6,7 @@ Source: `design/source/DESIGN.md` · Aether: `design/aether/DESIGN.md`.
 | --- | --- | --- |
 | `colors.surface` | modified | accepted: Aether's window fill is 98% opaque; the demo uses color-mix(surface-solid 92%, transparent). This is the open backdrop-blur item (V8). |
 | `colors.line-strong` | modified | accepted: The demo's computed hairline is 77/255 after color-mix; Aether paints 76/255. A 1/255 rounding difference. |
-| `typography.menubar-menu` | modified | accepted: The demo's menu buttons are 550; the compositor has regular and bold faces only, so it paints 400. |
-| `typography.resource-value` | modified | accepted: The demo's resource values are 600; with regular/bold only, 700 is the nearer face. |
 | `spacing.dock` | modified | accepted: Aether paints 8px of inner padding; the demo's 7px plus its 1px border gives the same visible inset. |
-| `components.menubar-menu` | modified | accepted: Cascades from typography.menubar-menu (550 vs 400). |
 | `components.window` | modified | accepted: Cascades from colors.surface (92% vs 98% opacity). |
 | `components.divider` | modified | accepted: Cascades from colors.line-strong (77/255 vs 76/255). |
 | `components.dock` | modified | accepted: Cascades from spacing.dock and the dock height difference (62 vs 64). |

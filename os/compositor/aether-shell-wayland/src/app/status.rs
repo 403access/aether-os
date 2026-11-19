@@ -27,13 +27,13 @@ impl App {
     }
 
     pub fn text_width(&self, text: &str, scale: u32) -> u32 {
-        let bold = super::text_style::text_bold(scale);
+        let weight = super::text_style::text_weight(scale);
         match self.font.as_ref() {
             Some(font) => {
                 font.measure(
                     text,
                     Self::text_px(scale & 0xff),
-                    bold,
+                    weight,
                     Self::text_spacing(scale),
                 )
                 .0

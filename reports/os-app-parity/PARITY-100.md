@@ -15,13 +15,13 @@ Measured with `bun run parity:scene`, `bun run parity:state` and
 | --- | ---: | ---: |
 | Paired surfaces | 29 | all in scope |
 | Surfaces complete by text | 3 (`radio`, `calendar`, `menubar`) | all |
-| Text runs matched | 428 / 842 (50.8 %) | 100 % minus a declared data allowlist |
-| Matched text within tolerance | 185 / 428 (43.2 %) | 100 % within 1 px |
-| Design-state keys matching | 99 / 108 | 100 % |
-| State differences accepted | 9 | 0 outside out-of-scope |
-| DESIGN.md paths accepted | 12 | 0 outside out-of-scope |
+| Text runs matched | 434 / 842 (51.5 %) | 100 % minus a declared data allowlist |
+| Matched text within tolerance | 197 / 434 (45.4 %) | 100 % within 1 px |
+| Design-state keys matching | 101 / 108 | 100 % |
+| State differences accepted | 7 | 0 outside out-of-scope |
+| DESIGN.md paths accepted | 9 | 0 outside out-of-scope |
 | DESIGN.md paths open | 0 | 0 |
-| Pixel comparison | 6.87 % differ across 24 same-size surfaces; 13 size mismatches | per-surface pixel threshold |
+| Pixel comparison | 6.70 % differ across 24 same-size surfaces; 13 size mismatches | per-surface pixel threshold |
 
 The first two gates from the plan are now in place: the scene baseline stores
 both text coverage and geometry alignment, and `parity:pixels` compares every
@@ -41,8 +41,8 @@ Two examples show why text coverage alone is not parity:
   instead of their full-width containers, 7 of 12 runs align (weekday columns
   now compare text-to-text).
 - **Menu bar** matches 100 % of its text, but only **1 of 10** runs aligns: the
-  menus are **3–4 px** right and the resource captions **6–7 px** right because
-  fontdue's regular/bold metrics differ from the demo's variable weights.
+  resource captions are **6–7 px** right and the menus **3–4 px** left, a
+  remaining packing difference now that the variable weights themselves match.
 
 ## 1. What “100 %” must mean
 
@@ -70,7 +70,7 @@ variable fonts, backdrop blur and demo data; Aether is a real OS with live data.
 | No client-surface comparison | Terminal/client content is invisible to the scene tree |
 | No icon/asset diff | Logo, tray glyphs and tab icons differ but score nothing |
 | ~~Geometry is reported, not gated~~ | **Done:** `state/scene-baseline.json` stores coverage and aligned ratio; a drop fails. Current: 43.2 % aligned |
-| ~~No per-surface pixel diff~~ | **Done:** `parity:pixels` compares same-size crops and baselines the ratio. Current: 6.87 % pixels differ |
+| ~~No per-surface pixel diff~~ | **Done:** `parity:pixels` compares same-size crops and baselines the ratio. Current: 6.70 % pixels differ |
 | No state matrix | Hover/focus/themes/font sizes/breakpoints are not captured |
 | Live data pollutes content | Process/file/IP/user differences are counted as missing text |
 
@@ -83,7 +83,7 @@ not yet a complete visual-tree differ.
 
 | Area | Current gap | Work needed |
 | --- | --- | --- |
-| **Fonts** | Demo uses variable weights 550/600/650/720; Aether has regular/bold only. Text widths and menu positions drift as a result. | Variable-weight text rendering in `aether-text`; feed real weights into layout measurement |
+| **Fonts** | ~~Demo uses variable weights 550/600/650/720; Aether has regular/bold only.~~ | **Done:** `aether-text` now uses swash and the `wght` axis; menu-bar, Settings, window and resource roles carry 550/600/650/700. |
 | **Settings** | Row height 34 px vs the demo’s ~47/48 px; per-row descriptions missing; section/card spacing and per-tab content differ | Row descriptions, 47 px rows, section spacing, per-tab sections/controls, per-app switches |
 | **Explorer** | Column widths, sidebar geometry, search/filter affordances and row layout differ; data is different | Match sidebar/toolbar/table geometry, row metrics, filter behaviour, deterministic file fixtures |
 | **Task Manager** | Tabs, summary cards, columns and process/user data differ | Match pane/card/column layout and row metrics; fixture processes/users |
@@ -121,7 +121,7 @@ Highest leverage first:
 | Order | Work | Rough effort |
 | --- | --- | --- |
 | 1 | Lock the rubric; make geometry and pixels fail CI; add state matrix | 2–3 days |
-| 2 | Variable font weights; re-measure menu/row/column geometry | 2–4 days |
+| 2 | ~~Variable font weights; re-measure geometry~~ | **Done:** swash `wght` axis, 7 state waivers resolved |
 | 3 | Settings row heights, descriptions, section spacing, per-tab content | 3–5 days |
 | 4 | Dock geometry, exact icon set, glass/blur effects | 3–5 days |
 | 5 | Explorer, Task Manager, Calendar and trays, one at a time, with fixtures | 2–4 days each |

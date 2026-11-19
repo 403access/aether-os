@@ -6,6 +6,7 @@
 //! own window chrome. Geometry mirrors `.os-titlebar`, `.os-lights` and
 //! `.os-app-mark` in `design-system/os/os.css`.
 
+use crate::app::text_style::WEIGHT_650;
 use aether_geometry::Rect as AetherRect;
 use aether_shell::theme::ThemeTokens;
 use aether_shell::WindowId;
@@ -207,7 +208,7 @@ impl App {
             elements,
             &label,
             (text_x, text_y),
-            0x100 | 10,
+            WEIGHT_650 | 10,
             if focused { tokens.text } else { tokens.soft },
         );
         if let Some(subtitle) = subtitle {

@@ -17,7 +17,7 @@ use crate::app::overlays::dock::layout as dock_layout;
 use crate::app::overlays::menubar::{
     layout as menubar_layout, ResourceMeter, CLOCK_PAD, MENU_GAP, MENU_ITEM_HEIGHT,
 };
-use crate::app::text_style;
+use crate::app::text_style::{self, WEIGHT_650, WEIGHT_MEDIUM, WEIGHT_SEMIBOLD};
 use crate::app::tray::TrayId;
 use crate::render::surfaces::status::{BAR_FILL, POPOVER_FILL};
 
@@ -40,11 +40,7 @@ fn px(value: f32) -> Value {
 }
 
 fn weight(scale: u32) -> &'static str {
-    if text_style::text_bold(scale) {
-        "bold"
-    } else {
-        "regular"
-    }
+    text_style::text_weight_label(scale)
 }
 
 fn tray_id(tray: TrayId) -> &'static str {
@@ -67,7 +63,7 @@ pub fn manifest() -> Value {
                 font.measure(
                     text,
                     text_style::text_px(scale & 0xff),
-                    text_style::text_bold(scale),
+                    text_style::text_weight(scale),
                     text_style::text_spacing(scale),
                 )
                 .0
@@ -173,7 +169,11 @@ pub fn manifest() -> Value {
         "menubar.menu.font-px",
         px(text_style::text_px(10)),
     );
-    set(&mut values, "menubar.menu.weight", json!(weight(10)));
+    set(
+        &mut values,
+        "menubar.menu.weight",
+        json!(weight(WEIGHT_MEDIUM | 10)),
+    );
     set(&mut values, "menubar.menu.radius", json!(5));
     set(&mut values, "menubar.menu.color", json!(hex(tokens.soft)));
     set(&mut values, "menubar.sync.height", json!(bar.sync.height));
@@ -208,7 +208,7 @@ pub fn manifest() -> Value {
     set(
         &mut values,
         "menubar.resources.label-weight",
-        json!(weight(0x100 | 7)),
+        json!(weight(WEIGHT_650 | 7)),
     );
     set(
         &mut values,
@@ -223,7 +223,7 @@ pub fn manifest() -> Value {
     set(
         &mut values,
         "menubar.resources.value-weight",
-        json!(weight(0x100 | 8)),
+        json!(weight(WEIGHT_SEMIBOLD | 8)),
     );
     set(
         &mut values,
@@ -253,7 +253,7 @@ pub fn manifest() -> Value {
     set(
         &mut values,
         "menubar.clock.time-weight",
-        json!(weight(0x100 | 9)),
+        json!(weight(WEIGHT_650 | 9)),
     );
     set(&mut values, "menubar.tray.button-width", json!(31));
     // Battery: 8 + 15 + 6 + value + 8.
@@ -291,7 +291,7 @@ pub fn manifest() -> Value {
     set(
         &mut values,
         "window.title-weight",
-        json!(weight(0x100 | 10)),
+        json!(weight(WEIGHT_650 | 10)),
     );
     set(
         &mut values,

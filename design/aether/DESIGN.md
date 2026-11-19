@@ -24,7 +24,7 @@ typography:
   menubar-menu:
     fontFamily: "Inter"
     fontSize: "12.54px"
-    fontWeight: 400
+    fontWeight: 550
   menubar-sync:
     fontFamily: "Inter"
     fontSize: "11.4px"
@@ -36,20 +36,20 @@ typography:
   clock-time:
     fontFamily: "Inter"
     fontSize: "11.4px"
-    fontWeight: 700
+    fontWeight: 400
   resource-label:
     fontFamily: "Inter"
     fontSize: "7.98px"
-    fontWeight: 700
+    fontWeight: 400
     letterSpacing: "0.32px"
   resource-value:
     fontFamily: "Inter"
     fontSize: "9.69px"
-    fontWeight: 700
+    fontWeight: 550
   window-title:
     fontFamily: "Inter"
     fontSize: "12.54px"
-    fontWeight: 700
+    fontWeight: 400
     letterSpacing: "-0.13px"
   window-subtitle:
     fontFamily: "Inter"

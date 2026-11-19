@@ -3,10 +3,16 @@
 //! The 8x8 bitmap font remains the fallback and the preview renderer. When
 //! `AETHER_FONT` (or a standard Inter path) is available, labels use this
 //! renderer instead.
+//!
+//! Swash renders the variable font at the requested weight axis, so the
+//! demo's 550/600/650/720 weights get real advances instead of faux bold.
 
 use std::path::{Path, PathBuf};
 
-use fontdue::Font;
+use swash::scale::image::{Content, Image};
+use swash::scale::{Render, ScaleContext, Source};
+use swash::zeno::Format;
+use swash::FontRef;
 
 use crate::TextBitmap;
 
@@ -31,17 +37,32 @@ pub const OS_MENU_PX: f32 = 13.68;
 /// Sidebar group labels: `.os-settings-nav__label` (`8px * 1.14`).
 pub const OS_LABEL_CAPS_PX: f32 = 9.12;
 
+const WGHT: u32 = 0x77676874; // "wght"
+
 pub struct FontRenderer {
-    font: Font,
+    data: Vec<u8>,
     path: PathBuf,
+}
+
+fn normalized_weight(font: &FontRef, weight: u16) -> Vec<i16> {
+    font.variations()
+        .map(|variation| {
+            let value = if variation.tag() == WGHT {
+                f32::from(weight)
+            } else {
+                variation.default_value()
+            };
+            variation.normalize(value)
+        })
+        .collect()
 }
 
 impl FontRenderer {
     pub fn open(path: &Path) -> Option<Self> {
-        let bytes = std::fs::read(path).ok()?;
-        let font = Font::from_bytes(bytes, fontdue::FontSettings::default()).ok()?;
+        let data = std::fs::read(path).ok()?;
+        FontRef::from_index(&data, 0)?;
         Some(Self {
-            font,
+            data,
             path: path.to_path_buf(),
         })
     }
@@ -55,6 +76,7 @@ impl FontRenderer {
         }
         let candidates = [
             "/run/current-system/sw/share/fonts/truetype/InterVariable.ttf",
+            "/usr/share/fonts/truetype/inter-vf/InterVariable.ttf",
             "/usr/share/fonts/truetype/inter/InterVariable.ttf",
             "/usr/share/fonts/truetype/InterVariable.ttf",
             "/System/Library/Fonts/Helvetica.ttc",
@@ -84,7 +106,17 @@ impl FontRenderer {
         &self.path
     }
 
-    pub fn measure(&self, text: &str, px: f32, bold: bool, spacing: f32) -> (u32, u32) {
+    fn line_height(font: &FontRef, coords: &[i16], px: f32) -> f32 {
+        let metrics = font.metrics(coords).scale(px);
+        metrics.ascent + metrics.descent + metrics.leading
+    }
+
+    pub fn measure(&self, text: &str, px: f32, weight: u16, spacing: f32) -> (u32, u32) {
+        let Some(font) = FontRef::from_index(&self.data, 0) else {
+            return (text.chars().count() as u32 * 6, (px * 1.2).ceil() as u32);
+        };
+        let coords = normalized_weight(&font, weight);
+        let advances = font.glyph_metrics(&coords).scale(px);
         let mut width = 0.0f32;
         let mut lines = 0u32;
         for line in text.split('\n') {
@@ -92,22 +124,15 @@ impl FontRenderer {
             let mut line_width = 0.0f32;
             let count = line.chars().count();
             for character in line.chars() {
-                line_width += self.font.metrics(character, px).advance_width;
+                line_width += advances.advance_width(font.charmap().map(character));
             }
             if count > 1 {
                 line_width += spacing * (count - 1) as f32;
             }
             width = width.max(line_width);
         }
-        let line_height = self
-            .font
-            .horizontal_line_metrics(px)
-            .map_or(px * 1.2, |m| m.new_line_size);
-        let extra = if bold { 1.0 } else { 0.0 };
-        (
-            (width + extra).ceil() as u32,
-            (line_height * lines as f32).ceil() as u32,
-        )
+        let height = Self::line_height(&font, &coords, px);
+        (width.ceil() as u32, (height * lines as f32).ceil() as u32)
     }
 
     pub fn render(
@@ -115,48 +140,41 @@ impl FontRenderer {
         text: &str,
         px: f32,
         color: [u8; 4],
-        bold: bool,
+        weight: u16,
         spacing: f32,
     ) -> TextBitmap {
-        let (width, height) = self.measure(text, px, bold, spacing);
+        let (width, height) = self.measure(text, px, weight, spacing);
         if width == 0 || height == 0 {
             return TextBitmap::empty();
         }
+        let Some(font) = FontRef::from_index(&self.data, 0) else {
+            return TextBitmap::empty();
+        };
+        let coords = normalized_weight(&font, weight);
+        let advances = font.glyph_metrics(&coords).scale(px);
+        let line_height = Self::line_height(&font, &coords, px);
+        let ascent = font.metrics(&coords).scale(px).ascent;
         let mut pixels = vec![0u8; width as usize * height as usize * 4];
-        let line_metrics = self.font.horizontal_line_metrics(px);
-        let ascent = line_metrics.map_or(px * 0.8, |m| m.ascent);
+        let mut context = ScaleContext::new();
+        let mut scaler = context
+            .builder(font)
+            .size(px)
+            .variations(&[("wght", f32::from(weight))])
+            .build();
+        let sources = [Source::Outline];
+        let mut render = Render::new(&sources);
+        render.format(Format::Alpha);
         for (line_index, line) in text.split('\n').enumerate() {
-            let baseline = ascent + (line_index as f32 * px * 1.25);
-            let mut x = 0.0f32;
+            let baseline = ascent + (line_index as f32 * line_height);
+            let mut pen = 0.0f32;
             for character in line.chars() {
-                let (metrics, bitmap) = self.font.rasterize(character, px);
-                let glyph_x = x + metrics.xmin as f32;
-                let glyph_y = baseline - metrics.height as f32 - metrics.ymin as f32;
-                blit(
-                    &mut pixels,
-                    width,
-                    height,
-                    &bitmap,
-                    metrics.width,
-                    metrics.height,
-                    glyph_x,
-                    glyph_y,
-                    color,
-                );
-                x += metrics.advance_width + spacing;
-                if bold {
-                    blit(
-                        &mut pixels,
-                        width,
-                        height,
-                        &bitmap,
-                        metrics.width,
-                        metrics.height,
-                        glyph_x + 1.0,
-                        glyph_y,
-                        color,
-                    );
+                let glyph = font.charmap().map(character);
+                if let Some(image) = render.render(&mut scaler, glyph) {
+                    let x = pen + image.placement.left as f32;
+                    let y = baseline - image.placement.top as f32;
+                    blit_image(&mut pixels, width, height, &image, x, y, color);
                 }
+                pen += advances.advance_width(glyph) + spacing;
             }
         }
         TextBitmap::from_rgba(width, height, pixels)
@@ -164,22 +182,25 @@ impl FontRenderer {
 }
 
 #[allow(clippy::too_many_arguments)]
-fn blit(
+fn blit_image(
     target: &mut [u8],
     target_width: u32,
     target_height: u32,
-    coverage: &[u8],
-    glyph_width: usize,
-    glyph_height: usize,
+    image: &Image,
     x: f32,
     y: f32,
     color: [u8; 4],
 ) {
+    if image.content != Content::Mask {
+        return;
+    }
     let origin_x = x.round() as i32;
     let origin_y = y.round() as i32;
+    let glyph_width = image.placement.width as usize;
+    let glyph_height = image.placement.height as usize;
     for row in 0..glyph_height {
         for column in 0..glyph_width {
-            let alpha = coverage[row * glyph_width + column];
+            let alpha = image.data[row * glyph_width + column];
             if alpha == 0 {
                 continue;
             }
@@ -204,5 +225,20 @@ fn blit(
             }
             target[index + 3] = out_alpha;
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn weights_change_advances() {
+        let Some(renderer) = FontRenderer::discover() else {
+            return;
+        };
+        let regular = renderer.measure("Desktop", 12.54, 400, 0.0).0;
+        let bold = renderer.measure("Desktop", 12.54, 700, 0.0).0;
+        assert!(bold >= regular);
     }
 }

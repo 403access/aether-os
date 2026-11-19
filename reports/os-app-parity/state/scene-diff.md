@@ -1,6 +1,6 @@
 # Scene diff · source DOM vs Aether render chunk
 
-Text coverage: **428/842** runs across 29 surfaces (50.8 %). Geometry: **43.2 %** of matched boxes within tolerance.
+Text coverage: **434/842** runs across 29 surfaces (51.5 %). Geometry: **45.4 %** of matched boxes within tolerance.
 
 | Surface | Source runs | Aether runs | Matched | Coverage | Aligned | Missing (first) |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
@@ -22,7 +22,7 @@ Text coverage: **428/842** runs across 29 surfaces (50.8 %). Geometry: **43.2 %*
 | `settings-bluetooth` | 39 | 30 | 25 | 64 % | 52 % | `Bluetooth`, `Demo device`, `Bluetooth`, `Let nearby devices find this Mac.`, `My devices` |
 | `settings-sound` | 37 | 32 | 24 | 65 % | 50 % | `Sound`, `Demo device`, `Output device`, `Where sound should play.`, `Volume` |
 | `settings-battery` | 42 | 31 | 24 | 57 % | 50 % | `Battery`, `Demo device`, `Energy`, `Low power`, `Balanced` |
-| `settings-notifications` | 39 | 37 | 31 | 80 % | 45 % | `Notifications`, `Demo device`, `Show banners and alerts from apps.`, `What appears before you unlock the screen.`, `Silence all notifications until turned off.` |
+| `settings-notifications` | 39 | 43 | 37 | 95 % | 70 % | `Notifications`, `Demo device` |
 | `settings-security` | 47 | 32 | 23 | 49 % | 52 % | `Privacy & Security`, `Demo device`, `Security`, `FileVault`, `Encrypt the startup disk. Recovery key is stored in Aether ID.` |
 | `settings-storage` | 38 | 31 | 24 | 63 % | 50 % | `Storage`, `Demo device`, `Macintosh HD`, `Archive snapshots`, `Applications` |
 | `command` | 18 | 0 | 0 | 0 % | — | `Focus local pane`, `Move keyboard focus to the local index`, `Focus Jottacloud pane`, `Move keyboard focus to the remote snapshot`, `Go to local root` |

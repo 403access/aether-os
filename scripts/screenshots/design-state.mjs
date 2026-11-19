@@ -146,7 +146,10 @@ function collectSource(trays) {
   const weight = (value) => {
     const numeric = Number(value);
     if (!Number.isFinite(numeric)) return "regular";
-    return numeric >= 650 ? "bold" : numeric >= 550 ? "medium" : "regular";
+    if (numeric >= 700) return "bold";
+    if (numeric >= 650) return "semibold";
+    if (numeric >= 550) return "medium";
+    return "regular";
   };
 
   const element = (selector) => document.querySelector(selector);

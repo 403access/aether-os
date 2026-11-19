@@ -72,8 +72,8 @@
     "alignedRatio": 0.5
   },
   "settings-notifications": {
-    "coverage": 0.795,
-    "alignedRatio": 0.452
+    "coverage": 0.949,
+    "alignedRatio": 0.703
   },
   "settings-security": {
     "coverage": 0.489,

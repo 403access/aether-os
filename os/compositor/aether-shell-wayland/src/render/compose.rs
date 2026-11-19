@@ -431,13 +431,13 @@ impl App {
         // changing status line or a scrolling explorer must not retain every
         // label it has ever drawn.
         let base_scale = scale & 0xff;
-        let bold = Self::text_bold(scale);
+        let weight = crate::app::text_style::text_weight(scale);
         let spacing = Self::text_spacing(scale);
         let key = (
             text.to_string(),
             scale,
             color,
-            bold,
+            weight,
             (spacing * 1000.0) as i32,
         );
         let mut uncached = None;
@@ -447,7 +447,7 @@ impl App {
                     text,
                     crate::app::App::text_px(base_scale),
                     color,
-                    bold,
+                    weight,
                     spacing,
                 ),
                 None => TextBitmap::render(text, base_scale.max(1), color),

@@ -26,11 +26,43 @@ pub fn text_px(scale: u32) -> f32 {
     }
 }
 
+/// Weight flags carried in the high bits of a text scale.
+pub const WEIGHT_BOLD: u32 = 0x100;
+pub const WEIGHT_SEMIBOLD: u32 = 0x200;
+pub const WEIGHT_MEDIUM: u32 = 0x400;
+pub const WEIGHT_650: u32 = 0x800;
+
+/// Numeric weight for the variable font.
+pub fn text_weight(scale: u32) -> u16 {
+    if scale & WEIGHT_650 != 0 {
+        650
+    } else if scale & WEIGHT_MEDIUM != 0 {
+        550
+    } else if scale & WEIGHT_SEMIBOLD != 0 {
+        600
+    } else if scale & WEIGHT_BOLD != 0 {
+        700
+    } else {
+        400
+    }
+}
+
+/// Human-readable weight for scene/manifest output.
+pub fn text_weight_label(scale: u32) -> &'static str {
+    match text_weight(scale) {
+        650 => "semibold",
+        600 => "medium",
+        550 => "medium",
+        700 => "bold",
+        _ => "regular",
+    }
+}
+
 /// Whether a scale renders bold. Legacy heading scales (2-6) are bold; the OS
-/// scales (7-11) are regular unless the caller sets the bold bit.
+/// scales (7-11) are regular unless the caller sets a weight flag.
 pub fn text_bold(scale: u32) -> bool {
     let base = scale & 0xff;
-    ((2..=6).contains(&base)) || (scale & 0x100) != 0
+    ((2..=6).contains(&base)) || text_weight(scale) >= 600
 }
 
 /// Letter spacing from the design system: `0.04em` on resource captions and

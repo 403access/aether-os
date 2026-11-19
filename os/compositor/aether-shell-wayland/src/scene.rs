@@ -99,11 +99,7 @@ pub(crate) fn push_text(
         color: Some(color),
         radius: 0.0,
         px: Some(text_style::text_px(base)),
-        weight: Some(if text_style::text_bold(scale) {
-            "bold"
-        } else {
-            "regular"
-        }),
+        weight: Some(text_style::text_weight_label(scale)),
         tracking: Some(text_style::text_spacing(scale)),
     })
 }
@@ -176,7 +172,7 @@ pub fn write(path: &Path, width: u32, height: u32, chunk: &RenderChunk) {
                 "x": x,
                 "y": y,
                 "px": round(text_style::text_px(base)),
-                "weight": if text_style::text_bold(*scale) { "bold" } else { "regular" },
+                "weight": text_style::text_weight_label(*scale),
                 "tracking": round(text_style::text_spacing(*scale)),
                 "color": color(*fill),
             })

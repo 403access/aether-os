@@ -6,6 +6,7 @@ use std::sync::Arc;
 use smithay::backend::renderer::element::memory::MemoryRenderBuffer;
 
 use crate::app::overlays::menubar::{menu_layout, MenuId, Menubar, TrayAction, MENUBAR_HEIGHT};
+use crate::app::text_style::{WEIGHT_650, WEIGHT_MEDIUM, WEIGHT_SEMIBOLD};
 use crate::app::App;
 use crate::render::context::{FrameContext, RenderChunk};
 use crate::{scene_box, scene_node, scene_text};
@@ -95,14 +96,14 @@ impl App {
                 "menu",
                 id.label(),
                 aether_geometry::Rect::new(rect.x + 9, y + 11, self.text_width(id.label(), 10), 18),
-                10,
+                WEIGHT_MEDIUM | 10,
                 if open { tokens.text } else { tokens.soft }
             );
             labels.push((
                 id.label().into(),
                 rect.x + 9,
                 y + 11,
-                10,
+                WEIGHT_MEDIUM | 10,
                 if open { tokens.text } else { tokens.soft },
             ));
         }
@@ -165,7 +166,13 @@ impl App {
                 ));
             }
             let label_x = rect.x + 8;
-            labels.push((meter.label.clone(), label_x, y + 13, 0x100 | 7, tokens.dim));
+            labels.push((
+                meter.label.clone(),
+                label_x,
+                y + 13,
+                WEIGHT_650 | 7,
+                tokens.dim,
+            ));
             let meter_x = label_x + self.text_width(&meter.label, 6) as i32 + 4;
             if let Some(buffer) = self.chrome_round(20, 3, 2, [255, 255, 255, 26]) {
                 panels.push((buffer, meter_x, y + 17));
@@ -185,7 +192,7 @@ impl App {
                 meter.value.clone(),
                 meter_x + 24,
                 y + 13,
-                0x100 | 8,
+                WEIGHT_SEMIBOLD | 8,
                 tokens.soft,
             ));
         }
@@ -246,17 +253,17 @@ impl App {
             aether_geometry::Rect::new(
                 time_x,
                 y + 11,
-                self.text_width(&bar.clock_time, 0x100 | 9),
+                self.text_width(&bar.clock_time, WEIGHT_650 | 9),
                 18
             ),
-            0x100 | 9,
+            WEIGHT_650 | 9,
             tokens.text
         );
         labels.push((
             bar.clock_time.clone(),
             time_x,
             y + 11,
-            0x100 | 9,
+            WEIGHT_650 | 9,
             tokens.text,
         ));
 

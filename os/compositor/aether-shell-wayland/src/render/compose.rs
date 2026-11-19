@@ -424,7 +424,7 @@ impl App {
         // changing status line or a scrolling explorer must not retain every
         // label it has ever drawn.
         let base_scale = scale & 0xff;
-        let bold = scale >= 2 || (scale & 0x100) != 0;
+        let bold = Self::text_bold(scale);
         let spacing = Self::text_spacing(scale);
         let key = (
             text.to_string(),

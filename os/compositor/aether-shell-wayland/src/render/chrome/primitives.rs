@@ -695,8 +695,6 @@ mod tests {
         assert!(wave_rim(200, 120, 14.0, 0.7, 0.85).is_some());
     }
 
-    use super::*;
-
     #[test]
     fn icons_rasterize() {
         let markup = icon_svg("search", "#38d6ff").unwrap();

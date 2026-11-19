@@ -14,40 +14,20 @@ impl App {
         self.text_rasterizations
     }
 
-    /// Pixel size for a chrome text style. 0=small, 1=body, 2=title,
-    /// 3=heading, 4=tiny, 5=micro.
     pub fn text_px(scale: u32) -> f32 {
-        match scale {
-            0 => aether_text::font::SMALL_PX,
-            1 => aether_text::font::BODY_PX,
-            2 => aether_text::font::TITLE_PX,
-            3 => aether_text::font::HEADING_PX,
-            4 => aether_text::font::TINY_PX,
-            5 => aether_text::font::MICRO_PX,
-            6 => aether_text::font::CAPTION_PX,
-            7 => aether_text::font::OS_CAPTION_PX,
-            8 => aether_text::font::OS_MICRO_PX,
-            9 => aether_text::font::OS_SMALL_PX,
-            10 => aether_text::font::OS_XS_PX,
-            11 => aether_text::font::OS_SM_PX,
-            _ => aether_text::font::HEADING_PX,
-        }
+        super::text_style::text_px(scale)
     }
 
-    /// Letter spacing from the design system: `0.04em` on resource captions and
-    /// `-0.01em` on titles.
     pub fn text_spacing(scale: u32) -> f32 {
-        let base = scale & 0xff;
-        let bold = scale >= 2 || (scale & 0x100) != 0;
-        match base {
-            7 => 0.32,
-            10 if bold => -0.13,
-            _ => 0.0,
-        }
+        super::text_style::text_spacing(scale)
+    }
+
+    pub fn text_bold(scale: u32) -> bool {
+        super::text_style::text_bold(scale)
     }
 
     pub fn text_width(&self, text: &str, scale: u32) -> u32 {
-        let bold = scale >= 2 || (scale & 0x100) != 0;
+        let bold = super::text_style::text_bold(scale);
         match self.font.as_ref() {
             Some(font) => {
                 font.measure(

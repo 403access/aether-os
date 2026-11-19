@@ -32,10 +32,10 @@ impl TrayId {
 
     pub fn size(self) -> (u32, u32) {
         match self {
-            Self::Network => (301, 329),
-            Self::Devices => (301, 253),
-            Self::Battery => (287, 271),
-            Self::Sound => (293, 256),
+            Self::Network => (300, 328),
+            Self::Devices => (300, 253),
+            Self::Battery => (286, 270),
+            Self::Sound => (292, 256),
             Self::Calendar => (308, 351),
         }
     }
@@ -241,10 +241,10 @@ mod tests {
 
     #[test]
     fn tray_sizes_match_the_demo() {
-        assert_eq!(TrayId::Network.size(), (301, 329));
-        assert_eq!(TrayId::Devices.size(), (301, 253));
-        assert_eq!(TrayId::Battery.size(), (287, 271));
-        assert_eq!(TrayId::Sound.size(), (293, 256));
+        assert_eq!(TrayId::Network.size(), (300, 328));
+        assert_eq!(TrayId::Devices.size(), (300, 253));
+        assert_eq!(TrayId::Battery.size(), (286, 270));
+        assert_eq!(TrayId::Sound.size(), (292, 256));
         assert_eq!(TrayId::Calendar.size(), (308, 351));
     }
 }

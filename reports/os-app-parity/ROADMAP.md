@@ -3,7 +3,7 @@
 Source: `e86b239 Add drag-and-drop tile swapping to split layout` (local design-system/ checkout)
 Visual spec (source vs target, difference register): [`VISUAL-SPEC.md`](VISUAL-SPEC.md).
 
-Aether: `d307a4c fix(shell): align the menu bar by measured ink bands`
+Aether: `403b2f0 fix(parity): catch empty captures and fix the blank app screenshots`
 
 Implemented **18** · partial **2** · missing **0** · out of scope **2** · Aether-only **4**.
 

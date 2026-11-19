@@ -9,6 +9,7 @@ Two capture pipelines feed the gallery, the docs and the README:
 | `publish-screenshots.ts` | curated copies + manifest | `apps/web/public/screenshots`, `apps/docs/static/img` |
 | `os-parity.sh` + `os-parity.mjs` | live Water OS demo vs compositor (full frame + regions) | `artifacts/os-parity` |
 | `app-parity.mjs` | source checkout vs compositor, per app/window element | `reports/os-app-parity` |
+| `design-state.mjs` | source computed styles vs `design-manifest` (tokens, type, geometry) | `reports/os-app-parity/state` |
 
 ## Run everything
 
@@ -47,6 +48,24 @@ Useful flags:
 ```
 
 `capture-shell-screenshots.sh --list` prints every surface name.
+
+## Design state
+
+Pixels catch shape; the design-state pass catches values. Both projects emit a
+flat key/value document and the differ compares them property by property:
+
+```bash
+bun run parity:state       # extract source + Aether, diff, write state/
+bun run parity:state:diff  # re-diff existing JSON (no browser/container)
+```
+
+- The demo side is read with Chromium's `getComputedStyle`, so cascade,
+  `color-mix()`, custom properties and the 1.14 OS font scale are resolved.
+- The Aether side is `aether-shell-wayland --bin design-manifest`, which calls
+  the same layout and token code the renderer paints with.
+- Numbers allow 0.75 px, colours 2/255 per channel.
+- Deliberate differences are pinned in `state/baseline.json` with a reason.
+  Anything else exits non-zero, so drift fails the check.
 
 ## Publish without recapturing
 

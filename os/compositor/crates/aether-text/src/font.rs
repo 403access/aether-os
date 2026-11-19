@@ -26,6 +26,8 @@ pub const OS_MICRO_PX: f32 = 9.69;
 pub const OS_SMALL_PX: f32 = 11.4;
 pub const OS_XS_PX: f32 = 12.54;
 pub const OS_SM_PX: f32 = 14.82;
+/// Popover rows: `.os-menu__pop button` (`--ds-text-sm`).
+pub const OS_MENU_PX: f32 = 13.68;
 
 pub struct FontRenderer {
     font: Font,

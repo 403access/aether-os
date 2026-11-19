@@ -1,0 +1,100 @@
+{
+  "generated": "2026-11-19T01:26:14.882Z",
+  "source": {
+    "project": "Water OS demo",
+    "revision": "e86b239 Add drag-and-drop tile swapping to split layout"
+  },
+  "aether": {
+    "project": "Aether compositor",
+    "revision": "403b2f0 fix(parity): catch empty captures and fix the blank app screenshots"
+  },
+  "summary": {
+    "compared": 107,
+    "matched": 97,
+    "mismatched": 10,
+    "accepted": 10,
+    "aetherOnly": 0,
+    "sourceOnly": 0,
+    "failures": 0
+  },
+  "differences": [],
+  "accepted": [
+    {
+      "key": "dock.height",
+      "source": 64,
+      "aether": 62,
+      "kind": "value",
+      "delta": -2,
+      "reason": "Follows from dock.item (46 + 2 x 8 px padding) versus the demo's 48 + 2 x (7 + 1 border)."
+    },
+    {
+      "key": "dock.item",
+      "source": 48,
+      "aether": 46,
+      "kind": "value",
+      "delta": -2,
+      "reason": "Aether ships a deliberately tighter dock (46 px items, 38 px tiles, 7 px inner padding) than the demo's 48/39/7. Changing it moves every dock hit target and capture crop, so it belongs with the dock parity work rather than a token tweak."
+    },
+    {
+      "key": "dock.pad",
+      "source": 7,
+      "aether": 8,
+      "kind": "value",
+      "delta": 1,
+      "reason": "Aether paints 8 px of inner padding; the demo's 7 px plus a 1 px border gives 8 px outside. The visible inset is the same."
+    },
+    {
+      "key": "dock.tile",
+      "source": 39.36,
+      "aether": 38,
+      "kind": "value",
+      "delta": -1.36,
+      "reason": "See dock.item: the tile is 0.82x the 46 px item (37.7, rounded to 38) instead of 0.82x the demo's 48 px (39.36)."
+    },
+    {
+      "key": "dock.width",
+      "source": 565,
+      "aether": 439,
+      "kind": "value",
+      "delta": -126,
+      "reason": "Dock width is a consequence of the eight tiles at 46 px versus the demo's ten at 48 px (see structure.dock-items)."
+    },
+    {
+      "key": "menubar.menu.weight",
+      "source": "medium",
+      "aether": "regular",
+      "kind": "value",
+      "reason": "The compositor's text renderer has regular and bold faces only. The demo's menu buttons are 550 (medium); Aether paints regular. Add a medium face before tightening this."
+    },
+    {
+      "key": "menubar.resources.value-weight",
+      "source": "medium",
+      "aether": "bold",
+      "kind": "value",
+      "reason": "The demo's resource values are 600 (medium). With regular/bold only, bold is the nearer match and keeps the values legible at 9.69 px."
+    },
+    {
+      "key": "structure.dock-items",
+      "source": 10,
+      "aether": 8,
+      "kind": "value",
+      "delta": -2,
+      "reason": "The demo has ten dock tiles including Projects and App Studio. App Studio is out of scope by decision and Projects is a demo-only surface, so Aether ships eight."
+    },
+    {
+      "key": "structure.settings-tabs",
+      "source": 13,
+      "aether": 14,
+      "kind": "value",
+      "delta": 1,
+      "reason": "The demo has 13 panes: Aether adds Screen Time and About and folds Notifications elsewhere (14). Reconciling the settings information architecture is a separate app-parity task, not chrome drift."
+    },
+    {
+      "key": "token.surface",
+      "source": "#072733eb",
+      "aether": "#072733fa",
+      "kind": "value",
+      "reason": "Aether's window fill is 98% opaque; the demo uses color-mix(surface-solid 92%, transparent). The remaining difference belongs to the open backdrop-blur item (V8 in VISUAL-SPEC.md)."
+    }
+  ]
+}

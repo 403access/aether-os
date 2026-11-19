@@ -13,6 +13,7 @@
 //! - `stats` — newline-delimited frame statistics for the backends.
 
 mod app;
+pub mod design_manifest;
 mod render;
 mod stats;
 

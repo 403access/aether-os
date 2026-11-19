@@ -10,8 +10,8 @@ mod layout;
 
 pub(crate) use clock::{Clock, WEEKDAY_HEADERS};
 pub(crate) use layout::{
-    hit, menu_hit, menu_layout, MenuCommand, MenuId, MenuPanel, Menubar, MenubarAction,
-    ResourceMeter, TrayAction, MENUBAR_HEIGHT,
+    hit, layout, menu_hit, menu_layout, MenuCommand, MenuId, MenuPanel, Menubar, MenubarAction,
+    ResourceMeter, TrayAction, CLOCK_PAD, MENUBAR_HEIGHT, MENU_GAP, MENU_ITEM_HEIGHT,
 };
 
 use aether_geometry::Point as AetherPoint;

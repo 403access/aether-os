@@ -27,13 +27,35 @@ The menu-bar table below is an example of the measurement used throughout (final
 | CPU label | 7.98 px / 650 | 15–20 | 15–20 |
 | CPU value | 9.69 px / 600 | 15–21 | 15–21 |
 
+### 1.1 Design-state extraction
+
+Pixels are the final arbiter, but they are too coarse to localise drift. Both
+projects therefore also publish a flat design-state document:
+
+| Side | How it is extracted |
+| --- | --- |
+| Source | `scripts/screenshots/design-state.mjs` opens the local demo in Chromium and reads `getComputedStyle`, so cascade, `color-mix()`, custom properties and the 1.14 font scale are already resolved |
+| Target | `aether-shell-wayland --bin design-manifest` calls the same token table, type scale and menu-bar/dock layout functions the renderer paints with |
+
+```bash
+bun run parity:state        # extract both sides, diff, write reports/os-app-parity/state
+bun run parity:state:diff   # re-diff the committed JSON
+```
+
+The differ compares 100+ keys (tokens, type sizes, menu-bar/dock/popover/tray
+geometry, traffic lights, tide ring). Numbers allow 0.75 px; colours allow 2/255
+per channel. Deliberate differences are pinned in `state/baseline.json` with a
+reason and still appear in `state/diff.md`; anything unpinned exits non-zero.
+The same summary is embedded in `reports/os-app-parity/index.html`, next to the
+pixel pairs.
+
 ## 2. Source model
 
 ### 2.1 Tokens
 
 - **Type:** `--ds-text-2xs` 11 px → 12.54 px OS, `--ds-text-2xs` 10 px →
   11.4 px OS, body 13 px. Inter Variable throughout.
-- **Colour:** `--ds-bg #031922`, `--ds-bg-soft #052530`,
+- **Colour:** `--ds-bg #031922`, `--ds-bg-soft #052530`, `--ds-green #5EF2B0`,
   `--ds-surface-solid #072733`, `--ds-popover #0D3D4B`, `--ds-text #E9FBFF`,
   `--ds-text-2 #A5DBE5`, `--ds-text-3 #6BA9B6`, `--ds-accent #38D6FF`,
   `--ds-line` accent @ 15 %, `--ds-line-strong` @ 30 %.

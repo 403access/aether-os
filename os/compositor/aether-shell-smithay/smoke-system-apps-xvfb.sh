@@ -68,7 +68,7 @@ xdotool key Escape; sleep 0.4
 # The dock is hidden for these captures, so it cannot be used to open apps.
 window_item() {
   xdotool mousemove 285 19; sleep 0.3; xdotool click 1; sleep 0.5
-  xdotool mousemove 300 $((65 + $1 * 30)); sleep 0.3; xdotool click 1; sleep 1.0
+  xdotool mousemove 300 $((66 + $1 * 32)); sleep 0.3; xdotool click 1; sleep 1.0
 }
 window_item 7; shot app-settings
 xdotool key Escape; sleep 0.4

@@ -20,7 +20,7 @@ mod compose;
 mod context;
 mod element;
 pub(crate) mod helpers;
-mod surfaces;
+pub(crate) mod surfaces;
 pub(crate) mod ui;
 mod window_frame;
 

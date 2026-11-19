@@ -24,6 +24,7 @@ pub(crate) mod overlays;
 pub(crate) mod status;
 pub(crate) mod system;
 pub(crate) mod system_info;
+pub(crate) mod text_style;
 pub(crate) mod tray;
 mod windows;
 

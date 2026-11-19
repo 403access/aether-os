@@ -10,9 +10,9 @@ use crate::app::App;
 use crate::render::context::{FrameContext, RenderChunk};
 
 /// Bar fill: `color-mix(in srgb, var(--ds-bg-soft) 72%, transparent)`.
-const BAR_FILL: [u8; 4] = [5, 37, 48, 184];
+pub(crate) const BAR_FILL: [u8; 4] = [5, 37, 48, 184];
 /// Popover fill: `--ds-popover` with a hairline border.
-const POPOVER_FILL: [u8; 4] = [13, 61, 75, 250];
+pub(crate) const POPOVER_FILL: [u8; 4] = [13, 61, 75, 255];
 const RULE: [u8; 4] = [127, 230, 255, 38];
 
 impl App {
@@ -126,7 +126,7 @@ impl App {
                 ));
             }
             let label_x = rect.x + 8;
-            labels.push((meter.label.clone(), label_x, y + 13, 7, tokens.dim));
+            labels.push((meter.label.clone(), label_x, y + 13, 0x100 | 7, tokens.dim));
             let meter_x = label_x + self.text_width(&meter.label, 6) as i32 + 4;
             if let Some(buffer) = self.chrome_round(20, 3, 2, [255, 255, 255, 26]) {
                 panels.push((buffer, meter_x, y + 17));
@@ -142,7 +142,13 @@ impl App {
                     panels.push((buffer, meter_x, y + 17));
                 }
             }
-            labels.push((meter.value.clone(), meter_x + 24, y + 13, 8, tokens.soft));
+            labels.push((
+                meter.value.clone(),
+                meter_x + 24,
+                y + 13,
+                0x100 | 8,
+                tokens.soft,
+            ));
         }
 
         // Tray glyphs.
@@ -242,7 +248,7 @@ impl App {
                 entry.label.into(),
                 rect.x + 31,
                 rect.y + 8,
-                11,
+                12,
                 tokens.text_soft,
             ));
         }

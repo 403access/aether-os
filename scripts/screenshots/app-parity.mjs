@@ -82,7 +82,7 @@ const SOURCE_TRAYS = [
 const AETHER_CROPS = {
   menubar: { file: "desktop.png", rect: [0, 0, 1280, 38] },
   dock: { file: "desktop.png", rect: [420, 730, 439, 62] },
-  menu: { file: "menu.png", rect: [110, 0, 250, 215] },
+  menu: { file: "menu.png", rect: [110, 0, 250, 230] },
   command: { file: "palette-default.png", rect: [300, 190, 680, 420] },
   explorer: { file: "app-explorer.png", rect: [16, 54, 1248, 730] },
   about: { file: "app-about.png", rect: [16, 54, 1248, 730] },
@@ -99,10 +99,10 @@ const AETHER_CROPS = {
   chat: { file: "chat.png", rect: [864, 54, 400, 660] },
   agents: { file: "sandboxes.png", rect: [0, 38, 1280, 688] },
   remote: { file: "remote.png", rect: [330, 190, 620, 420] },
-  "tray-network": { file: "tray-network.png", rect: [620, 42, 301, 329] },
-  "tray-devices": { file: "tray-devices.png", rect: [656, 42, 301, 253] },
-  "tray-battery": { file: "tray-battery.png", rect: [736, 42, 287, 271] },
-  "tray-sound": { file: "tray-sound.png", rect: [766, 42, 293, 256] },
+  "tray-network": { file: "tray-network.png", rect: [620, 42, 300, 328] },
+  "tray-devices": { file: "tray-devices.png", rect: [656, 42, 300, 253] },
+  "tray-battery": { file: "tray-battery.png", rect: [736, 42, 286, 270] },
+  "tray-sound": { file: "tray-sound.png", rect: [766, 42, 292, 256] },
   "tray-calendar": { file: "tray-calendar.png", rect: [900, 42, 308, 351] },
 };
 
@@ -737,6 +737,37 @@ function imageSize(buffer) {
   return `${png.width}x${png.height}`;
 }
 
+/**
+ * The design-state differ writes `state/diff.json`; surface its headline
+ * numbers and accepted differences in the same report so pixel review and
+ * property review live together.
+ */
+async function designState() {
+  const file = join(outDir, "state", "diff.json");
+  if (!(await exists(file))) return { stats: "", section: "" };
+  const diff = JSON.parse(await readFile(file, "utf8"));
+  const rows = [...diff.differences, ...diff.accepted].map((entry) => {
+    const status = entry.kind === "value" ? (entry.reason ? "accepted" : "to fix") : entry.kind;
+    return `<tr><td><code>${entry.key}</code></td><td><code>${entry.source ?? "—"}</code></td><td><code>${entry.aether ?? "—"}</code></td><td>${status}${entry.reason ? ` — ${entry.reason}` : ""}</td></tr>`;
+  });
+  const stats = `
+    <div class="stat"><b>${diff.summary.matched}/${diff.summary.compared}</b><span>State matches</span></div>
+    <div class="stat"><b>${diff.summary.failures}</b><span>State to fix</span></div>`;
+  const section = `
+  <section class="state">
+    <header>
+      <h3>Design state</h3>
+      <span class="priority">computed values, not pixels</span>
+    </header>
+    <p class="notes">The demo's computed styles and the compositor's own <code>design-manifest</code> are diffed key by key. Numbers allow 0.75 px, colours 2/255 per channel. Accepted differences are pinned in <code>state/baseline.json</code> with a reason; anything else exits non-zero. Raw: <a href="state/diff.md">state/diff.md</a>.</p>
+    <table>
+      <thead><tr><th>key</th><th>source</th><th>aether</th><th>status</th></tr></thead>
+      <tbody>${rows.join("")}</tbody>
+    </table>
+  </section>`;
+  return { stats, section };
+}
+
 async function buildReport() {
   await mkdir(outDir, { recursive: true });
   const counts = {
@@ -747,6 +778,7 @@ async function buildReport() {
     "out-of-scope": 0,
   };
   for (const surface of SURFACES) counts[surface.status] += 1;
+  const state = await designState();
 
   const cards = [];
   let group = "";
@@ -815,6 +847,14 @@ async function buildReport() {
   figcaption { padding:5px 9px; font-size:10px; color:var(--mute); border-top:1px solid var(--line); font-variant-numeric:tabular-nums; }
   figure.empty div { display:grid; place-items:center; min-height:150px; color:var(--mute); font-size:12px; border-bottom:1px dashed var(--line); }
   .notes { margin:10px 0 0; color:var(--dim); font-size:12.5px; }
+  .state { border:1px solid var(--line); border-radius:14px; background:rgba(7,39,51,.55); padding:14px 16px; margin:0 0 22px; }
+  .state header { display:flex; align-items:center; gap:10px; margin-bottom:4px; }
+  .state h3 { margin:0; font-size:16px; }
+  .state table { width:100%; border-collapse:collapse; margin-top:12px; font-size:12px; }
+  .state th { text-align:left; color:var(--mute); font-weight:600; padding:6px 8px; border-bottom:1px solid var(--line); }
+  .state td { padding:6px 8px; border-bottom:1px solid rgba(127,230,255,.08); vertical-align:top; color:var(--dim); }
+  .state td code { color:var(--text); }
+  .state a { color:var(--accent); }
   footer { margin-top:40px; color:var(--mute); font-size:11px; }
 </style>
 </head>
@@ -832,9 +872,11 @@ async function buildReport() {
     <div class="stat"><b>${counts.missing}</b><span>Missing</span></div>
     <div class="stat"><b>${counts["out-of-scope"]}</b><span>Out of scope</span></div>
     <div class="stat"><b>${counts["aether-only"]}</b><span>Aether only</span></div>
+    ${state.stats}
   </div>
+  ${state.section}
   ${cards.join("\n")}
-  <footer>Generated by <code>scripts/screenshots/app-parity.mjs</code>. Roadmap: <code>ROADMAP.md</code> · Visual spec: <code>VISUAL-SPEC.md</code>.</footer>
+  <footer>Generated by <code>scripts/screenshots/app-parity.mjs</code>. Roadmap: <code>ROADMAP.md</code> · Visual spec: <code>VISUAL-SPEC.md</code> · Design state: <code>state/diff.md</code>.</footer>
 </body>
 </html>
 `;

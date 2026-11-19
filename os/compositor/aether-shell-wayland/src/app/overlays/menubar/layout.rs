@@ -26,7 +26,7 @@ const GLYPH: u32 = 15;
 /// Menu button horizontal padding.
 const MENU_PAD: i32 = 9;
 /// Clock padding and the gap between date and time.
-const CLOCK_PAD: i32 = 10;
+pub(crate) const CLOCK_PAD: i32 = 8;
 const CLOCK_GAP: i32 = 7;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -192,11 +192,11 @@ pub fn menu_entries(id: MenuId) -> &'static [MenuEntry] {
 }
 
 /// Item height and padding inside a menu popover.
-const MENU_ITEM_HEIGHT: u32 = 30;
+pub(crate) const MENU_ITEM_HEIGHT: u32 = 32;
 const MENU_POP_PAD: i32 = 5;
 const MENU_RULE: i32 = 9;
 const MENU_ICON: u32 = 15;
-const MENU_GAP: i32 = 8;
+pub(crate) const MENU_GAP: i32 = 9;
 const MENU_SIDE_PAD: i32 = 10;
 
 #[derive(Clone, Debug, PartialEq)]

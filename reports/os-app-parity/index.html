@@ -34,6 +34,14 @@
   figcaption { padding:5px 9px; font-size:10px; color:var(--mute); border-top:1px solid var(--line); font-variant-numeric:tabular-nums; }
   figure.empty div { display:grid; place-items:center; min-height:150px; color:var(--mute); font-size:12px; border-bottom:1px dashed var(--line); }
   .notes { margin:10px 0 0; color:var(--dim); font-size:12.5px; }
+  .state { border:1px solid var(--line); border-radius:14px; background:rgba(7,39,51,.55); padding:14px 16px; margin:0 0 22px; }
+  .state header { display:flex; align-items:center; gap:10px; margin-bottom:4px; }
+  .state h3 { margin:0; font-size:16px; }
+  .state table { width:100%; border-collapse:collapse; margin-top:12px; font-size:12px; }
+  .state th { text-align:left; color:var(--mute); font-weight:600; padding:6px 8px; border-bottom:1px solid var(--line); }
+  .state td { padding:6px 8px; border-bottom:1px solid rgba(127,230,255,.08); vertical-align:top; color:var(--dim); }
+  .state td code { color:var(--text); }
+  .state a { color:var(--accent); }
   footer { margin-top:40px; color:var(--mute); font-size:11px; }
 </style>
 </head>
@@ -42,7 +50,7 @@
   <p class="lede">Every surface from the Water OS demo next to the current Aether compositor. Captures are element or window crops only — no full-desktop frames.</p>
   <p class="meta">
     <span>Source · e86b239 Add drag-and-drop tile swapping to split layout</span>
-    <span>Aether · d307a4c fix(shell): align the menu bar by measured ink bands</span>
+    <span>Aether · 403b2f0 fix(parity): catch empty captures and fix the blank app screenshots</span>
     <span>1280×800 · clock pinned to 2026-11-18 16:47 UTC</span>
   </p>
   <div class="stats">
@@ -51,7 +59,22 @@
     <div class="stat"><b>0</b><span>Missing</span></div>
     <div class="stat"><b>2</b><span>Out of scope</span></div>
     <div class="stat"><b>4</b><span>Aether only</span></div>
+    
+    <div class="stat"><b>97/107</b><span>State matches</span></div>
+    <div class="stat"><b>0</b><span>State to fix</span></div>
   </div>
+  
+  <section class="state">
+    <header>
+      <h3>Design state</h3>
+      <span class="priority">computed values, not pixels</span>
+    </header>
+    <p class="notes">The demo's computed styles and the compositor's own <code>design-manifest</code> are diffed key by key. Numbers allow 0.75 px, colours 2/255 per channel. Accepted differences are pinned in <code>state/baseline.json</code> with a reason; anything else exits non-zero. Raw: <a href="state/diff.md">state/diff.md</a>.</p>
+    <table>
+      <thead><tr><th>key</th><th>source</th><th>aether</th><th>status</th></tr></thead>
+      <tbody><tr><td><code>dock.height</code></td><td><code>64</code></td><td><code>62</code></td><td>accepted — Follows from dock.item (46 + 2 x 8 px padding) versus the demo's 48 + 2 x (7 + 1 border).</td></tr><tr><td><code>dock.item</code></td><td><code>48</code></td><td><code>46</code></td><td>accepted — Aether ships a deliberately tighter dock (46 px items, 38 px tiles, 7 px inner padding) than the demo's 48/39/7. Changing it moves every dock hit target and capture crop, so it belongs with the dock parity work rather than a token tweak.</td></tr><tr><td><code>dock.pad</code></td><td><code>7</code></td><td><code>8</code></td><td>accepted — Aether paints 8 px of inner padding; the demo's 7 px plus a 1 px border gives 8 px outside. The visible inset is the same.</td></tr><tr><td><code>dock.tile</code></td><td><code>39.36</code></td><td><code>38</code></td><td>accepted — See dock.item: the tile is 0.82x the 46 px item (37.7, rounded to 38) instead of 0.82x the demo's 48 px (39.36).</td></tr><tr><td><code>dock.width</code></td><td><code>565</code></td><td><code>439</code></td><td>accepted — Dock width is a consequence of the eight tiles at 46 px versus the demo's ten at 48 px (see structure.dock-items).</td></tr><tr><td><code>menubar.menu.weight</code></td><td><code>medium</code></td><td><code>regular</code></td><td>accepted — The compositor's text renderer has regular and bold faces only. The demo's menu buttons are 550 (medium); Aether paints regular. Add a medium face before tightening this.</td></tr><tr><td><code>menubar.resources.value-weight</code></td><td><code>medium</code></td><td><code>bold</code></td><td>accepted — The demo's resource values are 600 (medium). With regular/bold only, bold is the nearer match and keeps the values legible at 9.69 px.</td></tr><tr><td><code>structure.dock-items</code></td><td><code>10</code></td><td><code>8</code></td><td>accepted — The demo has ten dock tiles including Projects and App Studio. App Studio is out of scope by decision and Projects is a demo-only surface, so Aether ships eight.</td></tr><tr><td><code>structure.settings-tabs</code></td><td><code>13</code></td><td><code>14</code></td><td>accepted — The demo has 13 panes: Aether adds Screen Time and About and folds Notifications elsewhere (14). Reconciling the settings information architecture is a separate app-parity task, not chrome drift.</td></tr><tr><td><code>token.surface</code></td><td><code>#072733eb</code></td><td><code>#072733fa</code></td><td>accepted — Aether's window fill is 98% opaque; the demo uses color-mix(surface-solid 92%, transparent). The remaining difference belongs to the open backdrop-blur item (V8 in VISUAL-SPEC.md).</td></tr></tbody>
+    </table>
+  </section>
   <h2 class="group">System chrome</h2>
 
       <section class="surface">
@@ -80,7 +103,7 @@
           <span class="priority">P0 · done</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
-        <div class="pair"><figure><img src="source/menu.png" alt="Demo App menus"><figcaption>Source · 264x286</figcaption></figure><figure><img src="aether/menu.png" alt="Aether App menus"><figcaption>Aether · 250x215</figcaption></figure></div>
+        <div class="pair"><figure><img src="source/menu.png" alt="Demo App menus"><figcaption>Source · 264x286</figcaption></figure><figure><img src="aether/menu.png" alt="Aether App menus"><figcaption>Aether · 250x230</figcaption></figure></div>
         <p class="notes">File/View/Go/Window/Help open popovers that run real commands. The Aether crop includes the bar segment above the popover.</p>
       </section>
 
@@ -232,7 +255,7 @@
           <span class="priority">P0 · done</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
-        <div class="pair"><figure><img src="source/tray-network.png" alt="Demo Wi-Fi tray"><figcaption>Source · 301x329</figcaption></figure><figure><img src="aether/tray-network.png" alt="Aether Wi-Fi tray"><figcaption>Aether · 301x329</figcaption></figure></div>
+        <div class="pair"><figure><img src="source/tray-network.png" alt="Demo Wi-Fi tray"><figcaption>Source · 301x329</figcaption></figure><figure><img src="aether/tray-network.png" alt="Aether Wi-Fi tray"><figcaption>Aether · 300x328</figcaption></figure></div>
         <p class="notes">Wi-Fi switch, connected interface, network list and a Network Settings link. Panel size matches the demo (301 x 329).</p>
       </section>
 
@@ -242,7 +265,7 @@
           <span class="priority">P0 · done</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
-        <div class="pair"><figure><img src="source/tray-devices.png" alt="Demo Bluetooth tray"><figcaption>Source · 301x253</figcaption></figure><figure><img src="aether/tray-devices.png" alt="Aether Bluetooth tray"><figcaption>Aether · 301x253</figcaption></figure></div>
+        <div class="pair"><figure><img src="source/tray-devices.png" alt="Demo Bluetooth tray"><figcaption>Source · 301x253</figcaption></figure><figure><img src="aether/tray-devices.png" alt="Aether Bluetooth tray"><figcaption>Aether · 300x253</figcaption></figure></div>
         <p class="notes">Bluetooth switch, paired-device area and a Bluetooth Settings link (301 x 253).</p>
       </section>
 
@@ -252,7 +275,7 @@
           <span class="priority">P0 · done</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
-        <div class="pair"><figure><img src="source/tray-battery.png" alt="Demo Battery tray"><figcaption>Source · 287x271</figcaption></figure><figure><img src="aether/tray-battery.png" alt="Aether Battery tray"><figcaption>Aether · 287x271</figcaption></figure></div>
+        <div class="pair"><figure><img src="source/tray-battery.png" alt="Demo Battery tray"><figcaption>Source · 287x271</figcaption></figure><figure><img src="aether/tray-battery.png" alt="Aether Battery tray"><figcaption>Aether · 286x270</figcaption></figure></div>
         <p class="notes">Charge, estimate, level bar, three-way energy mode and a Battery Settings link (287 x 271).</p>
       </section>
 
@@ -262,7 +285,7 @@
           <span class="priority">P0 · done</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
-        <div class="pair"><figure><img src="source/tray-sound.png" alt="Demo Sound tray"><figcaption>Source · 293x256</figcaption></figure><figure><img src="aether/tray-sound.png" alt="Aether Sound tray"><figcaption>Aether · 293x256</figcaption></figure></div>
+        <div class="pair"><figure><img src="source/tray-sound.png" alt="Demo Sound tray"><figcaption>Source · 293x256</figcaption></figure><figure><img src="aether/tray-sound.png" alt="Aether Sound tray"><figcaption>Aether · 292x256</figcaption></figure></div>
         <p class="notes">Output name, volume bar and a Sound Settings link (293 x 256). Preset switching stays in the audio overlay.</p>
       </section>
 
@@ -316,6 +339,6 @@
         <div class="pair"><figure class="empty"><div>No source surface</div><figcaption>—</figcaption></figure><figure><img src="aether/remote.png" alt="Aether Remote display"><figcaption>Aether · 620x420</figcaption></figure></div>
         <p class="notes">Pairing code, WebRTC transport and the recording indicator.</p>
       </section>
-  <footer>Generated by <code>scripts/screenshots/app-parity.mjs</code>. Roadmap: <code>ROADMAP.md</code> · Visual spec: <code>VISUAL-SPEC.md</code>.</footer>
+  <footer>Generated by <code>scripts/screenshots/app-parity.mjs</code>. Roadmap: <code>ROADMAP.md</code> · Visual spec: <code>VISUAL-SPEC.md</code> · Design state: <code>state/diff.md</code>.</footer>
 </body>
 </html>

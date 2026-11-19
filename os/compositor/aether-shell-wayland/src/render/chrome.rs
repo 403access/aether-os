@@ -51,7 +51,7 @@ impl App {
         hover: bool,
     ) -> WindowEffects {
         let shadow = self
-            .chrome_shadow(rect.width, rect.height, radius)
+            .chrome_shadow(rect.width, rect.height, radius, hover)
             .map(|buffer| {
                 (
                     buffer,
@@ -134,12 +134,13 @@ impl App {
         width: u32,
         height: u32,
         radius: u32,
+        strong: bool,
     ) -> Option<Arc<MemoryRenderBuffer>> {
-        let key = (width, height, radius);
+        let key = (width, height, radius, strong);
         if let Some(buffer) = self.chrome_shadows.get(&key) {
             return Some(buffer.clone());
         }
-        let buffer = Arc::new(primitives::shadow(width, height, radius as f32)?);
+        let buffer = Arc::new(primitives::shadow(width, height, radius as f32, strong)?);
         self.chrome_shadows
             .insert(key, buffer.clone(), rgba_bytes(width + 56, height + 56));
         Some(buffer)

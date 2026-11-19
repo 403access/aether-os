@@ -145,7 +145,7 @@ pub struct App {
     pub(crate) chrome_panels: BudgetCache<PanelCacheKey, Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_rounds: BudgetCache<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_outlines: BudgetCache<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,
-    pub(crate) chrome_shadows: BudgetCache<(u32, u32, u32), Arc<MemoryRenderBuffer>>,
+    pub(crate) chrome_shadows: BudgetCache<(u32, u32, u32, bool), Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_gradients: BudgetCache<GradientKey, Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_waves: BudgetCache<(u32, u32, u32, u32, u8), Arc<MemoryRenderBuffer>>,
     pub(crate) chrome_tops: BudgetCache<(u32, u32, u32, [u8; 4]), Arc<MemoryRenderBuffer>>,

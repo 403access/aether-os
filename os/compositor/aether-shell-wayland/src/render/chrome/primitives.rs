@@ -142,14 +142,19 @@ pub fn panel(
 /// it at `(x - SHADOW_PAD, y - SHADOW_PAD)`.
 pub const SHADOW_PAD: i32 = 28;
 
-pub fn shadow(width: u32, height: u32, radius: f32) -> Option<MemoryRenderBuffer> {
+pub fn shadow(width: u32, height: u32, radius: f32, strong: bool) -> Option<MemoryRenderBuffer> {
     let pad = SHADOW_PAD as u32;
     let w = width + pad * 2;
     let h = height + pad * 2;
     let mut pixmap = resvg::tiny_skia::Pixmap::new(w.max(1), h.max(1))?;
     // Three stacked layers approximate the demo's
     // `0 34px 90px rgba(0,8,14,.62), 0 3px 12px rgba(0,8,14,.4)`.
-    for (offset, alpha, spread) in [(18.0f32, 48u8, 22.0f32), (6.0, 60, 8.0), (1.0, 70, 2.0)] {
+    let layers: [(f32, u8, f32); 3] = if strong {
+        [(22.0, 58, 26.0), (8.0, 70, 10.0), (2.0, 80, 3.0)]
+    } else {
+        [(18.0, 48, 22.0), (6.0, 60, 8.0), (1.0, 70, 2.0)]
+    };
+    for (offset, alpha, spread) in layers {
         let mut paint = resvg::tiny_skia::Paint::default();
         paint.set_color_rgba8(0, 8, 14, alpha);
         if let Some(path) = rounded_path(
@@ -685,7 +690,8 @@ mod tests {
 
     #[test]
     fn shadows_and_waves_rasterize() {
-        assert!(shadow(200, 120, 14.0).is_some());
+        assert!(shadow(200, 120, 14.0, false).is_some());
+        assert!(shadow(200, 120, 14.0, true).is_some());
         assert!(wave_rim(200, 120, 14.0, 0.7, 0.85).is_some());
     }
 

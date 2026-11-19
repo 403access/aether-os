@@ -2,10 +2,10 @@
   "summary": {
     "surfaces": 29,
     "complete": 3,
-    "textRuns": 841,
-    "matched": 425,
-    "coverage": 0.505,
-    "alignedRatio": 0.567,
+    "textRuns": 842,
+    "matched": 428,
+    "coverage": 0.508,
+    "alignedRatio": 0.432,
     "missingScenes": 0,
     "regressions": 0
   },
@@ -25,34 +25,34 @@
         "aligned": 0,
         "worst": [
           {
-            "text": "Ocean current",
-            "dx": 24.4,
-            "dy": 74.5,
-            "distance": 98.9
-          },
-          {
             "text": "Local-first",
-            "dx": 20.1,
-            "dy": 74.5,
-            "distance": 94.6
-          },
-          {
-            "text": "Glass windows",
-            "dx": 15.8,
-            "dy": 74.5,
-            "distance": 90.3
+            "dx": 9.1,
+            "dy": 68.5,
+            "distance": 77.6
           },
           {
             "text": "Aether OS",
             "dx": -20.9,
-            "dy": 58,
-            "distance": 78.9
+            "dy": 54,
+            "distance": 74.9
+          },
+          {
+            "text": "Glass windows",
+            "dx": 4.8,
+            "dy": 68.5,
+            "distance": 73.3
+          },
+          {
+            "text": "Ocean current",
+            "dx": 1.4,
+            "dy": 68.5,
+            "distance": 69.9
           },
           {
             "text": "About Aether OS",
             "dx": 31,
-            "dy": 2.5,
-            "distance": 33.5
+            "dy": 0.5,
+            "distance": 31.5
           }
         ]
       },
@@ -90,34 +90,34 @@
         "aligned": 1,
         "worst": [
           {
-            "text": "Name",
-            "dx": 61,
-            "dy": 19,
-            "distance": 80
+            "text": "Size",
+            "dx": -90.9,
+            "dy": 13.2,
+            "distance": 104.10000000000001
           },
           {
             "text": "Search this folder…",
-            "dx": 67,
-            "dy": 11,
-            "distance": 78
+            "dx": 65,
+            "dy": 7.6,
+            "distance": 72.6
           },
           {
-            "text": "Read-only snapshot",
-            "dx": 30,
-            "dy": 35.4,
-            "distance": 65.4
+            "text": "Name",
+            "dx": 56,
+            "dy": 13.2,
+            "distance": 69.2
           },
           {
             "text": "Hidden",
             "dx": -55.3,
-            "dy": 2.6,
-            "distance": 57.9
+            "dy": 0.6,
+            "distance": 55.9
           },
           {
-            "text": "Size",
-            "dx": -9.6,
-            "dy": 19,
-            "distance": 28.6
+            "text": "Read-only snapshot",
+            "dx": 9,
+            "dy": 31.4,
+            "distance": 40.4
           }
         ]
       },
@@ -227,32 +227,32 @@
           {
             "text": "VPN",
             "dx": 6,
-            "dy": 23.4,
-            "distance": 29.4
+            "dy": 21.4,
+            "distance": 27.4
           },
           {
             "text": "Route traffic through the archive gateway.",
             "dx": 6,
-            "dy": 20.2,
-            "distance": 26.2
+            "dy": 18.2,
+            "distance": 24.2
           },
           {
             "text": "Wi-Fi",
             "dx": 6,
-            "dy": 17.2,
-            "distance": 23.2
+            "dy": 15.2,
+            "distance": 21.2
           },
           {
             "text": "Discover and join nearby networks.",
             "dx": 6,
-            "dy": 13.9,
-            "distance": 19.9
+            "dy": 11.9,
+            "distance": 17.9
           },
           {
             "text": "Networks",
             "dx": 4,
-            "dy": 13.7,
-            "distance": 17.7
+            "dy": 12.7,
+            "distance": 16.7
           }
         ]
       },
@@ -297,43 +297,43 @@
       "source": 25,
       "dynamic": 9,
       "aether": 24,
-      "matched": 14,
-      "coverage": 0.56,
+      "matched": 17,
+      "coverage": 0.68,
       "baseline": 0.56,
-      "alignedRatio": 0.071,
+      "alignedRatio": 0.118,
       "geometry": {
-        "matched": 14,
-        "aligned": 1,
+        "matched": 17,
+        "aligned": 2,
         "worst": [
-          {
-            "text": "Low power",
-            "dx": 2,
-            "dy": 68.6,
-            "distance": 70.6
-          },
           {
             "text": "Optimised charging",
             "dx": 6,
-            "dy": 40.8,
-            "distance": 46.8
+            "dy": 38.8,
+            "distance": 44.8
           },
           {
             "text": "Finish charging closer to when you unplug.",
             "dx": 6,
-            "dy": 37.6,
-            "distance": 43.6
+            "dy": 35.6,
+            "distance": 41.6
           },
           {
             "text": "Condition",
             "dx": 6,
-            "dy": 37.5,
-            "distance": 43.5
+            "dy": 35.5,
+            "distance": 41.5
           },
           {
             "text": "Maximum capacity",
             "dx": 6,
-            "dy": 36.2,
-            "distance": 42.2
+            "dy": 34.2,
+            "distance": 40.2
+          },
+          {
+            "text": "Low power mode",
+            "dx": 6,
+            "dy": 32.6,
+            "distance": 38.6
           }
         ]
       },
@@ -346,9 +346,6 @@
       "missing": [
         "On battery",
         "Battery",
-        "Balanced",
-        "High performance",
-        "Low power mode",
         "Normal",
         "Not charging",
         "Data Cloud Compare",
@@ -360,9 +357,6 @@
         "AC power",
         "On AC power",
         "No battery detected on this machine.",
-        "Low power",
-        "Balanced",
-        "High performance",
         "aether-shell-sm",
         "Xvfb",
         "bash",
@@ -386,32 +380,32 @@
           {
             "text": "Discoverable",
             "dx": 6,
-            "dy": 23.4,
-            "distance": 29.4
+            "dy": 21.4,
+            "distance": 27.4
           },
           {
             "text": "Bluetooth",
             "dx": 6,
-            "dy": 17.2,
-            "distance": 23.2
+            "dy": 15.2,
+            "distance": 21.2
           },
           {
             "text": "Bluetooth",
             "dx": 13,
-            "dy": 9,
-            "distance": 22
-          },
-          {
-            "text": "Find and connect wireless accessories.",
-            "dx": 6,
-            "dy": 13.9,
-            "distance": 19.9
+            "dy": 6,
+            "distance": 19
           },
           {
             "text": "Paired devices",
             "dx": 6,
-            "dy": 13.7,
-            "distance": 19.7
+            "dy": 12.7,
+            "distance": 18.7
+          },
+          {
+            "text": "Find and connect wireless accessories.",
+            "dx": 6,
+            "dy": 11.9,
+            "distance": 17.9
           }
         ]
       },
@@ -461,20 +455,20 @@
           {
             "text": "Deep Current",
             "dx": 8,
-            "dy": 15.1,
-            "distance": 23.1
+            "dy": 12.1,
+            "distance": 20.1
           },
           {
             "text": "Aether OS Sessions",
             "dx": 8,
-            "dy": 13.7,
-            "distance": 21.7
+            "dy": 11.7,
+            "distance": 19.7
           },
           {
             "text": "Tide Radio",
             "dx": 0,
-            "dy": 2.5,
-            "distance": 2.5
+            "dy": 0.5,
+            "distance": 0.5
           }
         ]
       },
@@ -499,40 +493,40 @@
       "matched": 12,
       "coverage": 1,
       "baseline": 1,
-      "alignedRatio": 0.167,
+      "alignedRatio": 0.583,
       "geometry": {
         "matched": 12,
-        "aligned": 2,
+        "aligned": 7,
         "worst": [
           {
-            "text": "Fri",
-            "dx": 43.6,
-            "dy": 0,
-            "distance": 43.6
+            "text": "Snapshot verification",
+            "dx": 0,
+            "dy": -11.5,
+            "distance": 11.5
+          },
+          {
+            "text": "Tide Radio session",
+            "dx": 0,
+            "dy": -11.3,
+            "distance": 11.3
           },
           {
             "text": "Sun",
-            "dx": 43,
-            "dy": 0,
-            "distance": 43
-          },
-          {
-            "text": "Tue",
-            "dx": 42.1,
-            "dy": 0,
-            "distance": 42.1
+            "dx": 3,
+            "dy": -1,
+            "distance": 4
           },
           {
             "text": "Mon",
-            "dx": 41.5,
-            "dy": 0,
-            "distance": 41.5
+            "dx": 2.8,
+            "dy": -1,
+            "distance": 3.8
           },
           {
-            "text": "Thu",
-            "dx": 41.1,
-            "dy": 0,
-            "distance": 41.1
+            "text": "Today",
+            "dx": 2.4,
+            "dy": -0.8,
+            "distance": 3.2
           }
         ]
       },
@@ -563,14 +557,14 @@
           {
             "text": "Processes and resources",
             "dx": 0.4,
-            "dy": 2.5,
-            "distance": 2.9
+            "dy": 0.5,
+            "distance": 0.9
           },
           {
             "text": "Task Manager",
             "dx": 0,
-            "dy": 2.5,
-            "distance": 2.5
+            "dy": 0.5,
+            "distance": 0.5
           }
         ]
       },
@@ -686,28 +680,22 @@
       "matched": 37,
       "coverage": 0.841,
       "baseline": 0.841,
-      "alignedRatio": 0.514,
+      "alignedRatio": 0.405,
       "geometry": {
         "matched": 37,
-        "aligned": 19,
+        "aligned": 15,
         "worst": [
           {
             "text": "Language & Region",
-            "dx": 13,
-            "dy": -47.6,
-            "distance": 60.6
+            "dx": 1,
+            "dy": -58.6,
+            "distance": 59.6
           },
           {
             "text": "Language",
             "dx": 1,
             "dy": -56.2,
             "distance": 57.2
-          },
-          {
-            "text": "Unified memory",
-            "dx": 1,
-            "dy": 56.1,
-            "distance": 57.1
           },
           {
             "text": "Region",
@@ -718,8 +706,14 @@
           {
             "text": "Used across the desktop and apps.",
             "dx": 1,
-            "dy": -54.8,
-            "distance": 55.8
+            "dy": -55.8,
+            "distance": 56.8
+          },
+          {
+            "text": "Formats dates, numbers, and currency.",
+            "dx": 1,
+            "dy": -55.7,
+            "distance": 56.7
           }
         ]
       },
@@ -770,40 +764,40 @@
       "matched": 27,
       "coverage": 0.563,
       "baseline": 0.563,
-      "alignedRatio": 0.63,
+      "alignedRatio": 0.444,
       "geometry": {
         "matched": 27,
-        "aligned": 17,
+        "aligned": 12,
         "worst": [
           {
             "text": "Master switch for ripples, shimmer, and window waves.",
             "dx": 1,
-            "dy": -72,
-            "distance": 73
+            "dy": -73,
+            "distance": 74
           },
           {
             "text": "Small, soft rings trail your pointer.",
             "dx": 1,
-            "dy": -71.9,
-            "distance": 72.9
-          },
-          {
-            "text": "Theme",
-            "dx": 13,
-            "dy": 37,
-            "distance": 50
+            "dy": -72.9,
+            "distance": 73.9
           },
           {
             "text": "Water effects",
-            "dx": 13,
-            "dy": -29,
-            "distance": 42
+            "dx": 1,
+            "dy": -40,
+            "distance": 41
           },
           {
-            "text": "OM",
-            "dx": 6,
-            "dy": 4.8,
-            "distance": 10.8
+            "text": "Theme",
+            "dx": 1,
+            "dy": 26,
+            "distance": 27
+          },
+          {
+            "text": "Storage",
+            "dx": 0,
+            "dy": -8.3,
+            "distance": 8.3
           }
         ]
       },
@@ -874,40 +868,40 @@
       "matched": 23,
       "coverage": 0.548,
       "baseline": 0.548,
-      "alignedRatio": 0.739,
+      "alignedRatio": 0.522,
       "geometry": {
         "matched": 23,
-        "aligned": 17,
+        "aligned": 12,
         "worst": [
           {
-            "text": "OM",
-            "dx": 6,
-            "dy": 4.8,
-            "distance": 10.8
+            "text": "Storage",
+            "dx": 0,
+            "dy": -8.3,
+            "distance": 8.3
           },
           {
-            "text": "Search settings",
-            "dx": 6,
-            "dy": 2,
-            "distance": 8
+            "text": "Accessibility",
+            "dx": 0,
+            "dy": -8.1,
+            "distance": 8.1
           },
           {
             "text": "Connectivity",
             "dx": 0,
-            "dy": -6.7,
-            "distance": 6.7
+            "dy": -7.7,
+            "distance": 7.7
+          },
+          {
+            "text": "Sound",
+            "dx": 0,
+            "dy": -7.7,
+            "distance": 7.7
           },
           {
             "text": "Power & privacy",
             "dx": 0,
-            "dy": -6.3,
-            "distance": 6.3
-          },
-          {
-            "text": "Storage",
-            "dx": 0,
-            "dy": -6.3,
-            "distance": 6.3
+            "dy": -7.3,
+            "distance": 7.3
           }
         ]
       },
@@ -966,10 +960,10 @@
       "matched": 25,
       "coverage": 0.543,
       "baseline": 0.543,
-      "alignedRatio": 0.68,
+      "alignedRatio": 0.48,
       "geometry": {
         "matched": 25,
-        "aligned": 17,
+        "aligned": 12,
         "worst": [
           {
             "text": "Show dock",
@@ -980,26 +974,26 @@
           {
             "text": "Display the application dock on the desktop.",
             "dx": 1,
-            "dy": -70.9,
-            "distance": 71.9
+            "dy": -71.9,
+            "distance": 72.9
           },
           {
-            "text": "OM",
-            "dx": 6,
-            "dy": 4.8,
-            "distance": 10.8
+            "text": "Storage",
+            "dx": 0,
+            "dy": -8.3,
+            "distance": 8.3
           },
           {
-            "text": "Search settings",
-            "dx": 6,
-            "dy": 2,
-            "distance": 8
+            "text": "Accessibility",
+            "dx": 0,
+            "dy": -8.1,
+            "distance": 8.1
           },
           {
             "text": "Connectivity",
             "dx": 0,
-            "dy": -6.7,
-            "distance": 6.7
+            "dy": -7.7,
+            "distance": 7.7
           }
         ]
       },
@@ -1068,40 +1062,40 @@
       "matched": 24,
       "coverage": 0.511,
       "baseline": 0.511,
-      "alignedRatio": 0.708,
+      "alignedRatio": 0.542,
       "geometry": {
         "matched": 24,
-        "aligned": 17,
+        "aligned": 13,
         "worst": [
           {
-            "text": "Command palette",
-            "dx": 13,
-            "dy": 9,
-            "distance": 22
+            "text": "Storage",
+            "dx": 0,
+            "dy": -8.3,
+            "distance": 8.3
           },
           {
-            "text": "OM",
-            "dx": 6,
-            "dy": 4.8,
-            "distance": 10.8
-          },
-          {
-            "text": "Search settings",
-            "dx": 6,
-            "dy": 2,
-            "distance": 8
+            "text": "Accessibility",
+            "dx": 0,
+            "dy": -8.1,
+            "distance": 8.1
           },
           {
             "text": "Connectivity",
             "dx": 0,
-            "dy": -6.7,
-            "distance": 6.7
+            "dy": -7.7,
+            "distance": 7.7
+          },
+          {
+            "text": "Sound",
+            "dx": 0,
+            "dy": -7.7,
+            "distance": 7.7
           },
           {
             "text": "Power & privacy",
             "dx": 0,
-            "dy": -6.3,
-            "distance": 6.3
+            "dy": -7.3,
+            "distance": 7.3
           }
         ]
       },
@@ -1169,17 +1163,11 @@
       "matched": 25,
       "coverage": 0.543,
       "baseline": 0.543,
-      "alignedRatio": 0.68,
+      "alignedRatio": 0.48,
       "geometry": {
         "matched": 25,
-        "aligned": 17,
+        "aligned": 12,
         "worst": [
-          {
-            "text": "Vision",
-            "dx": 13,
-            "dy": 99,
-            "distance": 112
-          },
           {
             "text": "Text size",
             "dx": 1,
@@ -1187,22 +1175,28 @@
             "distance": 90.4
           },
           {
-            "text": "OM",
-            "dx": 6,
-            "dy": 4.8,
-            "distance": 10.8
+            "text": "Vision",
+            "dx": 1,
+            "dy": 88,
+            "distance": 89
           },
           {
-            "text": "Search settings",
-            "dx": 6,
-            "dy": 2,
-            "distance": 8
+            "text": "Storage",
+            "dx": 0,
+            "dy": -8.3,
+            "distance": 8.3
+          },
+          {
+            "text": "Accessibility",
+            "dx": 0,
+            "dy": -8.1,
+            "distance": 8.1
           },
           {
             "text": "Connectivity",
             "dx": 0,
-            "dy": -6.7,
-            "distance": 6.7
+            "dy": -7.7,
+            "distance": 7.7
           }
         ]
       },
@@ -1268,40 +1262,40 @@
       "matched": 23,
       "coverage": 0.511,
       "baseline": 0.511,
-      "alignedRatio": 0.739,
+      "alignedRatio": 0.522,
       "geometry": {
         "matched": 23,
-        "aligned": 17,
+        "aligned": 12,
         "worst": [
           {
-            "text": "OM",
-            "dx": 6,
-            "dy": 4.8,
-            "distance": 10.8
+            "text": "Storage",
+            "dx": 0,
+            "dy": -8.3,
+            "distance": 8.3
           },
           {
-            "text": "Search settings",
-            "dx": 6,
-            "dy": 2,
-            "distance": 8
+            "text": "Accessibility",
+            "dx": 0,
+            "dy": -8.1,
+            "distance": 8.1
           },
           {
             "text": "Connectivity",
             "dx": 0,
-            "dy": -6.7,
-            "distance": 6.7
+            "dy": -7.7,
+            "distance": 7.7
+          },
+          {
+            "text": "Sound",
+            "dx": 0,
+            "dy": -7.7,
+            "distance": 7.7
           },
           {
             "text": "Power & privacy",
             "dx": 0,
-            "dy": -6.3,
-            "distance": 6.3
-          },
-          {
-            "text": "Storage",
-            "dx": 0,
-            "dy": -6.3,
-            "distance": 6.3
+            "dy": -7.3,
+            "distance": 7.3
           }
         ]
       },
@@ -1364,17 +1358,11 @@
       "matched": 25,
       "coverage": 0.641,
       "baseline": 0.641,
-      "alignedRatio": 0.68,
+      "alignedRatio": 0.52,
       "geometry": {
         "matched": 25,
-        "aligned": 17,
+        "aligned": 13,
         "worst": [
-          {
-            "text": "Bluetooth",
-            "dx": 13,
-            "dy": 9,
-            "distance": 22
-          },
           {
             "text": "Discoverable",
             "dx": 1,
@@ -1382,22 +1370,28 @@
             "distance": 15.5
           },
           {
-            "text": "OM",
-            "dx": 6,
-            "dy": 4.8,
-            "distance": 10.8
+            "text": "Storage",
+            "dx": 0,
+            "dy": -8.3,
+            "distance": 8.3
           },
           {
-            "text": "Search settings",
-            "dx": 6,
-            "dy": 2,
-            "distance": 8
+            "text": "Accessibility",
+            "dx": 0,
+            "dy": -8.1,
+            "distance": 8.1
           },
           {
             "text": "Connectivity",
             "dx": 0,
-            "dy": -6.7,
-            "distance": 6.7
+            "dy": -7.7,
+            "distance": 7.7
+          },
+          {
+            "text": "Sound",
+            "dx": 0,
+            "dy": -7.7,
+            "distance": 7.7
           }
         ]
       },
@@ -1450,40 +1444,40 @@
       "matched": 24,
       "coverage": 0.649,
       "baseline": 0.649,
-      "alignedRatio": 0.708,
+      "alignedRatio": 0.5,
       "geometry": {
         "matched": 24,
-        "aligned": 17,
+        "aligned": 12,
         "worst": [
           {
             "text": "Output",
-            "dx": 13,
-            "dy": 37,
-            "distance": 50
+            "dx": 1,
+            "dy": 26,
+            "distance": 27
           },
           {
-            "text": "OM",
-            "dx": 6,
-            "dy": 4.8,
-            "distance": 10.8
+            "text": "Storage",
+            "dx": 0,
+            "dy": -8.3,
+            "distance": 8.3
           },
           {
-            "text": "Search settings",
-            "dx": 6,
-            "dy": 2,
-            "distance": 8
+            "text": "Accessibility",
+            "dx": 0,
+            "dy": -8.1,
+            "distance": 8.1
           },
           {
             "text": "Connectivity",
             "dx": 0,
-            "dy": -6.7,
-            "distance": 6.7
+            "dy": -7.7,
+            "distance": 7.7
           },
           {
-            "text": "Power & privacy",
+            "text": "Sound",
             "dx": 0,
-            "dy": -6.3,
-            "distance": 6.3
+            "dy": -7.7,
+            "distance": 7.7
           }
         ]
       },
@@ -1538,40 +1532,40 @@
       "matched": 24,
       "coverage": 0.571,
       "baseline": 0.571,
-      "alignedRatio": 0.708,
+      "alignedRatio": 0.5,
       "geometry": {
         "matched": 24,
-        "aligned": 17,
+        "aligned": 12,
         "worst": [
           {
             "text": "Battery",
             "dx": -67.9,
-            "dy": -3,
-            "distance": 70.9
+            "dy": -5,
+            "distance": 72.9
           },
           {
-            "text": "OM",
-            "dx": 6,
-            "dy": 4.8,
-            "distance": 10.8
+            "text": "Storage",
+            "dx": 0,
+            "dy": -8.3,
+            "distance": 8.3
           },
           {
-            "text": "Search settings",
-            "dx": 6,
-            "dy": 2,
-            "distance": 8
+            "text": "Accessibility",
+            "dx": 0,
+            "dy": -8.1,
+            "distance": 8.1
           },
           {
             "text": "Connectivity",
             "dx": 0,
-            "dy": -6.7,
-            "distance": 6.7
+            "dy": -7.7,
+            "distance": 7.7
           },
           {
-            "text": "Power & privacy",
+            "text": "Sound",
             "dx": 0,
-            "dy": -6.3,
-            "distance": 6.3
+            "dy": -7.7,
+            "distance": 7.7
           }
         ]
       },
@@ -1630,10 +1624,10 @@
       "matched": 31,
       "coverage": 0.795,
       "baseline": 0.795,
-      "alignedRatio": 0.581,
+      "alignedRatio": 0.452,
       "geometry": {
         "matched": 31,
-        "aligned": 18,
+        "aligned": 14,
         "worst": [
           {
             "text": "Calendar",
@@ -1649,9 +1643,9 @@
           },
           {
             "text": "Application notifications",
-            "dx": 13,
-            "dy": -35.3,
-            "distance": 48.3
+            "dx": 1,
+            "dy": -46.3,
+            "distance": 47.3
           },
           {
             "text": "Data Cloud Compare",
@@ -1711,40 +1705,40 @@
       "matched": 23,
       "coverage": 0.489,
       "baseline": 0.489,
-      "alignedRatio": 0.739,
+      "alignedRatio": 0.522,
       "geometry": {
         "matched": 23,
-        "aligned": 17,
+        "aligned": 12,
         "worst": [
           {
-            "text": "OM",
-            "dx": 6,
-            "dy": 4.8,
-            "distance": 10.8
+            "text": "Storage",
+            "dx": 0,
+            "dy": -8.3,
+            "distance": 8.3
           },
           {
-            "text": "Search settings",
-            "dx": 6,
-            "dy": 2,
-            "distance": 8
+            "text": "Accessibility",
+            "dx": 0,
+            "dy": -8.1,
+            "distance": 8.1
           },
           {
             "text": "Connectivity",
             "dx": 0,
-            "dy": -6.7,
-            "distance": 6.7
+            "dy": -7.7,
+            "distance": 7.7
+          },
+          {
+            "text": "Sound",
+            "dx": 0,
+            "dy": -7.7,
+            "distance": 7.7
           },
           {
             "text": "Power & privacy",
             "dx": 0,
-            "dy": -6.3,
-            "distance": 6.3
-          },
-          {
-            "text": "Storage",
-            "dx": 0,
-            "dy": -6.3,
-            "distance": 6.3
+            "dy": -7.3,
+            "distance": 7.3
           }
         ]
       },
@@ -1811,40 +1805,40 @@
       "matched": 24,
       "coverage": 0.632,
       "baseline": 0.632,
-      "alignedRatio": 0.708,
+      "alignedRatio": 0.5,
       "geometry": {
         "matched": 24,
-        "aligned": 17,
+        "aligned": 12,
         "worst": [
           {
             "text": "Free space",
             "dx": -13,
-            "dy": -63.2,
-            "distance": 76.2
+            "dy": -65.2,
+            "distance": 78.2
           },
           {
-            "text": "OM",
-            "dx": 6,
-            "dy": 4.8,
-            "distance": 10.8
+            "text": "Storage",
+            "dx": 0,
+            "dy": -8.3,
+            "distance": 8.3
           },
           {
-            "text": "Search settings",
-            "dx": 6,
-            "dy": 2,
-            "distance": 8
+            "text": "Accessibility",
+            "dx": 0,
+            "dy": -8.1,
+            "distance": 8.1
           },
           {
             "text": "Connectivity",
             "dx": 0,
-            "dy": -6.7,
-            "distance": 6.7
+            "dy": -7.7,
+            "distance": 7.7
           },
           {
-            "text": "Power & privacy",
+            "text": "Sound",
             "dx": 0,
-            "dy": -6.3,
-            "distance": 6.3
+            "dy": -7.7,
+            "distance": 7.7
           }
         ]
       },
@@ -1893,7 +1887,7 @@
     {
       "id": "command",
       "status": "missing-text",
-      "source": 17,
+      "source": 18,
       "dynamic": 0,
       "aether": 0,
       "matched": 0,
@@ -1923,7 +1917,8 @@
         "Already at the root",
         "Show this path in the other pane",
         "Mirror /mnt/tank",
-        "Search"
+        "Search",
+        "Search the active pane"
       ],
       "extra": []
     },
@@ -1935,41 +1930,41 @@
       "aether": 10,
       "matched": 10,
       "coverage": 1,
-      "baseline": 0.9,
-      "alignedRatio": 0.2,
+      "baseline": 1,
+      "alignedRatio": 0.1,
       "geometry": {
         "matched": 10,
-        "aligned": 2,
+        "aligned": 1,
         "worst": [
           {
-            "text": "Help",
-            "dx": 4.3,
-            "dy": 5.5,
-            "distance": 9.8
+            "text": "RAM",
+            "dx": 6.7,
+            "dy": -0.1,
+            "distance": 6.8
           },
           {
-            "text": "Go",
-            "dx": 3.8,
-            "dy": 5.5,
-            "distance": 9.3
+            "text": "STORAGE",
+            "dx": 6.6,
+            "dy": -0.1,
+            "distance": 6.699999999999999
           },
           {
-            "text": "Window",
-            "dx": 3.8,
-            "dy": 5.5,
-            "distance": 9.3
-          },
-          {
-            "text": "File",
-            "dx": 3.5,
-            "dy": 5.5,
-            "distance": 9
+            "text": "CPU",
+            "dx": 6.5,
+            "dy": -0.1,
+            "distance": 6.6
           },
           {
             "text": "View",
-            "dx": 3.2,
-            "dy": 5.5,
-            "distance": 8.7
+            "dx": -5.8,
+            "dy": 0.5,
+            "distance": 6.3
+          },
+          {
+            "text": "File",
+            "dx": -5.5,
+            "dy": 0.5,
+            "distance": 6
           }
         ]
       },
@@ -1997,34 +1992,34 @@
         "aligned": 0,
         "worst": [
           {
-            "text": "Help",
-            "dx": 4.3,
-            "dy": 5.5,
-            "distance": 9.8
-          },
-          {
-            "text": "Go",
-            "dx": 3.8,
-            "dy": 5.5,
-            "distance": 9.3
-          },
-          {
-            "text": "Window",
-            "dx": 3.8,
-            "dy": 5.5,
-            "distance": 9.3
+            "text": "View",
+            "dx": -5.8,
+            "dy": 0.5,
+            "distance": 6.3
           },
           {
             "text": "File",
-            "dx": 3.5,
-            "dy": 5.5,
-            "distance": 9
+            "dx": -5.5,
+            "dy": 0.5,
+            "distance": 6
           },
           {
-            "text": "View",
-            "dx": 3.2,
-            "dy": 5.5,
-            "distance": 8.7
+            "text": "Go",
+            "dx": -5.2,
+            "dy": 0.5,
+            "distance": 5.7
+          },
+          {
+            "text": "Window",
+            "dx": -5.2,
+            "dy": 0.5,
+            "distance": 5.7
+          },
+          {
+            "text": "Help",
+            "dx": -4.7,
+            "dy": 0.5,
+            "distance": 5.2
           }
         ]
       },
@@ -2063,27 +2058,27 @@
         "worst": [
           {
             "text": "Network Settings…",
-            "dx": 31.4,
-            "dy": 6.3,
-            "distance": 37.699999999999996
+            "dx": 25.4,
+            "dy": 3.3,
+            "distance": 28.7
           },
           {
             "text": "Known networks",
-            "dx": 3.3,
-            "dy": -17.3,
-            "distance": 20.6
+            "dx": -2.7,
+            "dy": -22.3,
+            "distance": 25
           },
           {
             "text": "Connected",
-            "dx": 3.3,
-            "dy": -5.8,
-            "distance": 9.1
+            "dx": -2.7,
+            "dy": -10.8,
+            "distance": 13.5
           },
           {
             "text": "Wi-Fi",
             "dx": -0.7,
-            "dy": 0.9,
-            "distance": 1.6
+            "dy": -1.1,
+            "distance": 1.8
           }
         ]
       },
@@ -2125,21 +2120,21 @@
         "worst": [
           {
             "text": "Bluetooth Settings…",
-            "dx": 34.2,
-            "dy": 6.8,
-            "distance": 41
+            "dx": 28.2,
+            "dy": 3.8,
+            "distance": 32
           },
           {
             "text": "Bluetooth",
             "dx": -2.7,
-            "dy": 3.9,
-            "distance": 6.6
+            "dy": 1.9,
+            "distance": 4.6
           },
           {
             "text": "Bluetooth",
             "dx": -0.7,
-            "dy": 0.9,
-            "distance": 1.6
+            "dy": -1.1,
+            "distance": 1.8
           }
         ]
       },
@@ -2178,33 +2173,33 @@
         "worst": [
           {
             "text": "Battery Settings…",
-            "dx": 32.1,
-            "dy": 6.2,
-            "distance": 38.300000000000004
-          },
-          {
-            "text": "Energy mode",
-            "dx": 3.3,
-            "dy": 14.5,
-            "distance": 17.8
+            "dx": 26.1,
+            "dy": 3.2,
+            "distance": 29.3
           },
           {
             "text": "Low",
-            "dx": 7.3,
-            "dy": 7.9,
-            "distance": 15.2
-          },
-          {
-            "text": "Balanced",
-            "dx": 7.3,
-            "dy": 7.9,
-            "distance": 15.2
+            "dx": -24.9,
+            "dy": 2.7,
+            "distance": 27.599999999999998
           },
           {
             "text": "High",
-            "dx": 7.3,
-            "dy": 7.9,
-            "distance": 15.2
+            "dx": -23.3,
+            "dy": 2.7,
+            "distance": 26
+          },
+          {
+            "text": "Balanced",
+            "dx": -12.2,
+            "dy": 2.7,
+            "distance": 14.899999999999999
+          },
+          {
+            "text": "Energy mode",
+            "dx": 2.3,
+            "dy": 9.5,
+            "distance": 11.8
           }
         ]
       },
@@ -2243,14 +2238,14 @@
           {
             "text": "Harbour Speakers",
             "dx": -3.7,
-            "dy": 38.4,
-            "distance": 42.1
+            "dy": 36.4,
+            "distance": 40.1
           },
           {
             "text": "Sound",
             "dx": -0.7,
-            "dy": 0.9,
-            "distance": 1.6
+            "dy": -1.1,
+            "distance": 1.8
           }
         ]
       },
@@ -2293,9 +2288,9 @@
         "worst": [
           {
             "text": "Open Calendar…",
-            "dx": 23.5,
-            "dy": 8.5,
-            "distance": 32
+            "dx": 17.5,
+            "dy": 5.5,
+            "distance": 23
           }
         ]
       },

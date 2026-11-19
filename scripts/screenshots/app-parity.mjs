@@ -552,12 +552,24 @@ function collectDomScene() {
     ) {
       return;
     }
-    const ownText = [...element.childNodes]
-      .filter((node) => node.nodeType === Node.TEXT_NODE)
+    const textNodes = [...element.childNodes].filter(
+      (node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== "",
+    );
+    const ownText = textNodes
       .map((node) => node.textContent)
       .join(" ")
       .replace(/\s+/g, " ")
       .trim();
+    // The element box can be a full-width row with centred text; measure the
+    // text node's own box so geometry compares text to text.
+    let textRect = rect;
+    if (textNodes.length > 0) {
+      const range = document.createRange();
+      range.setStartBefore(textNodes[0]);
+      range.setEndAfter(textNodes[textNodes.length - 1]);
+      const measured = range.getBoundingClientRect();
+      if (measured.width > 0 && measured.height > 0) textRect = measured;
+    }
     const fontSize = Number.parseFloat(style.fontSize);
     elements.push({
       path,
@@ -569,10 +581,10 @@ function collectDomScene() {
           ? element.className.split(/\s+/).filter(Boolean)
           : [],
       text: ownText,
-      x: round(rect.x),
-      y: round(rect.y),
-      w: round(rect.width),
-      h: round(rect.height),
+      x: round(textRect.x),
+      y: round(textRect.y),
+      w: round(textRect.width),
+      h: round(textRect.height),
       font: Number.isFinite(fontSize)
         ? {
             px: round(fontSize),

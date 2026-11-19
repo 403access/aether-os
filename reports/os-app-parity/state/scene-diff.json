@@ -55,7 +55,8 @@
         ]
       },
       "roles": [
-        "label"
+        "label",
+        "title"
       ],
       "missing": [
         "A desktop concept drawn from the Data Cloud Compare design system. Every surface, badge, and control here is a token or component from the gallery.",
@@ -80,7 +81,7 @@
       "aether": 30,
       "matched": 8,
       "coverage": 0.14,
-      "baseline": 0.228,
+      "baseline": 0.14,
       "geometry": {
         "matched": 8,
         "aligned": 1,
@@ -118,7 +119,17 @@
         ]
       },
       "roles": [
-        "label"
+        "breadcrumb",
+        "column",
+        "file-name",
+        "file-type",
+        "label",
+        "note",
+        "note-title",
+        "sidebar-item",
+        "sidebar-section",
+        "subtitle",
+        "title"
       ],
       "missing": [
         "/mnt/tank",
@@ -180,16 +191,16 @@
         "notes",
         "Files come from the local index.",
         "/notes",
-        "Everywhere",
-        "Filter",
         "Type",
-        "Modified",
         "alpha.md",
         "MD",
         "beta.txt",
         "TXT",
         "gamma.json",
         "JSON",
+        "Everywhere",
+        "Filter",
+        "Modified",
         "Enter open   Esc close   PgUp/PgDn page",
         "alpha.md",
         "/caps/system-fixture/notes/alpha.md",
@@ -204,7 +215,7 @@
       "aether": 18,
       "matched": 8,
       "coverage": 0.364,
-      "baseline": 0.682,
+      "baseline": 0.364,
       "geometry": {
         "matched": 8,
         "aligned": 2,
@@ -242,7 +253,10 @@
         ]
       },
       "roles": [
-        "label"
+        "badge-label",
+        "label",
+        "subtitle",
+        "title"
       ],
       "missing": [
         "Known",
@@ -281,7 +295,7 @@
       "aether": 24,
       "matched": 14,
       "coverage": 0.56,
-      "baseline": 0.68,
+      "baseline": 0.56,
       "geometry": {
         "matched": 14,
         "aligned": 1,
@@ -319,7 +333,10 @@
         ]
       },
       "roles": [
-        "label"
+        "badge-label",
+        "label",
+        "subtitle",
+        "title"
       ],
       "missing": [
         "On battery",
@@ -393,7 +410,10 @@
         ]
       },
       "roles": [
-        "label"
+        "badge-label",
+        "label",
+        "subtitle",
+        "title"
       ],
       "missing": [
         "Let nearby devices find this Mac.",
@@ -452,7 +472,10 @@
         ]
       },
       "roles": [
-        "label"
+        "badge-label",
+        "label",
+        "subtitle",
+        "title"
       ],
       "missing": [],
       "extra": [
@@ -506,7 +529,11 @@
         ]
       },
       "roles": [
-        "label"
+        "event-title",
+        "label",
+        "title",
+        "today",
+        "weekday"
       ],
       "missing": [],
       "extra": []
@@ -519,7 +546,7 @@
       "aether": 47,
       "matched": 2,
       "coverage": 0.041,
-      "baseline": 0.082,
+      "baseline": 0.041,
       "geometry": {
         "matched": 2,
         "aligned": 2,
@@ -539,7 +566,10 @@
         ]
       },
       "roles": [
-        "label"
+        "command",
+        "label",
+        "pane-title",
+        "title"
       ],
       "missing": [
         "Live",
@@ -592,9 +622,26 @@
       ],
       "extra": [
         "Processes",
+        "sleep infinity",
+        "bash",
+        "weston-terminal",
+        "sh",
+        "opener.sh",
+        "weston-terminal",
+        "sh",
+        "weston-terminal",
+        "sh",
+        "weston-terminal",
+        "sh",
+        "Xvfb",
+        "aether-shell-sm",
+        "foot",
+        "foot",
+        "foot",
+        "foot",
+        "Processes",
         "Users",
         "Resources",
-        "Processes",
         "PID",
         "USER",
         "CPU",
@@ -602,39 +649,22 @@
         "STATE",
         "COMMAND",
         "root",
-        "sleep infinity",
         "root",
-        "bash",
         "root",
-        "weston-terminal",
         "root",
-        "sh",
         "root",
-        "opener.sh",
         "root",
-        "weston-terminal",
         "root",
-        "sh",
         "root",
-        "weston-terminal",
         "root",
-        "sh",
         "root",
-        "weston-terminal",
         "root",
-        "sh",
         "root",
-        "Xvfb",
         "root",
-        "aether-shell-sm",
         "root",
-        "foot",
         "root",
-        "foot",
         "root",
-        "foot",
         "root",
-        "foot",
         "↑↓ select  ←→ collapse  tab tabs  r refresh  esc close"
       ]
     },
@@ -733,7 +763,7 @@
       "aether": 39,
       "matched": 25,
       "coverage": 0.521,
-      "baseline": 0.604,
+      "baseline": 0.521,
       "geometry": {
         "matched": 25,
         "aligned": 7,
@@ -836,7 +866,7 @@
       "aether": 30,
       "matched": 23,
       "coverage": 0.548,
-      "baseline": 0.571,
+      "baseline": 0.548,
       "geometry": {
         "matched": 23,
         "aligned": 7,
@@ -927,7 +957,7 @@
       "aether": 36,
       "matched": 24,
       "coverage": 0.522,
-      "baseline": 0.565,
+      "baseline": 0.522,
       "geometry": {
         "matched": 24,
         "aligned": 7,
@@ -1027,7 +1057,7 @@
       "aether": 35,
       "matched": 24,
       "coverage": 0.511,
-      "baseline": 0.553,
+      "baseline": 0.511,
       "geometry": {
         "matched": 24,
         "aligned": 7,
@@ -1127,7 +1157,7 @@
       "aether": 34,
       "matched": 25,
       "coverage": 0.543,
-      "baseline": 0.565,
+      "baseline": 0.543,
       "geometry": {
         "matched": 25,
         "aligned": 7,
@@ -1223,7 +1253,7 @@
       "aether": 31,
       "matched": 23,
       "coverage": 0.511,
-      "baseline": 0.622,
+      "baseline": 0.511,
       "geometry": {
         "matched": 23,
         "aligned": 7,
@@ -1403,7 +1433,7 @@
       "aether": 32,
       "matched": 24,
       "coverage": 0.649,
-      "baseline": 0.676,
+      "baseline": 0.649,
       "geometry": {
         "matched": 24,
         "aligned": 7,
@@ -1490,7 +1520,7 @@
       "aether": 31,
       "matched": 24,
       "coverage": 0.571,
-      "baseline": 0.619,
+      "baseline": 0.571,
       "geometry": {
         "matched": 24,
         "aligned": 7,
@@ -1661,7 +1691,7 @@
       "aether": 32,
       "matched": 23,
       "coverage": 0.489,
-      "baseline": 0.511,
+      "baseline": 0.489,
       "geometry": {
         "matched": 23,
         "aligned": 7,
@@ -1760,7 +1790,7 @@
       "aether": 31,
       "matched": 24,
       "coverage": 0.632,
-      "baseline": 0.658,
+      "baseline": 0.632,
       "geometry": {
         "matched": 24,
         "aligned": 7,
@@ -1965,7 +1995,7 @@
       "aether": 9,
       "matched": 4,
       "coverage": 0.4,
-      "baseline": 0.5,
+      "baseline": 0.4,
       "geometry": {
         "matched": 4,
         "aligned": 1,
@@ -1997,7 +2027,10 @@
         ]
       },
       "roles": [
-        "label"
+        "footer-link",
+        "label",
+        "state",
+        "title"
       ],
       "missing": [
         "Connected",
@@ -2049,7 +2082,10 @@
         ]
       },
       "roles": [
-        "label"
+        "footer-link",
+        "label",
+        "state",
+        "title"
       ],
       "missing": [
         "Connected",
@@ -2110,7 +2146,10 @@
         ]
       },
       "roles": [
-        "label"
+        "footer-link",
+        "label",
+        "state",
+        "title"
       ],
       "missing": [
         "On battery",
@@ -2132,7 +2171,7 @@
       "aether": 6,
       "matched": 2,
       "coverage": 0.2,
-      "baseline": 0.3,
+      "baseline": 0.2,
       "geometry": {
         "matched": 2,
         "aligned": 1,
@@ -2152,7 +2191,10 @@
         ]
       },
       "roles": [
-        "label"
+        "footer-link",
+        "label",
+        "state",
+        "title"
       ],
       "missing": [
         "Harbour Speakers",
@@ -2166,9 +2208,9 @@
       ],
       "extra": [
         "audio -",
+        "Sound Settings…",
         "Output",
-        "Volume",
-        "Sound Settings…"
+        "Volume"
       ]
     },
     {
@@ -2193,7 +2235,9 @@
         ]
       },
       "roles": [
-        "label"
+        "footer-link",
+        "label",
+        "title"
       ],
       "missing": [
         "Sun",

@@ -8,6 +8,7 @@ use smithay::backend::renderer::element::memory::MemoryRenderBuffer;
 use crate::app::App;
 use crate::render::context::{FrameContext, RenderChunk};
 use crate::render::helpers::{format_rate, format_uptime, truncate};
+use crate::{scene_node, scene_text};
 
 impl App {
     pub(crate) fn compose_task_manager(&mut self, ctx: &FrameContext) -> RenderChunk {
@@ -50,6 +51,13 @@ impl App {
                 )
             };
             let visible = self.task_visible_rows();
+            let window = scene_node!((), None, "window", bounds);
+            let titlebar = scene_node!(
+                (),
+                Some(window),
+                "titlebar",
+                AetherRect::new(bounds.x, bounds.y, bounds.width, 40)
+            );
             // First-party window chrome.
             if let Some(buffer) = self.chrome_round(
                 bounds.width.max(1),
@@ -99,6 +107,20 @@ impl App {
                 bounds.x + 71,
                 bounds.y + 13,
             ));
+            scene_text!(
+                (),
+                Some(titlebar),
+                "title",
+                "Task Manager",
+                AetherRect::new(
+                    bounds.x + 97,
+                    bounds.y + 13,
+                    self.text_width("Task Manager", 0x100 | 10),
+                    22
+                ),
+                0x100 | 10,
+                tokens.text
+            );
             labels.push((
                 "Task Manager".into(),
                 bounds.x + 97,
@@ -161,6 +183,7 @@ impl App {
                     },
                 ));
             }
+            let pane_node = scene_node!((), Some(window), "pane", pane);
             // Pane header.
             display_icons.push((
                 "chart".into(),
@@ -169,6 +192,20 @@ impl App {
                 pane.x + 16,
                 pane.y + 14,
             ));
+            scene_text!(
+                (),
+                Some(pane_node),
+                "pane-title",
+                tab.label(),
+                AetherRect::new(
+                    pane.x + 46,
+                    pane.y + 12,
+                    self.text_width(tab.label(), 3),
+                    24
+                ),
+                3,
+                tokens.text
+            );
             labels.push((tab.label().into(), pane.x + 46, pane.y + 12, 3, tokens.text));
             let subtitle = match tab {
                 crate::app::overlays::task_manager::TaskTab::Processes => format!(
@@ -291,6 +328,21 @@ impl App {
                         ));
                         labels.push((process.state.clone(), row.x + 304, row.y + 7, 0, tokens.dim));
                         let command = truncate(&process.command, 70);
+                        let row_node = scene_node!((), Some(pane_node), "process-row", row);
+                        scene_text!(
+                            (),
+                            Some(row_node),
+                            "command",
+                            &command,
+                            AetherRect::new(
+                                row.x + 370,
+                                row.y + 7,
+                                self.text_width(&command, 0),
+                                16
+                            ),
+                            0,
+                            tokens.text_soft
+                        );
                         labels.push((command, row.x + 370, row.y + 7, 0, tokens.text_soft));
                     }
                     if process_rows.len() > visible {

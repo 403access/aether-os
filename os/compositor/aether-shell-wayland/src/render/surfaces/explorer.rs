@@ -11,6 +11,7 @@ use crate::app::App;
 use crate::render::context::{FrameContext, RenderChunk};
 use crate::render::helpers::{file_kind, truncate};
 use crate::render::ui::Ui;
+use crate::{scene_box, scene_node, scene_text};
 
 const WINDOW_FILL: [u8; 4] = [7, 39, 51, 235];
 const TITLEBAR_FILL: [u8; 4] = [10, 51, 66, 255];
@@ -51,6 +52,13 @@ impl App {
     fn explorer_window(&mut self, ui: &mut Ui, rect: AetherRect, tokens: ThemeTokens) {
         let accent = tokens.accent(255);
         let hover = self.pointer_in(rect);
+        let window = scene_node!(ui, None, "window", rect);
+        let titlebar = scene_node!(
+            ui,
+            Some(window),
+            "titlebar",
+            AetherRect::new(rect.x, rect.y, rect.width, 40)
+        );
         let effects = self.window_effects(rect, 14, true, hover);
         ui.effect(effects.shadow);
         if let Some(buffer) = self.chrome_round(rect.width, rect.height, 14, WINDOW_FILL) {
@@ -77,6 +85,8 @@ impl App {
             [1.0, 1.0, 1.0, 0.07],
         );
         for (index, color) in LIGHTS.into_iter().enumerate() {
+            let light = AetherRect::new(rect.x + 11 + index as i32 * 17, rect.y + 14, 11, 11);
+            scene_box!(ui, Some(titlebar), "traffic-light", light, color, 5.5);
             if let Some(buffer) = self.chrome_round(11, 11, 5, color) {
                 ui.panel(Some(buffer), rect.x + 11 + index as i32 * 17, rect.y + 14);
             }
@@ -85,6 +95,20 @@ impl App {
             ui.panel(Some(buffer), rect.x + 66, rect.y + 8);
         }
         ui.icon("folder", 13, accent, rect.x + 71, rect.y + 13);
+        scene_text!(
+            ui,
+            Some(titlebar),
+            "title",
+            "Explorer",
+            AetherRect::new(
+                rect.x + 97,
+                rect.y + 13,
+                self.text_width("Explorer", 0x100 | 10),
+                22
+            ),
+            0x100 | 10,
+            tokens.text
+        );
         ui.label(
             "Explorer",
             rect.x + 97,
@@ -93,13 +117,17 @@ impl App {
             tokens.text,
         );
         let path = self.explorer_path_label();
-        ui.label(
+        let path_x = rect.x + 97 + self.text_width("Explorer", 10) as i32 + 8;
+        scene_text!(
+            ui,
+            Some(titlebar),
+            "subtitle",
             &path,
-            rect.x + 97 + self.text_width("Explorer", 10) as i32 + 8,
-            rect.y + 13,
+            AetherRect::new(path_x, rect.y + 13, self.text_width(&path, 9), 20),
             9,
-            tokens.dim,
+            tokens.dim
         );
+        ui.label(&path, path_x, rect.y + 13, 9, tokens.dim);
         let badge = format!("{} files", self.shell.explorer_match_count());
         let badge_w = 8 + 6 + 6 + self.text_width(&badge, 0) + 8;
         let badge_x = rect.x + rect.width as i32 - 12 - badge_w as i32;
@@ -109,12 +137,34 @@ impl App {
         if let Some(buffer) = self.chrome_round(6, 6, 3, tokens.green) {
             ui.panel(Some(buffer), badge_x + 8, rect.y + 17);
         }
+        scene_text!(
+            ui,
+            Some(titlebar),
+            "badge-label",
+            &badge,
+            AetherRect::new(badge_x + 20, rect.y + 14, self.text_width(&badge, 0), 18),
+            0,
+            tokens.green
+        );
         ui.label(badge, badge_x + 20, rect.y + 14, 0, tokens.green);
         ui.grip(rect, [1.0, 1.0, 1.0, 0.18]);
         ui.effect(effects.wave);
     }
 
     fn explorer_sidebar(&mut self, ui: &mut Ui, body: AetherRect, tokens: ThemeTokens) {
+        let sidebar = scene_box!(
+            ui,
+            None,
+            "sidebar",
+            AetherRect::new(
+                body.x,
+                body.y,
+                aether_shell::Shell::SIDEBAR_WIDTH as u32,
+                body.height
+            ),
+            SIDEBAR_FILL,
+            0.0
+        );
         let width = aether_shell::Shell::SIDEBAR_WIDTH;
         if let Some(buffer) = self.chrome_round(width as u32, body.height, 0, SIDEBAR_FILL) {
             ui.panel(Some(buffer), body.x, body.y);
@@ -130,12 +180,53 @@ impl App {
         );
 
         let x = body.x + 14;
+        scene_text!(
+            ui,
+            Some(sidebar),
+            "sidebar-section",
+            "FAVOURITES",
+            AetherRect::new(x, body.y + 14, self.text_width("FAVOURITES", 6), 16),
+            6,
+            tokens.dim
+        );
         ui.label("FAVOURITES", x, body.y + 14, 6, tokens.dim);
         ui.icon("folder", 14, tokens.accent(255), x, body.y + 38);
+        scene_text!(
+            ui,
+            Some(sidebar),
+            "sidebar-item",
+            "All indexed files",
+            AetherRect::new(
+                x + 22,
+                body.y + 36,
+                self.text_width("All indexed files", 4),
+                18
+            ),
+            4,
+            tokens.text
+        );
         ui.label("All indexed files", x + 22, body.y + 36, 4, tokens.text);
         ui.icon("chart", 14, tokens.soft, x, body.y + 66);
+        scene_text!(
+            ui,
+            Some(sidebar),
+            "sidebar-item",
+            "Recent",
+            AetherRect::new(x + 22, body.y + 64, self.text_width("Recent", 4), 18),
+            4,
+            tokens.text_soft
+        );
         ui.label("Recent", x + 22, body.y + 64, 4, tokens.text_soft);
 
+        scene_text!(
+            ui,
+            Some(sidebar),
+            "sidebar-section",
+            "LOCATIONS",
+            AetherRect::new(x, body.y + 104, self.text_width("LOCATIONS", 6), 16),
+            6,
+            tokens.dim
+        );
         ui.label("LOCATIONS", x, body.y + 104, 6, tokens.dim);
         let mut locations: BTreeSet<String> = BTreeSet::new();
         for file in self.shell.visible_explorer_rows() {
@@ -147,6 +238,15 @@ impl App {
         for (index, location) in locations.iter().take(9).enumerate() {
             let row_y = body.y + 126 + index as i32 * 28;
             ui.icon("folder", 13, tokens.soft, x, row_y + 2);
+            scene_text!(
+                ui,
+                Some(sidebar),
+                "sidebar-item",
+                location,
+                AetherRect::new(x + 20, row_y, self.text_width(location, 4), 18),
+                4,
+                tokens.text_soft
+            );
             ui.label(location, x + 20, row_y, 4, tokens.text_soft);
         }
         if locations.is_empty() {
@@ -159,12 +259,40 @@ impl App {
             ui.panel(Some(buffer), x, note_y);
         }
         ui.icon("drop", 11, tokens.soft, x + 9, note_y + 6);
+        scene_text!(
+            ui,
+            Some(sidebar),
+            "note-title",
+            "Read-only snapshot",
+            AetherRect::new(
+                x + 26,
+                note_y + 6,
+                self.text_width("Read-only snapshot", 6),
+                16
+            ),
+            6,
+            tokens.text_soft
+        );
         ui.label(
             "Read-only snapshot",
             x + 26,
             note_y + 6,
             6,
             tokens.text_soft,
+        );
+        scene_text!(
+            ui,
+            Some(sidebar),
+            "note",
+            "Files come from the local index.",
+            AetherRect::new(
+                x,
+                note_y + 34,
+                self.text_width("Files come from the local index.", 6),
+                16
+            ),
+            6,
+            tokens.dim
         );
         ui.label(
             "Files come from the local index.",
@@ -179,6 +307,12 @@ impl App {
         let x0 = body.x + aether_shell::Shell::SIDEBAR_WIDTH;
         let width = body.x + body.width as i32 - x0;
         let accent = tokens.accent(255);
+        let main = scene_node!(
+            ui,
+            None,
+            "main",
+            AetherRect::new(x0, body.y, width as u32, body.height)
+        );
 
         // Toolbar: navigation + breadcrumb + hidden toggle.
         let toolbar_y = body.y;
@@ -195,6 +329,15 @@ impl App {
             );
         }
         let path = self.explorer_path_label();
+        scene_text!(
+            ui,
+            Some(main),
+            "breadcrumb",
+            &path,
+            AetherRect::new(x0 + 106, toolbar_y + 11, self.text_width(&path, 0x100), 18),
+            0x100,
+            tokens.text
+        );
         ui.label(&path, x0 + 106, toolbar_y + 11, 0x100, tokens.text);
         ui.icon("file", 13, tokens.dim, x0 + width - 120, toolbar_y + 13);
         ui.label(
@@ -293,6 +436,33 @@ impl App {
                 0.15,
             ],
         );
+        scene_text!(
+            ui,
+            Some(main),
+            "column",
+            "Name",
+            AetherRect::new(x0 + 18, columns_y + 8, self.text_width("Name", 6), 16),
+            6,
+            tokens.dim
+        );
+        scene_text!(
+            ui,
+            Some(main),
+            "column",
+            "Type",
+            AetherRect::new(type_x, columns_y + 8, self.text_width("Type", 6), 16),
+            6,
+            tokens.dim
+        );
+        scene_text!(
+            ui,
+            Some(main),
+            "column",
+            "Size",
+            AetherRect::new(size_x, columns_y + 8, self.text_width("Size", 6), 16),
+            6,
+            tokens.dim
+        );
         ui.label("Name", x0 + 18, columns_y + 8, 6, tokens.dim);
         ui.label("Type", type_x, columns_y + 8, 6, tokens.dim);
         ui.label("Size", size_x, columns_y + 8, 6, tokens.dim);
@@ -344,6 +514,34 @@ impl App {
                 .unwrap_or_else(|| "FILE".to_string());
             let kind = file_kind(&extension);
             ui.icon(kind.0, 16, kind.1, row_rect.x + 8, row_rect.y + 7);
+            let row_node = scene_node!(ui, Some(main), "file-row", row_rect);
+            scene_text!(
+                ui,
+                Some(row_node),
+                "file-name",
+                &file.name,
+                AetherRect::new(
+                    row_rect.x + 30,
+                    row_rect.y + 8,
+                    self.text_width(&file.name, 1),
+                    18
+                ),
+                1,
+                if index == selected {
+                    tokens.text
+                } else {
+                    tokens.text_soft
+                }
+            );
+            scene_text!(
+                ui,
+                Some(row_node),
+                "file-type",
+                &extension,
+                AetherRect::new(type_x, row_rect.y + 9, self.text_width(&extension, 4), 16),
+                4,
+                tokens.soft
+            );
             ui.label(
                 file.name.clone(),
                 row_rect.x + 30,
@@ -382,17 +580,21 @@ impl App {
                 0.15,
             ],
         );
-        ui.label(
-            format!(
-                "{} items · {} files",
-                rows.len(),
-                self.shell.explorer_match_count()
-            ),
-            x0 + 18,
-            footer_y + 9,
-            6,
-            tokens.dim,
+        let count_text = format!(
+            "{} items · {} files",
+            rows.len(),
+            self.shell.explorer_match_count()
         );
+        scene_text!(
+            ui,
+            Some(main),
+            "footer-count",
+            &count_text,
+            AetherRect::new(x0 + 18, footer_y + 9, self.text_width(&count_text, 6), 16),
+            6,
+            tokens.dim
+        );
+        ui.label(count_text, x0 + 18, footer_y + 9, 6, tokens.dim);
         let hint = "Enter open   Esc close   PgUp/PgDn page";
         let hint_w = self.text_width(hint, 6) as i32;
         ui.label(hint, x0 + width - 16 - hint_w, footer_y + 9, 6, tokens.dim);

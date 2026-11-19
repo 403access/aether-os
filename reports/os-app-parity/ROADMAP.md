@@ -3,7 +3,7 @@
 Source: `e86b239 Add drag-and-drop tile swapping to split layout` (local design-system/ checkout)
 Visual spec (source vs target, difference register): [`VISUAL-SPEC.md`](VISUAL-SPEC.md).
 
-Aether: `6871570 feat(settings): draw the sidebar chrome and centre the pane`
+Aether: `c563e0c feat(parity): record a debug-only semantic scene tree`
 
 Implemented **17** · partial **15** · missing **0** · out of scope **2** · Aether-only **4**.
 

@@ -9,6 +9,7 @@ use crate::app::overlays::calendar::TITLEBAR_HEIGHT;
 use crate::app::overlays::menubar::WEEKDAY_HEADERS;
 use crate::app::App;
 use crate::render::context::{FrameContext, RenderChunk};
+use crate::{scene_node, scene_text};
 
 const WINDOW_FILL: [u8; 4] = [7, 39, 51, 235];
 const TITLEBAR_FILL: [u8; 4] = [10, 51, 66, 255];
@@ -37,6 +38,13 @@ impl App {
         let agenda = self.calendar_agenda_rect();
 
         // Window body and title bar.
+        let window = scene_node!((), None, "window", rect);
+        let titlebar = scene_node!(
+            (),
+            Some(window),
+            "titlebar",
+            AetherRect::new(rect.x, rect.y, rect.width, TITLEBAR_HEIGHT as u32)
+        );
         let hover = self.pointer_in(rect);
         let effects = self.window_effects(rect, 14, true, hover);
         if let Some(entry) = effects.shadow {
@@ -81,6 +89,20 @@ impl App {
             panels.push((buffer, mark_x, mark_y));
         }
         display_icons.push(("calendar".into(), 13, accent, mark_x + 5, mark_y + 5));
+        scene_text!(
+            (),
+            Some(titlebar),
+            "title",
+            "Calendar",
+            AetherRect::new(
+                mark_x + 31,
+                rect.y + 13,
+                self.text_width("Calendar", 0x100 | 10),
+                22
+            ),
+            0x100 | 10,
+            tokens.text
+        );
         labels.push((
             "Calendar".into(),
             mark_x + 31,
@@ -141,6 +163,22 @@ impl App {
             )
         };
         let content = month.inset(14);
+        let month_node = scene_node!((), Some(window), "month", month);
+        let agenda_node = scene_node!((), Some(window), "agenda", agenda);
+        scene_text!(
+            (),
+            Some(month_node),
+            "month-label",
+            &view_label,
+            AetherRect::new(
+                content.x + 32,
+                content.y + 4,
+                self.text_width(&view_label, 3),
+                24
+            ),
+            3,
+            tokens.text
+        );
         labels.push((view_label, content.x + 32, content.y + 4, 3, tokens.text));
         // Toolbar buttons.
         for (rect, glyph) in [
@@ -155,6 +193,20 @@ impl App {
         {
             panels.push((buffer, today_rect.x, today_rect.y));
         }
+        scene_text!(
+            (),
+            Some(month_node),
+            "today",
+            "Today",
+            AetherRect::new(
+                today_rect.x + 9,
+                today_rect.y + 7,
+                self.text_width("Today", 4),
+                16
+            ),
+            4,
+            tokens.text_soft
+        );
         labels.push((
             "Today".into(),
             today_rect.x + 9,
@@ -168,13 +220,17 @@ impl App {
         let cell_width = grid.width as i32 / 7;
         for (index, name) in WEEKDAY_HEADERS.iter().enumerate() {
             let width = self.text_width(name, 4) as i32;
-            labels.push((
-                name.to_uppercase(),
-                content.x + index as i32 * cell_width + (cell_width - width) / 2,
-                grid.y - 19,
+            let x = content.x + index as i32 * cell_width + (cell_width - width) / 2;
+            scene_text!(
+                (),
+                Some(month_node),
+                "weekday",
+                &name.to_uppercase(),
+                AetherRect::new(x, grid.y - 19, width as u32, 16),
                 4,
-                tokens.dim,
-            ));
+                tokens.dim
+            );
+            labels.push((name.to_uppercase(), x, grid.y - 19, 4, tokens.dim));
         }
 
         // Day cells.
@@ -211,6 +267,21 @@ impl App {
                 };
                 let day = cell.date.day.to_string();
                 let width = self.text_width(&day, 1) as i32;
+                let cell_node = scene_node!((), Some(month_node), "day-cell", cell_rect);
+                scene_text!(
+                    (),
+                    Some(cell_node),
+                    "day",
+                    &day,
+                    AetherRect::new(
+                        cell_rect.x + (cell_rect.width as i32 - width) / 2,
+                        cell_rect.y + (cell_rect.height as i32 - 14) / 2,
+                        width as u32,
+                        16
+                    ),
+                    if cell.today { 0x100 } else { 0 },
+                    color
+                );
                 labels.push((
                     day,
                     cell_rect.x + (cell_rect.width as i32 - width) / 2,
@@ -240,6 +311,20 @@ impl App {
             panels.push((buffer, agenda.x, agenda.y));
         }
         let pad = agenda.inset(14);
+        scene_text!(
+            (),
+            Some(agenda_node),
+            "agenda-date",
+            &selected_label,
+            AetherRect::new(
+                pad.x,
+                pad.y + 2,
+                self.text_width(&selected_label, 0x100),
+                18
+            ),
+            0x100,
+            tokens.text
+        );
         labels.push((selected_label, pad.x, pad.y + 2, 0x100, tokens.text));
         let time_w = self.text_width(&clock_time, 3) as i32;
         labels.push((
@@ -273,6 +358,30 @@ impl App {
             if let Some(buffer) = self.chrome_round(pad.width, 52, 8, EVENT_FILL) {
                 panels.push((buffer, pad.x, top));
             }
+            let event_node = scene_node!(
+                (),
+                Some(agenda_node),
+                "event",
+                AetherRect::new(pad.x, top, pad.width, 52)
+            );
+            scene_text!(
+                (),
+                Some(event_node),
+                "event-title",
+                &event.title,
+                AetherRect::new(pad.x + 49, top + 7, self.text_width(event.title, 0x100), 18),
+                0x100,
+                tokens.text
+            );
+            scene_text!(
+                (),
+                Some(event_node),
+                "event-detail",
+                &event.detail,
+                AetherRect::new(pad.x + 49, top + 24, self.text_width(event.detail, 5), 16),
+                5,
+                tokens.dim
+            );
             labels.push((event.time.into(), pad.x + 9, top + 8, 5, tokens.accent(255)));
             labels.push((event.title.into(), pad.x + 49, top + 7, 0x100, tokens.text));
             labels.push((event.detail.into(), pad.x + 49, top + 24, 5, tokens.dim));

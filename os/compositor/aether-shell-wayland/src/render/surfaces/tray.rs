@@ -9,6 +9,7 @@ use crate::app::tray::TrayId;
 use crate::app::App;
 use crate::render::context::{FrameContext, RenderChunk};
 use crate::render::ui::Ui;
+use crate::{scene_box, scene_text};
 
 const FILL: [u8; 4] = [7, 39, 51, 245];
 const RULE: [u8; 4] = [127, 230, 255, 38];
@@ -21,6 +22,7 @@ impl App {
         let tokens = ctx.tokens;
         let rect = self.tray_rect(tray);
         let mut ui = Ui::default();
+        let tray_node = scene_box!(ui, None, "tray", rect, FILL, 12.0);
         if let Some(buffer) = self.chrome_shadow(rect.width, rect.height, 12, false) {
             ui.panel(Some(buffer), rect.x - 28, rect.y - 28);
         }
@@ -63,9 +65,37 @@ impl App {
             rect.x + 12,
             rect.y + 13,
         );
+        scene_text!(
+            ui,
+            Some(tray_node),
+            "title",
+            tray.title(),
+            AetherRect::new(
+                rect.x + 34,
+                rect.y + 13,
+                self.text_width(tray.title(), 0x100),
+                20
+            ),
+            0x100,
+            tokens.text
+        );
         ui.label(tray.title(), rect.x + 34, rect.y + 13, 0x100, tokens.text);
         if !state.is_empty() {
             let width = self.text_width(state, 0) as i32;
+            scene_text!(
+                ui,
+                Some(tray_node),
+                "state",
+                state,
+                AetherRect::new(
+                    rect.x + rect.width as i32 - 14 - width,
+                    rect.y + 13,
+                    width as u32,
+                    18
+                ),
+                0,
+                tokens.dim
+            );
             ui.label(
                 state,
                 rect.x + rect.width as i32 - 14 - width,
@@ -111,6 +141,20 @@ impl App {
             TrayId::Calendar => "Open Calendar…",
         };
         let width = self.text_width(label, 4) as i32;
+        scene_text!(
+            ui,
+            Some(tray_node),
+            "footer-link",
+            label,
+            AetherRect::new(
+                rect.x + rect.width as i32 - 14 - width,
+                footer_y + 10,
+                width as u32,
+                16
+            ),
+            4,
+            tokens.accent(255)
+        );
         ui.label(
             label,
             rect.x + rect.width as i32 - 14 - width,

@@ -127,30 +127,33 @@ function sourceTexts(scene, rect) {
 }
 
 function aetherTexts(scene, rect) {
-  const texts = [];
-  // Use the semantic node tree when the surface recorded one; otherwise fall
-  // back to the raw labels (client surfaces and uninstrumented panes).
-  const nodes = (scene.nodes ?? []).filter((node) => node.text);
-  if (nodes.length >= 10) {
-    for (const node of nodes) {
-      if (!node.text || node.text.length < 2) continue;
-      if (isDynamic(node.text)) continue;
-      const box = node.rect;
-      if (!inside(box.x + box.w / 2, box.y + box.h / 2, rect)) continue;
-      texts.push({ text: node.text, x: box.x, y: box.y, role: node.role });
-    }
-    return texts;
+  const entries = [];
+  // Semantic nodes first: they carry roles and measured boxes.
+  for (const node of scene.nodes ?? []) {
+    if (!node.text || node.text.length < 2) continue;
+    if (isDynamic(node.text)) continue;
+    const box = node.rect;
+    if (!inside(box.x + box.w / 2, box.y + box.h / 2, rect)) continue;
+    entries.push({ text: node.text, x: box.x, y: box.y, role: node.role });
   }
+  const normalized = (text) => text.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
   for (const label of scene.labels ?? []) {
     if (!label.text || label.text.length < 2) continue;
     if (isDynamic(label.text)) continue;
-    // Labels are anchored at their top-left; text height is roughly 1.6em.
     const cx = label.x + 4;
     const cy = label.y + Math.max(4, (label.px ?? 10) * 0.8);
     if (!inside(cx, cy, rect)) continue;
-    texts.push({ text: label.text, x: label.x, y: label.y, role: "label" });
+    // Keep the raw label only when a node does not already describe it.
+    const duplicate = entries.some(
+      (entry) =>
+        normalized(entry.text) === normalized(label.text) &&
+        Math.abs(entry.x - label.x) + Math.abs(entry.y - label.y) < 20,
+    );
+    if (!duplicate) {
+      entries.push({ text: label.text, x: label.x, y: label.y, role: "label" });
+    }
   }
-  return texts;
+  return entries;
 }
 
 function compareTexts(source, aether) {

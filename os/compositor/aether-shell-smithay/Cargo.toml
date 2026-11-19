@@ -9,6 +9,11 @@ description = "Linux-only Smithay winit backend for the Aether shell (developmen
 # build Smithay. Build with --manifest-path on Linux.
 [workspace]
 
+[features]
+default = []
+# Debug-only scene recording; forwards to the shell crate.
+scene-dump = ["aether-shell-wayland/scene-dump"]
+
 [[bin]]
 name = "aether-shell-smithay"
 path = "src/main.rs"

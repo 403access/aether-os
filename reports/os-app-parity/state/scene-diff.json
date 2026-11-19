@@ -3,8 +3,8 @@
     "surfaces": 28,
     "complete": 2,
     "textRuns": 824,
-    "matched": 455,
-    "coverage": 0.552,
+    "matched": 416,
+    "coverage": 0.505,
     "missingScenes": 0,
     "regressions": 0
   },
@@ -18,6 +18,45 @@
       "matched": 5,
       "coverage": 0.556,
       "baseline": 0.556,
+      "geometry": {
+        "matched": 5,
+        "aligned": 0,
+        "worst": [
+          {
+            "text": "Ocean current",
+            "dx": 24.4,
+            "dy": 74.5,
+            "distance": 98.9
+          },
+          {
+            "text": "Local-first",
+            "dx": 20.1,
+            "dy": 74.5,
+            "distance": 94.6
+          },
+          {
+            "text": "Glass windows",
+            "dx": 15.8,
+            "dy": 74.5,
+            "distance": 90.3
+          },
+          {
+            "text": "Aether OS",
+            "dx": -20.9,
+            "dy": 58,
+            "distance": 78.9
+          },
+          {
+            "text": "About Aether OS",
+            "dx": 31,
+            "dy": 2.5,
+            "distance": 33.5
+          }
+        ]
+      },
+      "roles": [
+        "label"
+      ],
       "missing": [
         "A desktop concept drawn from the Data Cloud Compare design system. Every surface, badge, and control here is a token or component from the gallery.",
         "Open the design system",
@@ -39,9 +78,48 @@
       "source": 57,
       "dynamic": 39,
       "aether": 30,
-      "matched": 13,
-      "coverage": 0.228,
+      "matched": 8,
+      "coverage": 0.14,
       "baseline": 0.228,
+      "geometry": {
+        "matched": 8,
+        "aligned": 1,
+        "worst": [
+          {
+            "text": "Name",
+            "dx": 61,
+            "dy": 19,
+            "distance": 80
+          },
+          {
+            "text": "Search this folder…",
+            "dx": 67,
+            "dy": 11,
+            "distance": 78
+          },
+          {
+            "text": "Read-only snapshot",
+            "dx": 30,
+            "dy": 35.4,
+            "distance": 65.4
+          },
+          {
+            "text": "Hidden",
+            "dx": -55.3,
+            "dy": 2.6,
+            "distance": 57.9
+          },
+          {
+            "text": "Size",
+            "dx": -9.6,
+            "dy": 19,
+            "distance": 28.6
+          }
+        ]
+      },
+      "roles": [
+        "label"
+      ],
       "missing": [
         "/mnt/tank",
         "Local",
@@ -50,6 +128,7 @@
         "_LikedSongs",
         "_order_me",
         "_Sounds_Videos_Unsorted",
+        "Audio",
         "Authenticator - Google",
         "Backup-C",
         "Benedikt Pilz",
@@ -58,6 +137,8 @@
         "Bonuz",
         "Files come from the local index. Nothing is written.",
         "/mnt/tank",
+        "Type",
+        "Modified",
         "_LikedSongs",
         "Folder",
         "Folder",
@@ -84,7 +165,9 @@
         "Projects",
         "Folder",
         "CHANGELOG.md",
+        "MD",
         "package.json",
+        "JSON",
         "Select an item to see details.",
         "Open in Data Cloud Compare"
       ],
@@ -99,13 +182,18 @@
         "/notes",
         "Everywhere",
         "Filter",
+        "Type",
+        "Modified",
         "alpha.md",
+        "MD",
         "beta.txt",
         "TXT",
         "gamma.json",
+        "JSON",
         "Enter open   Esc close   PgUp/PgDn page",
         "alpha.md",
-        "/caps/system-fixture/notes/alpha.md"
+        "/caps/system-fixture/notes/alpha.md",
+        "audio -"
       ]
     },
     {
@@ -114,9 +202,48 @@
       "source": 22,
       "dynamic": 15,
       "aether": 18,
-      "matched": 15,
-      "coverage": 0.682,
+      "matched": 8,
+      "coverage": 0.364,
       "baseline": 0.682,
+      "geometry": {
+        "matched": 8,
+        "aligned": 2,
+        "worst": [
+          {
+            "text": "VPN",
+            "dx": 6,
+            "dy": 23.4,
+            "distance": 29.4
+          },
+          {
+            "text": "Route traffic through the archive gateway.",
+            "dx": 6,
+            "dy": 20.2,
+            "distance": 26.2
+          },
+          {
+            "text": "Wi-Fi",
+            "dx": 6,
+            "dy": 17.2,
+            "distance": 23.2
+          },
+          {
+            "text": "Discover and join nearby networks.",
+            "dx": 6,
+            "dy": 13.9,
+            "distance": 19.9
+          },
+          {
+            "text": "Networks",
+            "dx": 4,
+            "dy": 13.7,
+            "distance": 17.7
+          }
+        ]
+      },
+      "roles": [
+        "label"
+      ],
       "missing": [
         "Known",
         "Lighthouse",
@@ -124,12 +251,26 @@
         "Tidepool Guest",
         "Nearby",
         "Old Pier",
-        "Nearby"
+        "Nearby",
+        "Details",
+        "IP address",
+        "Router",
+        "DNS",
+        "MAC address",
+        "Band",
+        "Security"
       ],
       "extra": [
         "Ethernet · up",
         "Ethernet · up",
-        "Connected"
+        "Connected",
+        "DETAILS",
+        "IP address",
+        "Router",
+        "DNS",
+        "MAC address",
+        "Band",
+        "Security"
       ]
     },
     {
@@ -138,12 +279,54 @@
       "source": 25,
       "dynamic": 9,
       "aether": 24,
-      "matched": 17,
-      "coverage": 0.68,
+      "matched": 14,
+      "coverage": 0.56,
       "baseline": 0.68,
+      "geometry": {
+        "matched": 14,
+        "aligned": 1,
+        "worst": [
+          {
+            "text": "Low power",
+            "dx": 2,
+            "dy": 68.6,
+            "distance": 70.6
+          },
+          {
+            "text": "Optimised charging",
+            "dx": 6,
+            "dy": 40.8,
+            "distance": 46.8
+          },
+          {
+            "text": "Finish charging closer to when you unplug.",
+            "dx": 6,
+            "dy": 37.6,
+            "distance": 43.6
+          },
+          {
+            "text": "Condition",
+            "dx": 6,
+            "dy": 37.5,
+            "distance": 43.5
+          },
+          {
+            "text": "Maximum capacity",
+            "dx": 6,
+            "dy": 36.2,
+            "distance": 42.2
+          }
+        ]
+      },
+      "roles": [
+        "label"
+      ],
       "missing": [
         "On battery",
         "Battery",
+        "Balanced",
+        "High performance",
+        "Low power mode",
         "Normal",
         "Not charging",
         "Data Cloud Compare",
@@ -155,10 +338,13 @@
         "AC power",
         "On AC power",
         "No battery detected on this machine.",
+        "Low power",
+        "Balanced",
+        "High performance",
         "aether-shell-sm",
         "Xvfb",
-        "bash",
-        "sleep"
+        "sleep",
+        "bash"
       ]
     },
     {
@@ -170,6 +356,45 @@
       "matched": 7,
       "coverage": 0.333,
       "baseline": 0.333,
+      "geometry": {
+        "matched": 7,
+        "aligned": 2,
+        "worst": [
+          {
+            "text": "Discoverable",
+            "dx": 6,
+            "dy": 23.4,
+            "distance": 29.4
+          },
+          {
+            "text": "Bluetooth",
+            "dx": 6,
+            "dy": 17.2,
+            "distance": 23.2
+          },
+          {
+            "text": "Bluetooth",
+            "dx": 13,
+            "dy": 9,
+            "distance": 22
+          },
+          {
+            "text": "Find and connect wireless accessories.",
+            "dx": 6,
+            "dy": 13.9,
+            "distance": 19.9
+          },
+          {
+            "text": "Paired devices",
+            "dx": 6,
+            "dy": 13.7,
+            "distance": 19.7
+          }
+        ]
+      },
+      "roles": [
+        "label"
+      ],
       "missing": [
         "Let nearby devices find this Mac.",
         "Tide Mouse",
@@ -202,6 +427,33 @@
       "matched": 3,
       "coverage": 1,
       "baseline": 1,
+      "geometry": {
+        "matched": 3,
+        "aligned": 1,
+        "worst": [
+          {
+            "text": "Deep Current",
+            "dx": 8,
+            "dy": 15.1,
+            "distance": 23.1
+          },
+          {
+            "text": "Aether OS Sessions",
+            "dx": 8,
+            "dy": 13.7,
+            "distance": 21.7
+          },
+          {
+            "text": "Tide Radio",
+            "dx": 0,
+            "dy": 2.5,
+            "distance": 2.5
+          }
+        ]
+      },
+      "roles": [
+        "label"
+      ],
       "missing": [],
       "extra": [
         "Deep Current · live stream",
@@ -217,6 +469,45 @@
       "matched": 12,
       "coverage": 1,
       "baseline": 1,
+      "geometry": {
+        "matched": 12,
+        "aligned": 2,
+        "worst": [
+          {
+            "text": "Fri",
+            "dx": 43.6,
+            "dy": 0,
+            "distance": 43.6
+          },
+          {
+            "text": "Sun",
+            "dx": 43,
+            "dy": 0,
+            "distance": 43
+          },
+          {
+            "text": "Tue",
+            "dx": 42.1,
+            "dy": 0,
+            "distance": 42.1
+          },
+          {
+            "text": "Mon",
+            "dx": 41.5,
+            "dy": 0,
+            "distance": 41.5
+          },
+          {
+            "text": "Thu",
+            "dx": 41.1,
+            "dy": 0,
+            "distance": 41.1
+          }
+        ]
+      },
+      "roles": [
+        "label"
+      ],
       "missing": [],
       "extra": []
     },
@@ -226,16 +517,39 @@
       "source": 49,
       "dynamic": 40,
       "aether": 47,
-      "matched": 4,
-      "coverage": 0.082,
+      "matched": 2,
+      "coverage": 0.041,
       "baseline": 0.082,
+      "geometry": {
+        "matched": 2,
+        "aligned": 2,
+        "worst": [
+          {
+            "text": "Processes and resources",
+            "dx": 0.4,
+            "dy": 2.5,
+            "distance": 2.9
+          },
+          {
+            "text": "Task Manager",
+            "dx": 0,
+            "dy": 2.5,
+            "distance": 2.5
+          }
+        ]
+      },
+      "roles": [
+        "label"
+      ],
       "missing": [
         "Live",
+        "CPU",
         "Memory",
         "Storage",
         "Usage over time",
         "CPU",
         "Memory",
+        "Processes",
         "Sample",
         "Display",
         "All",
@@ -277,11 +591,13 @@
         "End task"
       ],
       "extra": [
+        "Processes",
         "Users",
         "Resources",
         "Processes",
         "PID",
         "USER",
+        "CPU",
         "MEM",
         "STATE",
         "COMMAND",
@@ -330,7 +646,59 @@
       "aether": 41,
       "matched": 32,
       "coverage": 0.727,
-      "baseline": 0.568,
+      "baseline": 0.727,
+      "geometry": {
+        "matched": 32,
+        "aligned": 7,
+        "worst": [
+          {
+            "text": "Region",
+            "dx": 1,
+            "dy": -95.1,
+            "distance": 96.1
+          },
+          {
+            "text": "Language & Region",
+            "dx": 13,
+            "dy": -77.6,
+            "distance": 90.6
+          },
+          {
+            "text": "Language",
+            "dx": 1,
+            "dy": -81.2,
+            "distance": 82.2
+          },
+          {
+            "text": "Software Update",
+            "dx": 13,
+            "dy": -53.2,
+            "distance": 66.2
+          },
+          {
+            "text": "Automatic updates",
+            "dx": 1,
+            "dy": -56.8,
+            "distance": 57.8
+          }
+        ]
+      },
+      "roles": [
+        "avatar-initials",
+        "build",
+        "name",
+        "nav-group",
+        "pane-subtitle",
+        "pane-title",
+        "placeholder",
+        "role",
+        "row-label",
+        "row-value",
+        "section",
+        "subtitle",
+        "tab-label",
+        "title"
+      ],
       "missing": [
         "Demo device",
         "Concept build · Water design system",
@@ -363,14 +731,68 @@
       "source": 48,
       "dynamic": 2,
       "aether": 39,
-      "matched": 29,
-      "coverage": 0.604,
-      "baseline": 0.458,
+      "matched": 25,
+      "coverage": 0.521,
+      "baseline": 0.604,
+      "geometry": {
+        "matched": 25,
+        "aligned": 7,
+        "worst": [
+          {
+            "text": "Theme",
+            "dx": 13,
+            "dy": 43,
+            "distance": 56
+          },
+          {
+            "text": "Water effects",
+            "dx": 13,
+            "dy": -23,
+            "distance": 36
+          },
+          {
+            "text": "OM",
+            "dx": 6,
+            "dy": 4.8,
+            "distance": 10.8
+          },
+          {
+            "text": "Search settings",
+            "dx": 6,
+            "dy": 2,
+            "distance": 8
+          },
+          {
+            "text": "Connectivity",
+            "dx": 0,
+            "dy": -6.7,
+            "distance": 6.7
+          }
+        ]
+      },
+      "roles": [
+        "avatar-initials",
+        "build",
+        "name",
+        "nav-group",
+        "pane-subtitle",
+        "pane-title",
+        "placeholder",
+        "role",
+        "row-label",
+        "row-value",
+        "section",
+        "subtitle",
+        "tab-label",
+        "title"
+      ],
       "missing": [
+        "Appearance",
         "Demo device",
         "System",
         "Light",
         "Dark",
+        "Water",
         "Water effects are active. Drips follow your cursor.",
         "Water effects",
         "Master switch for ripples, shimmer, and window waves.",
@@ -378,25 +800,31 @@
         "Small, soft rings trail your pointer.",
         "Ripples on click",
         "Clicking sends one larger ring outward.",
+        "Caustic shimmer",
         "Slow light patterns drift behind the app.",
         "Animated row highlights",
         "Hover and selection colours flow between states.",
         "Window waves",
         "A liquid rim around active windows and the command bar.",
         "Current",
+        "Flow speed",
         "How quickly the water moves.",
         "Drip energy"
       ],
       "extra": [
         "General",
         "Build dev",
+        "Appearance",
+        "Water",
         "Reduce motion",
         "Effects",
         "Cursor drips",
+        "Caustic shimmer",
         "Glass surfaces",
-        "LOOK",
+        "Look",
         "Water tone",
         "Ocean",
+        "Flow speed",
         "Flowing"
       ]
     },
@@ -406,15 +834,67 @@
       "source": 42,
       "dynamic": 5,
       "aether": 30,
-      "matched": 24,
-      "coverage": 0.571,
-      "baseline": 0.405,
+      "matched": 23,
+      "coverage": 0.548,
+      "baseline": 0.571,
+      "geometry": {
+        "matched": 23,
+        "aligned": 7,
+        "worst": [
+          {
+            "text": "OM",
+            "dx": 6,
+            "dy": 4.8,
+            "distance": 10.8
+          },
+          {
+            "text": "Search settings",
+            "dx": 6,
+            "dy": 2,
+            "distance": 8
+          },
+          {
+            "text": "Connectivity",
+            "dx": 0,
+            "dy": -6.7,
+            "distance": 6.7
+          },
+          {
+            "text": "Power & privacy",
+            "dx": 0,
+            "dy": -6.3,
+            "distance": 6.3
+          },
+          {
+            "text": "Storage",
+            "dx": 0,
+            "dy": -6.3,
+            "distance": 6.3
+          }
+        ]
+      },
+      "roles": [
+        "avatar-initials",
+        "build",
+        "name",
+        "nav-group",
+        "pane-subtitle",
+        "pane-title",
+        "placeholder",
+        "role",
+        "row-label",
+        "section",
+        "subtitle",
+        "tab-label",
+        "title"
+      ],
       "missing": [
-        "Demo device",
         "Displays",
+        "Demo device",
         "Aether Display",
         "Brightness",
         "Adjust the built-in display.",
+        "Resolution",
         "Choose more space or larger text.",
         "Default",
         "More space",
@@ -432,8 +912,9 @@
       "extra": [
         "General",
         "Build dev",
-        "DISPLAY",
+        "Display",
         "Output",
+        "Resolution",
         "Refresh rate",
         "Scale"
       ]
@@ -444,10 +925,63 @@
       "source": 46,
       "dynamic": 3,
       "aether": 36,
-      "matched": 26,
-      "coverage": 0.565,
-      "baseline": 0.413,
+      "matched": 24,
+      "coverage": 0.522,
+      "baseline": 0.565,
+      "geometry": {
+        "matched": 24,
+        "aligned": 7,
+        "worst": [
+          {
+            "text": "Show dock",
+            "dx": 1,
+            "dy": -81.4,
+            "distance": 82.4
+          },
+          {
+            "text": "OM",
+            "dx": 6,
+            "dy": 4.8,
+            "distance": 10.8
+          },
+          {
+            "text": "Search settings",
+            "dx": 6,
+            "dy": 2,
+            "distance": 8
+          },
+          {
+            "text": "Connectivity",
+            "dx": 0,
+            "dy": -6.7,
+            "distance": 6.7
+          },
+          {
+            "text": "Power & privacy",
+            "dx": 0,
+            "dy": -6.3,
+            "distance": 6.3
+          }
+        ]
+      },
+      "roles": [
+        "avatar-initials",
+        "build",
+        "name",
+        "nav-group",
+        "pane-subtitle",
+        "pane-title",
+        "placeholder",
+        "role",
+        "row-label",
+        "row-value",
+        "section",
+        "subtitle",
+        "tab-label",
+        "title"
+      ],
       "missing": [
+        "Desktop & Dock",
         "Demo device",
         "Windows",
         "Window layout",
@@ -456,6 +990,7 @@
         "Keep recent windows in a strip beside the active app.",
         "Dock",
         "Display the application dock on the desktop.",
+        "Size",
         "Scale the dock icons.",
         "Magnification",
         "Enlarge icons as the pointer passes.",
@@ -472,12 +1007,14 @@
       "extra": [
         "General",
         "Build dev",
+        "Desktop & Dock",
         "Position",
         "Bottom",
+        "Size",
         "Running indicators",
         "Workspaces",
         "Keyboard and palette",
-        "MENU BAR",
+        "Menu bar",
         "Meters",
         "CPU · RAM · storage"
       ]
@@ -488,12 +1025,64 @@
       "source": 47,
       "dynamic": 3,
       "aether": 35,
-      "matched": 26,
-      "coverage": 0.553,
-      "baseline": 0.404,
+      "matched": 24,
+      "coverage": 0.511,
+      "baseline": 0.553,
+      "geometry": {
+        "matched": 24,
+        "aligned": 7,
+        "worst": [
+          {
+            "text": "Command palette",
+            "dx": 13,
+            "dy": 9,
+            "distance": 22
+          },
+          {
+            "text": "OM",
+            "dx": 6,
+            "dy": 4.8,
+            "distance": 10.8
+          },
+          {
+            "text": "Search settings",
+            "dx": 6,
+            "dy": 2,
+            "distance": 8
+          },
+          {
+            "text": "Connectivity",
+            "dx": 0,
+            "dy": -6.7,
+            "distance": 6.7
+          },
+          {
+            "text": "Power & privacy",
+            "dx": 0,
+            "dy": -6.3,
+            "distance": 6.3
+          }
+        ]
+      },
+      "roles": [
+        "avatar-initials",
+        "build",
+        "name",
+        "nav-group",
+        "pane-subtitle",
+        "pane-title",
+        "placeholder",
+        "role",
+        "row-label",
+        "row-value",
+        "section",
+        "subtitle",
+        "tab-label",
+        "title"
+      ],
       "missing": [
-        "Demo device",
         "Search & Commands",
+        "Demo device",
         "Show commands",
         "Navigation, view, appearance, and system actions.",
         "Search local files",
@@ -506,12 +1095,14 @@
         "Hide navigation actions that cannot run in this view.",
         "Command groups",
         "Navigation",
+        "Search",
         "View",
         "Columns",
         "Sort",
         "Filters",
         "Appearance",
         "System",
+        "Provider",
         "Reset command palette"
       ],
       "extra": [
@@ -522,6 +1113,8 @@
         "Prefix · commands",
         "Prefix · agents",
         "Prefix · files",
+        "Search",
+        "Provider",
         "aether-index",
         "Ranking"
       ]
@@ -532,17 +1125,70 @@
       "source": 46,
       "dynamic": 3,
       "aether": 34,
-      "matched": 26,
-      "coverage": 0.565,
-      "baseline": 0.413,
+      "matched": 25,
+      "coverage": 0.543,
+      "baseline": 0.565,
+      "geometry": {
+        "matched": 25,
+        "aligned": 7,
+        "worst": [
+          {
+            "text": "Vision",
+            "dx": 13,
+            "dy": 91,
+            "distance": 104
+          },
+          {
+            "text": "Text size",
+            "dx": 1,
+            "dy": 87.4,
+            "distance": 88.4
+          },
+          {
+            "text": "OM",
+            "dx": 6,
+            "dy": 4.8,
+            "distance": 10.8
+          },
+          {
+            "text": "Search settings",
+            "dx": 6,
+            "dy": 2,
+            "distance": 8
+          },
+          {
+            "text": "Connectivity",
+            "dx": 0,
+            "dy": -6.7,
+            "distance": 6.7
+          }
+        ]
+      },
+      "roles": [
+        "avatar-initials",
+        "build",
+        "name",
+        "nav-group",
+        "pane-subtitle",
+        "pane-title",
+        "placeholder",
+        "role",
+        "row-label",
+        "row-value",
+        "section",
+        "subtitle",
+        "tab-label",
+        "title"
+      ],
       "missing": [
-        "Demo device",
         "Accessibility",
+        "Demo device",
         "Scale the desktop and every app.",
         "Increase contrast",
         "Strengthen borders and secondary text.",
         "Reduce transparency",
         "Replace frosted panes with solid surfaces.",
+        "Reduce motion",
         "Turn off window waves and animated transitions.",
         "Hearing",
         "Play stereo audio as mono",
@@ -560,7 +1206,8 @@
       "extra": [
         "General",
         "Build dev",
-        "MOTION",
+        "Motion",
+        "Reduce motion",
         "Comfortable",
         "Focus ring",
         "Accent",
@@ -574,10 +1221,62 @@
       "source": 45,
       "dynamic": 16,
       "aether": 31,
-      "matched": 28,
-      "coverage": 0.622,
-      "baseline": 0.467,
+      "matched": 23,
+      "coverage": 0.511,
+      "baseline": 0.622,
+      "geometry": {
+        "matched": 23,
+        "aligned": 7,
+        "worst": [
+          {
+            "text": "OM",
+            "dx": 6,
+            "dy": 4.8,
+            "distance": 10.8
+          },
+          {
+            "text": "Search settings",
+            "dx": 6,
+            "dy": 2,
+            "distance": 8
+          },
+          {
+            "text": "Connectivity",
+            "dx": 0,
+            "dy": -6.7,
+            "distance": 6.7
+          },
+          {
+            "text": "Power & privacy",
+            "dx": 0,
+            "dy": -6.3,
+            "distance": 6.3
+          },
+          {
+            "text": "Storage",
+            "dx": 0,
+            "dy": -6.3,
+            "distance": 6.3
+          }
+        ]
+      },
+      "roles": [
+        "avatar-initials",
+        "build",
+        "name",
+        "nav-group",
+        "pane-subtitle",
+        "pane-title",
+        "placeholder",
+        "role",
+        "row-label",
+        "section",
+        "subtitle",
+        "tab-label",
+        "title"
+      ],
       "missing": [
+        "Network",
         "Demo device",
         "Connection",
         "Connected",
@@ -594,12 +1293,21 @@
         "Old Pier",
         "Nearby",
         "Details",
+        "IP address",
+        "Router",
+        "DNS",
+        "MAC address",
         "Band"
       ],
       "extra": [
         "General",
         "Build dev",
-        "Interface"
+        "Network",
+        "Interface",
+        "MAC address",
+        "IP address",
+        "Router",
+        "DNS"
       ]
     },
     {
@@ -610,10 +1318,62 @@
       "aether": 30,
       "matched": 25,
       "coverage": 0.641,
-      "baseline": 0.462,
+      "baseline": 0.641,
+      "geometry": {
+        "matched": 25,
+        "aligned": 7,
+        "worst": [
+          {
+            "text": "Bluetooth",
+            "dx": 13,
+            "dy": 9,
+            "distance": 22
+          },
+          {
+            "text": "OM",
+            "dx": 6,
+            "dy": 4.8,
+            "distance": 10.8
+          },
+          {
+            "text": "Discoverable",
+            "dx": 1,
+            "dy": -8.5,
+            "distance": 9.5
+          },
+          {
+            "text": "Search settings",
+            "dx": 6,
+            "dy": 2,
+            "distance": 8
+          },
+          {
+            "text": "Connectivity",
+            "dx": 0,
+            "dy": -6.7,
+            "distance": 6.7
+          }
+        ]
+      },
+      "roles": [
+        "avatar-initials",
+        "build",
+        "name",
+        "nav-group",
+        "pane-subtitle",
+        "pane-title",
+        "placeholder",
+        "role",
+        "row-label",
+        "row-value",
+        "section",
+        "subtitle",
+        "tab-label",
+        "title"
+      ],
       "missing": [
-        "Demo device",
         "Bluetooth",
+        "Demo device",
         "Bluetooth",
         "Let nearby devices find this Mac.",
         "My devices",
@@ -641,10 +1401,63 @@
       "source": 37,
       "dynamic": 3,
       "aether": 32,
-      "matched": 25,
-      "coverage": 0.676,
-      "baseline": 0.486,
+      "matched": 24,
+      "coverage": 0.649,
+      "baseline": 0.676,
+      "geometry": {
+        "matched": 24,
+        "aligned": 7,
+        "worst": [
+          {
+            "text": "Output",
+            "dx": 13,
+            "dy": 43,
+            "distance": 56
+          },
+          {
+            "text": "OM",
+            "dx": 6,
+            "dy": 4.8,
+            "distance": 10.8
+          },
+          {
+            "text": "Search settings",
+            "dx": 6,
+            "dy": 2,
+            "distance": 8
+          },
+          {
+            "text": "Connectivity",
+            "dx": 0,
+            "dy": -6.7,
+            "distance": 6.7
+          },
+          {
+            "text": "Power & privacy",
+            "dx": 0,
+            "dy": -6.3,
+            "distance": 6.3
+          }
+        ]
+      },
+      "roles": [
+        "avatar-initials",
+        "build",
+        "name",
+        "nav-group",
+        "pane-subtitle",
+        "pane-title",
+        "placeholder",
+        "role",
+        "row-label",
+        "row-value",
+        "section",
+        "subtitle",
+        "tab-label",
+        "title"
+      ],
       "missing": [
+        "Sound",
         "Demo device",
         "Output device",
         "Where sound should play.",
@@ -661,6 +1474,7 @@
       "extra": [
         "General",
         "Build dev",
+        "Sound",
         "audio -",
         "Presets",
         "Studio · Hall · Deep",
@@ -674,20 +1488,74 @@
       "source": 42,
       "dynamic": 7,
       "aether": 31,
-      "matched": 26,
-      "coverage": 0.619,
-      "baseline": 0.452,
+      "matched": 24,
+      "coverage": 0.571,
+      "baseline": 0.619,
+      "geometry": {
+        "matched": 24,
+        "aligned": 7,
+        "worst": [
+          {
+            "text": "Battery",
+            "dx": -67.9,
+            "dy": -3,
+            "distance": 70.9
+          },
+          {
+            "text": "OM",
+            "dx": 6,
+            "dy": 4.8,
+            "distance": 10.8
+          },
+          {
+            "text": "Search settings",
+            "dx": 6,
+            "dy": 2,
+            "distance": 8
+          },
+          {
+            "text": "Connectivity",
+            "dx": 0,
+            "dy": -6.7,
+            "distance": 6.7
+          },
+          {
+            "text": "Power & privacy",
+            "dx": 0,
+            "dy": -6.3,
+            "distance": 6.3
+          }
+        ]
+      },
+      "roles": [
+        "avatar-initials",
+        "build",
+        "name",
+        "nav-group",
+        "pane-subtitle",
+        "pane-title",
+        "placeholder",
+        "role",
+        "row-label",
+        "row-value",
+        "section",
+        "subtitle",
+        "tab-label",
+        "title"
+      ],
       "missing": [
-        "Demo device",
         "Battery",
+        "Demo device",
         "Energy",
         "Low power",
+        "Balanced",
         "High performance",
         "Low power mode",
         "Reduce background activity when unplugged.",
         "Optimised charging",
         "Finish charging closer to when you unplug.",
         "Battery health",
+        "Condition",
         "Normal",
         "Maximum capacity",
         "Cycle count",
@@ -700,7 +1568,9 @@
         "Build dev",
         "Charge",
         "AC power",
-        "Energy mode"
+        "Condition",
+        "Energy mode",
+        "Balanced"
       ]
     },
     {
@@ -711,10 +1581,62 @@
       "aether": 37,
       "matched": 31,
       "coverage": 0.795,
-      "baseline": 0.615,
+      "baseline": 0.795,
+      "geometry": {
+        "matched": 31,
+        "aligned": 7,
+        "worst": [
+          {
+            "text": "Calendar",
+            "dx": 1,
+            "dy": -60.7,
+            "distance": 61.7
+          },
+          {
+            "text": "Tide Radio",
+            "dx": 1,
+            "dy": -46.8,
+            "distance": 47.8
+          },
+          {
+            "text": "Application notifications",
+            "dx": 13,
+            "dy": -29.3,
+            "distance": 42.3
+          },
+          {
+            "text": "Data Cloud Compare",
+            "dx": 1,
+            "dy": -32.9,
+            "distance": 33.9
+          },
+          {
+            "text": "Do Not Disturb",
+            "dx": 1,
+            "dy": -22.4,
+            "distance": 23.4
+          }
+        ]
+      },
+      "roles": [
+        "avatar-initials",
+        "build",
+        "name",
+        "nav-group",
+        "pane-subtitle",
+        "pane-title",
+        "placeholder",
+        "role",
+        "row-label",
+        "row-value",
+        "section",
+        "subtitle",
+        "tab-label",
+        "title"
+      ],
       "missing": [
+        "Notifications",
         "Demo device",
-        "Allow notifications",
         "Show banners and alerts from apps.",
         "What appears before you unlock the screen.",
         "Silence all notifications until turned off.",
@@ -737,10 +1659,63 @@
       "source": 47,
       "dynamic": 4,
       "aether": 32,
-      "matched": 24,
-      "coverage": 0.511,
-      "baseline": 0.362,
+      "matched": 23,
+      "coverage": 0.489,
+      "baseline": 0.511,
+      "geometry": {
+        "matched": 23,
+        "aligned": 7,
+        "worst": [
+          {
+            "text": "OM",
+            "dx": 6,
+            "dy": 4.8,
+            "distance": 10.8
+          },
+          {
+            "text": "Search settings",
+            "dx": 6,
+            "dy": 2,
+            "distance": 8
+          },
+          {
+            "text": "Connectivity",
+            "dx": 0,
+            "dy": -6.7,
+            "distance": 6.7
+          },
+          {
+            "text": "Power & privacy",
+            "dx": 0,
+            "dy": -6.3,
+            "distance": 6.3
+          },
+          {
+            "text": "Storage",
+            "dx": 0,
+            "dy": -6.3,
+            "distance": 6.3
+          }
+        ]
+      },
+      "roles": [
+        "avatar-initials",
+        "build",
+        "name",
+        "nav-group",
+        "pane-subtitle",
+        "pane-title",
+        "placeholder",
+        "role",
+        "row-label",
+        "row-value",
+        "section",
+        "subtitle",
+        "tab-label",
+        "title"
+      ],
       "missing": [
+        "Privacy & Security",
         "Demo device",
         "Security",
         "FileVault",
@@ -768,6 +1743,7 @@
       "extra": [
         "General",
         "Build dev",
+        "Privacy & Security",
         "Agent isolation",
         "Landlock · seccomp",
         "Telemetry",
@@ -782,10 +1758,63 @@
       "source": 38,
       "dynamic": 9,
       "aether": 31,
-      "matched": 25,
-      "coverage": 0.658,
-      "baseline": 0.474,
+      "matched": 24,
+      "coverage": 0.632,
+      "baseline": 0.658,
+      "geometry": {
+        "matched": 24,
+        "aligned": 7,
+        "worst": [
+          {
+            "text": "Free space",
+            "dx": -13,
+            "dy": -57.2,
+            "distance": 70.2
+          },
+          {
+            "text": "OM",
+            "dx": 6,
+            "dy": 4.8,
+            "distance": 10.8
+          },
+          {
+            "text": "Search settings",
+            "dx": 6,
+            "dy": 2,
+            "distance": 8
+          },
+          {
+            "text": "Connectivity",
+            "dx": 0,
+            "dy": -6.7,
+            "distance": 6.7
+          },
+          {
+            "text": "Power & privacy",
+            "dx": 0,
+            "dy": -6.3,
+            "distance": 6.3
+          }
+        ]
+      },
+      "roles": [
+        "avatar-initials",
+        "build",
+        "name",
+        "nav-group",
+        "pane-subtitle",
+        "pane-title",
+        "placeholder",
+        "role",
+        "row-label",
+        "row-value",
+        "section",
+        "subtitle",
+        "tab-label",
+        "title"
+      ],
       "missing": [
+        "Storage",
         "Demo device",
         "Macintosh HD",
         "Archive snapshots",
@@ -803,6 +1832,7 @@
       "extra": [
         "General",
         "Build dev",
+        "Storage",
         "Root filesystem",
         "XFS",
         "Index",
@@ -818,6 +1848,45 @@
       "matched": 9,
       "coverage": 0.9,
       "baseline": 0.9,
+      "geometry": {
+        "matched": 9,
+        "aligned": 1,
+        "worst": [
+          {
+            "text": "View",
+            "dx": -18.8,
+            "dy": 5.5,
+            "distance": 24.3
+          },
+          {
+            "text": "File",
+            "dx": -18.5,
+            "dy": 5.5,
+            "distance": 24
+          },
+          {
+            "text": "Go",
+            "dx": -18.2,
+            "dy": 5.5,
+            "distance": 23.7
+          },
+          {
+            "text": "Window",
+            "dx": -18.2,
+            "dy": 5.5,
+            "distance": 23.7
+          },
+          {
+            "text": "Help",
+            "dx": -17.7,
+            "dy": 5.5,
+            "distance": 23.2
+          }
+        ]
+      },
+      "roles": [
+        "label"
+      ],
       "missing": [
         "Desktop"
       ],
@@ -834,6 +1903,45 @@
       "matched": 5,
       "coverage": 0.5,
       "baseline": 0.5,
+      "geometry": {
+        "matched": 5,
+        "aligned": 0,
+        "worst": [
+          {
+            "text": "Help",
+            "dx": 15.3,
+            "dy": 5.5,
+            "distance": 20.8
+          },
+          {
+            "text": "Go",
+            "dx": 14.8,
+            "dy": 5.5,
+            "distance": 20.3
+          },
+          {
+            "text": "Window",
+            "dx": 14.8,
+            "dy": 5.5,
+            "distance": 20.3
+          },
+          {
+            "text": "File",
+            "dx": 14.5,
+            "dy": 5.5,
+            "distance": 20
+          },
+          {
+            "text": "View",
+            "dx": 14.2,
+            "dy": 5.5,
+            "distance": 19.7
+          }
+        ]
+      },
+      "roles": [
+        "label"
+      ],
       "missing": [
         "New Explorer window",
         "New Data Cloud Compare window",
@@ -855,17 +1963,52 @@
       "source": 10,
       "dynamic": 7,
       "aether": 9,
-      "matched": 5,
-      "coverage": 0.5,
+      "matched": 4,
+      "coverage": 0.4,
       "baseline": 0.5,
+      "geometry": {
+        "matched": 4,
+        "aligned": 1,
+        "worst": [
+          {
+            "text": "Network Settings…",
+            "dx": 31.4,
+            "dy": 6.3,
+            "distance": 37.699999999999996
+          },
+          {
+            "text": "Known networks",
+            "dx": 3.3,
+            "dy": -17.3,
+            "distance": 20.6
+          },
+          {
+            "text": "Connected",
+            "dx": 3.3,
+            "dy": -5.8,
+            "distance": 9.1
+          },
+          {
+            "text": "Wi-Fi",
+            "dx": -0.7,
+            "dy": 0.9,
+            "distance": 1.6
+          }
+        ]
+      },
+      "roles": [
+        "label"
+      ],
       "missing": [
         "Connected",
         "Known",
         "Lighthouse",
         "Known",
-        "VPN"
+        "VPN",
+        "Off"
       ],
       "extra": [
+        "Off",
         "Wi-Fi",
         "Off",
         "Ethernet · up",
@@ -881,6 +2024,33 @@
       "matched": 3,
       "coverage": 0.429,
       "baseline": 0.429,
+      "geometry": {
+        "matched": 3,
+        "aligned": 1,
+        "worst": [
+          {
+            "text": "Bluetooth Settings…",
+            "dx": 34.2,
+            "dy": 6.8,
+            "distance": 41
+          },
+          {
+            "text": "Bluetooth",
+            "dx": -2.7,
+            "dy": 3.9,
+            "distance": 6.6
+          },
+          {
+            "text": "Bluetooth",
+            "dx": -0.7,
+            "dy": 0.9,
+            "distance": 1.6
+          }
+        ]
+      },
+      "roles": [
+        "label"
+      ],
       "missing": [
         "Connected",
         "Tide Mouse",
@@ -903,6 +2073,45 @@
       "matched": 6,
       "coverage": 0.6,
       "baseline": 0.6,
+      "geometry": {
+        "matched": 6,
+        "aligned": 1,
+        "worst": [
+          {
+            "text": "Battery Settings…",
+            "dx": 32.1,
+            "dy": 6.2,
+            "distance": 38.300000000000004
+          },
+          {
+            "text": "Energy mode",
+            "dx": 3.3,
+            "dy": 14.5,
+            "distance": 17.8
+          },
+          {
+            "text": "Low",
+            "dx": 7.3,
+            "dy": 7.9,
+            "distance": 15.2
+          },
+          {
+            "text": "Balanced",
+            "dx": 7.3,
+            "dy": 7.9,
+            "distance": 15.2
+          },
+          {
+            "text": "High",
+            "dx": 7.3,
+            "dy": 7.9,
+            "distance": 15.2
+          }
+        ]
+      },
+      "roles": [
+        "label"
+      ],
       "missing": [
         "On battery",
         "Low power mode",
@@ -921,20 +2130,43 @@
       "source": 10,
       "dynamic": 2,
       "aether": 6,
-      "matched": 3,
-      "coverage": 0.3,
+      "matched": 2,
+      "coverage": 0.2,
       "baseline": 0.3,
+      "geometry": {
+        "matched": 2,
+        "aligned": 1,
+        "worst": [
+          {
+            "text": "Harbour Speakers",
+            "dx": -3.7,
+            "dy": 38.4,
+            "distance": 42.1
+          },
+          {
+            "text": "Sound",
+            "dx": -0.7,
+            "dy": 0.9,
+            "distance": 1.6
+          }
+        ]
+      },
+      "roles": [
+        "label"
+      ],
       "missing": [
+        "Harbour Speakers",
         "Now playing",
         "Deep Current",
-        "Harbour Speakers",
         "Analog · analog-stereo",
+        "Output",
         "Internal",
         "Tide Radio…",
         "Audio…"
       ],
       "extra": [
         "audio -",
+        "Output",
         "Volume",
         "Sound Settings…"
       ]
@@ -948,6 +2180,21 @@
       "matched": 1,
       "coverage": 0.111,
       "baseline": 0.111,
+      "geometry": {
+        "matched": 1,
+        "aligned": 0,
+        "worst": [
+          {
+            "text": "Open Calendar…",
+            "dx": 23.5,
+            "dy": 8.5,
+            "distance": 32
+          }
+        ]
+      },
+      "roles": [
+        "label"
+      ],
       "missing": [
         "Sun",
         "Mon",

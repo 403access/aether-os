@@ -80,11 +80,14 @@ bun run parity:design  # regenerate both DESIGN.md files and diff the contract
 
 - Source scenes are written by `app-parity.mjs` from a visible-element walk of
   the demo (`getBoundingClientRect` + `getComputedStyle` per element).
-- Aether scenes are written by the compositor when `AETHER_SCENE_DUMP` is set:
-  the render chunk's chrome rectangles, labels (text, px, weight, colour),
-  icons and panels. The smokes snapshot one file per surface.
-- `scene-diff.mjs` matches non-numeric text runs and stores per-surface
-  coverage in `state/scene-baseline.json`; a drop fails the run.
+- Aether scenes are written by the compositor when it is built with the
+  **debug-only `scene-dump` feature** and `AETHER_SCENE_DUMP` is set: the
+  semantic node tree (role, rect, text, style) plus the raw render chunk's
+  chrome, labels, icons and panels. Capture images build with the feature;
+  production builds leave it off, so none of the recorder ships.
+- `scene-diff.mjs` matches non-numeric text runs by text and nearest position,
+  records geometry offsets, and stores per-surface coverage in
+  `state/scene-baseline.json`; a drop fails the run.
 - `design-docs.mjs` writes `design/source/DESIGN.md` (the contract) and
   `design/aether/DESIGN.md`, lints both, and diffs them. Deliberate differences
   live in `design/accepted.json`; known missing UI lives in `design/open.json`

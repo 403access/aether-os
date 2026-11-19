@@ -121,13 +121,26 @@ function sourceTexts(scene, rect) {
       dynamic += 1;
       continue;
     }
-    texts.push(element.text);
+    texts.push({ text: element.text, x: element.x, y: element.y });
   }
   return { texts, dynamic };
 }
 
 function aetherTexts(scene, rect) {
   const texts = [];
+  // Use the semantic node tree when the surface recorded one; otherwise fall
+  // back to the raw labels (client surfaces and uninstrumented panes).
+  const nodes = (scene.nodes ?? []).filter((node) => node.text);
+  if (nodes.length >= 10) {
+    for (const node of nodes) {
+      if (!node.text || node.text.length < 2) continue;
+      if (isDynamic(node.text)) continue;
+      const box = node.rect;
+      if (!inside(box.x + box.w / 2, box.y + box.h / 2, rect)) continue;
+      texts.push({ text: node.text, x: box.x, y: box.y, role: node.role });
+    }
+    return texts;
+  }
   for (const label of scene.labels ?? []) {
     if (!label.text || label.text.length < 2) continue;
     if (isDynamic(label.text)) continue;
@@ -135,29 +148,52 @@ function aetherTexts(scene, rect) {
     const cx = label.x + 4;
     const cy = label.y + Math.max(4, (label.px ?? 10) * 0.8);
     if (!inside(cx, cy, rect)) continue;
-    texts.push(label.text);
+    texts.push({ text: label.text, x: label.x, y: label.y, role: "label" });
   }
   return texts;
 }
 
 function compareTexts(source, aether) {
-  const pool = aether.map((text) => normalize(text));
+  const pool = aether.map((entry) => normalize(entry.text));
   const used = new Set();
   const missing = [];
   const matched = [];
+  const pairs = [];
 
-  for (const text of source) {
+  const distance = (candidate, at) =>
+    Math.abs(aether[at].x - candidate.x) + Math.abs(aether[at].y - candidate.y);
+  // A label of the same text far away is a different element (for example the
+  // window subtitle and the pane title both say "Notifications").
+  const MAX_DISTANCE = 120;
+
+  for (const entry of source) {
+    const text = entry.text;
     const needle = normalize(text);
-    let index = pool.findIndex((value, at) => !used.has(at) && value === needle);
+    const closest = (predicate) => {
+      let best = -1;
+      let bestDistance = Number.POSITIVE_INFINITY;
+      for (let at = 0; at < pool.length; at += 1) {
+        if (used.has(at) || !predicate(pool[at])) continue;
+        const current = distance(entry, at);
+        if (current < bestDistance) {
+          best = at;
+          bestDistance = current;
+        }
+      }
+      return bestDistance <= MAX_DISTANCE ? best : -1;
+    };
+
+    let index = closest((value) => value === needle);
     if (index === -1) {
       // Runs split across elements: accept a word-boundary prefix/suffix match
       // when the two strings are of comparable length.
-      index = pool.findIndex((value, at) => {
-        if (used.has(at)) return false;
+      index = closest((value) => {
         const shorter = Math.min(value.length, needle.length);
         const longer = Math.max(value.length, needle.length);
         if (longer === 0 || shorter / longer < 0.6) return false;
-        const pattern = new RegExp(`(^|\\s)${needle.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}(\\s|$)`);
+        const pattern = new RegExp(
+          `(^|\\s)${needle.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}(\\s|$)`,
+        );
         return pattern.test(value);
       });
     }
@@ -165,11 +201,12 @@ function compareTexts(source, aether) {
     else {
       used.add(index);
       matched.push(text);
+      pairs.push({ source: entry, aether: aether[index] });
     }
   }
 
-  const extra = aether.filter((_, index) => !used.has(index));
-  return { matched, missing, extra };
+  const extra = aether.filter((_, index) => !used.has(index)).map((entry) => entry.text);
+  return { matched, missing, extra, pairs };
 }
 
 async function loadBaseline() {
@@ -200,8 +237,20 @@ async function main() {
 
     const { texts: sourceList, dynamic } = sourceTexts(source, surface.rect);
     const aetherList = aetherTexts(aether, surface.rect);
-    const { matched, missing, extra } = compareTexts(sourceList, aetherList);
+    const { matched, missing, extra, pairs } = compareTexts(sourceList, aetherList);
     const coverage = sourceList.length === 0 ? 1 : matched.length / sourceList.length;
+    const offsets = pairs.map((pair) => ({
+      text: pair.source.text,
+      dx: Math.round((pair.aether.x - pair.source.x) * 10) / 10,
+      dy: Math.round((pair.aether.y - pair.source.y) * 10) / 10,
+    }));
+    const aligned = offsets.filter(
+      (offset) => Math.abs(offset.dx) <= 2 && Math.abs(offset.dy) <= 3,
+    );
+    const worst = offsets
+      .map((offset) => ({ ...offset, distance: Math.abs(offset.dx) + Math.abs(offset.dy) }))
+      .sort((left, right) => right.distance - left.distance)
+      .slice(0, 5);
     const accepted = baseline[surface.id] ?? coverage;
     nextBaseline[surface.id] = Math.round(coverage * 1000) / 1000;
     if (!update && coverage + 0.02 < accepted) regressions.push(surface.id);
@@ -215,6 +264,12 @@ async function main() {
       matched: matched.length,
       coverage: Math.round(coverage * 1000) / 1000,
       baseline: Math.round(accepted * 1000) / 1000,
+      geometry: {
+        matched: pairs.length,
+        aligned: aligned.length,
+        worst,
+      },
+      roles: [...new Set(aetherList.map((entry) => entry.role))].sort(),
       missing: missing.slice(0, 60),
       extra: extra.slice(0, 60),
     });

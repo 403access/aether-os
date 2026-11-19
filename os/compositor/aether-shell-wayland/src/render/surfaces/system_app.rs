@@ -7,6 +7,7 @@ use crate::app::system::{SystemApp, TITLEBAR_HEIGHT};
 use crate::app::App;
 use crate::render::context::{FrameContext, RenderChunk};
 use crate::render::ui::Ui;
+use crate::{scene_box, scene_node, scene_text};
 
 const WINDOW_FILL: [u8; 4] = [7, 39, 51, 235];
 const TITLEBAR_FILL: [u8; 4] = [10, 51, 66, 255];
@@ -100,6 +101,13 @@ impl App {
     ) {
         let accent = tokens.accent(255);
         let hover = self.pointer_in(rect);
+        let window = scene_node!(ui, None, "window", rect);
+        let titlebar = scene_node!(
+            ui,
+            Some(window),
+            "titlebar",
+            AetherRect::new(rect.x, rect.y, rect.width, TITLEBAR_HEIGHT as u32)
+        );
         let effects = self.window_effects(rect, 14, true, hover);
         ui.effect(effects.shadow);
         if let Some(buffer) = self.chrome_round(rect.width, rect.height, 14, WINDOW_FILL) {
@@ -137,16 +145,40 @@ impl App {
             ],
         );
         for (index, color) in LIGHTS.into_iter().enumerate() {
+            let light = AetherRect::new(rect.x + 11 + index as i32 * 17, rect.y + 14, 11, 11);
+            scene_box!(ui, Some(titlebar), "traffic-light", light, color, 5.5);
             if let Some(buffer) = self.chrome_round(11, 11, 5, color) {
                 ui.panel(Some(buffer), rect.x + 11 + index as i32 * 17, rect.y + 14);
             }
         }
         let mark_x = rect.x + 66;
         let mark_y = rect.y + (TITLEBAR_HEIGHT - 23) / 2;
+        scene_box!(
+            ui,
+            Some(titlebar),
+            "app-mark",
+            AetherRect::new(mark_x, mark_y, 23, 23),
+            [accent[0], accent[1], accent[2], 36],
+            5.0
+        );
         if let Some(buffer) = self.chrome_round(23, 23, 5, [accent[0], accent[1], accent[2], 36]) {
             ui.panel(Some(buffer), mark_x, mark_y);
         }
         ui.icon(app.icon(), 13, accent, mark_x + 5, mark_y + 5);
+        scene_text!(
+            ui,
+            Some(titlebar),
+            "title",
+            app.title(),
+            AetherRect::new(
+                mark_x + 31,
+                rect.y + 13,
+                self.text_width(app.title(), 0x100 | 10),
+                22
+            ),
+            0x100 | 10,
+            tokens.text
+        );
         ui.label(
             app.title(),
             mark_x + 31,
@@ -155,17 +187,43 @@ impl App {
             tokens.text,
         );
         if !app.subtitle().is_empty() {
-            ui.label(
+            let subtitle_x = mark_x + 31 + self.text_width(app.title(), 10) as i32 + 8;
+            scene_text!(
+                ui,
+                Some(titlebar),
+                "subtitle",
                 app.subtitle(),
-                mark_x + 31 + self.text_width(app.title(), 10) as i32 + 8,
-                rect.y + 13,
+                AetherRect::new(
+                    subtitle_x,
+                    rect.y + 13,
+                    self.text_width(app.subtitle(), 9),
+                    20
+                ),
                 9,
-                tokens.dim,
+                tokens.dim
             );
+            ui.label(app.subtitle(), subtitle_x, rect.y + 13, 9, tokens.dim);
         }
         if let Some((text, color)) = badge {
             let width = 8 + 6 + 6 + self.text_width(text, 0) + 8;
             let x = rect.x + rect.width as i32 - 12 - width as i32;
+            scene_box!(
+                ui,
+                Some(titlebar),
+                "badge",
+                AetherRect::new(x, rect.y + 9, width, 22),
+                [color[0], color[1], color[2], 28],
+                11.0
+            );
+            scene_text!(
+                ui,
+                Some(titlebar),
+                "badge-label",
+                text,
+                AetherRect::new(x + 20, rect.y + 11, self.text_width(text, 0), 18),
+                0,
+                color
+            );
             if let Some(buffer) =
                 self.chrome_round(width, 22, 11, [color[0], color[1], color[2], 28])
             {
@@ -865,8 +923,15 @@ impl App {
 impl App {
     // -------------------------------------------------------------- settings
 
-    fn settings_body(&mut self, ui: &mut Ui, _body: AetherRect, tokens: ThemeTokens) {
+    fn settings_body(&mut self, ui: &mut Ui, body: AetherRect, tokens: ThemeTokens) {
         let nav = self.settings_nav();
+        let settings = scene_node!(ui, None, "settings", body);
+        let sidebar = scene_node!(
+            ui,
+            Some(settings),
+            "sidebar",
+            AetherRect::new(body.x, body.y, 238, body.height)
+        );
 
         // Sidebar divider.
         ui.solid(
@@ -880,6 +945,28 @@ impl App {
         );
 
         // Search affordance.
+        let search = scene_box!(
+            ui,
+            Some(sidebar),
+            "search",
+            nav.search,
+            [255, 255, 255, 10],
+            7.0
+        );
+        scene_text!(
+            ui,
+            Some(search),
+            "placeholder",
+            "Search settings",
+            AetherRect::new(
+                nav.search.x + 32,
+                nav.search.y + 7,
+                self.text_width("Search settings", 5),
+                18
+            ),
+            5,
+            tokens.dim
+        );
         if let Some(buffer) =
             self.chrome_round(nav.search.width, nav.search.height, 7, [255, 255, 255, 10])
         {
@@ -895,6 +982,14 @@ impl App {
         );
 
         // Profile card: avatar, real account name and status dot.
+        let profile = scene_box!(
+            ui,
+            Some(sidebar),
+            "profile",
+            nav.profile,
+            tokens.base_a(61),
+            9.0
+        );
         if let Some(buffer) =
             self.chrome_round(nav.profile.width, nav.profile.height, 9, tokens.base_a(61))
         {
@@ -902,6 +997,28 @@ impl App {
         }
         let (name, initials) = self.settings_user();
         let avatar = AetherRect::new(nav.profile.x + 8, nav.profile.y + 9, 30, 30);
+        scene_box!(
+            ui,
+            Some(profile),
+            "avatar",
+            avatar,
+            tokens.accent(255),
+            15.0
+        );
+        scene_text!(
+            ui,
+            Some(profile),
+            "avatar-initials",
+            &initials,
+            AetherRect::new(
+                avatar.x + 6,
+                avatar.y + 5,
+                self.text_width(&initials, 0x100 | 9),
+                18
+            ),
+            0x100 | 9,
+            [4, 32, 42, 255]
+        );
         if let Some(buffer) = self.chrome_round_gradient(
             avatar.width,
             avatar.height,
@@ -919,12 +1036,40 @@ impl App {
             0x100 | 9,
             [4, 32, 42, 255],
         );
+        scene_text!(
+            ui,
+            Some(profile),
+            "name",
+            &name,
+            AetherRect::new(
+                nav.profile.x + 46,
+                nav.profile.y + 7,
+                self.text_width(&name, 0x100 | 9),
+                20
+            ),
+            0x100 | 9,
+            tokens.text
+        );
         ui.label(
             name,
             nav.profile.x + 46,
             nav.profile.y + 7,
             0x100 | 9,
             tokens.text,
+        );
+        scene_text!(
+            ui,
+            Some(profile),
+            "role",
+            "Aether ID · Administrator",
+            AetherRect::new(
+                nav.profile.x + 46,
+                nav.profile.y + 24,
+                self.text_width("Aether ID · Administrator", 13),
+                16
+            ),
+            13,
+            tokens.dim
         );
         ui.label(
             "Aether ID · Administrator",
@@ -934,6 +1079,7 @@ impl App {
             tokens.dim,
         );
         let status = AetherRect::new(nav.profile.right() as i32 - 18, nav.profile.y + 21, 6, 6);
+        scene_box!(ui, Some(profile), "status", status, tokens.green, 3.0);
         if let Some(buffer) = self.chrome_round(12, 12, 6, tokens.green_a(40)) {
             ui.panel(Some(buffer), status.x - 3, status.y - 3);
         }
@@ -974,6 +1120,15 @@ impl App {
             [0xff, 0xb0, 0x72],
         ];
         for (label, rect, _) in &nav.groups {
+            scene_text!(
+                ui,
+                Some(sidebar),
+                "nav-group",
+                label,
+                AetherRect::new(rect.x, rect.y, rect.width, 16),
+                0x100 | 13,
+                tokens.dim
+            );
             ui.label(label.to_uppercase(), rect.x, rect.y, 0x100 | 13, tokens.dim);
         }
         for (index, label) in tabs.iter().enumerate() {
@@ -987,6 +1142,31 @@ impl App {
                 }
             }
             let color = colors[index];
+            let tab = scene_box!(
+                ui,
+                Some(sidebar),
+                "tab",
+                rect,
+                if active {
+                    tokens.accent(38)
+                } else {
+                    [0, 0, 0, 0]
+                },
+                7.0
+            );
+            scene_text!(
+                ui,
+                Some(tab),
+                "tab-label",
+                label,
+                AetherRect::new(rect.x + 36, rect.y + 8, self.text_width(label, 9), 18),
+                9,
+                if active {
+                    tokens.text
+                } else {
+                    tokens.text_soft
+                }
+            );
             let tile = AetherRect::new(rect.x + 8, rect.y + 5, 20, 20);
             if let Some(buffer) = self.chrome_round(
                 tile.width,
@@ -1031,6 +1211,31 @@ impl App {
                 0.15,
             ],
         );
+        let footer = scene_node!(
+            ui,
+            Some(settings),
+            "footer",
+            AetherRect::new(
+                nav.footer.x,
+                nav.footer.y,
+                nav.footer.width,
+                nav.footer.height
+            )
+        );
+        scene_text!(
+            ui,
+            Some(footer),
+            "version",
+            "Aether OS 0.1.0-alpha",
+            AetherRect::new(
+                nav.footer.x + 14,
+                nav.footer.y + 12,
+                self.text_width("Aether OS 0.1.0-alpha", 8),
+                18
+            ),
+            8,
+            tokens.dim
+        );
         ui.label(
             "Aether OS 0.1.0-alpha",
             nav.footer.x + 14,
@@ -1040,6 +1245,20 @@ impl App {
         );
         let build = "Build dev";
         let build_width = self.text_width(build, 6) as i32;
+        scene_text!(
+            ui,
+            Some(footer),
+            "build",
+            build,
+            AetherRect::new(
+                nav.footer.right() as i32 - 14 - build_width,
+                nav.footer.y + 13,
+                build_width as u32,
+                16
+            ),
+            6,
+            tokens.dim
+        );
         ui.label(
             build,
             nav.footer.right() as i32 - 14 - build_width,
@@ -1050,9 +1269,24 @@ impl App {
 
         // Content: pane header + sections, centred at the demo's 640 px.
         let pane = self.settings_pane_rect();
+        let pane_node = scene_node!(ui, Some(settings), "pane", pane);
         let selected = self.system.selected.min(tabs.len() - 1);
-        let mark = AetherRect::new(pane.x + 2, pane.y + 3, 42, 42);
         let color = colors[selected];
+        let mark = AetherRect::new(pane.x + 2, pane.y + 3, 42, 42);
+        let header = scene_node!(
+            ui,
+            Some(pane_node),
+            "pane-header",
+            AetherRect::new(pane.x, pane.y, pane.width, 44)
+        );
+        scene_box!(
+            ui,
+            Some(header),
+            "pane-mark",
+            mark,
+            [color[0], color[1], color[2], 36],
+            10.0
+        );
         if let Some(buffer) = self.chrome_round(
             mark.width,
             mark.height,
@@ -1068,12 +1302,40 @@ impl App {
             mark.x + 10,
             mark.y + 10,
         );
+        scene_text!(
+            ui,
+            Some(header),
+            "pane-title",
+            tabs[selected],
+            AetherRect::new(
+                pane.x + 56,
+                pane.y + 2,
+                self.text_width(tabs[selected], 0x100 | 2),
+                26
+            ),
+            0x100 | 2,
+            tokens.text
+        );
         ui.label(
             tabs[selected],
             pane.x + 56,
             pane.y + 2,
             0x100 | 2,
             tokens.text,
+        );
+        scene_text!(
+            ui,
+            Some(header),
+            "pane-subtitle",
+            crate::app::system::SETTINGS_SUBTITLES[selected],
+            AetherRect::new(
+                pane.x + 56,
+                pane.y + 27,
+                self.text_width(crate::app::system::SETTINGS_SUBTITLES[selected], 9),
+                18
+            ),
+            9,
+            tokens.dim
         );
         ui.label(
             crate::app::system::SETTINGS_SUBTITLES[selected],
@@ -1087,6 +1349,21 @@ impl App {
         for section in self.settings_sections() {
             let height = 36 + section.rows.len() as i32 * 34;
             let card = AetherRect::new(pane.x, y, pane.width, height as u32);
+            let card_node = scene_box!(ui, Some(pane_node), "card", card, CARD_FILL, 10.0);
+            scene_text!(
+                ui,
+                Some(card_node),
+                "section",
+                section.title,
+                AetherRect::new(
+                    pane.x + 14,
+                    y + 10,
+                    self.text_width(section.title, 0x100 | 13),
+                    16
+                ),
+                0x100 | 13,
+                tokens.dim
+            );
             self.card(ui, card, tokens);
             self.section(ui, pane.x + 14, y + 10, section.title, tokens);
             for (index, row) in section.rows.iter().enumerate() {
@@ -1102,15 +1379,61 @@ impl App {
                         ],
                     );
                 }
+                let row_node = scene_node!(
+                    ui,
+                    Some(card_node),
+                    "row",
+                    AetherRect::new(pane.x + 1, row_y, pane.width.saturating_sub(2), 34)
+                );
+                scene_text!(
+                    ui,
+                    Some(row_node),
+                    "row-label",
+                    row.label,
+                    AetherRect::new(
+                        pane.x + 14,
+                        row_y + 8,
+                        self.text_width(row.label, 0x100 | 9),
+                        18
+                    ),
+                    0x100 | 9,
+                    tokens.text
+                );
                 ui.label(row.label, pane.x + 14, row_y + 8, 0x100 | 9, tokens.text);
                 match row.switch {
                     Some((on, _)) => {
                         let switch =
                             AetherRect::new(pane.x + pane.width as i32 - 50, row_y + 7, 34, 20);
+                        scene_box!(
+                            ui,
+                            Some(row_node),
+                            "switch",
+                            switch,
+                            if on {
+                                tokens.accent(255)
+                            } else {
+                                [255, 255, 255, 26]
+                            },
+                            10.0
+                        );
                         self.switch(ui, switch, on, tokens);
                     }
                     None => {
                         let width = self.text_width(&row.value, 5) as i32;
+                        scene_text!(
+                            ui,
+                            Some(row_node),
+                            "row-value",
+                            &row.value,
+                            AetherRect::new(
+                                pane.x + pane.width as i32 - 14 - width,
+                                row_y + 8,
+                                width as u32,
+                                18
+                            ),
+                            5,
+                            tokens.text_soft
+                        );
                         ui.label(
                             &row.value,
                             pane.x + pane.width as i32 - 14 - width,

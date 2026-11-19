@@ -57,11 +57,13 @@ the values someone enumerated. The scene pass records what each side laid out:
 | Side | Document |
 | --- | --- |
 | Source | `app-parity.mjs` walks every visible DOM element and writes `elements[{path,text,x,y,w,h,font,background,color,radius,border,shadow}]` |
-| Target | `AETHER_SCENE_DUMP` makes the compositor write its render chunk per frame: `chrome[]`, `labels[{text,x,y,px,weight,tracking,color}]`, `icons[]`, `panels[]` |
+| Target | a `scene-dump`-feature build writes a semantic node tree per frame (`role`, `rect`, `text`, background, colour, radius, px, weight, tracking) plus the raw render chunk (`chrome[]`, `labels[]`, `icons[]`, `panels[]`) when `AETHER_SCENE_DUMP` is set |
 
-`scene-diff.mjs` clips both to the surface rectangle, matches non-numeric text
-runs (live data is excluded), and writes per-surface coverage plus the missing
-runs. Coverage is baselined in `state/scene-baseline.json`, so losing a label is
+The `scene-dump` feature is debug-only: capture images enable it, production
+builds do not, so no recorder code or node instrumentation ships. `scene-diff.mjs`
+clips both to the surface rectangle, matches non-numeric text runs by text and
+nearest position (live data is excluded), records position offsets, and writes
+per-surface coverage plus the missing runs. Coverage is baselined in `state/scene-baseline.json`, so losing a label is
 a regression. This is what exposed the missing Settings profile card, nav group
 labels, row descriptions and footer.
 

@@ -31,6 +31,8 @@ impl App {
         output: Option<OutputId>,
     ) -> ComposedFrame {
         self.poll_status();
+        #[cfg(feature = "scene-dump")]
+        crate::scene::reset();
         let ctx = self.frame_context(output);
         let mut elements: Vec<AetherRenderElement> = Vec::new();
 
@@ -53,6 +55,7 @@ impl App {
         chunk.merge(self.compose_dock(&ctx));
         chunk.merge(self.compose_status_chrome(&ctx));
 
+        #[cfg(feature = "scene-dump")]
         if let Ok(path) = std::env::var("AETHER_SCENE_DUMP") {
             crate::scene::write(std::path::Path::new(&path), ctx.width, ctx.height, &chunk);
         }

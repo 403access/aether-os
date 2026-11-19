@@ -10,6 +10,11 @@ publish = false
 # so macOS/CI do not try to build it. Build with --manifest-path on Linux.
 [workspace]
 
+[features]
+default = []
+# Debug-only semantic scene recording. Never enabled in release builds.
+scene-dump = []
+
 [dependencies]
 smithay = { version = "0.7", default-features = false, features = ["wayland_frontend", "renderer_gl"] }
 aether-geometry = { path = "../crates/aether-geometry" }

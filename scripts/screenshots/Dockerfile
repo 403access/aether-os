@@ -29,7 +29,8 @@ COPY os/compositor /src/os/compositor
 COPY scripts/check-explorer-screenshot.sh /src/scripts/check-explorer-screenshot.sh
 RUN chmod +x /src/scripts/check-explorer-screenshot.sh
 
-RUN cargo build --manifest-path /src/os/compositor/aether-shell-smithay/Cargo.toml
+# Capture binaries enable the debug-only scene recorder; production builds do not.
+RUN cargo build --manifest-path /src/os/compositor/aether-shell-smithay/Cargo.toml --features scene-dump
 
 # Bun and the JavaScript indexer for the full-text palette captures. The
 # indexer imports the workspace protocol package directly, so link just those

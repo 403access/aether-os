@@ -51,7 +51,7 @@
   <p class="lede">Every surface from the Water OS demo next to the current Aether compositor. Captures are element or window crops only — no full-desktop frames.</p>
   <p class="meta">
     <span>Source · e86b239 Add drag-and-drop tile swapping to split layout</span>
-    <span>Aether · 4a7acea feat(parity): extract UI scenes and DESIGN.md contracts</span>
+    <span>Aether · 6871570 feat(settings): draw the sidebar chrome and centre the pane</span>
     <span>1280×800 · clock pinned to 2026-11-18 16:47 UTC</span>
   </p>
   <div class="stats">
@@ -64,7 +64,7 @@
     <div class="stat"><b>99/108</b><span>State matches</span></div>
     <div class="stat"><b>0</b><span>State to fix</span></div>
     
-    <div class="stat"><b>55%</b><span>UI text coverage</span></div>
+    <div class="stat"><b>51%</b><span>UI text coverage</span></div>
     
     <div class="stat"><b>0</b><span>Contract drift</span></div>
   </div>
@@ -89,7 +89,7 @@
     <p class="notes">Every visible text run is matched between the demo's DOM and the labels the compositor actually painted. Numbers are excluded because they are live data (CPU %, IPs, dates). Missing runs are real content the frame does not draw. Raw: <a href="state/scene-diff.md">state/scene-diff.md</a>.</p>
     <table>
       <thead><tr><th>surface</th><th>matched</th><th>coverage</th><th>missing (first)</th></tr></thead>
-      <tbody><tr><td><code>taskmanager</code></td><td>4/49</td><td>8%</td><td><code>Live</code>, <code>Memory</code>, <code>Storage</code>, <code>Usage over time</code></td></tr><tr><td><code>tray-calendar</code></td><td>1/9</td><td>11%</td><td><code>Sun</code>, <code>Mon</code>, <code>Tue</code>, <code>Wed</code></td></tr><tr><td><code>explorer</code></td><td>13/57</td><td>23%</td><td><code>/mnt/tank</code>, <code>Local</code>, <code>Local index</code>, <code>Projects</code></td></tr><tr><td><code>tray-sound</code></td><td>3/10</td><td>30%</td><td><code>Now playing</code>, <code>Deep Current</code>, <code>Harbour Speakers</code>, <code>Analog · analog-stereo</code></td></tr><tr><td><code>devices</code></td><td>7/21</td><td>33%</td><td><code>Let nearby devices find this Mac.</code>, <code>Tide Mouse</code>, <code>Connected</code>, <code>Battery</code></td></tr><tr><td><code>tray-devices</code></td><td>3/7</td><td>43%</td><td><code>Connected</code>, <code>Tide Mouse</code>, <code>Harbour Keyboard</code>, <code>Wireless</code></td></tr><tr><td><code>menu</code></td><td>5/10</td><td>50%</td><td><code>New Explorer window</code>, <code>New Data Cloud Compare window</code>, <code>Verify snapshot</code>, <code>Toggle dotfiles</code></td></tr><tr><td><code>tray-network</code></td><td>5/10</td><td>50%</td><td><code>Connected</code>, <code>Known</code>, <code>Lighthouse</code>, <code>Known</code></td></tr><tr><td><code>settings-security</code></td><td>24/47</td><td>51%</td><td><code>Demo device</code>, <code>Security</code>, <code>FileVault</code>, <code>Encrypt the startup disk. Recovery key is stored in Aether ID.</code></td></tr><tr><td><code>settings-commands</code></td><td>26/47</td><td>55%</td><td><code>Demo device</code>, <code>Search &amp; Commands</code>, <code>Show commands</code>, <code>Navigation, view, appearance, and system actions.</code></td></tr><tr><td><code>about</code></td><td>5/9</td><td>56%</td><td><code>A desktop concept drawn from the Data Cloud Compare design system. Every surface, badge, and control here is a token or component from the gallery.</code>, <code>Open the design system</code>, <code>Try the real Data Cloud Compare</code>, <code>Built with plain CSS and JavaScript. No images, no frameworks.</code></td></tr><tr><td><code>settings-desktop</code></td><td>26/46</td><td>56%</td><td><code>Demo device</code>, <code>Windows</code>, <code>Window layout</code>, <code>Split shares the desktop between open apps; drag a title bar onto another tile to swap places. Overlap keeps their own positions and sizes.</code></td></tr></tbody>
+      <tbody><tr><td><code>taskmanager</code></td><td>2/49</td><td>4%</td><td><code>Live</code>, <code>CPU</code>, <code>Memory</code>, <code>Storage</code></td></tr><tr><td><code>tray-calendar</code></td><td>1/9</td><td>11%</td><td><code>Sun</code>, <code>Mon</code>, <code>Tue</code>, <code>Wed</code></td></tr><tr><td><code>explorer</code></td><td>8/57</td><td>14%</td><td><code>/mnt/tank</code>, <code>Local</code>, <code>Local index</code>, <code>Projects</code></td></tr><tr><td><code>tray-sound</code></td><td>2/10</td><td>20%</td><td><code>Harbour Speakers</code>, <code>Now playing</code>, <code>Deep Current</code>, <code>Analog · analog-stereo</code></td></tr><tr><td><code>devices</code></td><td>7/21</td><td>33%</td><td><code>Let nearby devices find this Mac.</code>, <code>Tide Mouse</code>, <code>Connected</code>, <code>Battery</code></td></tr><tr><td><code>network</code></td><td>8/22</td><td>36%</td><td><code>Known</code>, <code>Lighthouse</code>, <code>Known</code>, <code>Tidepool Guest</code></td></tr><tr><td><code>tray-network</code></td><td>4/10</td><td>40%</td><td><code>Connected</code>, <code>Known</code>, <code>Lighthouse</code>, <code>Known</code></td></tr><tr><td><code>tray-devices</code></td><td>3/7</td><td>43%</td><td><code>Connected</code>, <code>Tide Mouse</code>, <code>Harbour Keyboard</code>, <code>Wireless</code></td></tr><tr><td><code>settings-security</code></td><td>23/47</td><td>49%</td><td><code>Privacy &amp; Security</code>, <code>Demo device</code>, <code>Security</code>, <code>FileVault</code></td></tr><tr><td><code>menu</code></td><td>5/10</td><td>50%</td><td><code>New Explorer window</code>, <code>New Data Cloud Compare window</code>, <code>Verify snapshot</code>, <code>Toggle dotfiles</code></td></tr><tr><td><code>settings-commands</code></td><td>24/47</td><td>51%</td><td><code>Search &amp; Commands</code>, <code>Demo device</code>, <code>Show commands</code>, <code>Navigation, view, appearance, and system actions.</code></td></tr><tr><td><code>settings-network</code></td><td>23/45</td><td>51%</td><td><code>Network</code>, <code>Demo device</code>, <code>Connection</code>, <code>Connected</code></td></tr></tbody>
     </table>
   </section>
   
@@ -166,7 +166,7 @@
         <header>
           <h3>Explorer</h3>
           <span class="priority">P1</span>
-          <span class="pill pill--coverage">text 23%</span>
+          <span class="pill pill--coverage">text 14%</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/explorer.png" alt="Demo Explorer"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/explorer.png" alt="Aether Explorer"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -188,7 +188,7 @@
         <header>
           <h3>Settings · Appearance</h3>
           <span class="priority">P1</span>
-          <span class="pill pill--coverage">text 60%</span>
+          <span class="pill pill--coverage">text 52%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-appearance.png" alt="Demo Settings · Appearance"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-appearance.png" alt="Aether Settings · Appearance"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -199,7 +199,7 @@
         <header>
           <h3>Settings · Displays</h3>
           <span class="priority">P1</span>
-          <span class="pill pill--coverage">text 57%</span>
+          <span class="pill pill--coverage">text 55%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-displays.png" alt="Demo Settings · Displays"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-displays.png" alt="Aether Settings · Displays"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -210,7 +210,7 @@
         <header>
           <h3>Settings · Desktop & Dock</h3>
           <span class="priority">P1</span>
-          <span class="pill pill--coverage">text 56%</span>
+          <span class="pill pill--coverage">text 52%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-desktop.png" alt="Demo Settings · Desktop & Dock"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-desktop.png" alt="Aether Settings · Desktop & Dock"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -221,7 +221,7 @@
         <header>
           <h3>Settings · Search & Commands</h3>
           <span class="priority">P1</span>
-          <span class="pill pill--coverage">text 55%</span>
+          <span class="pill pill--coverage">text 51%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-commands.png" alt="Demo Settings · Search & Commands"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-commands.png" alt="Aether Settings · Search & Commands"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -232,7 +232,7 @@
         <header>
           <h3>Settings · Accessibility</h3>
           <span class="priority">P1</span>
-          <span class="pill pill--coverage">text 56%</span>
+          <span class="pill pill--coverage">text 54%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-accessibility.png" alt="Demo Settings · Accessibility"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-accessibility.png" alt="Aether Settings · Accessibility"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -243,7 +243,7 @@
         <header>
           <h3>Settings · Network</h3>
           <span class="priority">P1</span>
-          <span class="pill pill--coverage">text 62%</span>
+          <span class="pill pill--coverage">text 51%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-network.png" alt="Demo Settings · Network"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-network.png" alt="Aether Settings · Network"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -265,7 +265,7 @@
         <header>
           <h3>Settings · Sound</h3>
           <span class="priority">P1</span>
-          <span class="pill pill--coverage">text 68%</span>
+          <span class="pill pill--coverage">text 65%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-sound.png" alt="Demo Settings · Sound"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-sound.png" alt="Aether Settings · Sound"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -276,7 +276,7 @@
         <header>
           <h3>Settings · Battery</h3>
           <span class="priority">P1</span>
-          <span class="pill pill--coverage">text 62%</span>
+          <span class="pill pill--coverage">text 57%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-battery.png" alt="Demo Settings · Battery"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-battery.png" alt="Aether Settings · Battery"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -298,7 +298,7 @@
         <header>
           <h3>Settings · Privacy & Security</h3>
           <span class="priority">P1</span>
-          <span class="pill pill--coverage">text 51%</span>
+          <span class="pill pill--coverage">text 49%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-security.png" alt="Demo Settings · Privacy & Security"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-security.png" alt="Aether Settings · Privacy & Security"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -309,7 +309,7 @@
         <header>
           <h3>Settings · Storage</h3>
           <span class="priority">P1</span>
-          <span class="pill pill--coverage">text 66%</span>
+          <span class="pill pill--coverage">text 63%</span>
           <span class="pill pill--partial">Partial</span>
         </header>
         <div class="pair"><figure><img src="source/settings-storage.png" alt="Demo Settings · Storage"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/settings-storage.png" alt="Aether Settings · Storage"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -320,7 +320,7 @@
         <header>
           <h3>Network</h3>
           <span class="priority">P0 · done</span>
-          <span class="pill pill--coverage">text 68%</span>
+          <span class="pill pill--coverage">text 36%</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/network.png" alt="Demo Network"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/network.png" alt="Aether Network"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -331,7 +331,7 @@
         <header>
           <h3>Battery</h3>
           <span class="priority">P0 · done</span>
-          <span class="pill pill--coverage">text 68%</span>
+          <span class="pill pill--coverage">text 56%</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/battery.png" alt="Demo Battery"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/battery.png" alt="Aether Battery"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -364,7 +364,7 @@
         <header>
           <h3>Task Manager</h3>
           <span class="priority">P1</span>
-          <span class="pill pill--coverage">text 8%</span>
+          <span class="pill pill--coverage">text 4%</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/taskmanager.png" alt="Demo Task Manager"><figcaption>Source · 1248x730</figcaption></figure><figure><img src="aether/taskmanager.png" alt="Aether Task Manager"><figcaption>Aether · 1248x730</figcaption></figure></div>
@@ -431,7 +431,7 @@
         <header>
           <h3>Wi-Fi tray</h3>
           <span class="priority">P0 · done</span>
-          <span class="pill pill--coverage">text 50%</span>
+          <span class="pill pill--coverage">text 40%</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/tray-network.png" alt="Demo Wi-Fi tray"><figcaption>Source · 301x329</figcaption></figure><figure><img src="aether/tray-network.png" alt="Aether Wi-Fi tray"><figcaption>Aether · 300x328</figcaption></figure></div>
@@ -464,7 +464,7 @@
         <header>
           <h3>Sound tray</h3>
           <span class="priority">P0 · done</span>
-          <span class="pill pill--coverage">text 30%</span>
+          <span class="pill pill--coverage">text 20%</span>
           <span class="pill pill--implemented">Implemented</span>
         </header>
         <div class="pair"><figure><img src="source/tray-sound.png" alt="Demo Sound tray"><figcaption>Source · 293x256</figcaption></figure><figure><img src="aether/tray-sound.png" alt="Aether Sound tray"><figcaption>Aether · 292x256</figcaption></figure></div>
